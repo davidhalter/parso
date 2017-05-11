@@ -18,14 +18,14 @@ import itertools as _itertools
 
 from parso.token import (tok_name, N_TOKENS, ENDMARKER, STRING, NUMBER, opmap,
                                NAME, OP, ERRORTOKEN, NEWLINE, INDENT, DEDENT)
-from jedi._compatibility import is_py3, py_version, u
+from parso._compatibility import py_version, u
 from jedi.common import splitlines
 
 
 cookie_re = re.compile("coding[:=]\s*([-\w.]+)")
 
 
-if is_py3:
+if py_version >= 30:
     # Python 3 has str.isidentifier() to check if a char is a valid identifier
     is_identifier = str.isidentifier
 else:
@@ -73,7 +73,7 @@ if py_version >= 36:
 else:
     Hexnumber = r'0[xX][0-9a-fA-F]+'
     Binnumber = r'0[bB][01]+'
-    if is_py3:
+    if py_version >= 30:
         Octnumber = r'0[oO][0-7]+'
     else:
         Octnumber = '0[0-7]+'

@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-from jedi._compatibility import is_py3, is_py35
+from parso._compatibility import py_version
 from token import *
 
 
@@ -12,7 +12,7 @@ NL = N_TOKENS
 tok_name[NL] = 'NL'
 N_TOKENS += 1
 
-if is_py3:
+if py_version >= 30:
     BACKQUOTE = N_TOKENS
     tok_name[BACKQUOTE] = 'BACKQUOTE'
     N_TOKENS += 1
@@ -24,7 +24,7 @@ else:
     tok_name[ELLIPSIS] = 'ELLIPSIS'
     N_TOKENS += 1
 
-if not is_py35:
+if not py_version >= 35:
     ATEQUAL = N_TOKENS
     tok_name[ATEQUAL] = 'ATEQUAL'
     N_TOKENS += 1

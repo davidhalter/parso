@@ -1,5 +1,5 @@
 from abc import abstractmethod, abstractproperty
-from jedi._compatibility import utf8_repr, encoding, is_py3
+from parso._compatibility import utf8_repr, encoding, py_version
 
 
 def search_ancestor(node, *node_types):
@@ -283,7 +283,7 @@ class BaseNode(NodeOrLeaf):
     @utf8_repr
     def __repr__(self):
         code = self.get_code().replace('\n', ' ').strip()
-        if not is_py3:
+        if not py_version >= 30:
             code = code.encode(encoding, 'replace')
         return "<%s: %s@%s,%s>" % \
             (type(self).__name__, code, self.start_pos[0], self.start_pos[1])

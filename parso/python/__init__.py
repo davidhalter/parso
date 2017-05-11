@@ -5,7 +5,7 @@ import os
 
 from jedi import settings
 from jedi.common import splitlines, source_to_unicode
-from jedi._compatibility import FileNotFoundError
+from parso._compatibility import FileNotFoundError
 from parso.pgen2.pgen import generate_grammar
 from parso.python.parser import Parser, _remove_last_newline
 from parso.python.diff import DiffParser

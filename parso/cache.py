@@ -10,7 +10,7 @@ import errno
 
 from jedi import settings
 from jedi import debug
-from jedi._compatibility import FileNotFoundError
+from parso._compatibility import FileNotFoundError
 
 
 _PICKLE_VERSION = 30
