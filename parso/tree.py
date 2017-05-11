@@ -1,5 +1,5 @@
 from abc import abstractmethod, abstractproperty
-from parso._compatibility import utf8_repr, encoding, is_py3
+from jedi._compatibility import utf8_repr, encoding, is_py3
 
 
 def search_ancestor(node, *node_types):

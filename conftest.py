@@ -9,7 +9,7 @@ collect_ignore = ["setup.py"]
 
 
 # The following hooks (pytest_configure, pytest_unconfigure) are used
-# to modify `jedi.settings.cache_directory` because `clean_jedi_cache`
+# to modify `jedi.settings.cache_directory` because `clean_parso_cache`
 # has no effect during doctests.  Without these hooks, doctests uses
 # user's cache (e.g., ~/.cache/jedi/).  We should remove this
 # workaround once the problem is fixed in py.test.
@@ -51,7 +51,7 @@ def pytest_unconfigure(config):
 
 
 @pytest.fixture(scope='session')
-def clean_jedi_cache(request):
+def clean_parso_cache(request):
     """
     Set `jedi.settings.cache_directory` to a temporary directory during test.
 
