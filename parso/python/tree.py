@@ -12,7 +12,7 @@ the input given to the parser. This is important if you are using refactoring.
 The easiest way to play with this module is to use :class:`parsing.Parser`.
 :attr:`parsing.Parser.module` holds an instance of :class:`Module`:
 
->>> from jedi.parser.python import parse
+>>> from parso.python import parse
 >>> parser = parse('import os')
 >>> module = parser.get_root_node()
 >>> module

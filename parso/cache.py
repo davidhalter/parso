@@ -7,9 +7,9 @@ import shutil
 import pickle
 import platform
 import errno
+import logging
 
 from jedi import settings
-from jedi import debug
 from parso._compatibility import FileNotFoundError
 
 
@@ -99,7 +99,7 @@ def _load_from_file_system(grammar, path, p_time):
         return None
     else:
         parser_cache[path] = module_cache_item
-        debug.dbg('pickle loaded: %s', path)
+        logging.debug('pickle loaded: %s', path)
         return module_cache_item.node
 
 

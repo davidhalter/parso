@@ -3,8 +3,7 @@ Parsers for Python
 """
 import os
 
-from jedi import settings
-from jedi.common import splitlines, source_to_unicode
+from parso.utils import splitlines, source_to_unicode
 from parso._compatibility import FileNotFoundError
 from parso.pgen2.pgen import generate_grammar
 from parso.python.parser import Parser, _remove_last_newline
@@ -84,7 +83,7 @@ def parse(code=None, path=None, grammar=None, error_recovery=True,
         with open(path, 'rb') as f:
             code = source_to_unicode(f.read())
 
-    if diff_cache and settings.fast_parser:
+    if diff_cache:
         try:
             module_cache_item = parser_cache[path]
         except KeyError:

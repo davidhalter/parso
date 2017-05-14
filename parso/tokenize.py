@@ -19,7 +19,7 @@ import itertools as _itertools
 from parso.token import (tok_name, N_TOKENS, ENDMARKER, STRING, NUMBER, opmap,
                                NAME, OP, ERRORTOKEN, NEWLINE, INDENT, DEDENT)
 from parso._compatibility import py_version, u
-from jedi.common import splitlines
+from parso.utils import splitlines
 
 
 cookie_re = re.compile("coding[:=]\s*([-\w.]+)")

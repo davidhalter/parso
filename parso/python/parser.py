@@ -3,7 +3,7 @@ from parso import tokenize
 from parso.token import (DEDENT, INDENT, ENDMARKER, NEWLINE, NUMBER,
                                STRING, tok_name)
 from parso.parser import BaseParser
-from jedi.common import splitlines
+from parso.utils import splitlines
 
 
 class Parser(BaseParser):
