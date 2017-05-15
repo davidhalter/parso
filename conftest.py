@@ -3,40 +3,36 @@ import shutil
 
 import pytest
 
+from parso import cache
+
 
 #collect_ignore = ["setup.py"]
 
 
 # The following hooks (pytest_configure, pytest_unconfigure) are used
-# to modify `jedi.settings.cache_directory` because `clean_parso_cache`
+# to modify `cache._default_cache_path` because `clean_parso_cache`
 # has no effect during doctests.  Without these hooks, doctests uses
-# user's cache (e.g., ~/.cache/jedi/).  We should remove this
+# user's cache (e.g., ~/.cache/parso/).  We should remove this
 # workaround once the problem is fixed in py.test.
 #
-# See:
+# See (this was back when parso was part of jedi):
 # - https://github.com/davidhalter/jedi/pull/168
 # - https://bitbucket.org/hpk42/pytest/issue/275/
 
-jedi_cache_directory_orig = None
-jedi_cache_directory_temp = None
+parso_cache_directory_orig = None
+parso_cache_directory_temp = None
 
 
 def pytest_addoption(parser):
-    parser.addoption("--jedi-debug", "-D", action='store_true',
-                     help="Enables Jedi's debug output.")
-
     parser.addoption("--warning-is-error", action='store_true',
                      help="Warnings are treated as errors.")
 
 
 def pytest_configure(config):
-    global jedi_cache_directory_orig, jedi_cache_directory_temp
-    jedi_cache_directory_orig = jedi.settings.cache_directory
-    jedi_cache_directory_temp = tempfile.mkdtemp(prefix='jedi-test-')
-    jedi.settings.cache_directory = jedi_cache_directory_temp
-
-    if config.option.jedi_debug:
-        jedi.set_debug_function()
+    global parso_cache_directory_orig, parso_cache_directory_temp
+    parso_cache_directory_orig = cache._default_cache_path
+    parso_cache_directory_temp = tempfile.mkdtemp(prefix='parso-test-')
+    cache._default_cache_path = parso_cache_directory_temp
 
     if config.option.warning_is_error:
         import warnings
@@ -44,9 +40,9 @@ def pytest_configure(config):
 
 
 def pytest_unconfigure(config):
-    global jedi_cache_directory_orig, jedi_cache_directory_temp
-    jedi.settings.cache_directory = jedi_cache_directory_orig
-    shutil.rmtree(jedi_cache_directory_temp)
+    global parso_cache_directory_orig, parso_cache_directory_temp
+    cache._default_cache_path = parso_cache_directory_orig
+    shutil.rmtree(parso_cache_directory_temp)
 
 
 @pytest.fixture(scope='session')
