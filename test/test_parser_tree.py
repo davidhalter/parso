@@ -6,7 +6,6 @@ import pytest
 
 from parso.python import parse
 from parso.python import tree
-from jedi.parser_utils import get_doc_with_call_signature, get_call_signature
 
 
 class TestsFunctionAndLambdaParsing(object):
@@ -62,9 +61,3 @@ class TestsFunctionAndLambdaParsing(object):
             assert node.annotation is None
         else:
             assert node.annotation.value == expected_annotation
-
-    def test_get_call_signature(self, node, expected):
-        assert get_call_signature(node) == expected['call_sig']
-
-    def test_doc(self, node, expected):
-        assert get_doc_with_call_signature(node) == (expected['call_sig'] + '\n\n')
