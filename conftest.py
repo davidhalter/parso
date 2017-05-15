@@ -48,7 +48,7 @@ def pytest_unconfigure(config):
 @pytest.fixture(scope='session')
 def clean_parso_cache(request):
     """
-    Set `jedi.settings.cache_directory` to a temporary directory during test.
+    Set the default cache directory to a temporary directory during tests.
 
     Note that you can't use built-in `tmpdir` and `monkeypatch`
     fixture here because their scope is 'function', which is not used
@@ -56,12 +56,11 @@ def clean_parso_cache(request):
 
     This fixture is activated in ../pytest.ini.
     """
-    from jedi import settings
-    old = settings.cache_directory
-    tmp = tempfile.mkdtemp(prefix='jedi-test-')
-    settings.cache_directory = tmp
+    old = cache._default_cache_path
+    tmp = tempfile.mkdtemp(prefix='parso-test-')
+    cache.default_cache_path = tmp
 
     @request.addfinalizer
     def restore():
-        settings.cache_directory = old
+        cache._default_cache_path = old
         shutil.rmtree(tmp)
