@@ -4,7 +4,7 @@ import pytest
 
 import jedi
 from jedi import debug
-from jedi.common import splitlines
+from parso.utils import splitlines
 from jedi import cache
 from parso.cache import parser_cache
 from parso.python import load_grammar

@@ -8,7 +8,7 @@ test_grammar.py files from both Python 2 and Python 3.
 
 from textwrap import dedent
 
-from jedi._compatibility import is_py3
+from parso._compatibility import py_version
 from parso.python import parse as _parse, load_grammar
 from parso import ParserSyntaxError
 import pytest
@@ -217,7 +217,7 @@ class TestSetLiteral(GrammarTest):
 class TestNumericLiterals(GrammarTest):
     def test_new_octal_notation(self):
         code = """0o7777777777777"""
-        if is_py3:
+        if py_version >= 30:
             parse(code)
         else:
             self.invalid_syntax(code)

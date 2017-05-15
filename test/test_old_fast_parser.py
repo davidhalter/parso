@@ -9,7 +9,7 @@ However the tests might still be relevant for the parser.
 from textwrap import dedent
 
 import jedi
-from jedi._compatibility import u
+from parso._compatibility import u
 from parso.python import parse
 
 

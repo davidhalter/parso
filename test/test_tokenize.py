@@ -2,8 +2,8 @@
 
 from textwrap import dedent
 
-from jedi._compatibility import is_py3, py_version
-from jedi.common import splitlines
+from parso._compatibility import py_version
+from parso.utils import splitlines
 from parso.token import NAME, OP, NEWLINE, STRING, INDENT, ERRORTOKEN, ENDMARKER
 from parso import tokenize
 from parso.python import parse
@@ -117,7 +117,7 @@ class TokenTest(unittest.TestCase):
         tokens = tokenize.source_tokens(fundef)
         token_list = list(tokens)
         unicode_token = token_list[1]
-        if is_py3:
+        if py_version >= 30:
             assert unicode_token[0] == NAME
         else:
             # Unicode tokens in Python 2 seem to be identified as operators.
@@ -170,9 +170,9 @@ def test_ur_literals():
             assert typ == NAME
 
     check('u""')
-    check('ur""', is_literal=not is_py3)
-    check('Ur""', is_literal=not is_py3)
-    check('UR""', is_literal=not is_py3)
+    check('ur""', is_literal=not py_version >= 30)
+    check('Ur""', is_literal=not py_version >= 30)
+    check('UR""', is_literal=not py_version >= 30)
     check('bR""')
     # Starting with Python 3.3 this ordering is also possible, but we just
     # enable it for all versions. It doesn't hurt.

@@ -6,7 +6,7 @@ import pytest
 from parso import cache
 
 
-#collect_ignore = ["setup.py"]
+collect_ignore = ["setup.py"]
 
 
 # The following hooks (pytest_configure, pytest_unconfigure) are used

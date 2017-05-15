@@ -4,13 +4,10 @@ from textwrap import dedent
 
 import pytest
 
-import jedi
-from jedi._compatibility import u, is_py3
+from parso._compatibility import u, py_version
 from parso.python import parse, load_grammar
 from parso.python import tree
-from jedi.common import splitlines
-from jedi.parser_utils import get_statement_of_position, \
-    clean_scope_docstring, safe_literal_eval
+from parso.utils import splitlines
 
 
 def test_basic_parsing():
@@ -22,53 +19,6 @@ def test_basic_parsing():
     compare('wblabla* 1\t\n')
     compare('def x(a, b:3): pass\n')
     compare('assert foo\n')
-
-def test_user_statement_on_import():
-    """github #285"""
-    s = "from datetime import (\n" \
-        "    time)"
-
-    for pos in [(2, 1), (2, 4)]:
-        p = parse(s)
-        stmt = get_statement_of_position(p, pos)
-        assert isinstance(stmt, tree.Import)
-        assert [n.value for n in stmt.get_defined_names()] == ['time']
-
-
-class TestCallAndName():
-    def get_call(self, source):
-        # Get the simple_stmt and then the first one.
-        simple_stmt = parse(source).children[0]
-        return simple_stmt.children[0]
-
-    def test_name_and_call_positions(self):
-        name = self.get_call('name\nsomething_else')
-        assert name.value == 'name'
-        assert name.start_pos == (1, 0)
-        assert name.end_pos == (1, 4)
-
-        leaf = self.get_call('1.0\n')
-        assert leaf.value == '1.0'
-        assert safe_literal_eval(leaf.value) == 1.0
-        assert leaf.start_pos == (1, 0)
-        assert leaf.end_pos == (1, 3)
-
-    def test_call_type(self):
-        call = self.get_call('hello')
-        assert isinstance(call, tree.Name)
-
-    def test_literal_type(self):
-        literal = self.get_call('1.0')
-        assert isinstance(literal, tree.Literal)
-        assert type(safe_literal_eval(literal.value)) == float
-
-        literal = self.get_call('1')
-        assert isinstance(literal, tree.Literal)
-        assert type(safe_literal_eval(literal.value)) == int
-
-        literal = self.get_call('"hello"')
-        assert isinstance(literal, tree.Literal)
-        assert safe_literal_eval(literal.value) == 'hello'
 
 
 class TestSubscopes():
@@ -135,33 +85,6 @@ def test_incomplete_list_comprehension():
         ['error_node', 'error_node', 'newline', 'endmarker']
 
 
-def test_hex_values_in_docstring():
-    source = r'''
-        def foo(object):
-            """
-             \xff
-            """
-            return 1
-        '''
-
-    doc = clean_scope_docstring(next(parse(source).iter_funcdefs()))
-    if is_py3:
-        assert doc == '\xff'
-    else:
-        assert doc == u('�')
-
-
-def test_error_correction_with():
-    source = """
-    with open() as f:
-        try:
-            f."""
-    comps = jedi.Script(source).completions()
-    assert len(comps) > 30
-    # `open` completions have a closed attribute.
-    assert [1 for c in comps if c.name == 'closed']
-
-
 def test_newline_positions():
     endmarker = parse('a\n').children[-1]
     assert endmarker.end_pos == (2, 0)
@@ -193,7 +116,7 @@ def test_param_splitting():
         # Python 2 tuple params should be ignored for now.
         grammar = load_grammar('%s.%s' % sys.version_info[:2])
         m = parse(src, grammar=grammar)
-        if is_py3:
+        if py_version >= 30:
             assert not list(m.iter_funcdefs())
         else:
             # We don't want b and c to be a part of the param enumeration. Just
@@ -222,7 +145,7 @@ def test_started_lambda_stmt():
 def test_python2_octal():
     module = parse('0660')
     first = module.children[0]
-    if is_py3:
+    if py_version >= 30:
         assert first.type == 'error_node'
     else:
         assert first.children[0].type == 'number'
@@ -230,7 +153,7 @@ def test_python2_octal():
 
 def test_python3_octal():
     module = parse('0o660')
-    if is_py3:
+    if py_version >= 30:
         assert module.children[0].children[0].type == 'number'
     else:
         assert module.children[0].type == 'error_node'
