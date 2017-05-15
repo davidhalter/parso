@@ -3,9 +3,8 @@ import shutil
 
 import pytest
 
-import jedi
 
-collect_ignore = ["setup.py"]
+#collect_ignore = ["setup.py"]
 
 
 # The following hooks (pytest_configure, pytest_unconfigure) are used

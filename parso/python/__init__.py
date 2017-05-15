@@ -48,7 +48,8 @@ def load_grammar(version=None):
 
 
 def parse(code=None, path=None, grammar=None, error_recovery=True,
-          start_symbol='file_input', cache=False, diff_cache=False):
+          start_symbol='file_input', cache=False, diff_cache=False,
+          cache_path=None):
     """
     If you want to parse a Python file you want to start here, most likely.
 
@@ -64,6 +65,8 @@ def parse(code=None, path=None, grammar=None, error_recovery=True,
         get a ParseError when encountering syntax errors in your code.
     :param start_symbol: The grammar symbol that you want to parse. Only
         allowed to be used when error_recovery is disabled.
+    :param cache_path: If given saves the parso cache in this directory. If not
+        given, defaults to the default cache places on each platform.
 
     :return: A syntax tree node. Typically the module.
     """
@@ -75,7 +78,7 @@ def parse(code=None, path=None, grammar=None, error_recovery=True,
 
     if cache and not code and path is not None:
         # In this case we do actual caching. We just try to load it.
-        module_node = load_module(grammar, path)
+        module_node = load_module(grammar, path, cache_path=cache_path)
         if module_node is not None:
             return module_node
 
@@ -93,14 +96,16 @@ def parse(code=None, path=None, grammar=None, error_recovery=True,
             module_node = module_cache_item.node
             old_lines = module_cache_item.lines
             if old_lines == lines:
-                save_module(grammar, path, module_node, lines, pickling=False)
+                save_module(grammar, path, module_node, lines, pickling=False,
+                            cache_path=cache_path)
                 return module_node
 
             new_node = DiffParser(grammar, module_node).update(
                 old_lines=old_lines,
                 new_lines=lines
             )
-            save_module(grammar, path, new_node, lines, pickling=cache)
+            save_module(grammar, path, new_node, lines, pickling=cache,
+                        cache_path=cache_path)
             return new_node
 
     added_newline = not code.endswith('\n')
@@ -119,5 +124,6 @@ def parse(code=None, path=None, grammar=None, error_recovery=True,
         _remove_last_newline(root_node)
 
     if cache or diff_cache:
-        save_module(grammar, path, root_node, lines, pickling=cache)
+        save_module(grammar, path, root_node, lines, pickling=cache,
+                    cache_path=cache_path)
     return root_node

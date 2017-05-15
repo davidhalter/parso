@@ -9,7 +9,6 @@ import platform
 import errno
 import logging
 
-from jedi import settings
 from parso._compatibility import FileNotFoundError
 
 
@@ -40,6 +39,25 @@ we generate something similar.  See:
 http://docs.python.org/3/library/sys.html#sys.implementation
 """
 
+def _get_default_cache_path():
+    if platform.system().lower() == 'windows':
+        dir_ = os.path.join(os.getenv('APPDATA') or '~', 'Parso', 'Parso')
+    elif platform.system().lower() == 'darwin':
+        dir_ = os.path.join('~', 'Library', 'Caches', 'Parso')
+    else:
+        dir_ = os.path.join(os.getenv('XDG_CACHE_HOME') or '~/.cache', 'parso')
+    return os.path.expanduser(dir_)
+
+_default_cache_path = _get_default_cache_path()
+"""
+The path where the cache is stored.
+
+On Linux, this defaults to ``~/.cache/parso/``, on OS X to
+``~/Library/Caches/Parso/`` and on Windows to ``%APPDATA%\\Parso\\Parso\\``.
+On Linux, if environment variable ``$XDG_CACHE_HOME`` is set,
+``$XDG_CACHE_HOME/parso`` is used instead of the default one.
+"""
+
 # for fast_parser, should not be deleted
 parser_cache = {}
 
@@ -54,7 +72,7 @@ class _NodeCacheItem(object):
         self.change_time = change_time
 
 
-def load_module(grammar, path):
+def load_module(grammar, path, cache_path=None):
     """
     Returns a module or None, if it fails.
     """
@@ -69,14 +87,11 @@ def load_module(grammar, path):
         if p_time <= module_cache_item.change_time:
             return module_cache_item.node
     except KeyError:
-        if not settings.use_filesystem_cache:
-            return None
-
-        return _load_from_file_system(grammar, path, p_time)
+        return _load_from_file_system(grammar, path, p_time, cache_path=cache_path)
 
 
-def _load_from_file_system(grammar, path, p_time):
-    cache_path = _get_hashed_path(grammar, path)
+def _load_from_file_system(grammar, path, p_time, cache_path=None):
+    cache_path = _get_hashed_path(grammar, path, cache_path=cache_path)
     try:
         try:
             if p_time > os.path.getmtime(cache_path):
@@ -103,7 +118,7 @@ def _load_from_file_system(grammar, path, p_time):
         return module_cache_item.node
 
 
-def save_module(grammar, path, module, lines, pickling=True):
+def save_module(grammar, path, module, lines, pickling=True, cache_path=None):
     try:
         p_time = None if path is None else os.path.getmtime(path)
     except OSError:
@@ -112,13 +127,9 @@ def save_module(grammar, path, module, lines, pickling=True):
 
     item = _NodeCacheItem(module, lines, p_time)
     parser_cache[path] = item
-    if settings.use_filesystem_cache and pickling and path is not None:
-        _save_to_file_system(grammar, path, item)
-
-
-def _save_to_file_system(grammar, path, item):
-    with open(_get_hashed_path(grammar, path), 'wb') as f:
-        pickle.dump(item, f, pickle.HIGHEST_PROTOCOL)
+    if pickling and path is not None:
+        with open(_get_hashed_path(grammar, path, cache_path=cache_path), 'wb') as f:
+            pickle.dump(item, f, pickle.HIGHEST_PROTOCOL)
 
 
 def remove_old_modules(self):
@@ -129,19 +140,23 @@ def remove_old_modules(self):
     """
 
 
-def clear_cache(self):
-    shutil.rmtree(settings.cache_directory)
+def clear_cache(cache_path=None):
+    if cache_path is None:
+        cache_path = _default_cache_path
+    shutil.rmtree(cache_path)
     parser_cache.clear()
 
 
-def _get_hashed_path(grammar, path):
+def _get_hashed_path(grammar, path, cache_path=None):
     file_hash = hashlib.sha256(path.encode("utf-8")).hexdigest()
     directory = _get_cache_directory_path()
     return os.path.join(directory, '%s-%s.pkl' % (grammar.sha256, file_hash))
 
 
-def _get_cache_directory_path():
-    directory = os.path.join(settings.cache_directory, _VERSION_TAG)
+def _get_cache_directory_path(cache_path=None):
+    if cache_path is None:
+        cache_path = _default_cache_path
+    directory = os.path.join(cache_path, _VERSION_TAG)
     if not os.path.exists(directory):
         os.makedirs(directory)
     return directory
