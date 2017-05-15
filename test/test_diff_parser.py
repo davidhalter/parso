@@ -1,12 +1,10 @@
 from textwrap import dedent
+import logging
 
 import pytest
 
-import jedi
-from jedi import debug
 from parso.utils import splitlines
-from jedi import cache
-from parso.cache import parser_cache
+from parso import cache
 from parso.python import load_grammar
 from parso.python.diff import DiffParser
 from parso.python import parse
@@ -45,14 +43,14 @@ class Differ(object):
     grammar = load_grammar()
 
     def initialize(self, code):
-        debug.dbg('differ: initialize', color='YELLOW')
+        logging.debug('differ: initialize')
         self.lines = splitlines(code, keepends=True)
-        parser_cache.pop(None, None)
+        cache.parser_cache.pop(None, None)
         self.module = parse(code, diff_cache=True, cache=True)
         return self.module
 
     def parse(self, code, copies=0, parsers=0, expect_error_leaves=False):
-        debug.dbg('differ: parse copies=%s parsers=%s', copies, parsers, color='YELLOW')
+        logging.debug('differ: parse copies=%s parsers=%s', copies, parsers)
         lines = splitlines(code, keepends=True)
         diff_parser = DiffParser(self.grammar, self.module)
         new_module = diff_parser.update(self.lines, lines)
@@ -384,38 +382,6 @@ def test_node_insertion(differ):
 
     differ.initialize(code1)
     differ.parse(code2, parsers=1, copies=2)
-
-
-def test_add_to_end():
-    """
-    fast_parser doesn't parse everything again. It just updates with the
-    help of caches, this is an example that didn't work.
-    """
-
-    a = dedent("""\
-    class Abc():
-        def abc(self):
-            self.x = 3
-
-    class Two(Abc):
-        def g(self):
-            self
-    """)      # ^ here is the first completion
-
-    b = "    def h(self):\n" \
-        "        self."
-
-    def complete(code, line=None, column=None):
-        script = jedi.Script(code, line, column, 'example.py')
-        assert script.completions()
-        _assert_valid_graph(script._get_module())
-
-    complete(a, 7, 12)
-    complete(a + b)
-
-    a = a[:-1] + '.\n'
-    complete(a, 7, 13)
-    complete(a + b)
 
 
 def test_whitespace_at_end(differ):
