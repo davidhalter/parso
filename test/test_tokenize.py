@@ -22,6 +22,7 @@ def test_end_pos_one_line():
     string = simple_stmt.children[0].get_rhs()
     assert string.end_pos == (3, 14)
 
+
 def test_end_pos_multi_line():
     parsed = parse(dedent('''
     def testit():
@@ -32,6 +33,7 @@ def test_end_pos_multi_line():
     string_leaf = expr_stmt.get_rhs().children[0]
     assert string_leaf.end_pos == (4, 11)
 
+
 def test_simple_no_whitespace():
     # Test a simple one line string, no preceding whitespace
     simple_docstring = '"""simple one line docstring"""'
@@ -40,6 +42,7 @@ def test_simple_no_whitespace():
     _, value, _, prefix = token_list[0]
     assert prefix == ''
     assert value == '"""simple one line docstring"""'
+
 
 def test_simple_with_whitespace():
     # Test a simple one line string with preceding whitespace and newline
@@ -54,6 +57,7 @@ def test_simple_with_whitespace():
     typ, value, start_pos, prefix = token_list[2]
     assert prefix == ' '
     assert typ == NEWLINE
+
 
 def test_function_whitespace():
     # Test function definition whitespace identification
@@ -79,6 +83,7 @@ def test_function_whitespace():
         if value == 'if':
             assert prefix == '    '
 
+
 def test_tokenize_multiline_I():
     # Make sure multiline string having newlines have the end marker on the
     # next line
@@ -87,6 +92,7 @@ def test_tokenize_multiline_I():
     token_list = list(tokens)
     assert token_list == [TokenInfo(ERRORTOKEN, '""""\n', (1, 0), ''),
                           TokenInfo(ENDMARKER ,       '', (2, 0), '')]
+
 
 def test_tokenize_multiline_II():
     # Make sure multiline string having no newlines have the end marker on
@@ -97,6 +103,7 @@ def test_tokenize_multiline_II():
     assert token_list == [TokenInfo(ERRORTOKEN, '""""', (1, 0), ''),
                           TokenInfo(ENDMARKER,      '', (1, 4), '')]
 
+
 def test_tokenize_multiline_III():
     # Make sure multiline string having newlines have the end marker on the
     # next line even if several newline
@@ -105,6 +112,7 @@ def test_tokenize_multiline_III():
     token_list = list(tokens)
     assert token_list == [TokenInfo(ERRORTOKEN, '""""\n\n', (1, 0), ''),
                           TokenInfo(ENDMARKER,          '', (3, 0), '')]
+
 
 def test_identifier_contains_unicode():
     fundef = dedent('''
@@ -120,6 +128,7 @@ def test_identifier_contains_unicode():
         # Unicode tokens in Python 2 seem to be identified as operators.
         # They will be ignored in the parser, that's ok.
         assert unicode_token[0] == OP
+
 
 def test_quoted_strings():
     string_tokens = [
