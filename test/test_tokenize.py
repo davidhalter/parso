@@ -9,139 +9,135 @@ from parso import tokenize
 from parso.python import parse
 from parso.tokenize import TokenInfo
 
-from .helpers import unittest
-
 def _get_token_list(string):
     return list(tokenize.source_tokens(string))
 
 
-class TokenTest(unittest.TestCase):
-    def test_end_pos_one_line(self):
-        parsed = parse(dedent('''
-        def testit():
-            a = "huhu"
-        '''))
-        simple_stmt = next(parsed.iter_funcdefs()).get_suite().children[-1]
-        string = simple_stmt.children[0].get_rhs()
-        assert string.end_pos == (3, 14)
+def test_end_pos_one_line():
+    parsed = parse(dedent('''
+    def testit():
+        a = "huhu"
+    '''))
+    simple_stmt = next(parsed.iter_funcdefs()).get_suite().children[-1]
+    string = simple_stmt.children[0].get_rhs()
+    assert string.end_pos == (3, 14)
 
-    def test_end_pos_multi_line(self):
-        parsed = parse(dedent('''
-        def testit():
-            a = """huhu
-        asdfasdf""" + "h"
-        '''))
-        expr_stmt = next(parsed.iter_funcdefs()).get_suite().children[1].children[0]
-        string_leaf = expr_stmt.get_rhs().children[0]
-        assert string_leaf.end_pos == (4, 11)
+def test_end_pos_multi_line():
+    parsed = parse(dedent('''
+    def testit():
+        a = """huhu
+    asdfasdf""" + "h"
+    '''))
+    expr_stmt = next(parsed.iter_funcdefs()).get_suite().children[1].children[0]
+    string_leaf = expr_stmt.get_rhs().children[0]
+    assert string_leaf.end_pos == (4, 11)
 
-    def test_simple_no_whitespace(self):
-        # Test a simple one line string, no preceding whitespace
-        simple_docstring = '"""simple one line docstring"""'
-        tokens = tokenize.source_tokens(simple_docstring)
-        token_list = list(tokens)
-        _, value, _, prefix = token_list[0]
-        assert prefix == ''
-        assert value == '"""simple one line docstring"""'
+def test_simple_no_whitespace():
+    # Test a simple one line string, no preceding whitespace
+    simple_docstring = '"""simple one line docstring"""'
+    tokens = tokenize.source_tokens(simple_docstring)
+    token_list = list(tokens)
+    _, value, _, prefix = token_list[0]
+    assert prefix == ''
+    assert value == '"""simple one line docstring"""'
 
-    def test_simple_with_whitespace(self):
-        # Test a simple one line string with preceding whitespace and newline
-        simple_docstring = '  """simple one line docstring""" \r\n'
-        tokens = tokenize.source_tokens(simple_docstring)
-        token_list = list(tokens)
-        assert token_list[0][0] == INDENT
-        typ, value, start_pos, prefix = token_list[1]
-        assert prefix == '  '
-        assert value == '"""simple one line docstring"""'
-        assert typ == STRING
-        typ, value, start_pos, prefix = token_list[2]
-        assert prefix == ' '
-        assert typ == NEWLINE
+def test_simple_with_whitespace():
+    # Test a simple one line string with preceding whitespace and newline
+    simple_docstring = '  """simple one line docstring""" \r\n'
+    tokens = tokenize.source_tokens(simple_docstring)
+    token_list = list(tokens)
+    assert token_list[0][0] == INDENT
+    typ, value, start_pos, prefix = token_list[1]
+    assert prefix == '  '
+    assert value == '"""simple one line docstring"""'
+    assert typ == STRING
+    typ, value, start_pos, prefix = token_list[2]
+    assert prefix == ' '
+    assert typ == NEWLINE
 
-    def test_function_whitespace(self):
-        # Test function definition whitespace identification
-        fundef = dedent('''
-        def test_whitespace(*args, **kwargs):
-            x = 1
-            if x > 0:
-                print(True)
-        ''')
-        tokens = tokenize.source_tokens(fundef)
-        token_list = list(tokens)
-        for _, value, _, prefix in token_list:
-            if value == 'test_whitespace':
-                assert prefix == ' '
-            if value == '(':
-                assert prefix == ''
-            if value == '*':
-                assert prefix == ''
-            if value == '**':
-                assert prefix == ' '
-            if value == 'print':
-                assert prefix == '        '
-            if value == 'if':
-                assert prefix == '    '
+def test_function_whitespace():
+    # Test function definition whitespace identification
+    fundef = dedent('''
+    def test_whitespace(*args, **kwargs):
+        x = 1
+        if x > 0:
+            print(True)
+    ''')
+    tokens = tokenize.source_tokens(fundef)
+    token_list = list(tokens)
+    for _, value, _, prefix in token_list:
+        if value == 'test_whitespace':
+            assert prefix == ' '
+        if value == '(':
+            assert prefix == ''
+        if value == '*':
+            assert prefix == ''
+        if value == '**':
+            assert prefix == ' '
+        if value == 'print':
+            assert prefix == '        '
+        if value == 'if':
+            assert prefix == '    '
 
-    def test_tokenize_multiline_I(self):
-        # Make sure multiline string having newlines have the end marker on the
-        # next line
-        fundef = '''""""\n'''
-        tokens = tokenize.source_tokens(fundef)
-        token_list = list(tokens)
-        assert token_list == [TokenInfo(ERRORTOKEN, '""""\n', (1, 0), ''),
-                              TokenInfo(ENDMARKER ,       '', (2, 0), '')]
+def test_tokenize_multiline_I():
+    # Make sure multiline string having newlines have the end marker on the
+    # next line
+    fundef = '''""""\n'''
+    tokens = tokenize.source_tokens(fundef)
+    token_list = list(tokens)
+    assert token_list == [TokenInfo(ERRORTOKEN, '""""\n', (1, 0), ''),
+                          TokenInfo(ENDMARKER ,       '', (2, 0), '')]
 
-    def test_tokenize_multiline_II(self):
-        # Make sure multiline string having no newlines have the end marker on
-        # same line
-        fundef = '''""""'''
-        tokens = tokenize.source_tokens(fundef)
-        token_list = list(tokens)
-        assert token_list == [TokenInfo(ERRORTOKEN, '""""', (1, 0), ''),
-                              TokenInfo(ENDMARKER,      '', (1, 4), '')]
+def test_tokenize_multiline_II():
+    # Make sure multiline string having no newlines have the end marker on
+    # same line
+    fundef = '''""""'''
+    tokens = tokenize.source_tokens(fundef)
+    token_list = list(tokens)
+    assert token_list == [TokenInfo(ERRORTOKEN, '""""', (1, 0), ''),
+                          TokenInfo(ENDMARKER,      '', (1, 4), '')]
 
-    def test_tokenize_multiline_III(self):
-        # Make sure multiline string having newlines have the end marker on the
-        # next line even if several newline
-        fundef = '''""""\n\n'''
-        tokens = tokenize.source_tokens(fundef)
-        token_list = list(tokens)
-        assert token_list == [TokenInfo(ERRORTOKEN, '""""\n\n', (1, 0), ''),
-                              TokenInfo(ENDMARKER,          '', (3, 0), '')]
+def test_tokenize_multiline_III():
+    # Make sure multiline string having newlines have the end marker on the
+    # next line even if several newline
+    fundef = '''""""\n\n'''
+    tokens = tokenize.source_tokens(fundef)
+    token_list = list(tokens)
+    assert token_list == [TokenInfo(ERRORTOKEN, '""""\n\n', (1, 0), ''),
+                          TokenInfo(ENDMARKER,          '', (3, 0), '')]
 
-    def test_identifier_contains_unicode(self):
-        fundef = dedent('''
-        def 我あφ():
-            pass
-        ''')
-        tokens = tokenize.source_tokens(fundef)
-        token_list = list(tokens)
-        unicode_token = token_list[1]
-        if py_version >= 30:
-            assert unicode_token[0] == NAME
-        else:
-            # Unicode tokens in Python 2 seem to be identified as operators.
-            # They will be ignored in the parser, that's ok.
-            assert unicode_token[0] == OP
+def test_identifier_contains_unicode():
+    fundef = dedent('''
+    def 我あφ():
+        pass
+    ''')
+    tokens = tokenize.source_tokens(fundef)
+    token_list = list(tokens)
+    unicode_token = token_list[1]
+    if py_version >= 30:
+        assert unicode_token[0] == NAME
+    else:
+        # Unicode tokens in Python 2 seem to be identified as operators.
+        # They will be ignored in the parser, that's ok.
+        assert unicode_token[0] == OP
 
-    def test_quoted_strings(self):
+def test_quoted_strings():
+    string_tokens = [
+        'u"test"',
+        'u"""test"""',
+        'U"""test"""',
+        "u'''test'''",
+        "U'''test'''",
+    ]
 
-        string_tokens = [
-            'u"test"',
-            'u"""test"""',
-            'U"""test"""',
-            "u'''test'''",
-            "U'''test'''",
-        ]
-
-        for s in string_tokens:
-            module = parse('''a = %s\n''' % s)
-            simple_stmt = module.children[0]
-            expr_stmt = simple_stmt.children[0]
-            assert len(expr_stmt.children) == 3
-            string_tok = expr_stmt.children[2]
-            assert string_tok.type == 'string'
-            assert string_tok.value == s
+    for s in string_tokens:
+        module = parse('''a = %s\n''' % s)
+        simple_stmt = module.children[0]
+        expr_stmt = simple_stmt.children[0]
+        assert len(expr_stmt.children) == 3
+        string_tok = expr_stmt.children[2]
+        assert string_tok.type == 'string'
+        assert string_tok.value == s
 
 
 def test_ur_literals():
