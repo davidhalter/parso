@@ -8,20 +8,8 @@ from parso import cache
 
 collect_ignore = ["setup.py"]
 
-
-def pytest_addoption(parser):
-    parser.addoption("--warning-is-error", action='store_true',
-                     help="Warnings are treated as errors.")
-
-
-def pytest_configure(config):
-    if config.option.warning_is_error:
-        import warnings
-        warnings.simplefilter("error")
-
-
 @pytest.fixture(scope='session')
-def clean_parso_cache(request):
+def clean_parso_cache():
     """
     Set the default cache directory to a temporary directory during tests.
 
@@ -35,7 +23,6 @@ def clean_parso_cache(request):
     tmp = tempfile.mkdtemp(prefix='parso-test-')
     cache._default_cache_path = tmp
 
-    @request.addfinalizer
-    def restore():
-        cache._default_cache_path = old
-        shutil.rmtree(tmp)
+    yield
+    cache._default_cache_path = old
+    shutil.rmtree(tmp)
