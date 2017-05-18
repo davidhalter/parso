@@ -178,3 +178,8 @@ def test_open_string_literal(code):
     module = parse(code)
     assert module.get_code() == code
     assert module.end_pos == end_pos == module.children[1].end_pos
+
+
+def test_too_many_params():
+    with pytest.raises(TypeError):
+        parse('asdf', hello=3)

@@ -47,9 +47,7 @@ def load_grammar(version=None):
             return load_grammar()
 
 
-def parse(code=None, path=None, grammar=None, error_recovery=True,
-          start_symbol='file_input', cache=False, diff_cache=False,
-          cache_path=None):
+def parse(code=None, **kwargs):
     """
     If you want to parse a Python file you want to start here, most likely.
 
@@ -70,6 +68,21 @@ def parse(code=None, path=None, grammar=None, error_recovery=True,
 
     :return: A syntax tree node. Typically the module.
     """
+    # Wanted python3.5 * operator and keyword only arguments.
+    path = kwargs.pop('path', None)
+    grammar = kwargs.pop('grammar', None)
+    error_recovery = kwargs.pop('error_recovery', True)
+    start_symbol = kwargs.pop('start_symbol', 'file_input')
+    cache = kwargs.pop('cache', False)
+    diff_cache = kwargs.pop('diff_cache', False)
+    cache_path = kwargs.pop('cache_path', None)
+
+    if kwargs:
+        raise TypeError(
+            "parse() got an unexpected keyword argument '%s'"
+            % next(iter(kwargs)))
+
+    # Start with actual code.
     if code is None and path is None:
         raise TypeError("Please provide either code or a path.")
 
