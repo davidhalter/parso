@@ -88,16 +88,17 @@ def parse(code=None, path=None, grammar=None, error_recovery=True,
         with open(path, 'rb') as f:
             code = source_to_unicode(f.read())
 
+    lines = tokenize_lines = splitlines(code, keepends=True)
     if diff_cache:
         try:
             module_cache_item = parser_cache[path]
         except KeyError:
             pass
         else:
-            lines = splitlines(code, keepends=True)
             module_node = module_cache_item.node
             old_lines = module_cache_item.lines
             if old_lines == lines:
+                # TODO remove this line? I think it's not needed. (dave)
                 save_module(grammar, path, module_node, lines, pickling=False,
                             cache_path=cache_path)
                 return module_node
@@ -110,7 +111,6 @@ def parse(code=None, path=None, grammar=None, error_recovery=True,
                         cache_path=cache_path)
             return new_node
 
-    lines = tokenize_lines = splitlines(code, keepends=True)
     added_newline = not code.endswith('\n')
     if added_newline:
         code += '\n'
