@@ -76,8 +76,10 @@ def parse(code=None, path=None, grammar=None, error_recovery=True,
     if grammar is None:
         grammar = load_grammar()
 
-    if cache and not code and path is not None:
-        # In this case we do actual caching. We just try to load it.
+    if cache and code is None and path is not None:
+        # With the current architecture we cannot load from cache if the
+        # code is given, because we just load from cache if it's not older than
+        # the latest change (file last modified).
         module_node = load_module(grammar, path, cache_path=cache_path)
         if module_node is not None:
             return module_node
@@ -108,8 +110,8 @@ def parse(code=None, path=None, grammar=None, error_recovery=True,
                         cache_path=cache_path)
             return new_node
 
-    added_newline = not code.endswith('\n')
     lines = tokenize_lines = splitlines(code, keepends=True)
+    added_newline = not code.endswith('\n')
     if added_newline:
         code += '\n'
         tokenize_lines = list(tokenize_lines)
