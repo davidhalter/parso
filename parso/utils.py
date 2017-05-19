@@ -1,6 +1,8 @@
 import re
 from ast import literal_eval
 
+from parso._compatibility import unicode
+
 
 def splitlines(string, keepends=False):
     """
