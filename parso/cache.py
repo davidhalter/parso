@@ -128,8 +128,12 @@ def save_module(grammar, path, module, lines, pickling=True, cache_path=None):
     item = _NodeCacheItem(module, lines, p_time)
     parser_cache[path] = item
     if pickling and path is not None:
-        with open(_get_hashed_path(grammar, path, cache_path=cache_path), 'wb') as f:
-            pickle.dump(item, f, pickle.HIGHEST_PROTOCOL)
+        _save_to_file_system(grammar, path, item)
+
+
+def _save_to_file_system(grammar, path, item, cache_path=None):
+    with open(_get_hashed_path(grammar, path, cache_path=cache_path), 'wb') as f:
+        pickle.dump(item, f, pickle.HIGHEST_PROTOCOL)
 
 
 def remove_old_modules(self):
