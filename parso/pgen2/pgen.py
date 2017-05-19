@@ -14,10 +14,10 @@ class ParserGenerator(object):
     def __init__(self, bnf_text):
         self._bnf_text = bnf_text
         self.generator = tokenize.source_tokens(bnf_text)
-        self.gettoken()  # Initialize lookahead
-        self.dfas, self.startsymbol = self.parse()
+        self._gettoken()  # Initialize lookahead
+        self.dfas, self.startsymbol = self._parse()
         self.first = {}  # map from symbol name to set of tokens
-        self.addfirstsets()
+        self._addfirstsets()
 
     def make_grammar(self):
         c = grammar.Grammar(self._bnf_text)
@@ -35,25 +35,25 @@ class ParserGenerator(object):
             for state in dfa:
                 arcs = []
                 for label, next in state.arcs.items():
-                    arcs.append((self.make_label(c, label), dfa.index(next)))
+                    arcs.append((self._make_label(c, label), dfa.index(next)))
                 if state.isfinal:
                     arcs.append((0, dfa.index(state)))
                 states.append(arcs)
             c.states.append(states)
-            c.dfas[c.symbol2number[name]] = (states, self.make_first(c, name))
+            c.dfas[c.symbol2number[name]] = (states, self._make_first(c, name))
         c.start = c.symbol2number[self.startsymbol]
         return c
 
-    def make_first(self, c, name):
+    def _make_first(self, c, name):
         rawfirst = self.first[name]
         first = {}
         for label in rawfirst:
-            ilabel = self.make_label(c, label)
+            ilabel = self._make_label(c, label)
             ##assert ilabel not in first # XXX failed on <> ... !=
             first[ilabel] = 1
         return first
 
-    def make_label(self, c, label):
+    def _make_label(self, c, label):
         # XXX Maybe this should be a method on a subclass of converter?
         ilabel = len(c.labels)
         if label[0].isalpha():
@@ -99,15 +99,15 @@ class ParserGenerator(object):
                     c.tokens[itoken] = ilabel
                     return ilabel
 
-    def addfirstsets(self):
+    def _addfirstsets(self):
         names = list(self.dfas.keys())
         names.sort()
         for name in names:
             if name not in self.first:
-                self.calcfirst(name)
+                self._calcfirst(name)
             #print name, self.first[name].keys()
 
-    def calcfirst(self, name):
+    def _calcfirst(self, name):
         dfa = self.dfas[name]
         self.first[name] = None  # dummy to detect left recursion
         state = dfa[0]
@@ -120,7 +120,7 @@ class ParserGenerator(object):
                     if fset is None:
                         raise ValueError("recursion for rule %r" % name)
                 else:
-                    self.calcfirst(label)
+                    self._calcfirst(label)
                     fset = self.first[label]
                 totalset.update(fset)
                 overlapcheck[label] = fset
@@ -137,23 +137,23 @@ class ParserGenerator(object):
                 inverse[symbol] = label
         self.first[name] = totalset
 
-    def parse(self):
+    def _parse(self):
         dfas = {}
         startsymbol = None
         # MSTART: (NEWLINE | RULE)* ENDMARKER
         while self.type != token.ENDMARKER:
             while self.type == token.NEWLINE:
-                self.gettoken()
+                self._gettoken()
             # RULE: NAME ':' RHS NEWLINE
-            name = self.expect(token.NAME)
-            self.expect(token.OP, ":")
-            a, z = self.parse_rhs()
-            self.expect(token.NEWLINE)
-            #self.dump_nfa(name, a, z)
-            dfa = self.make_dfa(a, z)
-            #self.dump_dfa(name, dfa)
+            name = self._expect(token.NAME)
+            self._expect(token.OP, ":")
+            a, z = self._parse_rhs()
+            self._expect(token.NEWLINE)
+            #self._dump_nfa(name, a, z)
+            dfa = self._make_dfa(a, z)
+            #self._dump_dfa(name, dfa)
             # oldlen = len(dfa)
-            self.simplify_dfa(dfa)
+            self._simplify_dfa(dfa)
             # newlen = len(dfa)
             dfas[name] = dfa
             #print name, oldlen, newlen
@@ -161,7 +161,7 @@ class ParserGenerator(object):
                 startsymbol = name
         return dfas, startsymbol
 
-    def make_dfa(self, start, finish):
+    def _make_dfa(self, start, finish):
         # To turn an NFA into a DFA, we define the states of the DFA
         # to correspond to *sets* of states of the NFA.  Then do some
         # state reduction.  Let's represent sets as dicts with 1 for
@@ -200,7 +200,7 @@ class ParserGenerator(object):
                 state.addarc(st, label)
         return states  # List of DFAState instances; first one is start
 
-    def dump_nfa(self, name, start, finish):
+    def _dump_nfa(self, name, start, finish):
         print("Dump of NFA for", name)
         todo = [start]
         for i, state in enumerate(todo):
@@ -216,14 +216,14 @@ class ParserGenerator(object):
                 else:
                     print("    %s -> %d" % (label, j))
 
-    def dump_dfa(self, name, dfa):
+    def _dump_dfa(self, name, dfa):
         print("Dump of DFA for", name)
         for i, state in enumerate(dfa):
             print("  State", i, state.isfinal and "(final)" or "")
             for label, next in state.arcs.items():
                 print("    %s -> %d" % (label, dfa.index(next)))
 
-    def simplify_dfa(self, dfa):
+    def _simplify_dfa(self, dfa):
         # This is not theoretically optimal, but works well enough.
         # Algorithm: repeatedly look for two states that have the same
         # set of arcs (same labels pointing to the same nodes) and
@@ -244,9 +244,9 @@ class ParserGenerator(object):
                         changes = True
                         break
 
-    def parse_rhs(self):
+    def _parse_rhs(self):
         # RHS: ALT ('|' ALT)*
-        a, z = self.parse_alt()
+        a, z = self._parse_alt()
         if self.value != "|":
             return a, z
         else:
@@ -255,75 +255,75 @@ class ParserGenerator(object):
             aa.addarc(a)
             z.addarc(zz)
             while self.value == "|":
-                self.gettoken()
-                a, z = self.parse_alt()
+                self._gettoken()
+                a, z = self._parse_alt()
                 aa.addarc(a)
                 z.addarc(zz)
             return aa, zz
 
-    def parse_alt(self):
+    def _parse_alt(self):
         # ALT: ITEM+
-        a, b = self.parse_item()
+        a, b = self._parse_item()
         while (self.value in ("(", "[") or
                self.type in (token.NAME, token.STRING)):
-            c, d = self.parse_item()
+            c, d = self._parse_item()
             b.addarc(c)
             b = d
         return a, b
 
-    def parse_item(self):
+    def _parse_item(self):
         # ITEM: '[' RHS ']' | ATOM ['+' | '*']
         if self.value == "[":
-            self.gettoken()
-            a, z = self.parse_rhs()
-            self.expect(token.OP, "]")
+            self._gettoken()
+            a, z = self._parse_rhs()
+            self._expect(token.OP, "]")
             a.addarc(z)
             return a, z
         else:
-            a, z = self.parse_atom()
+            a, z = self._parse_atom()
             value = self.value
             if value not in ("+", "*"):
                 return a, z
-            self.gettoken()
+            self._gettoken()
             z.addarc(a)
             if value == "+":
                 return a, z
             else:
                 return a, a
 
-    def parse_atom(self):
+    def _parse_atom(self):
         # ATOM: '(' RHS ')' | NAME | STRING
         if self.value == "(":
-            self.gettoken()
-            a, z = self.parse_rhs()
-            self.expect(token.OP, ")")
+            self._gettoken()
+            a, z = self._parse_rhs()
+            self._expect(token.OP, ")")
             return a, z
         elif self.type in (token.NAME, token.STRING):
             a = NFAState()
             z = NFAState()
             a.addarc(z, self.value)
-            self.gettoken()
+            self._gettoken()
             return a, z
         else:
-            self.raise_error("expected (...) or NAME or STRING, got %s/%s",
-                             self.type, self.value)
+            self._raise_error("expected (...) or NAME or STRING, got %s/%s",
+                              self.type, self.value)
 
-    def expect(self, type, value=None):
+    def _expect(self, type, value=None):
         if self.type != type or (value is not None and self.value != value):
-            self.raise_error("expected %s/%s, got %s/%s",
-                             type, value, self.type, self.value)
+            self._raise_error("expected %s/%s, got %s/%s",
+                              type, value, self.type, self.value)
         value = self.value
-        self.gettoken()
+        self._gettoken()
         return value
 
-    def gettoken(self):
+    def _gettoken(self):
         tup = next(self.generator)
         while tup[0] in (token.COMMENT, token.NL):
             tup = next(self.generator)
         self.type, self.value, self.begin, prefix = tup
         #print tokenize.tok_name[self.type], repr(self.value)
 
-    def raise_error(self, msg, *args):
+    def _raise_error(self, msg, *args):
         if args:
             try:
                 msg = msg % args
