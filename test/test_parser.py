@@ -21,36 +21,34 @@ def test_basic_parsing():
     compare('assert foo\n')
 
 
-class TestSubscopes():
-    def get_sub(self, source):
+def test_subscope_names():
+    def get_sub(source):
         return parse(source).children[0]
 
-    def test_subscope_names(self):
-        name = self.get_sub('class Foo: pass').name
-        assert name.start_pos == (1, len('class '))
-        assert name.end_pos == (1, len('class Foo'))
-        assert name.value == 'Foo'
+    name = get_sub('class Foo: pass').name
+    assert name.start_pos == (1, len('class '))
+    assert name.end_pos == (1, len('class Foo'))
+    assert name.value == 'Foo'
 
-        name = self.get_sub('def foo(): pass').name
-        assert name.start_pos == (1, len('def '))
-        assert name.end_pos == (1, len('def foo'))
-        assert name.value == 'foo'
+    name = get_sub('def foo(): pass').name
+    assert name.start_pos == (1, len('def '))
+    assert name.end_pos == (1, len('def foo'))
+    assert name.value == 'foo'
 
 
-class TestImports():
-    def get_import(self, source):
+def test_import_names():
+    def get_import(source):
         return next(parse(source).iter_imports())
 
-    def test_import_names(self):
-        imp = self.get_import(u('import math\n'))
-        names = imp.get_defined_names()
-        assert len(names) == 1
-        assert names[0].value == 'math'
-        assert names[0].start_pos == (1, len('import '))
-        assert names[0].end_pos == (1, len('import math'))
+    imp = get_import('import math\n')
+    names = imp.get_defined_names()
+    assert len(names) == 1
+    assert names[0].value == 'math'
+    assert names[0].start_pos == (1, len('import '))
+    assert names[0].end_pos == (1, len('import math'))
 
-        assert imp.start_pos == (1, 0)
-        assert imp.end_pos == (1, len('import math'))
+    assert imp.start_pos == (1, 0)
+    assert imp.end_pos == (1, len('import math'))
 
 
 def test_end_pos():
