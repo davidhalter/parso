@@ -11,7 +11,7 @@ from collections import namedtuple
 import logging
 
 from parso.utils import splitlines
-from parso.python.parser import Parser, _remove_last_newline
+from parso.python.parser import Parser, remove_last_newline
 from parso.python.tree import EndMarker
 from parso.tokenize import (generate_tokens, NEWLINE, TokenInfo,
                             ENDMARKER, INDENT, DEDENT)
@@ -160,7 +160,7 @@ class DiffParser(object):
         self._nodes_stack.close()
 
         if self._added_newline:
-            _remove_last_newline(self._module)
+            remove_last_newline(self._module)
 
         last_pos = self._module.end_pos[0]
         if last_pos != line_length:

@@ -195,7 +195,7 @@ class Parser(BaseParser):
             yield typ, value, start_pos, prefix
 
 
-def _remove_last_newline(node):
+def remove_last_newline(node):
     endmarker = node.children[-1]
     # The newline is either in the endmarker as a prefix or the previous
     # leaf as a newline token.

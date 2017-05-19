@@ -6,7 +6,7 @@ import os
 from parso.utils import splitlines, source_to_unicode
 from parso._compatibility import FileNotFoundError
 from parso.pgen2.pgen import generate_grammar
-from parso.python.parser import Parser, _remove_last_newline
+from parso.python.parser import Parser, remove_last_newline
 from parso.python.diff import DiffParser
 from parso.tokenize import generate_tokens
 from parso.cache import parser_cache, load_module, save_module
@@ -136,7 +136,7 @@ def parse(code=None, **kwargs):
     p = Parser(grammar, error_recovery=error_recovery, start_symbol=start_symbol)
     root_node = p.parse(tokens=tokens)
     if added_newline:
-        _remove_last_newline(root_node)
+        remove_last_newline(root_node)
 
     if cache or diff_cache:
         save_module(grammar, path, root_node, lines, pickling=cache,
