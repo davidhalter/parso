@@ -152,8 +152,9 @@ def clear_cache(cache_path=None):
 
 
 def _get_hashed_path(grammar, path, cache_path=None):
+    directory = _get_cache_directory_path(cache_path=cache_path)
+
     file_hash = hashlib.sha256(path.encode("utf-8")).hexdigest()
-    directory = _get_cache_directory_path()
     return os.path.join(directory, '%s-%s.pkl' % (grammar.sha256, file_hash))
 
 

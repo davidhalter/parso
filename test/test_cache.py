@@ -23,7 +23,7 @@ def isolated_jedi_cache(monkeypatch, tmpdir):
     monkeypatch.setattr(cache, '_default_cache_path', str(tmpdir))
 
 
-def test_modulepickling_change_cache_dir(monkeypatch, tmpdir):
+def test_modulepickling_change_cache_dir(tmpdir):
     """
     ParserPickling should not save old cache when cache_directory is changed.
 
@@ -37,22 +37,20 @@ def test_modulepickling_change_cache_dir(monkeypatch, tmpdir):
     path_1 = 'fake path 1'
     path_2 = 'fake path 2'
 
-    monkeypatch.setattr(cache, '_default_cache_path', dir_1)
     grammar = load_grammar()
-    _save_to_file_system(grammar, path_1, item_1)
+    _save_to_file_system(grammar, path_1, item_1, cache_path=dir_1)
     parser_cache.clear()
-    cached = load_stored_item(grammar, path_1, item_1)
+    cached = load_stored_item(grammar, path_1, item_1, cache_path=dir_1)
     assert cached == item_1.node
 
-    monkeypatch.setattr(cache, '_default_cache_path', dir_2)
-    _save_to_file_system(grammar, path_2, item_2)
-    cached = load_stored_item(grammar, path_1, item_1)
+    _save_to_file_system(grammar, path_2, item_2, cache_path=dir_2)
+    cached = load_stored_item(grammar, path_1, item_1, cache_path=dir_2)
     assert cached is None
 
 
-def load_stored_item(grammar, path, item):
+def load_stored_item(grammar, path, item, cache_path):
     """Load `item` stored at `path` in `cache`."""
-    item = _load_from_file_system(grammar, path, item.change_time - 1)
+    item = _load_from_file_system(grammar, path, item.change_time - 1, cache_path)
     return item
 
 
