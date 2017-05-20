@@ -17,7 +17,7 @@ def test_splitlines_keepends():
     assert splitlines('\n', keepends=True) == ['\n', '']
 
 
-def test_source_to_unicode_unicode_text(self):
+def test_source_to_unicode_unicode_text():
     source = (
         b"# vim: fileencoding=utf-8\n"
         b"# \xe3\x81\x82\xe3\x81\x84\xe3\x81\x86\xe3\x81\x88\xe3\x81\x8a\n"
