@@ -3,7 +3,7 @@
 set -eu -o pipefail
 
 # Create tag
-git tag $(python -c 'import parso; print(parso.__version__)')
+git tag v$(python -c 'import parso; print(parso.__version__)')
 git push --tags
 
 # Package and upload to PyPI
