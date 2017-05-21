@@ -34,24 +34,24 @@ def _ends_with_newline(leaf, suffix=''):
     return typ == 'newline' or suffix.endswith('\n')
 
 
-def _flows_finished(grammar, stack):
+def _flows_finished(pgen_grammar, stack):
     """
     if, while, for and try might not be finished, because another part might
     still be parsed.
     """
     for dfa, newstate, (symbol_number, nodes) in stack:
-        if grammar.number2symbol[symbol_number] in ('if_stmt', 'while_stmt',
+        if pgen_grammar.number2symbol[symbol_number] in ('if_stmt', 'while_stmt',
                                                     'for_stmt', 'try_stmt'):
             return False
     return True
 
 
-def suite_or_file_input_is_valid(grammar, stack):
-    if not _flows_finished(grammar, stack):
+def suite_or_file_input_is_valid(pgen_grammar, stack):
+    if not _flows_finished(pgen_grammar, stack):
         return False
 
     for dfa, newstate, (symbol_number, nodes) in reversed(stack):
-        if grammar.number2symbol[symbol_number] == 'suite':
+        if pgen_grammar.number2symbol[symbol_number] == 'suite':
             # If only newline is in the suite, the suite is not valid, yet.
             return len(nodes) > 1
     # Not reaching a suite means that we're dealing with file_input levels
@@ -89,8 +89,8 @@ class DiffParser(object):
     An advanced form of parsing a file faster. Unfortunately comes with huge
     side effects. It changes the given module.
     """
-    def __init__(self, grammar, module):
-        self._grammar = grammar
+    def __init__(self, pgen_grammar, module):
+        self._pgen_grammar = pgen_grammar
         self._module = module
 
     def _reset(self):
@@ -299,7 +299,7 @@ class DiffParser(object):
             line_offset=parsed_until_line
         )
         self._active_parser = Parser(
-            self._grammar,
+            self._pgen_grammar,
             error_recovery=True
         )
         return self._active_parser.parse(tokens=tokens)
@@ -338,7 +338,7 @@ class DiffParser(object):
             elif typ == NEWLINE and start_pos[0] >= until_line:
                 yield TokenInfo(typ, string, start_pos, prefix)
                 # Check if the parser is actually in a valid suite state.
-                if suite_or_file_input_is_valid(self._grammar, stack):
+                if suite_or_file_input_is_valid(self._pgen_grammar, stack):
                     start_pos = start_pos[0] + 1, 0
                     while len(indents) > int(omitted_first_indent):
                         indents.pop()
