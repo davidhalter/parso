@@ -8,7 +8,7 @@ import pytest
 
 from parso.cache import _NodeCacheItem, save_module, load_module, \
     _get_hashed_path, parser_cache, _load_from_file_system, _save_to_file_system
-from parso.python import load_grammar
+from parso import load_python_grammar
 from parso import cache
 
 
@@ -37,7 +37,7 @@ def test_modulepickling_change_cache_dir(tmpdir):
     path_1 = 'fake path 1'
     path_2 = 'fake path 2'
 
-    grammar = load_grammar()
+    grammar = load_python_grammar()
     _save_to_file_system(grammar, path_1, item_1, cache_path=dir_1)
     parser_cache.clear()
     cached = load_stored_item(grammar, path_1, item_1, cache_path=dir_1)
@@ -69,7 +69,7 @@ def test_modulepickling_simulate_deleted_cache(tmpdir):
 
     __ https://developer.apple.com/library/content/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html
     """
-    grammar = load_grammar()
+    grammar = load_python_grammar()
     module = 'fake parser'
 
     # Create the file

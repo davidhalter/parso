@@ -5,7 +5,7 @@ import pytest
 
 from parso.utils import splitlines
 from parso import cache
-from parso.python import load_grammar
+from parso import load_python_grammar
 from parso.python.diff import DiffParser
 from parso.python import parse
 
@@ -40,7 +40,7 @@ def _assert_valid_graph(node):
 
 
 class Differ(object):
-    grammar = load_grammar()
+    grammar = load_python_grammar()
 
     def initialize(self, code):
         logging.debug('differ: initialize')
@@ -52,7 +52,7 @@ class Differ(object):
     def parse(self, code, copies=0, parsers=0, expect_error_leaves=False):
         logging.debug('differ: parse copies=%s parsers=%s', copies, parsers)
         lines = splitlines(code, keepends=True)
-        diff_parser = DiffParser(self.grammar, self.module)
+        diff_parser = DiffParser(self.grammar._pgen_grammar, self.module)
         new_module = diff_parser.update(self.lines, lines)
         self.lines = lines
         assert code == new_module.get_code()

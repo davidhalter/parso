@@ -9,14 +9,15 @@ test_grammar.py files from both Python 2 and Python 3.
 from textwrap import dedent
 
 from parso._compatibility import py_version
-from parso.python import parse as _parse, load_grammar
+from parso import load_python_grammar
+from parso.python import parse as _parse
 from parso import ParserSyntaxError
 import pytest
 
 
 def parse(code, version='3.4'):
     code = dedent(code) + "\n\n"
-    grammar = load_grammar(version=version)
+    grammar = load_python_grammar(version=version)
     return _parse(code, grammar=grammar, error_recovery=False)
 
 

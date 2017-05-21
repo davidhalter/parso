@@ -1,50 +1,11 @@
 """
 Parsers for Python
 """
-import os
-
 from parso.utils import splitlines, source_to_unicode
-from parso._compatibility import FileNotFoundError
-from parso.pgen2.pgen import generate_grammar
 from parso.python.parser import Parser, remove_last_newline
 from parso.python.diff import DiffParser
 from parso.tokenize import generate_tokens
 from parso.cache import parser_cache, load_module, save_module
-
-
-_loaded_grammars = {}
-
-
-def load_grammar(version=None):
-    """
-    Loads a Python grammar. The default version is always the latest.
-
-    If you need support for a specific version, please use e.g.
-    `version='3.3'`.
-    """
-    if version is None:
-        version = '3.6'
-
-    if version in ('3.2', '3.3'):
-        version = '3.4'
-    elif version == '2.6':
-        version = '2.7'
-
-    file = 'grammar' + version + '.txt'
-
-    global _loaded_grammars
-    path = os.path.join(os.path.dirname(__file__), file)
-    try:
-        return _loaded_grammars[path]
-    except KeyError:
-        try:
-            with open(path) as f:
-                bnf_text = f.read()
-            grammar = generate_grammar(bnf_text)
-            return _loaded_grammars.setdefault(path, grammar)
-        except FileNotFoundError:
-            # Just load the default if the file does not exist.
-            return load_grammar()
 
 
 def parse(code=None, **kwargs):
@@ -78,7 +39,8 @@ def parse(code=None, **kwargs):
             raise TypeError("Please provide either code or a path.")
 
         if grammar is None:
-            grammar = load_grammar()
+            from parso import load_python_grammar
+            grammar = load_python_grammar()
 
         if cache and code is None and path is not None:
             # With the current architecture we cannot load from cache if the
@@ -124,7 +86,7 @@ def parse(code=None, **kwargs):
 
         tokens = generate_tokens(tokenize_lines, use_exact_op_types=True)
 
-        p = Parser(grammar, error_recovery=error_recovery, start_symbol=start_symbol)
+        p = Parser(grammar._pgen_grammar, error_recovery=error_recovery, start_symbol=start_symbol)
         root_node = p.parse(tokens=tokens)
         if added_newline:
             remove_last_newline(root_node)
