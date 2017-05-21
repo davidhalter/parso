@@ -8,7 +8,7 @@ from parso.tokenize import generate_tokens
 from parso.python.parser import Parser
 
 
-__version__ = '0.0.1'
+__version__ = '0.0.2'
 
 _loaded_grammars = {}
 
