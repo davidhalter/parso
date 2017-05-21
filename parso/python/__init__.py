@@ -68,77 +68,69 @@ def parse(code=None, **kwargs):
 
     :return: A syntax tree node. Typically the module.
     """
-    # Wanted python3.5 * operator and keyword only arguments.
-    path = kwargs.pop('path', None)
-    grammar = kwargs.pop('grammar', None)
-    error_recovery = kwargs.pop('error_recovery', True)
-    start_symbol = kwargs.pop('start_symbol', 'file_input')
-    cache = kwargs.pop('cache', False)
-    diff_cache = kwargs.pop('diff_cache', False)
-    cache_path = kwargs.pop('cache_path', None)
+    # Wanted python3.5 * operator and keyword only arguments. Therefore just
+    # wrap it all.
+    def _parse(code=None, path=None, grammar=None, error_recovery=True,
+          start_symbol='file_input', cache=False, diff_cache=False,
+          cache_path=None):
 
-    if kwargs:
-        raise TypeError(
-            "parse() got an unexpected keyword argument '%s'"
-            % next(iter(kwargs)))
+        if code is None and path is None:
+            raise TypeError("Please provide either code or a path.")
 
-    # Start with actual code.
-    if code is None and path is None:
-        raise TypeError("Please provide either code or a path.")
+        if grammar is None:
+            grammar = load_grammar()
 
-    if grammar is None:
-        grammar = load_grammar()
-
-    if cache and code is None and path is not None:
-        # With the current architecture we cannot load from cache if the
-        # code is given, because we just load from cache if it's not older than
-        # the latest change (file last modified).
-        module_node = load_module(grammar, path, cache_path=cache_path)
-        if module_node is not None:
-            return module_node
-
-    if code is None:
-        with open(path, 'rb') as f:
-            code = source_to_unicode(f.read())
-
-    lines = tokenize_lines = splitlines(code, keepends=True)
-    if diff_cache:
-        try:
-            module_cache_item = parser_cache[path]
-        except KeyError:
-            pass
-        else:
-            module_node = module_cache_item.node
-            old_lines = module_cache_item.lines
-            if old_lines == lines:
-                # TODO remove this line? I think it's not needed. (dave)
-                save_module(grammar, path, module_node, lines, pickling=False,
-                            cache_path=cache_path)
+        if cache and code is None and path is not None:
+            # With the current architecture we cannot load from cache if the
+            # code is given, because we just load from cache if it's not older than
+            # the latest change (file last modified).
+            module_node = load_module(grammar, path, cache_path=cache_path)
+            if module_node is not None:
                 return module_node
 
-            new_node = DiffParser(grammar, module_node).update(
-                old_lines=old_lines,
-                new_lines=lines
-            )
-            save_module(grammar, path, new_node, lines, pickling=cache,
+        if code is None:
+            with open(path, 'rb') as f:
+                code = source_to_unicode(f.read())
+
+        lines = tokenize_lines = splitlines(code, keepends=True)
+        if diff_cache:
+            try:
+                module_cache_item = parser_cache[path]
+            except KeyError:
+                pass
+            else:
+                module_node = module_cache_item.node
+                old_lines = module_cache_item.lines
+                if old_lines == lines:
+                    # TODO remove this line? I think it's not needed. (dave)
+                    save_module(grammar, path, module_node, lines, pickling=False,
+                                cache_path=cache_path)
+                    return module_node
+
+                new_node = DiffParser(grammar, module_node).update(
+                    old_lines=old_lines,
+                    new_lines=lines
+                )
+                save_module(grammar, path, new_node, lines, pickling=cache,
+                            cache_path=cache_path)
+                return new_node
+
+        added_newline = not code.endswith('\n')
+        if added_newline:
+            code += '\n'
+            tokenize_lines = list(tokenize_lines)
+            tokenize_lines[-1] += '\n'
+            tokenize_lines.append('')
+
+        tokens = generate_tokens(tokenize_lines, use_exact_op_types=True)
+
+        p = Parser(grammar, error_recovery=error_recovery, start_symbol=start_symbol)
+        root_node = p.parse(tokens=tokens)
+        if added_newline:
+            remove_last_newline(root_node)
+
+        if cache or diff_cache:
+            save_module(grammar, path, root_node, lines, pickling=cache,
                         cache_path=cache_path)
-            return new_node
-
-    added_newline = not code.endswith('\n')
-    if added_newline:
-        code += '\n'
-        tokenize_lines = list(tokenize_lines)
-        tokenize_lines[-1] += '\n'
-        tokenize_lines.append('')
-
-    tokens = generate_tokens(tokenize_lines, use_exact_op_types=True)
-
-    p = Parser(grammar, error_recovery=error_recovery, start_symbol=start_symbol)
-    root_node = p.parse(tokens=tokens)
-    if added_newline:
-        remove_last_newline(root_node)
-
-    if cache or diff_cache:
-        save_module(grammar, path, root_node, lines, pickling=cache,
-                    cache_path=cache_path)
-    return root_node
+        return root_node
+    return _parse(code=code, **kwargs)
