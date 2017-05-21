@@ -9,7 +9,7 @@ class Grammar(object):
         self._parser = parser
         self._tokenizer = tokenizer
         self._diff_parser = diff_parser
-        self.sha256 = hashlib.sha256(bnf_text.encode("utf-8")).hexdigest()
+        self._sha256 = hashlib.sha256(bnf_text.encode("utf-8")).hexdigest()
 
     def __repr__(self):
         labels = self._pgen_grammar.symbol2number.values()

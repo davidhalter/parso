@@ -155,7 +155,7 @@ def _get_hashed_path(grammar, path, cache_path=None):
     directory = _get_cache_directory_path(cache_path=cache_path)
 
     file_hash = hashlib.sha256(path.encode("utf-8")).hexdigest()
-    return os.path.join(directory, '%s-%s.pkl' % (grammar.sha256, file_hash))
+    return os.path.join(directory, '%s-%s.pkl' % (grammar._sha256, file_hash))
 
 
 def _get_cache_directory_path(cache_path=None):
