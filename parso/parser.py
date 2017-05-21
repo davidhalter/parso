@@ -38,15 +38,15 @@ class BaseParser(object):
     }
     default_leaf = tree.Leaf
 
-    def __init__(self, grammar, start_symbol='file_input', error_recovery=False):
-        self._grammar = grammar
+    def __init__(self, pgen_grammar, start_symbol='file_input', error_recovery=False):
+        self._pgen_grammar = pgen_grammar
         self._start_symbol = start_symbol
         self._error_recovery = error_recovery
 
     def parse(self, tokens):
-        start_number = self._grammar.symbol2number[self._start_symbol]
+        start_number = self._pgen_grammar.symbol2number[self._start_symbol]
         self.pgen_parser = PgenParser(
-            self._grammar, self.convert_node, self.convert_leaf,
+            self._pgen_grammar, self.convert_node, self.convert_leaf,
             self.error_recovery, start_number
         )
 
@@ -55,22 +55,22 @@ class BaseParser(object):
         del self.pgen_parser
         return node
 
-    def error_recovery(self, grammar, stack, arcs, typ, value, start_pos, prefix,
+    def error_recovery(self, pgen_grammar, stack, arcs, typ, value, start_pos, prefix,
                        add_token_callback):
         if self._error_recovery:
             raise NotImplementedError("Error Recovery is not implemented")
         else:
             raise ParserSyntaxError('SyntaxError: invalid syntax', start_pos)
 
-    def convert_node(self, grammar, type_, children):
+    def convert_node(self, pgen_grammar, type_, children):
         # TODO REMOVE symbol, we don't want type here.
-        symbol = grammar.number2symbol[type_]
+        symbol = pgen_grammar.number2symbol[type_]
         try:
             return self.node_map[symbol](children)
         except KeyError:
             return self.default_node(symbol, children)
 
-    def convert_leaf(self, grammar, type_, value, prefix, start_pos):
+    def convert_leaf(self, pgen_grammar, type_, value, prefix, start_pos):
         try:
             return self.leaf_map[type_](value, start_pos, prefix)
         except KeyError:

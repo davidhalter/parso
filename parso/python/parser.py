@@ -11,7 +11,7 @@ class Parser(BaseParser):
     This class is used to parse a Python file, it then divides them into a
     class structure of different scopes.
 
-    :param grammar: The grammar object of pgen2. Loaded by load_grammar.
+    :param pgen_grammar: The grammar object of pgen2. Loaded by load_grammar.
     """
 
     node_map = {
@@ -45,8 +45,8 @@ class Parser(BaseParser):
     }
     default_node = tree.PythonNode
 
-    def __init__(self, grammar, error_recovery=True, start_symbol='file_input'):
-        super(Parser, self).__init__(grammar, start_symbol, error_recovery=error_recovery)
+    def __init__(self, pgen_grammar, error_recovery=True, start_symbol='file_input'):
+        super(Parser, self).__init__(pgen_grammar, start_symbol, error_recovery=error_recovery)
 
         self.syntax_errors = []
         self._omit_dedent_list = []
@@ -75,14 +75,14 @@ class Parser(BaseParser):
             # If there's only one statement, we get back a non-module. That's
             # not what we want, we want a module, so we add it here:
             node = self.convert_node(
-                self._grammar,
-                self._grammar.symbol2number['file_input'],
+                self._pgen_grammar,
+                self._pgen_grammar.symbol2number['file_input'],
                 [node]
             )
 
         return node
 
-    def convert_node(self, grammar, type, children):
+    def convert_node(self, pgen_grammar, type, children):
         """
         Convert raw node information to a PythonBaseNode instance.
 
@@ -91,7 +91,7 @@ class Parser(BaseParser):
         strictly bottom-up.
         """
         # TODO REMOVE symbol, we don't want type here.
-        symbol = grammar.number2symbol[type]
+        symbol = pgen_grammar.number2symbol[type]
         try:
             return self.node_map[symbol](children)
         except KeyError:
@@ -103,10 +103,10 @@ class Parser(BaseParser):
                 children = [children[0]] + children[2:-1]
             return self.default_node(symbol, children)
 
-    def convert_leaf(self, grammar, type, value, prefix, start_pos):
+    def convert_leaf(self, pgen_grammar, type, value, prefix, start_pos):
         # print('leaf', repr(value), token.tok_name[type])
         if type == tokenize.NAME:
-            if value in grammar.keywords:
+            if value in pgen_grammar.keywords:
                 return tree.Keyword(value, start_pos, prefix)
             else:
                 return tree.Name(value, start_pos, prefix)
@@ -121,7 +121,7 @@ class Parser(BaseParser):
         else:
             return tree.Operator(value, start_pos, prefix)
 
-    def error_recovery(self, grammar, stack, arcs, typ, value, start_pos, prefix,
+    def error_recovery(self, pgen_grammar, stack, arcs, typ, value, start_pos, prefix,
                        add_token_callback):
         """
         This parser is written in a dynamic way, meaning that this parser
@@ -130,7 +130,7 @@ class Parser(BaseParser):
         """
         if not self._error_recovery:
             return super(Parser, self).error_recovery(
-                grammar, stack, arcs, typ, value, start_pos, prefix,
+                pgen_grammar, stack, arcs, typ, value, start_pos, prefix,
                 add_token_callback)
 
         def current_suite(stack):
@@ -138,7 +138,7 @@ class Parser(BaseParser):
             # file_input, if we detect an error.
             for index, (dfa, state, (type_, nodes)) in reversed(list(enumerate(stack))):
                 # `suite` can sometimes be only simple_stmt, not stmt.
-                symbol = grammar.number2symbol[type_]
+                symbol = pgen_grammar.number2symbol[type_]
                 if symbol == 'file_input':
                     break
                 elif symbol == 'suite' and len(nodes) > 1:
@@ -149,7 +149,7 @@ class Parser(BaseParser):
         index, symbol, nodes = current_suite(stack)
 
         # print('err', token.tok_name[typ], repr(value), start_pos, len(stack), index)
-        if self._stack_removal(grammar, stack, arcs, index + 1, value, start_pos):
+        if self._stack_removal(pgen_grammar, stack, arcs, index + 1, value, start_pos):
             add_token_callback(typ, value, start_pos, prefix)
         else:
             if typ == INDENT:
@@ -160,7 +160,7 @@ class Parser(BaseParser):
                 error_leaf = tree.PythonErrorLeaf(tok_name[typ].lower(), value, start_pos, prefix)
                 stack[-1][2][1].append(error_leaf)
 
-    def _stack_removal(self, grammar, stack, arcs, start_index, value, start_pos):
+    def _stack_removal(self, pgen_grammar, stack, arcs, start_index, value, start_pos):
         failed_stack = []
         found = False
         all_nodes = []
@@ -168,7 +168,7 @@ class Parser(BaseParser):
             if nodes:
                 found = True
             if found:
-                symbol = grammar.number2symbol[typ]
+                symbol = pgen_grammar.number2symbol[typ]
                 failed_stack.append((symbol, nodes))
                 all_nodes += nodes
         if failed_stack:
