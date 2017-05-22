@@ -114,7 +114,7 @@ def test_param_splitting():
     def check(src, result):
         # Python 2 tuple params should be ignored for now.
         grammar = load_python_grammar('%s.%s' % sys.version_info[:2])
-        m = parse(src, grammar=grammar)
+        m = grammar.parse(src)
         if py_version >= 30:
             assert not list(m.iter_funcdefs())
         else:

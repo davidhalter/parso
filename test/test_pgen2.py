@@ -10,7 +10,6 @@ from textwrap import dedent
 
 from parso._compatibility import py_version
 from parso import load_python_grammar
-from parso.python import parse as _parse
 from parso import ParserSyntaxError
 import pytest
 
@@ -18,7 +17,7 @@ import pytest
 def parse(code, version='3.4'):
     code = dedent(code) + "\n\n"
     grammar = load_python_grammar(version=version)
-    return _parse(code, grammar=grammar, error_recovery=False)
+    return grammar.parse(code, error_recovery=False)
 
 
 def test_formfeed():
