@@ -76,8 +76,7 @@ class Grammar(object):
                                 cache_path=cache_path)
                     return module_node
 
-                # TODO I think it's wrong that we have self here.
-                new_node = DiffParser(self, module_node).update(
+                new_node = DiffParser(self._pgen_grammar, module_node).update(
                     old_lines=old_lines,
                     new_lines=lines
                 )

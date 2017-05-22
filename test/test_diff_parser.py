@@ -10,6 +10,15 @@ from parso.python.diff import DiffParser
 from parso.python import parse
 
 
+def test_simple():
+    """
+    The diff parser reuses modules. So check for that.
+    """
+    grammar = load_python_grammar()
+    module_a = grammar.parse('a', diff_cache=True)
+    assert grammar.parse('b', diff_cache=True) == module_a
+
+
 def _check_error_leaves_nodes(node):
     if node.type in ('error_leaf', 'error_node'):
         return True
