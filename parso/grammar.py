@@ -14,9 +14,6 @@ from parso.python.parser import Parser as PythonParser
 _loaded_grammars = {}
 
 
-
-
-
 class Grammar(object):
     def __init__(self, bnf_text, tokenizer, parser, diff_parser=None):
         self._pgen_grammar = generate_grammar(bnf_text)
