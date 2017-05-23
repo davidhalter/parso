@@ -2,10 +2,10 @@ import os
 
 from parso._compatibility import FileNotFoundError
 from parso.parser import ParserSyntaxError
-from parso import python
 from parso import grammar
 from parso.tokenize import generate_tokens
-from parso.python.parser import Parser
+from parso.parser import BaseParser
+from parso.python.parser import Parser as PythonParser
 
 
 __version__ = '0.0.2'
@@ -13,16 +13,11 @@ __version__ = '0.0.2'
 _loaded_grammars = {}
 
 
-def parse(grammar, code):
-    raise NotImplementedError
-    Parser(grammar, code)
-
-
-def create_grammar(text, tokenizer=generate_tokens):
+def create_grammar(text, tokenizer=generate_tokens, parser=BaseParser):
     """
     :param text: A BNF representation of your grammar.
     """
-    return grammar.Grammar(text, tokenizer, parser=None)
+    return grammar.Grammar(text, tokenizer=tokenizer, parser=parser)
 
 
 def load_python_grammar(version=None):
@@ -50,7 +45,7 @@ def load_python_grammar(version=None):
         try:
             with open(path) as f:
                 bnf_text = f.read()
-            grammar = create_grammar(bnf_text)
+            grammar = create_grammar(bnf_text, parser=PythonParser)
             return _loaded_grammars.setdefault(path, grammar)
         except FileNotFoundError:
             # Just load the default if the file does not exist.
