@@ -1,11 +1,20 @@
 import hashlib
+import os
 
+from parso._compatibility import FileNotFoundError
 from parso.pgen2.pgen import generate_grammar
 from parso.utils import splitlines, source_to_unicode
 from parso.python.parser import Parser, remove_last_newline
 from parso.python.diff import DiffParser
 from parso.tokenize import generate_tokens
 from parso.cache import parser_cache, load_module, save_module
+from parso.parser import BaseParser
+from parso.python.parser import Parser as PythonParser
+
+_loaded_grammars = {}
+
+
+
 
 
 class Grammar(object):
@@ -116,3 +125,42 @@ class Grammar(object):
         labels = self._pgen_grammar.symbol2number.values()
         txt = ' '.join(list(labels)[:3]) + ' ...'
         return '<%s:%s>' % (self.__class__.__name__, txt)
+
+
+def create_grammar(text, tokenizer=generate_tokens, parser=BaseParser):
+    """
+    :param text: A BNF representation of your grammar.
+    """
+    return grammar.Grammar(text, tokenizer=tokenizer, parser=parser)
+
+
+def load_python_grammar(version=None):
+    """
+    Loads a Python grammar. The default version is always the latest.
+
+    If you need support for a specific version, please use e.g.
+    `version='3.3'`.
+    """
+    if version is None:
+        version = '3.6'
+
+    if version in ('3.2', '3.3'):
+        version = '3.4'
+    elif version == '2.6':
+        version = '2.7'
+
+    file = 'python/grammar' + version + '.txt'
+
+    global _loaded_grammars
+    path = os.path.join(os.path.dirname(__file__), file)
+    try:
+        return _loaded_grammars[path]
+    except KeyError:
+        try:
+            with open(path) as f:
+                bnf_text = f.read()
+            grammar = create_grammar(bnf_text, parser=PythonParser)
+            return _loaded_grammars.setdefault(path, grammar)
+        except FileNotFoundError:
+            # Just load the default if the file does not exist.
+            return load_python_grammar()
