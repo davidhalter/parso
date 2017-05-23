@@ -23,17 +23,24 @@ class Grammar(object):
         If you need finer grained control over the parsed instance, there will be
         other ways to access it.
 
-        :param code: A unicode string that contains Python code.
-        :param path: The path to the file you want to open. Only needed for caching.
-        :param grammar: A Python grammar file, created with load_grammar. You may
-            not specify it. In that case it's the current Python version.
-        :param error_recovery: If enabled, any code will be returned. If it is
-            invalid, it will be returned as an error node. If disabled, you will
-            get a ParseError when encountering syntax errors in your code.
-        :param start_symbol: The grammar symbol that you want to parse. Only
+        :param code str: A unicode string that contains Python code.
+        :param path str: The path to the file you want to open. Only needed for caching.
+        :param error_recovery bool: If enabled, any code will be returned. If
+            it is invalid, it will be returned as an error node. If disabled,
+            you will get a ParseError when encountering syntax errors in your
+            code.
+        :param start_symbol str: The grammar symbol that you want to parse. Only
             allowed to be used when error_recovery is disabled.
-        :param cache_path: If given saves the parso cache in this directory. If not
-            given, defaults to the default cache places on each platform.
+        :param cache bool: A Python grammar file, created with load_grammar.
+            You may not specify it. In that case it's the current Python version.
+        :param diff_cache bool: Diffs the cached python module against the new
+            code and tries to parse only the parts that have changed. Returns
+            the same (changed) module that is found in cache. Using this option
+            requires you to not do anything anymore with the old cached module,
+            because the contents of it might have changed.
+        :param cache_path bool: If given saves the parso cache in this
+            directory. If not given, defaults to the default cache places on
+            each platform.
 
         :return: A syntax tree node. Typically the module.
         """
@@ -48,6 +55,8 @@ class Grammar(object):
         """
         if code is None and path is None:
             raise TypeError("Please provide either code or a path.")
+        if error_recovery and start_symbol:
+            raise NotImplementedError("This is currently not implemented.")
 
         if cache and code is None and path is not None:
             # With the current architecture we cannot load from cache if the
