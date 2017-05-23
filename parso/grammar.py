@@ -128,7 +128,7 @@ def create_grammar(text, tokenizer=generate_tokens, parser=BaseParser):
     """
     :param text: A BNF representation of your grammar.
     """
-    return grammar.Grammar(text, tokenizer=tokenizer, parser=parser)
+    return Grammar(text, tokenizer=tokenizer, parser=parser)
 
 
 def load_python_grammar(version=None):
