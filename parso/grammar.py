@@ -30,7 +30,7 @@ class Grammar(object):
             you will get a ParseError when encountering syntax errors in your
             code.
         :param start_symbol str: The grammar symbol that you want to parse. Only
-            allowed to be used when error_recovery is disabled.
+            allowed to be used when error_recovery is False.
         :param cache bool: A Python grammar file, created with load_grammar.
             You may not specify it. In that case it's the current Python version.
         :param diff_cache bool: Diffs the cached python module against the new
@@ -55,7 +55,7 @@ class Grammar(object):
         """
         if code is None and path is None:
             raise TypeError("Please provide either code or a path.")
-        if error_recovery and start_symbol:
+        if error_recovery and start_symbol != 'file_input':
             raise NotImplementedError("This is currently not implemented.")
 
         if cache and code is None and path is not None:
