@@ -1,3 +1,4 @@
+from collections import namedtuple
 import re
 from ast import literal_eval
 
@@ -73,3 +74,14 @@ def source_to_unicode(source, encoding=None):
         encoding = unicode(encoding, 'utf-8', 'replace')
     # cast to unicode by default
     return unicode(source, encoding, 'replace')
+
+
+def version_info():
+    """
+    Returns a namedtuple of parso's version, similar to Python's
+    ``sys.version_info``.
+    """
+    Version = namedtuple('Version', 'major, minor, micro')
+    from parso import __version__
+    tupl = re.findall('[a-z]+|\d+', __version__)
+    return Version(*[x if i == 3 else int(x) for i, x in enumerate(tupl)])
