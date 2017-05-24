@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 
 from __future__ import with_statement
-from setuptools import setup
+
+from setuptools import setup, find_packages
+
+import parso
 
 
 __AUTHOR__ = 'David Halter'
 __AUTHOR_EMAIL__ = 'davidhalter88@gmail.com'
 
 readme = open('README.rst').read() + '\n\n' + open('CHANGELOG.rst').read()
-packages = ['parso', 'parso.pgen2', 'parso.python']
-
-import parso
 
 setup(name='parso',
       version=parso.__version__,
@@ -24,7 +24,7 @@ setup(name='parso',
       license='MIT',
       keywords='python parser parsing',
       long_description=readme,
-      packages=packages,
+      packages=find_packages(exclude=['test']),
       package_data={'parso': ['python/grammar*.txt']},
       platforms=['any'],
       classifiers=[
