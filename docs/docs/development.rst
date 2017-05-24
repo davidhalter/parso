@@ -35,4 +35,3 @@ easy as::
 
 Tests are also run automatically on `Travis CI
 <https://travis-ci.org/davidhalter/parso/>`_.
-
