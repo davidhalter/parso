@@ -4,7 +4,7 @@ from textwrap import dedent
 
 import pytest
 
-from parso.python import parse
+from parso import parse
 from parso.python import tree
 
 

@@ -2,7 +2,7 @@ import difflib
 
 import pytest
 
-from parso.python import parse
+from parso import parse
 
 code_basic_features = '''
 """A mod docstring"""

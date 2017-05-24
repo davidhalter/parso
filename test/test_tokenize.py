@@ -6,7 +6,7 @@ from parso._compatibility import py_version
 from parso.utils import splitlines
 from parso.token import NAME, OP, NEWLINE, STRING, INDENT, ERRORTOKEN, ENDMARKER
 from parso import tokenize
-from parso.python import parse
+from parso import parse
 from parso.tokenize import TokenInfo
 
 def _get_token_list(string):

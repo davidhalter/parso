@@ -9,7 +9,7 @@ However the tests might still be relevant for the parser.
 from textwrap import dedent
 
 from parso._compatibility import u
-from parso.python import parse
+from parso import parse
 
 
 def test_carriage_return_splitting():

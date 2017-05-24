@@ -7,7 +7,7 @@ from parso.utils import splitlines
 from parso import cache
 from parso import load_python_grammar
 from parso.python.diff import DiffParser
-from parso.python import parse
+from parso import parse
 
 
 def test_simple():

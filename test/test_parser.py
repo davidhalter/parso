@@ -5,7 +5,7 @@ from textwrap import dedent
 import pytest
 
 from parso._compatibility import u, py_version
-from parso.python import parse
+from parso import parse
 from parso import load_python_grammar
 from parso.python import tree
 from parso.utils import splitlines

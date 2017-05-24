@@ -20,4 +20,14 @@ PythonNode(simple_stmt, [PythonNode(arith_expr, [...]), <Newline: ''>])
 from parso.parser import ParserSyntaxError
 from parso.grammar import create_grammar, load_python_grammar
 
+
+def parse(code=None, **kwargs):
+    """
+    A utility function to parse Python with the current Python version. Params
+    are documented in ``Grammar.parse``.
+    """
+    grammar = load_python_grammar()
+    return grammar.parse(code, **kwargs)
+
+
 __version__ = '0.0.2'
