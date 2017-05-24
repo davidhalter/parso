@@ -7,7 +7,7 @@ Usage
 ``load_grammar``. Grammars (with a custom tokenizer and custom parser trees)
 can also be created by directly instantiating ``Grammar``. More information
 about the resulting objects can be found in the :ref:`parser tree documentation
-<plugin-api-classes>`.
+<parser-tree>`.
 
 The simplest way of using parso is without even loading a grammar:
 

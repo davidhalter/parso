@@ -6,7 +6,7 @@ from parso._compatibility import unicode
 
 
 def splitlines(string, keepends=False):
-    """
+    r"""
     A splitlines for Python code. In contrast to Python's ``str.splitlines``,
     looks at form feeds and other special characters as normal text. Just
     splits ``\n`` and ``\r\n``.
