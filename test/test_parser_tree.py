@@ -61,3 +61,12 @@ class TestsFunctionAndLambdaParsing(object):
             assert node.annotation is None
         else:
             assert node.annotation.value == expected_annotation
+
+
+def test_end_pos_line():
+    # jedi issue #150
+    s = "x()\nx( )\nx(  )\nx (  )"
+    module = parse(s)
+    for i, simple_stmt in enumerate(module.children[:-1]):
+        expr_stmt = simple_stmt.children[0]
+        assert expr_stmt.end_pos == (i + 1, i + 3)
