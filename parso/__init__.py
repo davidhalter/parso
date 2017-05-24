@@ -21,6 +21,9 @@ from parso.parser import ParserSyntaxError
 from parso.grammar import create_grammar, load_python_grammar
 
 
+__version__ = '0.0.3'
+
+
 def parse(code=None, **kwargs):
     """
     A utility function to parse Python with the current Python version. Params
@@ -28,6 +31,3 @@ def parse(code=None, **kwargs):
     """
     grammar = load_python_grammar()
     return grammar.parse(code, **kwargs)
-
-
-__version__ = '0.0.2'
