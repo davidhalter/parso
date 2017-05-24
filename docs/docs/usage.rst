@@ -9,6 +9,14 @@ can also be created by directly instantiating ``Grammar``. More information
 about the resulting objects can be found in the :ref:`parser tree documentation
 <plugin-api-classes>`.
 
+The simplest way of using parso is without even loading a grammar:
+
+.. sourcecode:: python
+
+   >>> import parso
+   >>> parso.parse('foo + bar')
+   <Module: @1-1>
+
 .. automodule:: parso.grammar
     :members:
     :undoc-members:
