@@ -1,5 +1,6 @@
 import hashlib
 import os
+import sys
 
 from parso._compatibility import FileNotFoundError
 from parso.pgen2.pgen import generate_grammar
@@ -43,8 +44,9 @@ class Grammar(object):
             code.
         :param start_symbol str: The grammar symbol that you want to parse. Only
             allowed to be used when error_recovery is False.
-        :param cache bool: A Python grammar file, created with load_grammar.
-            You may not specify it. In that case it's the current Python version.
+        :param cache bool: Keeps a copy of the parser tree in RAM and on disk
+            if a path is given. Returns the cached trees if the corresponding
+            files on disk have not changed.
         :param diff_cache bool: Diffs the cached python module against the new
             code and tries to parse only the parts that have changed. Returns
             the same (changed) module that is found in cache. Using this option
