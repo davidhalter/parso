@@ -2,8 +2,8 @@
 parso is a Python parser. It's really easy to use and supports multiple Python
 versions, file caching, round-trips and other stuff:
 
->>> from parso import load_python_grammar
->>> grammar = load_python_grammar(version='2.7')
+>>> from parso import load_grammar
+>>> grammar = load_grammar(version='2.7')
 >>> module = grammar.parse('hello + 1')
 >>> stmt = module.children[0]
 >>> stmt
@@ -18,7 +18,7 @@ PythonNode(simple_stmt, [PythonNode(arith_expr, [...]), <Newline: ''>])
 """
 
 from parso.parser import ParserSyntaxError
-from parso.grammar import create_grammar, load_python_grammar
+from parso.grammar import create_grammar, load_grammar
 
 
 __version__ = '0.0.3'
@@ -29,5 +29,5 @@ def parse(code=None, **kwargs):
     A utility function to parse Python with the current Python version. Params
     are documented in ``Grammar.parse``.
     """
-    grammar = load_python_grammar()
+    grammar = load_grammar()
     return grammar.parse(code, **kwargs)

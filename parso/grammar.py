@@ -131,7 +131,7 @@ def create_grammar(text, tokenizer=generate_tokens, parser=BaseParser):
     return Grammar(text, tokenizer=tokenizer, parser=parser)
 
 
-def load_python_grammar(version=None):
+def load_grammar(version=None):
     """
     Loads a Python grammar. The default version is always the latest.
 
@@ -160,4 +160,4 @@ def load_python_grammar(version=None):
             return _loaded_grammars.setdefault(path, grammar)
         except FileNotFoundError:
             # Just load the default if the file does not exist.
-            return load_python_grammar()
+            return load_grammar()

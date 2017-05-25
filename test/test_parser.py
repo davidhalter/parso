@@ -6,7 +6,7 @@ import pytest
 
 from parso._compatibility import u, py_version
 from parso import parse
-from parso import load_python_grammar
+from parso import load_grammar
 from parso.python import tree
 from parso.utils import splitlines
 
@@ -113,7 +113,7 @@ def test_param_splitting():
     """
     def check(src, result):
         # Python 2 tuple params should be ignored for now.
-        grammar = load_python_grammar('%s.%s' % sys.version_info[:2])
+        grammar = load_grammar('%s.%s' % sys.version_info[:2])
         m = grammar.parse(src)
         if py_version >= 30:
             assert not list(m.iter_funcdefs())
@@ -161,10 +161,10 @@ def test_python3_octal():
 def test_load_newer_grammar():
     # This version shouldn't be out for a while, but if we somehow get this it
     # should just take the latest Python grammar.
-    load_python_grammar('15.8')
+    load_grammar('15.8')
     # The same is true for very old grammars (even though this is probably not
     # going to be an issue.
-    load_python_grammar('1.5')
+    load_grammar('1.5')
 
 
 @pytest.mark.parametrize('code', ['foo "', 'foo """\n', 'foo """\nbar'])

@@ -5,7 +5,7 @@ import pytest
 
 from parso.utils import splitlines
 from parso import cache
-from parso import load_python_grammar
+from parso import load_grammar
 from parso.python.diff import DiffParser
 from parso import parse
 
@@ -14,7 +14,7 @@ def test_simple():
     """
     The diff parser reuses modules. So check for that.
     """
-    grammar = load_python_grammar()
+    grammar = load_grammar()
     module_a = grammar.parse('a', diff_cache=True)
     assert grammar.parse('b', diff_cache=True) == module_a
 
@@ -49,7 +49,7 @@ def _assert_valid_graph(node):
 
 
 class Differ(object):
-    grammar = load_python_grammar()
+    grammar = load_grammar()
 
     def initialize(self, code):
         logging.debug('differ: initialize')
