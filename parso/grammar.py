@@ -4,7 +4,7 @@ import os
 from parso._compatibility import FileNotFoundError
 from parso.pgen2.pgen import generate_grammar
 from parso.utils import splitlines, source_to_unicode
-from parso.python.parser import Parser, remove_last_newline
+from parso.python.parser import remove_last_newline
 from parso.python.diff import DiffParser
 from parso.tokenize import generate_tokens
 from parso.cache import parser_cache, load_module, save_module
@@ -15,12 +15,16 @@ _loaded_grammars = {}
 
 
 class Grammar(object):
-    def __init__(self, bnf_text, tokenizer, parser, diff_parser=None):
-        self._pgen_grammar = generate_grammar(bnf_text)
+    """
+    :param text: A BNF representation of your grammar.
+    """
+    def __init__(self, text, tokenizer=generate_tokens, parser=BaseParser,
+                 diff_parser=None):
+        self._pgen_grammar = generate_grammar(text)
         self._parser = parser
         self._tokenizer = tokenizer
         self._diff_parser = diff_parser
-        self._sha256 = hashlib.sha256(bnf_text.encode("utf-8")).hexdigest()
+        self._sha256 = hashlib.sha256(text.encode("utf-8")).hexdigest()
 
     def parse(self, code=None, **kwargs):
         """
@@ -106,9 +110,9 @@ class Grammar(object):
             tokenize_lines[-1] += '\n'
             tokenize_lines.append('')
 
-        tokens = generate_tokens(tokenize_lines, use_exact_op_types=True)
+        tokens = self._tokenizer(tokenize_lines, use_exact_op_types=True)
 
-        p = Parser(self._pgen_grammar, error_recovery=error_recovery, start_symbol=start_symbol)
+        p = self._parser(self._pgen_grammar, error_recovery=error_recovery, start_symbol=start_symbol)
         root_node = p.parse(tokens=tokens)
         if added_newline:
             remove_last_newline(root_node)
@@ -122,13 +126,6 @@ class Grammar(object):
         labels = self._pgen_grammar.symbol2number.values()
         txt = ' '.join(list(labels)[:3]) + ' ...'
         return '<%s:%s>' % (self.__class__.__name__, txt)
-
-
-def create_grammar(text, tokenizer=generate_tokens, parser=BaseParser):
-    """
-    :param text: A BNF representation of your grammar.
-    """
-    return Grammar(text, tokenizer=tokenizer, parser=parser)
 
 
 def load_grammar(version=None):
@@ -156,7 +153,7 @@ def load_grammar(version=None):
         try:
             with open(path) as f:
                 bnf_text = f.read()
-            grammar = create_grammar(bnf_text, parser=PythonParser)
+            grammar = Grammar(bnf_text, parser=PythonParser)
             return _loaded_grammars.setdefault(path, grammar)
         except FileNotFoundError:
             # Just load the default if the file does not exist.
