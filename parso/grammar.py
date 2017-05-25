@@ -82,6 +82,9 @@ class Grammar(object):
 
         lines = tokenize_lines = splitlines(code, keepends=True)
         if diff_cache:
+            if self._diff_parser is None:
+                raise TypeError("You have to define a diff parser to be able "
+                                "to use this option.")
             try:
                 module_cache_item = parser_cache[path]
             except KeyError:
@@ -95,7 +98,7 @@ class Grammar(object):
                                 cache_path=cache_path)
                     return module_node
 
-                new_node = DiffParser(self._pgen_grammar, module_node).update(
+                new_node = self._diff_parser(self._pgen_grammar, module_node).update(
                     old_lines=old_lines,
                     new_lines=lines
                 )
@@ -153,7 +156,7 @@ def load_grammar(version=None):
         try:
             with open(path) as f:
                 bnf_text = f.read()
-            grammar = Grammar(bnf_text, parser=PythonParser)
+            grammar = Grammar(bnf_text, parser=PythonParser, diff_parser=DiffParser)
             return _loaded_grammars.setdefault(path, grammar)
         except FileNotFoundError:
             # Just load the default if the file does not exist.
