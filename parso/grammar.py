@@ -1,8 +1,9 @@
 import hashlib
 import os
 import sys
+import re
 
-from parso._compatibility import FileNotFoundError
+from parso._compatibility import FileNotFoundError, unicode
 from parso.pgen2.pgen import generate_grammar
 from parso.utils import splitlines, source_to_unicode
 from parso.python.parser import remove_last_newline
@@ -135,22 +136,48 @@ class Grammar(object):
         return '<%s:%s>' % (self.__class__.__name__, txt)
 
 
+def _parse_version(version):
+    match = re.match('(\d+)(?:\.(\d)(?:\.\d+)?)?$', version)
+    if match is None:
+        raise ValueError('The given version is not in the right format. '
+                         'Use something like "3.2" or "3".')
+
+    major = match.group(1)
+    minor = match.group(2)
+    if minor is None:
+        # Use the latest Python in case it's not exactly defined, because the
+        # grammars are typically backwards compatible?
+        if major == "2":
+            minor = "7"
+        elif major == "3":
+            minor = "6"
+        else:
+            raise NotImplementedError("Sorry, no support yet for those fancy new/old versions.")
+    return int(major + minor)
+
+
 def load_grammar(version=None):
     """
-    Loads a Python grammar. The default version is always the latest.
+    Loads a Python grammar. The default version is the current Python version.
 
     If you need support for a specific version, please use e.g.
     `version='3.3'`.
     """
     if version is None:
-        version = '3.6'
+        version = '%s.%s' % sys.version_info[:2]
+    if not isinstance(version, (unicode, str)):
+        raise TypeError("version must be a string like 3.2.")
 
-    if version in ('3.2', '3.3'):
-        version = '3.4'
-    elif version == '2.6':
-        version = '2.7'
+    version_int = _parse_version(version)
 
-    file = 'python/grammar' + version + '.txt'
+    # For these versions we use the same grammar files, because nothing
+    # changed.
+    if version_int == 33:
+        version_int = 34
+    elif version_int == 26:
+        version_int = 27
+
+    file = 'python/grammar' + str(version_int) + '.txt'
 
     global _loaded_grammars
     path = os.path.join(os.path.dirname(__file__), file)
@@ -160,8 +187,9 @@ def load_grammar(version=None):
         try:
             with open(path) as f:
                 bnf_text = f.read()
+
             grammar = Grammar(bnf_text, parser=PythonParser, diff_parser=DiffParser)
             return _loaded_grammars.setdefault(path, grammar)
         except FileNotFoundError:
-            # Just load the default if the file does not exist.
-            return load_grammar()
+            message = "Python version %s is currently not supported." % version
+            raise NotImplementedError(message)
