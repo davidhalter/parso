@@ -37,20 +37,20 @@ def test_modulepickling_change_cache_dir(tmpdir):
     path_1 = 'fake path 1'
     path_2 = 'fake path 2'
 
-    grammar = load_grammar()
-    _save_to_file_system(grammar, path_1, item_1, cache_path=dir_1)
+    hashed_grammar = load_grammar()._sha256
+    _save_to_file_system(hashed_grammar, path_1, item_1, cache_path=dir_1)
     parser_cache.clear()
-    cached = load_stored_item(grammar, path_1, item_1, cache_path=dir_1)
+    cached = load_stored_item(hashed_grammar, path_1, item_1, cache_path=dir_1)
     assert cached == item_1.node
 
-    _save_to_file_system(grammar, path_2, item_2, cache_path=dir_2)
-    cached = load_stored_item(grammar, path_1, item_1, cache_path=dir_2)
+    _save_to_file_system(hashed_grammar, path_2, item_2, cache_path=dir_2)
+    cached = load_stored_item(hashed_grammar, path_1, item_1, cache_path=dir_2)
     assert cached is None
 
 
-def load_stored_item(grammar, path, item, cache_path):
+def load_stored_item(hashed_grammar, path, item, cache_path):
     """Load `item` stored at `path` in `cache`."""
-    item = _load_from_file_system(grammar, path, item.change_time - 1, cache_path)
+    item = _load_from_file_system(hashed_grammar, path, item.change_time - 1, cache_path)
     return item
 
 
@@ -77,11 +77,11 @@ def test_modulepickling_simulate_deleted_cache(tmpdir):
     with open(path, 'w'):
         pass
 
-    save_module(grammar, path, module, [])
-    assert load_module(grammar, path) == module
+    save_module(grammar._sha256, path, module, [])
+    assert load_module(grammar._sha256, path) == module
 
-    unlink(_get_hashed_path(grammar, path))
+    unlink(_get_hashed_path(grammar._sha256, path))
     parser_cache.clear()
 
-    cached2 = load_module(grammar, path)
+    cached2 = load_module(grammar._sha256, path)
     assert cached2 is None

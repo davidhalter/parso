@@ -77,7 +77,7 @@ class Grammar(object):
             # With the current architecture we cannot load from cache if the
             # code is given, because we just load from cache if it's not older than
             # the latest change (file last modified).
-            module_node = load_module(self, path, cache_path=cache_path)
+            module_node = load_module(self._sha256, path, cache_path=cache_path)
             if module_node is not None:
                 return module_node
 
@@ -99,7 +99,7 @@ class Grammar(object):
                 old_lines = module_cache_item.lines
                 if old_lines == lines:
                     # TODO remove this line? I think it's not needed. (dave)
-                    save_module(self, path, module_node, lines, pickling=False,
+                    save_module(self._sha256, path, module_node, lines, pickling=False,
                                 cache_path=cache_path)
                     return module_node
 
@@ -107,7 +107,7 @@ class Grammar(object):
                     old_lines=old_lines,
                     new_lines=lines
                 )
-                save_module(self, path, new_node, lines, pickling=cache,
+                save_module(self._sha256, path, new_node, lines, pickling=cache,
                             cache_path=cache_path)
                 return new_node
 
@@ -126,7 +126,7 @@ class Grammar(object):
             remove_last_newline(root_node)
 
         if cache or diff_cache:
-            save_module(self, path, root_node, lines, pickling=cache,
+            save_module(self._sha256, path, root_node, lines, pickling=cache,
                         cache_path=cache_path)
         return root_node
 

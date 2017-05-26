@@ -72,7 +72,7 @@ class _NodeCacheItem(object):
         self.change_time = change_time
 
 
-def load_module(grammar, path, cache_path=None):
+def load_module(grammar_hash, path, cache_path=None):
     """
     Returns a module or None, if it fails.
     """
@@ -87,11 +87,11 @@ def load_module(grammar, path, cache_path=None):
         if p_time <= module_cache_item.change_time:
             return module_cache_item.node
     except KeyError:
-        return _load_from_file_system(grammar, path, p_time, cache_path=cache_path)
+        return _load_from_file_system(grammar_hash, path, p_time, cache_path=cache_path)
 
 
-def _load_from_file_system(grammar, path, p_time, cache_path=None):
-    cache_path = _get_hashed_path(grammar, path, cache_path=cache_path)
+def _load_from_file_system(grammar_hash, path, p_time, cache_path=None):
+    cache_path = _get_hashed_path(grammar_hash, path, cache_path=cache_path)
     try:
         try:
             if p_time > os.path.getmtime(cache_path):
@@ -118,7 +118,7 @@ def _load_from_file_system(grammar, path, p_time, cache_path=None):
         return module_cache_item.node
 
 
-def save_module(grammar, path, module, lines, pickling=True, cache_path=None):
+def save_module(grammar_hash, path, module, lines, pickling=True, cache_path=None):
     try:
         p_time = None if path is None else os.path.getmtime(path)
     except OSError:
@@ -128,11 +128,11 @@ def save_module(grammar, path, module, lines, pickling=True, cache_path=None):
     item = _NodeCacheItem(module, lines, p_time)
     parser_cache[path] = item
     if pickling and path is not None:
-        _save_to_file_system(grammar, path, item)
+        _save_to_file_system(grammar_hash, path, item)
 
 
-def _save_to_file_system(grammar, path, item, cache_path=None):
-    with open(_get_hashed_path(grammar, path, cache_path=cache_path), 'wb') as f:
+def _save_to_file_system(grammar_hash, path, item, cache_path=None):
+    with open(_get_hashed_path(grammar_hash, path, cache_path=cache_path), 'wb') as f:
         pickle.dump(item, f, pickle.HIGHEST_PROTOCOL)
 
 
@@ -151,11 +151,11 @@ def clear_cache(cache_path=None):
     parser_cache.clear()
 
 
-def _get_hashed_path(grammar, path, cache_path=None):
+def _get_hashed_path(grammar_hash, path, cache_path=None):
     directory = _get_cache_directory_path(cache_path=cache_path)
 
     file_hash = hashlib.sha256(path.encode("utf-8")).hexdigest()
-    return os.path.join(directory, '%s-%s.pkl' % (grammar._sha256, file_hash))
+    return os.path.join(directory, '%s-%s.pkl' % (grammar_hash, file_hash))
 
 
 def _get_cache_directory_path(cache_path=None):
