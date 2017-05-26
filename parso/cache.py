@@ -136,14 +136,6 @@ def _save_to_file_system(grammar_hash, path, item, cache_path=None):
         pickle.dump(item, f, pickle.HIGHEST_PROTOCOL)
 
 
-def remove_old_modules(self):
-    """
-    # TODO Might want to use such a function to clean up the cache (if it's
-    # too old). We could potentially also scan for old files in the
-    # directory and delete those.
-    """
-
-
 def clear_cache(cache_path=None):
     if cache_path is None:
         cache_path = _default_cache_path
