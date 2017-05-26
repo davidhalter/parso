@@ -204,13 +204,13 @@ class TokenInfo(namedtuple('Token', ['type', 'string', 'start_pos', 'prefix'])):
             return self.start_pos[0], self.start_pos[1] + len(self.string)
 
 
-def source_tokens(source, use_exact_op_types=False):
+def source_tokens(source, use_exact_op_types=True):
     """Generate tokens from a the source code (string)."""
     lines = splitlines(source, keepends=True)
     return generate_tokens(lines, use_exact_op_types)
 
 
-def generate_tokens(lines, use_exact_op_types=False):
+def generate_tokens(lines, use_exact_op_types=True):
     """
     A heavily modified Python standard library tokenizer.
 

@@ -118,7 +118,7 @@ class Grammar(object):
             tokenize_lines[-1] += '\n'
             tokenize_lines.append('')
 
-        tokens = self._tokenizer(tokenize_lines, use_exact_op_types=True)
+        tokens = self._tokenizer(tokenize_lines)
 
         p = self._parser(self._pgen_grammar, error_recovery=error_recovery, start_symbol=start_symbol)
         root_node = p.parse(tokens=tokens)
