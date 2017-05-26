@@ -13,7 +13,7 @@ from parso import tokenize
 class ParserGenerator(object):
     def __init__(self, bnf_text):
         self._bnf_text = bnf_text
-        self.generator = tokenize.source_tokens(bnf_text, exact_op_types=False)
+        self.generator = tokenize.source_tokens(bnf_text)
         self._gettoken()  # Initialize lookahead
         self.dfas, self.startsymbol = self._parse()
         self.first = {}  # map from symbol name to set of tokens
@@ -146,7 +146,7 @@ class ParserGenerator(object):
                 self._gettoken()
             # RULE: NAME ':' RHS NEWLINE
             name = self._expect(token.NAME)
-            self._expect(token.OP, ":")
+            self._expect(token.COLON)
             a, z = self._parse_rhs()
             self._expect(token.NEWLINE)
             #self._dump_nfa(name, a, z)
@@ -276,7 +276,7 @@ class ParserGenerator(object):
         if self.value == "[":
             self._gettoken()
             a, z = self._parse_rhs()
-            self._expect(token.OP, "]")
+            self._expect(token.RSQB)
             a.addarc(z)
             return a, z
         else:
@@ -296,7 +296,7 @@ class ParserGenerator(object):
         if self.value == "(":
             self._gettoken()
             a, z = self._parse_rhs()
-            self._expect(token.OP, ")")
+            self._expect(token.RPAR)
             return a, z
         elif self.type in (token.NAME, token.STRING):
             a = NFAState()
@@ -308,10 +308,10 @@ class ParserGenerator(object):
             self._raise_error("expected (...) or NAME or STRING, got %s/%s",
                               self.type, self.value)
 
-    def _expect(self, type, value=None):
-        if self.type != type or (value is not None and self.value != value):
-            self._raise_error("expected %s/%s, got %s/%s",
-                              type, value, self.type, self.value)
+    def _expect(self, type):
+        if self.type != type:
+            self._raise_error("expected %s, got %s(%s)",
+                              type, self.type, self.value)
         value = self.value
         self._gettoken()
         return value
