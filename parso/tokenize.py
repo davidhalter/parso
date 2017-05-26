@@ -204,13 +204,13 @@ class TokenInfo(namedtuple('Token', ['type', 'string', 'start_pos', 'prefix'])):
             return self.start_pos[0], self.start_pos[1] + len(self.string)
 
 
-def source_tokens(source):
+def tokenize(code):
     """Generate tokens from a the source code (string)."""
-    lines = splitlines(source, keepends=True)
-    return generate_tokens(lines)
+    lines = splitlines(code, keepends=True)
+    return tokenize_lines(lines)
 
 
-def generate_tokens(lines):
+def tokenize_lines(lines):
     """
     A heavily modified Python standard library tokenizer.
 
@@ -361,5 +361,5 @@ if __name__ == "__main__":
             code = u(f.read())
     else:
         code = u(sys.stdin.read())
-    for token in source_tokens(code):
+    for token in tokenize(code):
         print(token)

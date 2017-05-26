@@ -10,7 +10,7 @@ from parso import parse
 from parso.tokenize import TokenInfo
 
 def _get_token_list(string):
-    return list(tokenize.source_tokens(string))
+    return list(tokenize.tokenize(string))
 
 
 def test_end_pos_one_line():
@@ -37,7 +37,7 @@ def test_end_pos_multi_line():
 def test_simple_no_whitespace():
     # Test a simple one line string, no preceding whitespace
     simple_docstring = '"""simple one line docstring"""'
-    tokens = tokenize.source_tokens(simple_docstring)
+    tokens = tokenize.tokenize(simple_docstring)
     token_list = list(tokens)
     _, value, _, prefix = token_list[0]
     assert prefix == ''
@@ -47,7 +47,7 @@ def test_simple_no_whitespace():
 def test_simple_with_whitespace():
     # Test a simple one line string with preceding whitespace and newline
     simple_docstring = '  """simple one line docstring""" \r\n'
-    tokens = tokenize.source_tokens(simple_docstring)
+    tokens = tokenize.tokenize(simple_docstring)
     token_list = list(tokens)
     assert token_list[0][0] == INDENT
     typ, value, start_pos, prefix = token_list[1]
@@ -67,7 +67,7 @@ def test_function_whitespace():
         if x > 0:
             print(True)
     ''')
-    tokens = tokenize.source_tokens(fundef)
+    tokens = tokenize.tokenize(fundef)
     token_list = list(tokens)
     for _, value, _, prefix in token_list:
         if value == 'test_whitespace':
@@ -88,7 +88,7 @@ def test_tokenize_multiline_I():
     # Make sure multiline string having newlines have the end marker on the
     # next line
     fundef = '''""""\n'''
-    tokens = tokenize.source_tokens(fundef)
+    tokens = tokenize.tokenize(fundef)
     token_list = list(tokens)
     assert token_list == [TokenInfo(ERRORTOKEN, '""""\n', (1, 0), ''),
                           TokenInfo(ENDMARKER ,       '', (2, 0), '')]
@@ -98,7 +98,7 @@ def test_tokenize_multiline_II():
     # Make sure multiline string having no newlines have the end marker on
     # same line
     fundef = '''""""'''
-    tokens = tokenize.source_tokens(fundef)
+    tokens = tokenize.tokenize(fundef)
     token_list = list(tokens)
     assert token_list == [TokenInfo(ERRORTOKEN, '""""', (1, 0), ''),
                           TokenInfo(ENDMARKER,      '', (1, 4), '')]
@@ -108,7 +108,7 @@ def test_tokenize_multiline_III():
     # Make sure multiline string having newlines have the end marker on the
     # next line even if several newline
     fundef = '''""""\n\n'''
-    tokens = tokenize.source_tokens(fundef)
+    tokens = tokenize.tokenize(fundef)
     token_list = list(tokens)
     assert token_list == [TokenInfo(ERRORTOKEN, '""""\n\n', (1, 0), ''),
                           TokenInfo(ENDMARKER,          '', (3, 0), '')]
@@ -119,7 +119,7 @@ def test_identifier_contains_unicode():
     def 我あφ():
         pass
     ''')
-    tokens = tokenize.source_tokens(fundef)
+    tokens = tokenize.tokenize(fundef)
     token_list = list(tokens)
     unicode_token = token_list[1]
     if py_version >= 30:

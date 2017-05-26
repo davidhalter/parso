@@ -8,7 +8,7 @@ from parso.pgen2.pgen import generate_grammar
 from parso.utils import splitlines, source_to_unicode
 from parso.python.parser import remove_last_newline
 from parso.python.diff import DiffParser
-from parso.tokenize import generate_tokens
+from parso.tokenize import tokenize_lines
 from parso.cache import parser_cache, load_module, save_module
 from parso.parser import BaseParser
 from parso.python.parser import Parser as PythonParser
@@ -22,7 +22,7 @@ class Grammar(object):
 
     :param text: A BNF representation of your grammar.
     """
-    def __init__(self, text, parser=BaseParser, tokenizer=generate_tokens,
+    def __init__(self, text, tokenizer, parser=BaseParser,
                  diff_parser=None):
         self._pgen_grammar = generate_grammar(text)
         self._parser = parser
@@ -188,7 +188,12 @@ def load_grammar(version=None):
             with open(path) as f:
                 bnf_text = f.read()
 
-            grammar = Grammar(bnf_text, parser=PythonParser, diff_parser=DiffParser)
+            grammar = Grammar(
+                bnf_text,
+                tokenizer=tokenize_lines,
+                parser=PythonParser,
+                diff_parser=DiffParser
+            )
             return _loaded_grammars.setdefault(path, grammar)
         except FileNotFoundError:
             message = "Python version %s is currently not supported." % version
