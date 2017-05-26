@@ -204,13 +204,13 @@ class TokenInfo(namedtuple('Token', ['type', 'string', 'start_pos', 'prefix'])):
             return self.start_pos[0], self.start_pos[1] + len(self.string)
 
 
-def source_tokens(source, exact_op_types=True):
+def source_tokens(source):
     """Generate tokens from a the source code (string)."""
     lines = splitlines(source, keepends=True)
-    return generate_tokens(lines, exact_op_types)
+    return generate_tokens(lines)
 
 
-def generate_tokens(lines, exact_op_types=True):
+def generate_tokens(lines):
     """
     A heavily modified Python standard library tokenizer.
 
@@ -335,13 +335,9 @@ def generate_tokens(lines, exact_op_types=True):
                 try:
                     # This check is needed in any case to check if it's a valid
                     # operator or just some random unicode character.
-                    exact_type = opmap[token]
+                    typ = opmap[token]
                 except KeyError:
-                    exact_type = typ = ERRORTOKEN
-                if exact_op_types:
-                    typ = exact_type
-                else:
-                    typ = OP
+                    typ = ERRORTOKEN
                 yield TokenInfo(typ, token, spos, prefix)
 
     if contstr:
@@ -365,5 +361,5 @@ if __name__ == "__main__":
             code = u(f.read())
     else:
         code = u(sys.stdin.read())
-    for token in source_tokens(code, exact_op_types=True):
+    for token in source_tokens(code):
         print(token)
