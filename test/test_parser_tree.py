@@ -51,8 +51,6 @@ class TestsFunctionAndLambdaParsing(object):
         assert node.is_generator() is expected.get('is_generator', False)
 
     def test_yields(self, node, expected):
-        # TODO: There's a comment in the code noting that the current
-        # implementation is incorrect.
         assert node.is_generator() == expected.get('yields', False)
 
     def test_annotation(self, node, expected):
