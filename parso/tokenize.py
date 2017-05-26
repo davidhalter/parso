@@ -105,8 +105,8 @@ def _all_string_prefixes():
         for t in _itertools.permutations(prefix):
             # create a list with upper and lower versions of each
             #  character
-            for u in _itertools.product(*[(c, c.upper()) for c in t]):
-                result.add(''.join(u))
+            for s in _itertools.product(*[(c, c.upper()) for c in t]):
+                result.add(''.join(s))
     return result
 
 def _compile(expr):
