@@ -4,7 +4,7 @@ from textwrap import dedent
 
 from parso._compatibility import py_version
 from parso.utils import splitlines
-from parso.token import NAME, OP, NEWLINE, STRING, INDENT, ERRORTOKEN, ENDMARKER
+from parso.token import NAME, NEWLINE, STRING, INDENT, ERRORTOKEN, ENDMARKER
 from parso import tokenize
 from parso import parse
 from parso.tokenize import TokenInfo
@@ -127,7 +127,7 @@ def test_identifier_contains_unicode():
     else:
         # Unicode tokens in Python 2 seem to be identified as operators.
         # They will be ignored in the parser, that's ok.
-        assert unicode_token[0] == OP
+        assert unicode_token[0] == tokenize.ERRORTOKEN
 
 
 def test_quoted_strings():
