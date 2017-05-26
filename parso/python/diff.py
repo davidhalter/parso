@@ -255,8 +255,7 @@ class DiffParser(object):
         last_until_line = 0
         while until_line > self._nodes_stack.parsed_until_line:
             node = self._try_parse_part(until_line)
-            nodes = self._get_children_nodes(node)
-            #self._insert_nodes(nodes)
+            nodes = node.children
 
             self._nodes_stack.add_parsed_nodes(nodes)
             logging.debug(
@@ -270,16 +269,6 @@ class DiffParser(object):
             # change.
             assert last_until_line != self._nodes_stack.parsed_until_line, last_until_line
             last_until_line = self._nodes_stack.parsed_until_line
-
-    def _get_children_nodes(self, node):
-        nodes = node.children
-        first_element = nodes[0]
-        # TODO this looks very strange...
-        if first_element.type == 'error_leaf' and \
-                first_element.original_type == 'indent':
-            assert False, str(nodes)
-
-        return nodes
 
     def _try_parse_part(self, until_line):
         """
