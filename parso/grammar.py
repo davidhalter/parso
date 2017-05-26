@@ -98,9 +98,6 @@ class Grammar(object):
                 module_node = module_cache_item.node
                 old_lines = module_cache_item.lines
                 if old_lines == lines:
-                    # TODO remove this line? I think it's not needed. (dave)
-                    save_module(self._hashed, path, module_node, lines, pickling=False,
-                                cache_path=cache_path)
                     return module_node
 
                 new_node = self._diff_parser(self._pgen_grammar, module_node).update(
