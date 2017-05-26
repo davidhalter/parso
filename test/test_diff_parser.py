@@ -54,7 +54,7 @@ class Differ(object):
     def initialize(self, code):
         logging.debug('differ: initialize')
         self.lines = splitlines(code, keepends=True)
-        cache.parser_cache.pop(None, None)
+        cache.parser_cache[self.grammar._hashed].pop(None, None)
         self.module = parse(code, diff_cache=True, cache=True)
         return self.module
 

@@ -37,7 +37,7 @@ def test_modulepickling_change_cache_dir(tmpdir):
     path_1 = 'fake path 1'
     path_2 = 'fake path 2'
 
-    hashed_grammar = load_grammar()._sha256
+    hashed_grammar = load_grammar()._hashed
     _save_to_file_system(hashed_grammar, path_1, item_1, cache_path=dir_1)
     parser_cache.clear()
     cached = load_stored_item(hashed_grammar, path_1, item_1, cache_path=dir_1)
@@ -77,11 +77,11 @@ def test_modulepickling_simulate_deleted_cache(tmpdir):
     with open(path, 'w'):
         pass
 
-    save_module(grammar._sha256, path, module, [])
-    assert load_module(grammar._sha256, path) == module
+    save_module(grammar._hashed, path, module, [])
+    assert load_module(grammar._hashed, path) == module
 
-    unlink(_get_hashed_path(grammar._sha256, path))
+    unlink(_get_hashed_path(grammar._hashed, path))
     parser_cache.clear()
 
-    cached2 = load_module(grammar._sha256, path)
+    cached2 = load_module(grammar._hashed, path)
     assert cached2 is None
