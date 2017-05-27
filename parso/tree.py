@@ -22,6 +22,7 @@ class NodeOrLeaf(object):
     The base class for nodes and leaves.
     """
     __slots__ = ()
+    default_normalizer = None
 
     def get_root_node(self):
         """
@@ -145,16 +146,31 @@ class NodeOrLeaf(object):
         """
 
     @abstractmethod
-    def get_code(self, normalized=False, include_prefix=True):
+    def get_code(self, include_prefix=True):
         """
         Returns the code that was the input of the parser.
 
-        If a normalizer is given, the returned code will be normalized and will
-        not be equal to the input.
-
-        :param include_prefix: Removes the prefix (whitespace and comments) of e.g. a statement.
-        :param normalized: Deprecated. Please don't use. Will be replaced with something more powerful.
+        :param include_prefix: Removes the prefix (whitespace and comments) of
+            e.g. a statement.
         """
+
+    def normalize(self, normalizer=None):
+        """
+        The returned code will be normalized, e.g. PEP8 for Python.
+        """
+        if normalizer is None:
+            normalizer = self.default_normalizer
+            if normalizer is None:
+                raise ValueError("You need to specify a normalizer, because "
+                                 "there's no default normalizer for this tree.")
+
+        try:
+            children = self.children
+        except AttributeError:
+            return normalizer(self)
+        else:
+           return ''.join(child.normalize(normalizer) for child in children)
+
 
 
 class Leaf(NodeOrLeaf):
@@ -187,9 +203,7 @@ class Leaf(NodeOrLeaf):
     def get_last_leaf(self):
         return self
 
-    def get_code(self, normalized=False, include_prefix=True):
-        if normalized:
-            return self.value
+    def get_code(self, include_prefix=True):
         if include_prefix:
             return self.prefix + self.value
         else:
@@ -238,16 +252,15 @@ class BaseNode(NodeOrLeaf):
     def end_pos(self):
         return self.children[-1].end_pos
 
-    def _get_code_for_children(self, children, normalized, include_prefix):
-        # TODO implement normalized (depending on context).
+    def _get_code_for_children(self, children, include_prefix):
         if include_prefix:
-            return "".join(c.get_code(normalized) for c in children)
+            return "".join(c.get_code() for c in children)
         else:
             first = children[0].get_code(include_prefix=False)
-            return first + "".join(c.get_code(normalized) for c in children[1:])
+            return first + "".join(c.get_code() for c in children[1:])
 
-    def get_code(self, normalized=False, include_prefix=True):
-        return self._get_code_for_children(self.children, normalized, include_prefix)
+    def get_code(self, include_prefix=True):
+        return self._get_code_for_children(self.children, include_prefix)
 
     def get_leaf_for_position(self, position, include_prefixes=False):
         def binary_search(lower, upper):

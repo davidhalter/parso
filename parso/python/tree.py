@@ -28,6 +28,7 @@ Any subclasses of :class:`Scope`, including :class:`Module` has an attribute
 from parso._compatibility import utf8_repr, unicode
 from parso.tree import Node, BaseNode, Leaf, ErrorNode, ErrorLeaf, \
     search_ancestor
+from parso.python import normalizer
 
 
 class DocstringMixin(object):
@@ -63,6 +64,7 @@ class PythonMixin(object):
     Some Python specific utitilies.
     """
     __slots__ = ()
+    default_normalizer = normalizer.PEP8Normalizer()
 
     def get_definition(self):
         if self.type in ('newline', 'endmarker'):
@@ -94,7 +96,7 @@ class PythonMixin(object):
         return None
 
 
-class PythonLeaf(Leaf, PythonMixin):
+class PythonLeaf(PythonMixin, Leaf):
     __slots__ = ()
 
 
@@ -110,19 +112,19 @@ class _LeafWithoutNewlines(PythonLeaf):
 
 
 # Python base classes
-class PythonBaseNode(BaseNode, PythonMixin):
+class PythonBaseNode(PythonMixin, BaseNode):
     __slots__ = ()
 
 
-class PythonNode(Node, PythonMixin):
+class PythonNode(PythonMixin, Node):
     __slots__ = ()
 
 
-class PythonErrorNode(ErrorNode, PythonMixin):
+class PythonErrorNode(PythonMixin, ErrorNode):
     __slots__ = ()
 
 
-class PythonErrorLeaf(ErrorLeaf, PythonMixin):
+class PythonErrorLeaf(PythonMixin, ErrorLeaf):
     __slots__ = ()
 
 
@@ -1010,7 +1012,7 @@ class Param(PythonBaseNode):
         """
         return search_ancestor(self, 'funcdef', 'lambdef')
 
-    def get_code(self, normalized=False, include_prefix=True, include_comma=True):
+    def get_code(self, include_prefix=True, include_comma=True):
         """
         Like all the other get_code functions, but includes the param
         `include_comma`.
@@ -1018,14 +1020,13 @@ class Param(PythonBaseNode):
         :param include_comma bool: If enabled includes the comma in the string output.
         """
         if include_comma:
-            return super(Param, self).get_code(normalized, include_prefix)
+            return super(Param, self).get_code(include_prefix)
 
         children = self.children
         if children[-1] == ',':
             children = children[:-1]
         return self._get_code_for_children(
             children,
-            normalized=False,
             include_prefix=include_prefix
         )
 
