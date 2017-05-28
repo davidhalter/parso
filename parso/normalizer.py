@@ -1,4 +1,16 @@
-class Normalizer():
+class Normalizer(object):
+    @classmethod
+    def register_rule(cls, rule):
+        """
+        Use it as a class decorator:
+
+        >>> normalizer = Normalizer()
+        >>> @normalizer.register_rule
+        >>> class MyRule(Rule):
+        >>>     error_code = 42
+        """
+        return rule
+
     def normalize(self, leaf):
         return leaf.prefix + leaf.value
 
@@ -6,8 +18,14 @@ class Normalizer():
         return iter([])
 
 
-class Error():
+class Error(object):
     def __init__(self, leaf, code, message):
         self._leaf = leaf
         self.code = code
         self.message = message
+
+
+class Rule(object):
+    error_code = None
+    message = None
+    type = None
