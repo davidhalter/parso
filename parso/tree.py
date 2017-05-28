@@ -167,7 +167,7 @@ class NodeOrLeaf(object):
         try:
             children = self.children
         except AttributeError:
-            return normalizer(self)
+            return normalizer.normalize(self)
         else:
            return ''.join(child.normalize(normalizer) for child in children)
 

@@ -14,7 +14,7 @@ class PEP8Normalizer(Normalizer):
     Normalizing to PEP8. Not really implemented, yet.
     """
     def normalize(self, leaf):
-        return leaf.prefix + leaf.value
+        return leaf.value
 
     def iter_errors(self, leaf):
         return iter([])
