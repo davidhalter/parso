@@ -29,6 +29,7 @@ from parso._compatibility import utf8_repr, unicode
 from parso.tree import Node, BaseNode, Leaf, ErrorNode, ErrorLeaf, \
     search_ancestor
 from parso.python import normalizer
+from parso.python.prefix import split_prefix
 
 
 class DocstringMixin(object):
@@ -98,6 +99,9 @@ class PythonMixin(object):
 
 class PythonLeaf(PythonMixin, Leaf):
     __slots__ = ()
+
+    def _split_prefix(self):
+        return split_prefix(self.prefix, self.start_pos)
 
 
 class _LeafWithoutNewlines(PythonLeaf):

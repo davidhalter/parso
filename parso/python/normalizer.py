@@ -18,3 +18,7 @@ class PEP8Normalizer(Normalizer):
 
     def iter_errors(self, leaf):
         return iter([])
+
+
+class Rule():
+    pass

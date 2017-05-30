@@ -9,6 +9,11 @@ class Normalizer(object):
         >>> class MyRule(Rule):
         >>>     error_code = 42
         """
+        try:
+            rules = cls.rules
+        except AttributeError:
+            rules = cls.rules = []
+        rules.append(rule)
         return rule
 
     def normalize(self, leaf):
