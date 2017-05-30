@@ -11,9 +11,9 @@ class PrefixToken(object):
 
     @property
     def end_pos(self):
-        if '\n' in self.value:
+        if self.value.endswith('\n'):
             return self.start_pos[0] + 1, 0
-        return self.end_pos[1]
+        return self.start_pos[0], self.start_pos[1] + len(self.value)
 
 
 _comment = r'#[^\n\r\f]*'
@@ -46,6 +46,6 @@ def split_prefix(prefix, start_pos):
         yield PrefixToken(typ, value, (line, column + start))
 
         start = match.end(0)
-        if '\n' in value:
+        if value.endswith('\n'):
             line += 1
             column = -start

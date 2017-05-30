@@ -101,7 +101,7 @@ class PythonLeaf(PythonMixin, Leaf):
     __slots__ = ()
 
     def _split_prefix(self):
-        return split_prefix(self.prefix, self.start_pos)
+        return split_prefix(self.prefix, self.get_start_pos_of_prefix())
 
 
 class _LeafWithoutNewlines(PythonLeaf):

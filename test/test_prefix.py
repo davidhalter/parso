@@ -20,8 +20,21 @@ def test_simple_prefix_splitting(string, tokens):
     tree = parso.parse(string)
     leaf = tree.children[0]
     assert leaf.type == 'endmarker'
+
     parsed_tokens = list(leaf._split_prefix())
-    assert [t.value for t in parsed_tokens] == tokens
+    start_pos = (1, 0)
+    for pt, expected in zip(parsed_tokens, tokens):
+        assert pt.value == expected
+
+        # Calculate the estimated end_pos
+        if expected.endswith('\n'):
+            end_pos = start_pos[0] + 1, 0
+        else:
+            end_pos = start_pos[0], start_pos[1] + len(expected)
+
+        #assert start_pos == pt.start_pos
+        assert end_pos == pt.end_pos
+        start_pos = end_pos
 
 
 @pytest.mark.parametrize(('string', 'types'), [
