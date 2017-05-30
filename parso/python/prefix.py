@@ -4,7 +4,8 @@ from parso.tokenize import group
 
 
 class PrefixToken(object):
-    def __init__(self, value, start_pos):
+    def __init__(self, typ, value, start_pos):
+        self.type = typ
         self.value = value
         self.start_pos = start_pos
 
@@ -29,7 +30,7 @@ _types = {
     ' ': 'spaces',
     '#': 'comment',
     '\\': 'backslash',
-    '\f': 'form_feed',
+    '\f': 'formfeed',
     '\n': 'newline',
     '\r': 'newline'
 }
@@ -41,10 +42,10 @@ def split_prefix(prefix, start_pos):
     while start != len(prefix):
         match =_regex.match(prefix, start)
         value = match.group(0)
-        yield PrefixToken(value, (line, column + start))
+        typ = _types[value[0]]
+        yield PrefixToken(typ, value, (line, column + start))
 
         start = match.end(0)
-        print(start)
         if '\n' in value:
             line += 1
             column = -start
