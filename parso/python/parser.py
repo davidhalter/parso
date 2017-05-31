@@ -196,6 +196,18 @@ class Parser(BaseParser):
 
 
 def remove_last_newline(node):
+    def calculate_end_pos(leaf, text):
+        if leaf is None:
+            end_pos = (1, 0)
+        else:
+            end_pos = leaf.end_pos
+
+        lines = splitlines(text, keepends=True)
+        if len(lines) == 1:
+            return end_pos[0], end_pos[1] + len(lines[0])
+        else:
+            return end_pos[0] + len(lines) - 1,  len(lines[-1])
+
     endmarker = node.children[-1]
     # The newline is either in the endmarker as a prefix or the previous
     # leaf as a newline token.
@@ -213,20 +225,24 @@ def remove_last_newline(node):
         raise ValueError("There's no newline at the end, cannot remove it.")
 
     text = text[:-1]
+    if text and text[-1] == '\r':
+        # By adding an artificial newline this creates weird side effects for
+        # \r at the end of files that would normally be error leafs. Try to
+        # correct that here.
+        text = text[:-1]
+        start_pos = calculate_end_pos(leaf, text)
+        error_token = tree.PythonErrorLeaf('errortoken', '\r', start_pos, prefix=text)
+        node.children.insert(-2, error_token)
+
+        # Cleanup
+        leaf = error_token
+        text = ''
+
     if prefix:
         endmarker.prefix = text
 
-        if leaf is None:
-            end_pos = (1, 0)
-        else:
-            end_pos = leaf.end_pos
 
-        lines = splitlines(text, keepends=True)
-        if len(lines) == 1:
-            end_pos = end_pos[0], end_pos[1] + len(lines[0])
-        else:
-            end_pos = end_pos[0] + len(lines) - 1,  len(lines[-1])
-        endmarker.start_pos = end_pos
+        endmarker.start_pos = calculate_end_pos(leaf, text)
     else:
         leaf.value = text
         endmarker.start_pos = leaf.end_pos

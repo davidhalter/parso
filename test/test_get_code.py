@@ -104,3 +104,17 @@ def test_end_newlines():
     test('def a():\n pass', (2, 5))
 
     test('def a(', (1, 6))
+
+
+@pytest.mark.parametrize(('code', 'types'), [
+    ('\r', ['error_leaf', 'endmarker']),
+    ('\n\r', ['error_leaf', 'endmarker'])
+])
+def test_carriage_return_at_end(code, types):
+    """
+    By adding an artificial newline this creates weird side effects for
+    \r at the end of files that would normally be error leafs.
+    """
+    tree = parse(code)
+    assert tree.get_code() == code
+    assert [c.type for c in tree.children] == types

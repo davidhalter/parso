@@ -15,6 +15,7 @@ import parso
     ('\\', ['\\']),
     ('\\\n', ['\\\n']),
     ('\\\r\n', ['\\\r\n']),
+    ('\t\t\n\t', ['\t\t', '\n', '\t']),
 ])
 def test_simple_prefix_splitting(string, tokens):
     tree = parso.parse(string)
@@ -42,6 +43,7 @@ def test_simple_prefix_splitting(string, tokens):
     ('\r\n', ['newline']),
     ('\f', ['formfeed']),
     ('\\\n', ['backslash']),
+    ('\r', ['newline']),
 ])
 def test_prefix_splitting_types(string, types):
     tree = parso.parse(string)

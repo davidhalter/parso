@@ -3,7 +3,7 @@ import re
 from parso.tokenize import group
 
 
-class PrefixToken(object):
+class PrefixPart(object):
     def __init__(self, typ, value, start_pos):
         self.type = typ
         self.value = value
@@ -19,10 +19,11 @@ class PrefixToken(object):
 _comment = r'#[^\n\r\f]*'
 _backslash = r'\\\r?\n?'
 _whitespace = r' +'
+_tabs = r'\t+'
 _newline = r'\r?\n'
 _form_feed = r'\f'
 
-_regex = group(_comment, _backslash, _whitespace, _newline, _form_feed)
+_regex = group(_comment, _backslash, _whitespace, _newline, _form_feed, _tabs)
 _regex = re.compile(_regex)
 
 
@@ -32,7 +33,8 @@ _types = {
     '\\': 'backslash',
     '\f': 'formfeed',
     '\n': 'newline',
-    '\r': 'newline'
+    '\r': 'newline',
+    '\t': 'tabs',
 }
 
 
@@ -43,7 +45,7 @@ def split_prefix(prefix, start_pos):
         match =_regex.match(prefix, start)
         value = match.group(0)
         typ = _types[value[0]]
-        yield PrefixToken(typ, value, (line, column + start))
+        yield PrefixPart(typ, value, (line, column + start))
 
         start = match.end(0)
         if value.endswith('\n'):
