@@ -11,7 +11,7 @@ from collections import namedtuple
 import logging
 
 from parso.utils import splitlines
-from parso.python.parser import Parser, remove_last_newline
+from parso.python.parser import Parser
 from parso.python.tree import EndMarker
 from parso.tokenize import (tokenize_lines, NEWLINE, TokenInfo,
                             ENDMARKER, INDENT, DEDENT)
@@ -120,14 +120,6 @@ class DiffParser(object):
         self._module._used_names = None
 
         self._parser_lines_new = new_lines
-        self._added_newline = False
-        if new_lines[-1] != '':
-            # The Python grammar needs a newline at the end of a file, but for
-            # everything else we keep working with new_lines here.
-            self._parser_lines_new = list(new_lines)
-            self._parser_lines_new[-1] += '\n'
-            self._parser_lines_new.append('')
-            self._added_newline = True
 
         self._reset()
 
@@ -141,7 +133,7 @@ class DiffParser(object):
             logging.debug('diff %s old[%s:%s] new[%s:%s]',
                       operation, i1 + 1, i2, j1 + 1, j2)
 
-            if j2 == line_length + int(self._added_newline):
+            if j2 == line_length:
                 # The empty part after the last newline is not relevant.
                 j2 -= 1
 
@@ -158,9 +150,6 @@ class DiffParser(object):
         # With this action all change will finally be applied and we have a
         # changed module.
         self._nodes_stack.close()
-
-        if self._added_newline:
-            remove_last_newline(self._module)
 
         last_pos = self._module.end_pos[0]
         if last_pos != line_length:

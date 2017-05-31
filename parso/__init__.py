@@ -5,16 +5,18 @@ versions, file caching, round-trips and other stuff:
 >>> from parso import load_grammar
 >>> grammar = load_grammar(version='2.7')
 >>> module = grammar.parse('hello + 1')
->>> stmt = module.children[0]
->>> stmt
-PythonNode(simple_stmt, [PythonNode(arith_expr, [...]), <Newline: ''>])
->>> stmt.get_code()
+>>> expr = module.children[0]
+>>> expr
+PythonNode(arith_expr, [<Name: hello@1,0>, <Operator: +>, <Number: 1>])
+>>> expr.get_code()
 'hello + 1'
->>> name = stmt.children[0].children[0]
+>>> name = expr.children[0]
 >>> name
 <Name: hello@1,0>
 >>> name.end_pos
 (1, 5)
+>>> expr.end_pos
+(1, 9)
 """
 
 from parso.parser import ParserSyntaxError

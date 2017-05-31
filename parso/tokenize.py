@@ -251,7 +251,9 @@ def tokenize_lines(lines):
                 txt = line[pos:]
                 if txt.endswith('\n'):
                     new_line = True
-                yield TokenInfo(ERRORTOKEN, txt, (lnum, pos), prefix)
+                # TODO remove prefix?
+                yield TokenInfo(ERRORTOKEN, txt, (lnum, pos), additional_prefix)
+                additional_prefix = ''
                 break
 
             prefix = additional_prefix + pseudomatch.group(1)
@@ -259,6 +261,12 @@ def tokenize_lines(lines):
             start, pos = pseudomatch.span(2)
             spos = (lnum, start)
             token = pseudomatch.group(2)
+            if token == '':
+                assert prefix
+                additional_prefix = prefix
+                # This means that we have a line with whitespace/comments at
+                # the end, which just results in an endmarker.
+                break
             initial = token[0]
 
             if new_line and initial not in '\r\n#':

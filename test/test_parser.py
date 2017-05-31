@@ -81,7 +81,7 @@ def test_incomplete_list_comprehension():
     # parser only valid statements generate one.
     children = parse('(1 for def').children
     assert [c.type for c in children] == \
-        ['error_node', 'error_node', 'newline', 'endmarker']
+        ['error_node', 'error_node', 'endmarker']
 
 
 def test_newline_positions():
@@ -153,7 +153,7 @@ def test_python2_octal():
 def test_python3_octal():
     module = parse('0o660')
     if py_version >= 30:
-        assert module.children[0].children[0].type == 'number'
+        assert module.children[0].type == 'number'
     else:
         assert module.children[0].type == 'error_node'
 

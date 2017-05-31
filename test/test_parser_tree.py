@@ -63,7 +63,7 @@ class TestsFunctionAndLambdaParsing(object):
 
 def test_end_pos_line():
     # jedi issue #150
-    s = "x()\nx( )\nx(  )\nx (  )"
+    s = "x()\nx( )\nx(  )\nx (  )\n"
     module = parse(s)
     for i, simple_stmt in enumerate(module.children[:-1]):
         expr_stmt = simple_stmt.children[0]

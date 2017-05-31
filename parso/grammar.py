@@ -6,7 +6,6 @@ import re
 from parso._compatibility import FileNotFoundError, unicode
 from parso.pgen2.pgen import generate_grammar
 from parso.utils import splitlines, source_to_unicode
-from parso.python.parser import remove_last_newline
 from parso.python.diff import DiffParser
 from parso.tokenize import tokenize_lines
 from parso.cache import parser_cache, load_module, save_module
@@ -85,7 +84,7 @@ class Grammar(object):
             with open(path, 'rb') as f:
                 code = source_to_unicode(f.read())
 
-        lines = tokenize_lines = splitlines(code, keepends=True)
+        lines = splitlines(code, keepends=True)
         if diff_cache:
             if self._diff_parser is None:
                 raise TypeError("You have to define a diff parser to be able "
@@ -108,19 +107,10 @@ class Grammar(object):
                             cache_path=cache_path)
                 return new_node
 
-        added_newline = not code.endswith('\n')
-        if added_newline:
-            code += '\n'
-            tokenize_lines = list(tokenize_lines)
-            tokenize_lines[-1] += '\n'
-            tokenize_lines.append('')
-
-        tokens = self._tokenizer(tokenize_lines)
+        tokens = self._tokenizer(lines)
 
         p = self._parser(self._pgen_grammar, error_recovery=error_recovery, start_symbol=start_symbol)
         root_node = p.parse(tokens=tokens)
-        if added_newline:
-            remove_last_newline(root_node)
 
         if cache or diff_cache:
             save_module(self._hashed, path, root_node, lines, pickling=cache,

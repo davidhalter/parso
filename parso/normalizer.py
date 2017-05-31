@@ -6,8 +6,8 @@ class Normalizer(object):
 
         >>> normalizer = Normalizer()
         >>> @normalizer.register_rule
-        >>> class MyRule(Rule):
-        >>>     error_code = 42
+        ... class MyRule(Rule):
+        ...     error_code = 42
         """
         try:
             rules = cls.rules

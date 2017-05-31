@@ -17,7 +17,7 @@ class PrefixPart(object):
 
 
 _comment = r'#[^\n\r\f]*'
-_backslash = r'\\\r?\n?'
+_backslash = r'\\\r?\n'
 _whitespace = r' +'
 _tabs = r'\t+'
 _newline = r'\r?\n'

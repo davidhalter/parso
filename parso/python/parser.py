@@ -3,7 +3,7 @@ from parso import tokenize
 from parso.token import (DEDENT, INDENT, ENDMARKER, NEWLINE, NUMBER,
                                STRING, tok_name)
 from parso.parser import BaseParser
-from parso.utils import splitlines
+from parso.pgen2.parse import token_to_ilabel
 
 
 class Parser(BaseParser):
@@ -128,6 +128,51 @@ class Parser(BaseParser):
         allows using different grammars (even non-Python). However, error
         recovery is purely written for Python.
         """
+        def get_symbol_and_nodes(stack):
+            for dfa, state, (type_, nodes) in stack:
+                symbol = pgen_grammar.number2symbol[type_]
+                yield symbol, nodes
+
+        if typ == ENDMARKER:
+            def reduce_stack(states, newstate):
+                # reduce
+                state = newstate
+                while states[state] == [(0, state)]:
+                    self.pgen_parser._pop()
+
+                    dfa, state, (type_, nodes) = stack[-1]
+                    states, first = dfa
+
+
+            # In Python statements need to end with a newline. But since it's
+            # possible (and valid in Python ) that there's no newline at the
+            # end of a file, we have to recover even if the user doesn't want
+            # error recovery.
+            #print('x', pprint.pprint(stack))
+            ilabel = token_to_ilabel(pgen_grammar, NEWLINE, value)
+
+            dfa, state, (type_, nodes) = stack[-1]
+            symbol = pgen_grammar.number2symbol[type_]
+            states, first = dfa
+            arcs = states[state]
+            # Look for a state with this label
+            for i, newstate in arcs:
+                if ilabel == i:
+                    if symbol == 'simple_stmt':
+                        # This is basically shifting
+                        stack[-1] = (dfa, newstate, (type_, nodes))
+
+                        reduce_stack(states, newstate)
+                        add_token_callback(typ, value, start_pos, prefix)
+                        return
+                    # Check if we're at the right point
+                    #for symbol, nodes in get_symbol_and_nodes(stack):
+                    #        self.pgen_parser._pop()
+
+                            #break
+                    break
+            #symbol = pgen_grammar.number2symbol[type_]
+
         if not self._error_recovery:
             return super(Parser, self).error_recovery(
                 pgen_grammar, stack, arcs, typ, value, start_pos, prefix,
@@ -136,9 +181,8 @@ class Parser(BaseParser):
         def current_suite(stack):
             # For now just discard everything that is not a suite or
             # file_input, if we detect an error.
-            for index, (dfa, state, (type_, nodes)) in reversed(list(enumerate(stack))):
+            for index, (symbol, nodes) in reversed(list(enumerate(get_symbol_and_nodes(stack)))):
                 # `suite` can sometimes be only simple_stmt, not stmt.
-                symbol = pgen_grammar.number2symbol[type_]
                 if symbol == 'file_input':
                     break
                 elif symbol == 'suite' and len(nodes) > 1:
@@ -191,58 +235,4 @@ class Parser(BaseParser):
                 self._indent_counter -= 1
             elif typ == INDENT:
                 self._indent_counter += 1
-
             yield typ, value, start_pos, prefix
-
-
-def remove_last_newline(node):
-    def calculate_end_pos(leaf, text):
-        if leaf is None:
-            end_pos = (1, 0)
-        else:
-            end_pos = leaf.end_pos
-
-        lines = splitlines(text, keepends=True)
-        if len(lines) == 1:
-            return end_pos[0], end_pos[1] + len(lines[0])
-        else:
-            return end_pos[0] + len(lines) - 1,  len(lines[-1])
-
-    endmarker = node.children[-1]
-    # The newline is either in the endmarker as a prefix or the previous
-    # leaf as a newline token.
-    prefix = endmarker.prefix
-    leaf = endmarker.get_previous_leaf()
-    if prefix:
-        text = prefix
-    else:
-        if leaf is None:
-            raise ValueError("You're trying to remove a newline from an empty module.")
-
-        text = leaf.value
-
-    if not text.endswith('\n'):
-        raise ValueError("There's no newline at the end, cannot remove it.")
-
-    text = text[:-1]
-    if text and text[-1] == '\r':
-        # By adding an artificial newline this creates weird side effects for
-        # \r at the end of files that would normally be error leafs. Try to
-        # correct that here.
-        text = text[:-1]
-        start_pos = calculate_end_pos(leaf, text)
-        error_token = tree.PythonErrorLeaf('errortoken', '\r', start_pos, prefix=text)
-        node.children.insert(-2, error_token)
-
-        # Cleanup
-        leaf = error_token
-        text = ''
-
-    if prefix:
-        endmarker.prefix = text
-
-
-        endmarker.start_pos = calculate_end_pos(leaf, text)
-    else:
-        leaf.value = text
-        endmarker.start_pos = leaf.end_pos
