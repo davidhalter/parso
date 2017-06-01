@@ -147,7 +147,7 @@ def test_python2_octal():
     if py_version >= 30:
         assert first.type == 'error_node'
     else:
-        assert first.children[0].type == 'number'
+        assert first.type == 'number'
 
 
 def test_python3_octal():
