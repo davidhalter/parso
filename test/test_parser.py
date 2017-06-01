@@ -184,3 +184,18 @@ def test_dedent_at_end():
     suite = module.children[0].children[-1]
     foobar = suite.children[-1]
     assert foobar.type == 'name'
+
+
+def test_no_error_nodes():
+    def check(node):
+        assert node.type not in ('error_leaf', 'error_node')
+
+        try:
+            children = node.children
+        except AttributeError:
+            pass
+        else:
+            for child in children:
+                check(child)
+
+    check(parse("if foo:\n bar"))

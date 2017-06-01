@@ -139,7 +139,8 @@ class Parser(BaseParser):
         else:
             last_leaf = None
 
-        if typ == ENDMARKER or typ == DEDENT and '\n' not in last_leaf.value:
+        if self._start_symbol == 'file_input' and \
+                (typ == ENDMARKER or typ == DEDENT and '\n' not in last_leaf.value):
             def reduce_stack(states, newstate):
                 # reduce
                 state = newstate

@@ -73,7 +73,7 @@ class PythonMixin(object):
         scope = self
         while scope.parent is not None:
             parent = scope.parent
-            if isinstance(scope, (PythonNode, PythonLeaf)) and parent.type != 'simple_stmt':
+            if isinstance(scope, (PythonNode, PythonLeaf)) and parent.type not in ('simple_stmt', 'file_input'):
                 if scope.type == 'testlist_comp':
                     try:
                         if scope.children[1].type == 'comp_for':
