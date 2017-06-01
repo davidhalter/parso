@@ -133,7 +133,13 @@ class Parser(BaseParser):
                 symbol = pgen_grammar.number2symbol[type_]
                 yield symbol, nodes
 
-        if typ == ENDMARKER:
+        tos_nodes = stack.get_tos_nodes()
+        if tos_nodes:
+            last_leaf = tos_nodes[-1].get_last_leaf()
+        else:
+            last_leaf = None
+
+        if typ == ENDMARKER or typ == DEDENT and '\n' not in last_leaf.value:
             def reduce_stack(states, newstate):
                 # reduce
                 state = newstate

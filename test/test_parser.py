@@ -173,3 +173,14 @@ def test_open_string_literal(code):
 def test_too_many_params():
     with pytest.raises(TypeError):
         parse('asdf', hello=3)
+
+
+def test_dedent_at_end():
+    code = dedent('''
+        for foobar in [1]:
+            foobar''')
+    module = parse(code)
+    assert module.get_code() == code
+    suite = module.children[0].children[-1]
+    foobar = suite.children[-1]
+    assert foobar.type == 'name'

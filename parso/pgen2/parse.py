@@ -33,6 +33,12 @@ class InternalParseError(Exception):
         self.start_pos = start_pos
 
 
+class Stack(list):
+    def get_tos_nodes(self):
+        tos = self[-1]
+        return tos[2][1]
+
+
 def token_to_ilabel(grammar, type_, value):
     # Map from token to label
     if type_ == tokenize.NAME:
@@ -113,7 +119,7 @@ class PgenParser(object):
         # where children is a list of nodes or None
         newnode = (start, [])
         stackentry = (self.grammar.dfas[start], 0, newnode)
-        self.stack = [stackentry]
+        self.stack = Stack([stackentry])
         self.rootnode = None
         self.error_recovery = error_recovery
 

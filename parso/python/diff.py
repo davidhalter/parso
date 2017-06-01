@@ -133,7 +133,7 @@ class DiffParser(object):
             logging.debug('diff %s old[%s:%s] new[%s:%s]',
                       operation, i1 + 1, i2, j1 + 1, j2)
 
-            if j2 == line_length:
+            if j2 == line_length and new_lines[-1] == '':
                 # The empty part after the last newline is not relevant.
                 j2 -= 1
 
@@ -248,7 +248,7 @@ class DiffParser(object):
 
             self._nodes_stack.add_parsed_nodes(nodes)
             logging.debug(
-                'parse part %s to %s (to %s in parser)',
+                'parse_part from %s to %s (to %s in part parser)',
                 nodes[0].get_start_pos_of_prefix()[0],
                 self._nodes_stack.parsed_until_line,
                 node.end_pos[0] - 1
@@ -377,6 +377,9 @@ class _NodesStackNode(object):
             if _ends_with_newline(last_leaf, suffix):
                 line -= 1
         line += suffix.count('\n')
+        if suffix and not suffix.endswith('\n'):
+            # This is the end of a file (that doesn't end with a newline).
+            line += 1
         return line
 
 

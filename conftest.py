@@ -1,5 +1,7 @@
 import tempfile
 import shutil
+import logging
+import sys
 
 import pytest
 
@@ -25,3 +27,21 @@ def clean_parso_cache():
     yield
     cache._default_cache_path = old
     shutil.rmtree(tmp)
+
+
+def pytest_addoption(parser):
+    parser.addoption("--logging", "-L", action='store_true',
+                     help="Enables the logging output.")
+
+
+def pytest_configure(config):
+    if config.option.logging:
+        root = logging.getLogger()
+        root.setLevel(logging.DEBUG)
+
+        ch = logging.StreamHandler(sys.stdout)
+        ch.setLevel(logging.DEBUG)
+        #formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        #ch.setFormatter(formatter)
+
+        root.addHandler(ch)
