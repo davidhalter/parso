@@ -178,7 +178,7 @@ class NodeOrLeaf(object):
            with normalizer.visit_node(self):
                return ''.join(child._normalize(normalizer) for child in children)
 
-    def _get_normalize_errors(self, normalizer_config=None):
+    def _get_normalizer_issues(self, normalizer_config=None):
         normalizer = self._get_normalizer(normalizer_config)
         self._normalize(normalizer)
         return normalizer.issues

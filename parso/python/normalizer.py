@@ -38,23 +38,23 @@ class PEP8Normalizer(Normalizer):
         self.indentation = 0
 
     @contextmanager
-    def visit_node(self, state, node):
+    def visit_node(self, node):
         typ = node.type
 
         if typ in 'import_name':
             names = node.get_defined_names()
             if len(names) > 1:
                 for name in names[:1]:
-                    self.log_error(401, 'Multiple imports on one line', name)
+                    self.add_issue(401, 'Multiple imports on one line', name)
         elif typ == 'lambdef':
             if node.parent.type == 'expr_stmt':
-                self.log_error(731, 'Do not assign a lambda expression, use a def', node)
+                self.add_issue(731, 'Do not assign a lambda expression, use a def', node)
         elif typ == 'try_stmt':
             for child in node.children:
                 # Here we can simply check if it's an except, because otherwise
                 # it would be an except_clause.
                 if child == 'except':
-                    self.log_error(722, 'Do not use bare except, specify exception instead', node)
+                    self.add_issue(722, 'Do not use bare except, specify exception instead', node)
         elif typ == 'comparison':
             odd = False
             for child in node.children:
@@ -62,7 +62,7 @@ class PEP8Normalizer(Normalizer):
                     if child not in ('is', '=='):
                         break
                 else:
-                    if child.type == 'atom_expr':
+                    if child.type != 'atom_expr':
                         break
                     trailer = child.children[-1]
                     atom = child.children[-1]
@@ -71,7 +71,7 @@ class PEP8Normalizer(Normalizer):
                         break
                 odd = not odd
             else:
-                self.log_error(721, "Do not compare types, use 'isinstance()", node)
+                self.add_issue(721, "Do not compare types, use 'isinstance()", node)
 
         if typ in IMPORT_TYPES:
             module = node.parent
@@ -79,7 +79,7 @@ class PEP8Normalizer(Normalizer):
                 index = module.children.index(node)
                 for child in module.children[:index]:
                     if child.type not in IMPORT_TYPES:
-                        self.log_error(402, 'Module level import not at top of file', node)
+                        self.add_issue(402, 'Module level import not at top of file', node)
                         break
 
         if typ == 'suite':
@@ -94,11 +94,11 @@ class PEP8Normalizer(Normalizer):
             if leaf.is_definition():
                 message = "Do not define %s named 'l', 'O', or 'I' one line"
                 if leaf.parent.type == 'class' and leaf.parent.name == leaf:
-                    self.log_error(742, message % 'classes', leaf)
+                    self.add_issue(742, message % 'classes', leaf)
                 elif leaf.parent.type == 'function' and leaf.parent.name == leaf:
-                    self.log_error(743, message % 'function', leaf)
+                    self.add_issue(743, message % 'function', leaf)
                 else:
-                    self.log_error(741, message % 'variables', leaf)
+                    self.add_issuadd_issue(741, message % 'variables', leaf)
 
         for part in leaf._split_prefix():
             part

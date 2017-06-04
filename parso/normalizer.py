@@ -13,6 +13,10 @@ class Normalizer(object):
     def normalize(self, leaf):
         return leaf.prefix + leaf.value
 
+    def add_issue(self, code, message, node):
+        issue = Issue(node, code, message)
+        self.issues.append(issue)
+
 
 class NormalizerConfig(object):
     normalizer_class = Normalizer
@@ -41,11 +45,12 @@ class NormalizerConfig(object):
         return rule
 
 
-class Error(object):
-    def __init__(self, leaf, code, message):
-        self._leaf = leaf
+class Issue(object):
+    def __init__(self, node, code, message):
+        self._node = node
         self.code = code
         self.message = message
+        self.start_pos = node.start_pos
 
 
 class Rule(object):

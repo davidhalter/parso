@@ -2,6 +2,7 @@ import tempfile
 import shutil
 import logging
 import sys
+import os
 
 import pytest
 
@@ -32,6 +33,35 @@ def clean_parso_cache():
 def pytest_addoption(parser):
     parser.addoption("--logging", "-L", action='store_true',
                      help="Enables the logging output.")
+
+
+def pytest_generate_tests(metafunc):
+    if 'normalizer_issue_file' in metafunc.fixturenames:
+        base_dir = os.path.join(os.path.dirname(__file__), 'test', 'normalizer_issue_files')
+
+        cases = list(colllect_normalizer_tests(base_dir))
+        metafunc.parametrize(
+            'normalizer_issue_file',
+            cases,
+            ids=[c.name for c in cases]
+        )
+
+
+class NormalizerIssueCase(object):
+    """
+    Static Analysis cases lie in the static_analysis folder.
+    The tests also start with `#!`, like the goto_definition tests.
+    """
+    def __init__(self, path):
+        self.path = path
+        self.name = os.path.basename(path)
+
+
+def colllect_normalizer_tests(base_dir):
+    for f_name in os.listdir(base_dir):
+        if f_name.endswith(".py"):
+            path = os.path.join(base_dir, f_name)
+            yield NormalizerIssueCase(path)
 
 
 def pytest_configure(config):
