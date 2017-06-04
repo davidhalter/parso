@@ -65,7 +65,7 @@ class PythonMixin(object):
     Some Python specific utitilies.
     """
     __slots__ = ()
-    default_normalizer = normalizer.PEP8Normalizer()
+    default_normalizer_config = normalizer.PEP8NormalizerConfig()
 
     def get_definition(self):
         if self.type in ('newline', 'endmarker'):

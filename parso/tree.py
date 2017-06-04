@@ -22,7 +22,7 @@ class NodeOrLeaf(object):
     The base class for nodes and leaves.
     """
     __slots__ = ()
-    default_normalizer = None
+    default_normalizer_config = None
 
     def get_root_node(self):
         """
@@ -154,22 +154,34 @@ class NodeOrLeaf(object):
             e.g. a statement.
         """
 
-    def normalize(self, normalizer=None):
+    def _get_normalizer(self, normalizer_config):
+        if normalizer_config is None:
+            normalizer_config = self.default_normalizer_config
+            if normalizer_config is None:
+                raise ValueError("You need to specify a normalizer, because "
+                                 "there's no default normalizer for this tree.")
+        return normalizer_config.create_normalizer()
+
+    def normalize(self, normalizer_config=None):
         """
         The returned code will be normalized, e.g. PEP8 for Python.
         """
-        if normalizer is None:
-            normalizer = self.default_normalizer
-            if normalizer is None:
-                raise ValueError("You need to specify a normalizer, because "
-                                 "there's no default normalizer for this tree.")
+        normalizer = self._get_normalizer(normalizer_config)
+        return self._normalize(normalizer)
 
+    def _normalize(self, normalizer):
         try:
             children = self.children
         except AttributeError:
             return normalizer.normalize(self)
         else:
-           return ''.join(child.normalize(normalizer) for child in children)
+           with normalizer.visit_node(self):
+               return ''.join(child._normalize(normalizer) for child in children)
+
+    def _get_normalize_errors(self, normalizer_config=None):
+        normalizer = self._get_normalizer(normalizer_config)
+        self._normalize(normalizer)
+        return normalizer.issues
 
 
 

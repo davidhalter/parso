@@ -1,10 +1,34 @@
+from contextlib import contextmanager
+
+
 class Normalizer(object):
+    def __init__(self, config):
+        self._config = config
+        self.issues = []
+
+    @contextmanager
+    def visit_node(self):
+        yield
+
+    def normalize(self, leaf):
+        return leaf.prefix + leaf.value
+
+
+class NormalizerConfig(object):
+    normalizer_class = Normalizer
+
+    def create_normalizer(self):
+        if self.normalizer_class is None:
+            return None
+
+        return self.normalizer_class(self)
+
     @classmethod
     def register_rule(cls, rule):
         """
         Use it as a class decorator:
 
-        >>> normalizer = Normalizer()
+        >>> normalizer = NormalizerConfig()
         >>> @normalizer.register_rule
         ... class MyRule(Rule):
         ...     error_code = 42
@@ -15,12 +39,6 @@ class Normalizer(object):
             rules = cls.rules = []
         rules.append(rule)
         return rule
-
-    def normalize(self, leaf):
-        return leaf.prefix + leaf.value
-
-    def iter_errors(self, leaf):
-        return iter([])
 
 
 class Error(object):
