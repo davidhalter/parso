@@ -53,25 +53,20 @@ class PEP8Normalizer(Normalizer):
             for child in node.children:
                 # Here we can simply check if it's an except, because otherwise
                 # it would be an except_clause.
-                if child == 'except':
-                    self.add_issue(722, 'Do not use bare except, specify exception instead', node)
+                if child.type == 'keyword' and child.value == 'except':
+                    self.add_issue(722, 'Do not use bare except, specify exception instead', child)
         elif typ == 'comparison':
-            odd = False
             for child in node.children:
-                if odd:
-                    if child not in ('is', '=='):
-                        break
-                else:
-                    if child.type != 'atom_expr':
-                        break
-                    trailer = child.children[-1]
-                    atom = child.children[-1]
-                    if not (trailer.type == 'trailer' and atom.type == 'name'
-                            and atom.value == 'type'):
-                        break
-                odd = not odd
-            else:
-                self.add_issue(721, "Do not compare types, use 'isinstance()", node)
+                if child.type != 'atom_expr':
+                    continue
+                if len(child.children) > 2:
+                    continue
+                trailer = child.children[1]
+                atom = child.children[0]
+                if trailer.type == 'trailer' and atom.type == 'name' \
+                        and atom.value == 'type':
+                    self.add_issue(721, "Do not compare types, use 'isinstance()", node)
+                    break
 
         if typ in IMPORT_TYPES:
             module = node.parent

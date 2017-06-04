@@ -4,10 +4,13 @@ Some Python files have been taken from the standard library and are therefore
 PSF licensed. Modifications on these files are dual licensed (both MIT and
 PSF). These files are:
 
-- parso/pgen2
+- parso/pgen2/*
 - parso/tokenize.py
 - parso/token.py
 - test/test_pgen2.py
+
+Also some test files under test/normalizer_issue_files have been copied from
+https://github.com/PyCQA/pycodestyle (Expat License == MIT License).
 
 -------------------------------------------------------------------------------
 The MIT License (MIT)
