@@ -47,7 +47,10 @@ class PEP8Normalizer(Normalizer):
                 for name in names[:1]:
                     self.add_issue(401, 'Multiple imports on one line', name)
         elif typ == 'lambdef':
-            if node.parent.type == 'expr_stmt':
+            expr_stmt = node.parent
+            # Check if it's simply defining a single name, not something like
+            # foo.bar or x[1], where using a lambda could make more sense.
+            if expr_stmt.type == 'expr_stmt' and any(n.type == 'name' for n in expr_stmt.children[:-2:2]):
                 self.add_issue(731, 'Do not assign a lambda expression, use a def', node)
         elif typ == 'try_stmt':
             for child in node.children:
