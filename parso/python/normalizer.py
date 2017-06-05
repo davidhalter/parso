@@ -32,6 +32,11 @@ class WhitespaceInfo(object):
         self.trailing_whitespace = []
         self.comment_whitespace = []
 
+
+def _is_magic_name(name):
+    return name.value.startswith('__') and name.value.startswith('__')
+
+
 class PEP8Normalizer(Normalizer):
     def __init__(self, config):
         super(PEP8Normalizer, self).__init__(config)
@@ -72,13 +77,30 @@ class PEP8Normalizer(Normalizer):
                     break
 
         if typ in IMPORT_TYPES:
-            module = node.parent
+            simple_stmt = node.parent
+            module = simple_stmt.parent
+            #if module.type == 'simple_stmt':
             if module.type == 'file_input':
-                index = module.children.index(node)
+                index = module.children.index(simple_stmt)
+                from parso.python.tree import Flow
                 for child in module.children[:index]:
-                    if child.type not in IMPORT_TYPES:
+                    children = [child]
+                    if child.type == 'simple_stmt':
+                        # Remove the newline.
+                        children = child.children[:-1]
+                    for c in children:
+                        if c.type == 'expr_stmt' and \
+                                all(_is_magic_name(n) for n in c.get_defined_names()):
+                            continue
+
+                        if c.type in IMPORT_TYPES or isinstance(c, Flow):
+                            continue
+
                         self.add_issue(402, 'Module level import not at top of file', node)
                         break
+                    else:
+                        continue
+                    break
 
         if typ == 'suite':
             self.indentation += 1

@@ -33,6 +33,7 @@ assert type(res) is type((1, ))
 assert type(res) is not type((1, ))
 
 # Okay
+#: E402
 import types
 
 if isinstance(res, int):
