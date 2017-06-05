@@ -65,7 +65,7 @@ class PEP8Normalizer(Normalizer):
                     self.add_issue(722, 'Do not use bare except, specify exception instead', child)
         elif typ == 'comparison':
             for child in node.children:
-                if child.type != 'atom_expr':
+                if child.type not in ('atom_expr', 'power'):
                     continue
                 if len(child.children) > 2:
                     continue
