@@ -41,7 +41,7 @@ http://docs.python.org/3/library/sys.html#sys.implementation
 
 def _get_default_cache_path():
     if platform.system().lower() == 'windows':
-        dir_ = os.path.join(os.getenv('APPDATA') or '~', 'Parso', 'Parso')
+        dir_ = os.path.join(os.getenv('LOCALAPPDATA') or '~', 'Parso', 'Parso')
     elif platform.system().lower() == 'darwin':
         dir_ = os.path.join('~', 'Library', 'Caches', 'Parso')
     else:
@@ -53,7 +53,7 @@ _default_cache_path = _get_default_cache_path()
 The path where the cache is stored.
 
 On Linux, this defaults to ``~/.cache/parso/``, on OS X to
-``~/Library/Caches/Parso/`` and on Windows to ``%APPDATA%\\Parso\\Parso\\``.
+``~/Library/Caches/Parso/`` and on Windows to ``%LOCALAPPDATA%\\Parso\\Parso\\``.
 On Linux, if environment variable ``$XDG_CACHE_HOME`` is set,
 ``$XDG_CACHE_HOME/parso`` is used instead of the default one.
 """
