@@ -119,7 +119,7 @@ class PEP8Normalizer(Normalizer):
                     self.add_issue(743, message % 'function', leaf)
                 else:
                     self.add_issuadd_issue(741, message % 'variables', leaf)
-        elif leaf.value == ':':
+        if leaf.value == ':':
             from parso.python.tree import Flow, Scope
             if isinstance(leaf.parent, (Flow, Scope)) and leaf.parent.type != 'lambdef':
                 next_leaf = leaf.get_next_leaf()
@@ -128,11 +128,33 @@ class PEP8Normalizer(Normalizer):
                         self.add_issue(704, 'Multiple statements on one line (def)', next_leaf)
                     else:
                         self.add_issue(701, 'Multiple statements on one line (colon)', next_leaf)
-        elif leaf.value == ';':
+        if leaf.value == ';':
             if leaf.get_next_leaf().type in ('newline', 'endmarker'):
                 self.add_issue(703, 'Statement ends with a semicolon', leaf)
             else:
                 self.add_issue(702, 'Multiple statements on one line (semicolon)', leaf)
+        if leaf.value in ('==', '!='):
+            comparison = leaf.parent
+            index = comparison.children.index(leaf)
+            left = comparison.children[index - 1]
+            right = comparison.children[index + 1]
+            for node in left, right:
+                if node.type == 'keyword' or node.type == 'name':
+                    if node.value == 'None':
+                        message = "comparison to None should be 'if cond is None:'"
+                        self.add_issue(711, message, leaf)
+                        break
+                    elif node.value in ('True', 'False'):
+                        message = "comparison to False/True should be 'if cond is True:' or 'if cond:'"
+                        self.add_issue(712, message, leaf)
+                        break
+        if leaf.value in ('in', 'is'):
+            comparison = leaf.parent
+            if comparison.type == 'comparison' and comparison.parent.type == 'not_test':
+                if leaf.value == 'in':
+                    self.add_issue(713, "test for membership should be 'not in'", leaf)
+                else:
+                    self.add_issue(714, "test for object identity should be 'is not'", leaf)
 
         for part in leaf._split_prefix():
             part
