@@ -119,6 +119,20 @@ class PEP8Normalizer(Normalizer):
                     self.add_issue(743, message % 'function', leaf)
                 else:
                     self.add_issuadd_issue(741, message % 'variables', leaf)
+        elif leaf.value == ':':
+            from parso.python.tree import Flow, Scope
+            if isinstance(leaf.parent, (Flow, Scope)) and leaf.parent.type != 'lambdef':
+                next_leaf = leaf.get_next_leaf()
+                if next_leaf.type != 'newline':
+                    if leaf.parent.type == 'funcdef':
+                        self.add_issue(704, 'Multiple statements on one line (def)', next_leaf)
+                    else:
+                        self.add_issue(701, 'Multiple statements on one line (colon)', next_leaf)
+        elif leaf.value == ';':
+            if leaf.get_next_leaf().type in ('newline', 'endmarker'):
+                self.add_issue(703, 'Statement ends with a semicolon', leaf)
+            else:
+                self.add_issue(702, 'Multiple statements on one line (semicolon)', leaf)
 
         for part in leaf._split_prefix():
             part
