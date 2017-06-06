@@ -17,5 +17,5 @@ async def f(x): return 2
 #: E704:10
 def f(x): return 2 * x
 while all is round:
-    #: E704:10
+    #: E704:14
     def f(x): return 2 * x

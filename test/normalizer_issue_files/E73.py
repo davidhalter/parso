@@ -1,7 +1,7 @@
 #: E731:4
 f = lambda x: 2 * x
 while False:
-    #: E731:6
+    #: E731:10
     foo = lambda y, z: 2 * x
 # Okay
 f = object()

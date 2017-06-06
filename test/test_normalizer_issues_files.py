@@ -18,7 +18,7 @@ def collect_errors(code):
                 column = len(match.group(1))
                 if ':' in code:
                     code, _, add_indent = code.partition(':')
-                    column += int(add_indent)
+                    column = int(add_indent)
 
                 yield "%s@(%s,%s)" % (code, line_nr + 1, column)
 
