@@ -20,7 +20,7 @@ def collect_errors(code):
                     code, _, add_indent = code.partition(':')
                     column = int(add_indent)
 
-                yield "%s@(%s,%s)" % (code, line_nr + 1, column)
+                yield "%s@(%s,%s)" % (code[1:], line_nr + 1, column)
 
 
 def test_normalizer_issue(normalizer_issue_file):
@@ -32,7 +32,7 @@ def test_normalizer_issue(normalizer_issue_file):
     module = parso.parse(code)
     issues = module._get_normalizer_issues()
 
-    i = set("E%s@(%s,%s)" % (i.code, i.start_pos[0], i.start_pos[1]) for i in issues)
+    i = set("%s@(%s,%s)" % (i.code, i.start_pos[0], i.start_pos[1]) for i in issues)
     d = set(desired)
     assert i == d, dedent("""
         Test %r failed (%s of %s passed).

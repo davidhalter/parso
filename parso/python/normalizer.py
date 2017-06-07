@@ -13,10 +13,14 @@ class CompressNormalizer(Normalizer):
 
 
 class Comment(object):
-    def __init__(self, comment_token, indentation):
-        self.comment_token = comment_token
-        self.indentation = indentation
-        self.start_pos = self.comment_token.start_pos
+    def __init__(self, comment_part, indentation_part):
+        self.comment_part = comment_part
+        self.indentation_part = indentation_part
+        if indentation_part is None:
+            self.indentation = ''
+        else:
+            self.indentation = indentation_part.value
+        self.start_pos = self.comment_part.start_pos
 
 
 class WhitespaceInfo(object):
@@ -33,19 +37,24 @@ class WhitespaceInfo(object):
 '''
         self.has_backslash = False
         self.comments = []
-        indentation = ''
+        indentation_part = None
         for part in parts:
             if part.type == 'backslash':
                 self.has_backslash = True
 
             if part.type == 'comment':
-                self.comments.append(Comment(part, indentation))
+                self.comments.append(Comment(part, indentation_part))
 
             if part.type == 'indentation':
-                indentation = part.value
+                indentation_part = part
             else:
-                indentation = ''
-        self.indentation = indentation
+                indentation_part = None
+
+        if indentation_part is None:
+            self.indentation = ''
+        else:
+            self.indentation = indentation_part.value
+        self.indentation_part = indentation_part
 
         self.newline_count = 2
         self.trailing_whitespace = []
@@ -62,6 +71,13 @@ class PEP8Normalizer(Normalizer):
         self._indentation_level = 0
         self._last_indentation_level = 0
         self._on_newline = True
+
+        if ' ' in config.indentation:
+            self._indentation_type = 'spaces'
+            self._wrong_indentation_char = '\t'
+        else:
+            self._indentation_type = 'tabs'
+            self._wrong_indentation_char = ' '
 
     @contextmanager
     def visit_node(self, node):
@@ -129,17 +145,25 @@ class PEP8Normalizer(Normalizer):
         if typ == 'suite':
             self._indentation_level -= 1
 
+    def _check_tabs_spaces(self, leaf, indentation):
+        if self._wrong_indentation_char in indentation:
+            self.add_issue(101, 'Indentation contains ' + self._indentation_type, leaf)
+            return True
+        return False
+
     def normalize(self, leaf):
         info = WhitespaceInfo(leaf)
         should_be_indenation = self._indentation_level * self._config.indentation
         if self._on_newline:
             if info.indentation != should_be_indenation:
-                self.add_issue(111, 'Indentation is not a multiple of four', leaf)
+                if not self._check_tabs_spaces(info.indentation_part, info.indentation):
+                    s = '%s %s' % (len(self._config.indentation), self._indentation_type)
+                    self.add_issue(111, 'Indentation is not a multiple of ' + s, leaf)
 
         first = True
         for comment in info.comments:
             if first and not self._on_newline:
-                    continue
+                continue
             first = False
 
             actual_len = len(comment.indentation)
@@ -154,12 +178,13 @@ class PEP8Normalizer(Normalizer):
             if comment.indentation == should_be_indenation:
                 self._last_indentation_level = i
             else:
-                if actual_len < should_len:
-                    self.add_issue(115, 'Expected an indented block (comment)', comment)
-                elif actual_len > should_len:
-                    self.add_issue(116, 'Unexpected indentation (comment)', comment)
-                else:
-                    self.add_issue(114, 'indentation is not a multiple of four (comment)', comment)
+                if not self._check_tabs_spaces(comment.indentation_part, comment.indentation):
+                    if actual_len < should_len:
+                        self.add_issue(115, 'Expected an indented block (comment)', comment)
+                    elif actual_len > should_len:
+                        self.add_issue(116, 'Unexpected indentation (comment)', comment)
+                    else:
+                        self.add_issue(114, 'indentation is not a multiple of four (comment)', comment)
 
             self._on_newline = True
 

@@ -15,6 +15,14 @@ class PrefixPart(object):
             return self.start_pos[0] + 1, 0
         return self.start_pos[0], self.start_pos[1] + len(self.value)
 
+    def __repr__(self):
+        return '%s(%s, %s, %s)' % (
+            self.__class__.__name__,
+            self.type,
+            repr(self.value),
+            self.start_pos
+        )
+
 
 _comment = r'#[^\n\r\f]*'
 _backslash = r'\\\r?\n'

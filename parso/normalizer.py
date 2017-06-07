@@ -16,6 +16,7 @@ class Normalizer(object):
     def add_issue(self, code, message, node):
         issue = Issue(node, code, message)
         self.issues.append(issue)
+        return True
 
 
 class NormalizerConfig(object):
