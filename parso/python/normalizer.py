@@ -41,10 +41,10 @@ class WhitespaceInfo(object):
             if part.type == 'comment':
                 self.comments.append(Comment(part, indentation))
 
-            if part.type not in ('tabs', 'spaces'):
-                indentation = ''
+            if part.type == 'indentation':
+                indentation = part.value
             else:
-                indentation += part.value
+                indentation = ''
         self.indentation = indentation
 
         self.newline_count = 2

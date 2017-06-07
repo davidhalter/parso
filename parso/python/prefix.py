@@ -18,23 +18,22 @@ class PrefixPart(object):
 
 _comment = r'#[^\n\r\f]*'
 _backslash = r'\\\r?\n'
-_whitespace = r' +'
-_tabs = r'\t+'
+_indentation = r'[ \t]+'
 _newline = r'\r?\n'
 _form_feed = r'\f'
 
-_regex = group(_comment, _backslash, _whitespace, _newline, _form_feed, _tabs)
+_regex = group(_comment, _backslash, _indentation, _newline, _form_feed)
 _regex = re.compile(_regex)
 
 
 _types = {
-    ' ': 'spaces',
+    ' ': 'indentation',
     '#': 'comment',
     '\\': 'backslash',
     '\f': 'formfeed',
     '\n': 'newline',
     '\r': 'newline',
-    '\t': 'tabs',
+    '\t': 'indentation',
 }
 
 
