@@ -37,7 +37,7 @@ def test_normalizer_issue(normalizer_issue_file):
     assert i == d, dedent("""
         Test %r failed (%s of %s passed).
         not raised  = %s
-        unspecified = %s
+        unexpected = %s
         """) % (
             normalizer_issue_file.name, len(i & d), len(d),
             sorted(d - i), sorted(i - d)

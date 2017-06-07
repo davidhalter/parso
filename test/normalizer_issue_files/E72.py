@@ -1,7 +1,7 @@
-   #: E721
+#: E721:3
 if type(res) == type(42):
     pass
-   #: E721
+#: E721:3
 if type(res) != type(""):
     pass
 

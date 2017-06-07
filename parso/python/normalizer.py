@@ -12,6 +12,13 @@ class CompressNormalizer(Normalizer):
         return leaf.prefix + leaf.value
 
 
+class Comment(object):
+    def __init__(self, comment_token, indentation):
+        self.comment_token = comment_token
+        self.indentation = indentation
+        self.start_pos = self.comment_token.start_pos
+
+
 class WhitespaceInfo(object):
     def __init__(self, leaf):
         parts = list(leaf._split_prefix())
@@ -24,11 +31,23 @@ class WhitespaceInfo(object):
     '\r': 'newline',
     '\t': 'tabs',
 '''
+        self.has_backslash = False
+        self.comments = []
+        indentation = ''
         for part in parts:
-            if part.type:
-                part
+            if part.type == 'backslash':
+                self.has_backslash = True
+
+            if part.type == 'comment':
+                self.comments.append(Comment(part, indentation))
+
+            if part.type not in ('tabs', 'spaces'):
+                indentation = ''
+            else:
+                indentation += part.value
+        self.indentation = indentation
+
         self.newline_count = 2
-        self.indentation = '  '
         self.trailing_whitespace = []
         self.comment_whitespace = []
 
@@ -40,7 +59,9 @@ def _is_magic_name(name):
 class PEP8Normalizer(Normalizer):
     def __init__(self, config):
         super(PEP8Normalizer, self).__init__(config)
-        self.indentation = 0
+        self._indentation_level = 0
+        self._last_indentation_level = 0
+        self._on_newline = True
 
     @contextmanager
     def visit_node(self, node):
@@ -103,12 +124,54 @@ class PEP8Normalizer(Normalizer):
                     break
 
         if typ == 'suite':
-            self.indentation += 1
+            self._indentation_level += 1
         yield
         if typ == 'suite':
-            self.indentation -= 1
+            self._indentation_level -= 1
 
     def normalize(self, leaf):
+        info = WhitespaceInfo(leaf)
+        should_be_indenation = self._indentation_level * self._config.indentation
+        if self._on_newline:
+            if info.indentation != should_be_indenation:
+                self.add_issue(111, 'Indentation is not a multiple of four', leaf)
+
+        first = True
+        for comment in info.comments:
+            if first and not self._on_newline:
+                    continue
+            first = False
+
+            actual_len = len(comment.indentation)
+            # Comments can be dedented. So we have to care for that.
+            for i in range(self._last_indentation_level, self._indentation_level - 1, -1):
+                should_be_indenation = i * self._config.indentation
+                should_len = len(should_be_indenation)
+                if actual_len >= should_len:
+                    break
+
+
+            if comment.indentation == should_be_indenation:
+                self._last_indentation_level = i
+            else:
+                if actual_len < should_len:
+                    self.add_issue(115, 'Expected an indented block (comment)', comment)
+                elif actual_len > should_len:
+                    self.add_issue(116, 'Unexpected indentation (comment)', comment)
+                else:
+                    self.add_issue(114, 'indentation is not a multiple of four (comment)', comment)
+
+            self._on_newline = True
+
+        self._analyse_non_prefix(leaf)
+
+        self._on_newline = leaf.type == 'newline'
+        self._last_indentation_level = self._indentation_level
+
+        return leaf.value
+
+
+    def _analyse_non_prefix(self, leaf):
         typ = leaf.type
         if typ == 'name' and leaf.value in ('l', 'O', 'I'):
             if leaf.is_definition():
@@ -156,8 +219,6 @@ class PEP8Normalizer(Normalizer):
                 else:
                     self.add_issue(714, "test for object identity should be 'is not'", leaf)
 
-        for part in leaf._split_prefix():
-            part
         return leaf.value
 
 
@@ -166,6 +227,8 @@ class PEP8NormalizerConfig(NormalizerConfig):
     """
     Normalizing to PEP8. Not really implemented, yet.
     """
+    def __init__(self):
+        self.indentation = ' ' * 4
 
 
 @PEP8NormalizerConfig.register_rule
