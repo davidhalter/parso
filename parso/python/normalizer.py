@@ -38,6 +38,7 @@ class WhitespaceInfo(object):
         self.has_backslash = False
         self.comments = []
         indentation_part = None
+        self.newline_count = 0
         for part in parts:
             if part.type == 'backslash':
                 self.has_backslash = True
@@ -50,15 +51,42 @@ class WhitespaceInfo(object):
             else:
                 indentation_part = None
 
+            if part.type == 'newline':
+                self.newline_count += 1
+
         if indentation_part is None:
             self.indentation = ''
         else:
             self.indentation = indentation_part.value
         self.indentation_part = indentation_part
 
-        self.newline_count = 2
         self.trailing_whitespace = []
         self.comment_whitespace = []
+
+
+class BracketNode(object):
+    def __init__(self, config, indentation_level, leaf):
+        next_leaf = leaf.get_next_leaf()
+        if '\n' in next_leaf.prefix:
+            # This implies code like:
+            # foobarbaz(
+            #     a,
+            #     b,
+            # )
+            self.bracket_indentation = config.indentation * indentation_level
+            self.item_indentation = self.bracket_indentation + config.indentation
+        else:
+            # Implies code like:
+            # foobarbaz(
+            #           a,
+            #           b,
+            #           )
+            self.expected_end_indent = leaf.end_pos[1]
+            if '\t' in config.indentation:
+                self.bracket_indentation = None
+            else:
+                self.bracket_indentation =  ' ' * self.expected_end_indent
+            self.item_indentation = self.bracket_indentation
 
 
 def _is_magic_name(name):
@@ -71,6 +99,7 @@ class PEP8Normalizer(Normalizer):
         self._indentation_level = 0
         self._last_indentation_level = 0
         self._on_newline = True
+        self._bracket_stack = []
 
         if ' ' in config.indentation:
             self._indentation_type = 'spaces'
@@ -152,6 +181,7 @@ class PEP8Normalizer(Normalizer):
         return False
 
     def normalize(self, leaf):
+        value = leaf.value
         info = WhitespaceInfo(leaf)
         should_be_indenation = self._indentation_level * self._config.indentation
         if self._on_newline:
@@ -159,6 +189,23 @@ class PEP8Normalizer(Normalizer):
                 if not self._check_tabs_spaces(info.indentation_part, info.indentation):
                     s = '%s %s' % (len(self._config.indentation), self._indentation_type)
                     self.add_issue(111, 'Indentation is not a multiple of ' + s, leaf)
+        elif info.newline_count:
+            if self._bracket_stack:
+                node = self._bracket_stack[-1]
+                if value in '])}':
+                    should_be_indenation = node.bracket_indentation
+                else:
+                    should_be_indenation = node.item_indentation
+                if info.indentation != should_be_indenation:
+                    if not self._check_tabs_spaces(info.indentation_part, info.indentation):
+                        if len(info.indentation) < len(should_be_indenation):
+                            if value in '])}':
+                                self.add_issue(124, "Closing bracket does not match visual indentation", leaf)
+                            else:
+                                self.add_issue(121, 'Continuation line under-indented for hanging indent', leaf)
+                        else:
+                                self.add_issue(123, "Losing bracket does not match indentation of opening bracket's line", leaf)
+            # TODO  else?
 
         first = True
         for comment in info.comments:
@@ -190,10 +237,18 @@ class PEP8Normalizer(Normalizer):
 
         self._analyse_non_prefix(leaf)
 
+        # Finalize the state.
+        if value and value in '()[]{}' and leaf.parent.type not in ('error_node', 'error_leaf'):
+            if value in '([{':
+                node = BracketNode(self._config, self._indentation_level, leaf)
+                self._bracket_stack.append(node)
+            else:
+                self._bracket_stack.pop()
+
         self._on_newline = leaf.type == 'newline'
         self._last_indentation_level = self._indentation_level
 
-        return leaf.value
+        return value
 
 
     def _analyse_non_prefix(self, leaf):
