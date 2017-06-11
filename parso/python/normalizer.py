@@ -65,6 +65,9 @@ class WhitespaceInfo(object):
 
 
 class BracketNode(object):
+    SAME_INDENT_TYPE = object()
+    NEWLINE_TYPE = object()
+
     def __init__(self, config, indentation_level, leaf):
         next_leaf = leaf.get_next_leaf()
         if '\n' in next_leaf.prefix:
@@ -75,6 +78,7 @@ class BracketNode(object):
             # )
             self.bracket_indentation = config.indentation * indentation_level
             self.item_indentation = self.bracket_indentation + config.indentation
+            self.type = self.NEWLINE_TYPE
         else:
             # Implies code like:
             # foobarbaz(
@@ -87,6 +91,7 @@ class BracketNode(object):
             else:
                 self.bracket_indentation =  ' ' * self.expected_end_indent
             self.item_indentation = self.bracket_indentation
+            self.type = self.SAME_INDENT_TYPE
 
 
 def _is_magic_name(name):
@@ -202,9 +207,18 @@ class PEP8Normalizer(Normalizer):
                             if value in '])}':
                                 self.add_issue(124, "Closing bracket does not match visual indentation", leaf)
                             else:
-                                self.add_issue(121, 'Continuation line under-indented for hanging indent', leaf)
+                                if node.type == BracketNode.SAME_INDENT_TYPE:
+                                    self.add_issue(128, 'Continuation line under-indented for visual indent', leaf)
+                                else:
+                                    self.add_issue(121, 'Continuation line under-indented for hanging indent', leaf)
                         else:
+                            if value in '])}':
                                 self.add_issue(123, "Losing bracket does not match indentation of opening bracket's line", leaf)
+                            else:
+                                if node.type == BracketNode.SAME_INDENT_TYPE:
+                                    self.add_issue(127, 'Continuation line over-indented for visual indent', leaf)
+                                else:
+                                    self.add_issue(126, 'Continuation line over-indented for hanging indent', leaf)
             # TODO  else?
 
         first = True
