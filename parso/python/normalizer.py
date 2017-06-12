@@ -94,6 +94,14 @@ class BracketNode(object):
             self.type = self.SAME_INDENT_TYPE
 
 
+class BackslashNode(object):
+    BACKSLASH_TYPE = object()
+    def __init__(self, indentation_level):
+        self.bracket_indentation = self.item_indentation = \
+            config.indentation * indentation_level
+        self.type = self.NEWLINE_TYPE
+
+
 def _is_magic_name(name):
     return name.value.startswith('__') and name.value.startswith('__')
 
@@ -190,6 +198,9 @@ class PEP8Normalizer(Normalizer):
         info = WhitespaceInfo(leaf)
         should_be_indenation = self._indentation_level * self._config.indentation
         if self._on_newline:
+            if self._bracket_stack and \
+                    self._bracket_stack[-1].type == BackslashNode.BACKSLASH_TYPE:
+                self._bracket_stack.pop()
             if info.indentation != should_be_indenation:
                 if not self._check_tabs_spaces(info.indentation_part, info.indentation):
                     s = '%s %s' % (len(self._config.indentation), self._indentation_type)
@@ -219,7 +230,12 @@ class PEP8Normalizer(Normalizer):
                                     self.add_issue(127, 'Continuation line over-indented for visual indent', leaf)
                                 else:
                                     self.add_issue(126, 'Continuation line over-indented for hanging indent', leaf)
-            # TODO  else?
+
+        if info.has_backslash:
+            if self._bracket_stack:
+                self.add_issue(502, 'The backslash is redundant between brackets', leaf)
+            else:
+                self._bracket_stack.append(BackslashNode(self._indentation_level))
 
         first = True
         for comment in info.comments:
@@ -252,7 +268,8 @@ class PEP8Normalizer(Normalizer):
         self._analyse_non_prefix(leaf)
 
         # Finalize the state.
-        if value and value in '()[]{}' and leaf.parent.type not in ('error_node', 'error_leaf'):
+        if value and value in '()[]{}' and leaf.type != 'error_leaf' \
+                and leaf.parent.type != 'error_node':
             if value in '([{':
                 node = BracketNode(self._config, self._indentation_level, leaf)
                 self._bracket_stack.append(node)

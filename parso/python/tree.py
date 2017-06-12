@@ -128,7 +128,7 @@ class PythonErrorNode(PythonMixin, ErrorNode):
     __slots__ = ()
 
 
-class PythonErrorLeaf(PythonMixin, ErrorLeaf):
+class PythonErrorLeaf(ErrorLeaf, PythonLeaf):
     __slots__ = ()
 
 
