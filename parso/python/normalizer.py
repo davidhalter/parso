@@ -42,6 +42,7 @@ class WhitespaceInfo(object):
         for part in parts:
             if part.type == 'backslash':
                 self.has_backslash = True
+                self.newline_count += 1
 
             if part.type == 'comment':
                 self.comments.append(Comment(part, indentation_part))
@@ -73,7 +74,7 @@ class IndentationNode(object):
     type = SUITE_TYPE
 
     def __init__(self, config, indentation_level):
-        self.indentation = config.indentation * indentation_level
+        self.bracket_indentation = self.indentation = config.indentation * indentation_level
 
 
 class BracketNode(IndentationNode):
@@ -107,7 +108,7 @@ class BackslashNode(IndentationNode):
     type = IndentationNode.BACKSLASH_TYPE
 
     def __init__(self, config, parent_indentation):
-        self.indentation = parent_indentation + config.indentation
+        self.bracket_indentation = self.indentation = parent_indentation + config.indentation
 
 
 def _is_magic_name(name):
@@ -189,6 +190,9 @@ class PEP8Normalizer(Normalizer):
                     break
 
         if typ == 'suite':
+            if self._indentation_stack[-1].type == IndentationNode.BACKSLASH_TYPE:
+                self._indentation_stack.pop()
+
             self._indentation_stack.append(
                 IndentationNode(self._config, len(self._indentation_stack))
             )
@@ -206,18 +210,29 @@ class PEP8Normalizer(Normalizer):
     def normalize(self, leaf):
         value = leaf.value
         info = WhitespaceInfo(leaf)
-        should_be_indentation = self._indentation_stack[-1].indentation
+
+        node = self._indentation_stack[-1]
+        if info.has_backslash and node.type != IndentationNode.BACKSLASH_TYPE:
+            if node.type != IndentationNode.SUITE_TYPE:
+                self.add_issue(502, 'The backslash is redundant between brackets', leaf)
+            else:
+                node = BackslashNode(
+                        self._config,
+                        self._indentation_stack[-1].indentation
+                    )
+                self._indentation_stack.append(node)
+
+
         if self._on_newline:
             if self._indentation_stack and \
                     self._indentation_stack[-1].type == BackslashNode.BACKSLASH_TYPE:
                 self._indentation_stack.pop()
-            if info.indentation != should_be_indentation:
+            if info.indentation != node.indentation:
                 if not self._check_tabs_spaces(info.indentation_part, info.indentation):
                     s = '%s %s' % (len(self._config.indentation), self._indentation_type)
                     self.add_issue(111, 'Indentation is not a multiple of ' + s, leaf)
         elif info.newline_count:
-            if self._indentation_stack[-1]:
-                node = self._indentation_stack[-1]
+            if True:
                 if value in '])}':
                     should_be_indentation = node.bracket_indentation
                 else:
@@ -230,6 +245,8 @@ class PEP8Normalizer(Normalizer):
                             else:
                                 if node.type == BracketNode.SAME_INDENT_TYPE:
                                     self.add_issue(128, 'Continuation line under-indented for visual indent', leaf)
+                                elif node.type == BracketNode.BACKSLASH_TYPE:
+                                    self.add_issue(122, 'Continuation line missing indentation or outdented', leaf)
                                 else:
                                     self.add_issue(121, 'Continuation line under-indented for hanging indent', leaf)
                         else:
@@ -240,17 +257,6 @@ class PEP8Normalizer(Normalizer):
                                     self.add_issue(127, 'Continuation line over-indented for visual indent', leaf)
                                 else:
                                     self.add_issue(126, 'Continuation line over-indented for hanging indent', leaf)
-
-        if info.has_backslash:
-            if self._indentation_stack[-1].type != IndentationNode.SUITE_TYPE:
-                self.add_issue(502, 'The backslash is redundant between brackets', leaf)
-            else:
-                self._indentation_stack.append(
-                    BackslashNode(
-                        self._config,
-                        self._indentation_stack[-1].indentation
-                    )
-                )
 
         first = True
         for comment in info.comments:

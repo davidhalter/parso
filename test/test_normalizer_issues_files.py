@@ -15,12 +15,13 @@ def collect_errors(code):
         if match is not None:
             codes = match.group(2)
             for code in codes.split():
-                column = len(match.group(1))
-                if ':' in code:
-                    code, _, add_indent = code.partition(':')
-                    column = int(add_indent)
+                code, _, add_indent = code.partition(':')
+                column = int(add_indent or len(match.group(1)))
 
-                yield "%s@(%s,%s)" % (code[1:], line_nr + 1, column)
+                code, _, add_line = code.partition('+')
+                l = line_nr + 1 + int(add_line or 0)
+
+                yield "%s@(%s,%s)" % (code[1:], l, column)
 
 
 def test_normalizer_issue(normalizer_issue_file):
