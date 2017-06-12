@@ -30,12 +30,15 @@ class TestP4Poller(unittest.TestCase):
 if True:
     #: E101:0
 	foo(1,
+            #: E101:0
 	    2)
 
 def test_keys(self):
     """areas.json - All regions are accounted for."""
     expected = set([
+        #: E101:0
 	u'Norrbotten',
+        #: E101:0
 	u'V\xe4sterbotten',
     ])
 if True:

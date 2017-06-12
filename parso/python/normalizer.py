@@ -64,11 +64,20 @@ class WhitespaceInfo(object):
         self.comment_whitespace = []
 
 
-class BracketNode(object):
+class IndentationNode(object):
     SAME_INDENT_TYPE = object()
     NEWLINE_TYPE = object()
+    BACKSLASH_TYPE = object()
+    SUITE_TYPE = object()
 
-    def __init__(self, config, indentation_level, leaf):
+    type = SUITE_TYPE
+
+    def __init__(self, config, indentation_level):
+        self.indentation = config.indentation * indentation_level
+
+
+class BracketNode(IndentationNode):
+    def __init__(self, config, parent_indentation, leaf):
         next_leaf = leaf.get_next_leaf()
         if '\n' in next_leaf.prefix:
             # This implies code like:
@@ -76,8 +85,8 @@ class BracketNode(object):
             #     a,
             #     b,
             # )
-            self.bracket_indentation = config.indentation * indentation_level
-            self.item_indentation = self.bracket_indentation + config.indentation
+            self.bracket_indentation = parent_indentation
+            self.indentation = parent_indentation + config.indentation
             self.type = self.NEWLINE_TYPE
         else:
             # Implies code like:
@@ -87,19 +96,18 @@ class BracketNode(object):
             #           )
             self.expected_end_indent = leaf.end_pos[1]
             if '\t' in config.indentation:
-                self.bracket_indentation = None
+                self.indentation = None
             else:
-                self.bracket_indentation =  ' ' * self.expected_end_indent
-            self.item_indentation = self.bracket_indentation
+                self.indentation =  ' ' * self.expected_end_indent
+            self.bracket_indentation = self.indentation
             self.type = self.SAME_INDENT_TYPE
 
 
-class BackslashNode(object):
-    BACKSLASH_TYPE = object()
-    def __init__(self, indentation_level):
-        self.bracket_indentation = self.item_indentation = \
-            config.indentation * indentation_level
-        self.type = self.NEWLINE_TYPE
+class BackslashNode(IndentationNode):
+    type = IndentationNode.BACKSLASH_TYPE
+
+    def __init__(self, config, parent_indentation):
+        self.indentation = parent_indentation + config.indentation
 
 
 def _is_magic_name(name):
@@ -109,10 +117,9 @@ def _is_magic_name(name):
 class PEP8Normalizer(Normalizer):
     def __init__(self, config):
         super(PEP8Normalizer, self).__init__(config)
-        self._indentation_level = 0
         self._last_indentation_level = 0
         self._on_newline = True
-        self._bracket_stack = []
+        self._indentation_stack = [IndentationNode(config, indentation_level=0)]
 
         if ' ' in config.indentation:
             self._indentation_type = 'spaces'
@@ -182,10 +189,13 @@ class PEP8Normalizer(Normalizer):
                     break
 
         if typ == 'suite':
-            self._indentation_level += 1
+            self._indentation_stack.append(
+                IndentationNode(self._config, len(self._indentation_stack))
+            )
         yield
         if typ == 'suite':
-            self._indentation_level -= 1
+            assert self._indentation_stack[-1].type == IndentationNode.SUITE_TYPE
+            self._indentation_stack.pop()
 
     def _check_tabs_spaces(self, leaf, indentation):
         if self._wrong_indentation_char in indentation:
@@ -196,25 +206,25 @@ class PEP8Normalizer(Normalizer):
     def normalize(self, leaf):
         value = leaf.value
         info = WhitespaceInfo(leaf)
-        should_be_indenation = self._indentation_level * self._config.indentation
+        should_be_indentation = self._indentation_stack[-1].indentation
         if self._on_newline:
-            if self._bracket_stack and \
-                    self._bracket_stack[-1].type == BackslashNode.BACKSLASH_TYPE:
-                self._bracket_stack.pop()
-            if info.indentation != should_be_indenation:
+            if self._indentation_stack and \
+                    self._indentation_stack[-1].type == BackslashNode.BACKSLASH_TYPE:
+                self._indentation_stack.pop()
+            if info.indentation != should_be_indentation:
                 if not self._check_tabs_spaces(info.indentation_part, info.indentation):
                     s = '%s %s' % (len(self._config.indentation), self._indentation_type)
                     self.add_issue(111, 'Indentation is not a multiple of ' + s, leaf)
         elif info.newline_count:
-            if self._bracket_stack:
-                node = self._bracket_stack[-1]
+            if self._indentation_stack[-1]:
+                node = self._indentation_stack[-1]
                 if value in '])}':
-                    should_be_indenation = node.bracket_indentation
+                    should_be_indentation = node.bracket_indentation
                 else:
-                    should_be_indenation = node.item_indentation
-                if info.indentation != should_be_indenation:
+                    should_be_indentation = node.indentation
+                if info.indentation != should_be_indentation:
                     if not self._check_tabs_spaces(info.indentation_part, info.indentation):
-                        if len(info.indentation) < len(should_be_indenation):
+                        if len(info.indentation) < len(should_be_indentation):
                             if value in '])}':
                                 self.add_issue(124, "Closing bracket does not match visual indentation", leaf)
                             else:
@@ -232,10 +242,15 @@ class PEP8Normalizer(Normalizer):
                                     self.add_issue(126, 'Continuation line over-indented for hanging indent', leaf)
 
         if info.has_backslash:
-            if self._bracket_stack:
+            if self._indentation_stack[-1].type != IndentationNode.SUITE_TYPE:
                 self.add_issue(502, 'The backslash is redundant between brackets', leaf)
             else:
-                self._bracket_stack.append(BackslashNode(self._indentation_level))
+                self._indentation_stack.append(
+                    BackslashNode(
+                        self._config,
+                        self._indentation_stack[-1].indentation
+                    )
+                )
 
         first = True
         for comment in info.comments:
@@ -245,14 +260,14 @@ class PEP8Normalizer(Normalizer):
 
             actual_len = len(comment.indentation)
             # Comments can be dedented. So we have to care for that.
-            for i in range(self._last_indentation_level, self._indentation_level - 1, -1):
-                should_be_indenation = i * self._config.indentation
-                should_len = len(should_be_indenation)
+            for i in range(self._last_indentation_level, len(self._indentation_stack) - 2, -1):
+                should_be_indentation = i * self._config.indentation
+                should_len = len(should_be_indentation)
                 if actual_len >= should_len:
                     break
 
 
-            if comment.indentation == should_be_indenation:
+            if comment.indentation == should_be_indentation:
                 self._last_indentation_level = i
             else:
                 if not self._check_tabs_spaces(comment.indentation_part, comment.indentation):
@@ -271,13 +286,21 @@ class PEP8Normalizer(Normalizer):
         if value and value in '()[]{}' and leaf.type != 'error_leaf' \
                 and leaf.parent.type != 'error_node':
             if value in '([{':
-                node = BracketNode(self._config, self._indentation_level, leaf)
-                self._bracket_stack.append(node)
+                self._indentation_stack.append(
+                    BracketNode(
+                        self._config, self._indentation_stack[-1].indentation,
+                        leaf
+                    )
+                )
             else:
-                self._bracket_stack.pop()
+                self._indentation_stack.pop()
 
         self._on_newline = leaf.type == 'newline'
-        self._last_indentation_level = self._indentation_level
+        # TODO does this work? with brackets and stuff?
+        self._last_indentation_level = len(self._indentation_stack)
+        if self._on_newline and \
+                self._indentation_stack[-1].type == IndentationNode.BACKSLASH_TYPE:
+            self._indentation_stack.pop()
 
         return value
 
