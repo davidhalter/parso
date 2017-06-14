@@ -5,6 +5,7 @@ from parso.normalizer import Normalizer, Rule, NormalizerConfig
 _IMPORT_TYPES = ('import_name', 'import_from')
 _SUITE_INTRODUCERS = ('classdef', 'funcdef', 'if_stmt', 'while_stmt',
                       'for_stmt', 'try_stmt', 'with_stmt')
+_OPENING_BRACKETS = '([{'
 
 class CompressNormalizer(Normalizer):
     """
@@ -81,6 +82,8 @@ class IndentationNode(object):
 
 class BracketNode(IndentationNode):
     def __init__(self, config, parent_indentation, leaf):
+        self.leaf = leaf
+
         next_leaf = leaf.get_next_leaf()
         if '\n' in next_leaf.prefix:
             # This implies code like:
@@ -256,14 +259,14 @@ class PEP8Normalizer(Normalizer):
                                 self.add_issue(123, "Losing bracket does not match indentation of opening bracket's line", leaf)
                         else:
                             if len(info.indentation) < len(should_be_indentation):
-                                if node.type == BracketNode.SAME_INDENT_TYPE:
+                                if node.type == IndentationNode.SAME_INDENT_TYPE:
                                     self.add_issue(128, 'Continuation line under-indented for visual indent', leaf)
-                                elif node.type == BracketNode.BACKSLASH_TYPE:
+                                elif node.type == IndentationNode.BACKSLASH_TYPE:
                                     self.add_issue(122, 'Continuation line missing indentation or outdented', leaf)
                                 else:
                                     self.add_issue(121, 'Continuation line under-indented for hanging indent', leaf)
                             else:
-                                if node.type == BracketNode.SAME_INDENT_TYPE:
+                                if node.type == IndentationNode.SAME_INDENT_TYPE:
                                     self.add_issue(127, 'Continuation line over-indented for visual indent', leaf)
                                 else:
                                     self.add_issue(126, 'Continuation line over-indented for hanging indent', leaf)
@@ -307,10 +310,22 @@ class PEP8Normalizer(Normalizer):
         # -------------------------------
         if value and value in '()[]{}' and leaf.type != 'error_leaf' \
                 and leaf.parent.type != 'error_node':
-            if value in '([{':
+            if value in _OPENING_BRACKETS:
+                # Figure out here what the indentation is. For chained brackets
+                # we can basically use the previous indentation.
+                previous_leaf = leaf
+                index = 1
+                while not info.newline_count:
+                    previous_leaf = previous_leaf.get_previous_leaf()
+                    n = self._indentation_stack[-index]
+                    if not isinstance(n, BracketNode) or previous_leaf != n.leaf:
+                        break
+                    index += 1
+                indentation = self._indentation_stack[-index].indentation
+
                 self._indentation_stack.append(
                     BracketNode(
-                        self._config, self._indentation_stack[-1].indentation,
+                        self._config, indentation,
                         leaf
                     )
                 )
