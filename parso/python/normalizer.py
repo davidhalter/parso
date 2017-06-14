@@ -2,7 +2,9 @@ from contextlib import contextmanager
 from parso.normalizer import Normalizer, Rule, NormalizerConfig
 
 
-IMPORT_TYPES = ('import_name', 'import_from')
+_IMPORT_TYPES = ('import_name', 'import_from')
+_SUITE_INTRODUCERS = ('classdef', 'funcdef', 'if_stmt', 'while_stmt',
+                      'for_stmt', 'try_stmt', 'with_stmt')
 
 class CompressNormalizer(Normalizer):
     """
@@ -121,6 +123,7 @@ class PEP8Normalizer(Normalizer):
         self._last_indentation_level = 0
         self._on_newline = True
         self._indentation_stack = [IndentationNode(config, indentation_level=0)]
+        self._in_suite_introducer = False
 
         if ' ' in config.indentation:
             self._indentation_type = 'spaces'
@@ -163,7 +166,7 @@ class PEP8Normalizer(Normalizer):
                     self.add_issue(721, "Do not compare types, use 'isinstance()", node)
                     break
 
-        if typ in IMPORT_TYPES:
+        if typ in _IMPORT_TYPES:
             simple_stmt = node.parent
             module = simple_stmt.parent
             #if module.type == 'simple_stmt':
@@ -180,7 +183,7 @@ class PEP8Normalizer(Normalizer):
                                 all(_is_magic_name(n) for n in c.get_defined_names()):
                             continue
 
-                        if c.type in IMPORT_TYPES or isinstance(c, Flow):
+                        if c.type in _IMPORT_TYPES or isinstance(c, Flow):
                             continue
 
                         self.add_issue(402, 'Module level import not at top of file', node)
@@ -188,6 +191,10 @@ class PEP8Normalizer(Normalizer):
                     else:
                         continue
                     break
+
+        in_introducer = typ in _SUITE_INTRODUCERS
+        if in_introducer:
+            self._in_suite_introducer = True
 
         if typ == 'suite':
             if self._indentation_stack[-1].type == IndentationNode.BACKSLASH_TYPE:
@@ -200,6 +207,9 @@ class PEP8Normalizer(Normalizer):
         if typ == 'suite':
             assert self._indentation_stack[-1].type == IndentationNode.SUITE_TYPE
             self._indentation_stack.pop()
+
+        if in_introducer:
+            self._in_suite_introducer = False
 
     def _check_tabs_spaces(self, leaf, indentation):
         if self._wrong_indentation_char in indentation:
@@ -239,24 +249,28 @@ class PEP8Normalizer(Normalizer):
                     should_be_indentation = node.indentation
                 if info.indentation != should_be_indentation:
                     if not self._check_tabs_spaces(info.indentation_part, info.indentation):
-                        if len(info.indentation) < len(should_be_indentation):
-                            if value in '])}':
+                        if value in '])}':
+                            if node.type == IndentationNode.SAME_INDENT_TYPE:
                                 self.add_issue(124, "Closing bracket does not match visual indentation", leaf)
                             else:
+                                self.add_issue(123, "Losing bracket does not match indentation of opening bracket's line", leaf)
+                        else:
+                            if len(info.indentation) < len(should_be_indentation):
                                 if node.type == BracketNode.SAME_INDENT_TYPE:
                                     self.add_issue(128, 'Continuation line under-indented for visual indent', leaf)
                                 elif node.type == BracketNode.BACKSLASH_TYPE:
                                     self.add_issue(122, 'Continuation line missing indentation or outdented', leaf)
                                 else:
                                     self.add_issue(121, 'Continuation line under-indented for hanging indent', leaf)
-                        else:
-                            if value in '])}':
-                                self.add_issue(123, "Losing bracket does not match indentation of opening bracket's line", leaf)
                             else:
                                 if node.type == BracketNode.SAME_INDENT_TYPE:
                                     self.add_issue(127, 'Continuation line over-indented for visual indent', leaf)
                                 else:
                                     self.add_issue(126, 'Continuation line over-indented for hanging indent', leaf)
+
+                elif self._in_suite_introducer and \
+                        info.indentation == node.indentation:
+                    self.add_issue(129, "Line with same indent as next logical line", leaf)
 
         first = True
         for comment in info.comments:
@@ -288,7 +302,9 @@ class PEP8Normalizer(Normalizer):
 
         self._analyse_non_prefix(leaf)
 
-        # Finalize the state.
+        # -------------------------------
+        # Finalizing. Updating the state.
+        # -------------------------------
         if value and value in '()[]{}' and leaf.type != 'error_leaf' \
                 and leaf.parent.type != 'error_node':
             if value in '([{':
@@ -307,6 +323,9 @@ class PEP8Normalizer(Normalizer):
         if self._on_newline and \
                 self._indentation_stack[-1].type == IndentationNode.BACKSLASH_TYPE:
             self._indentation_stack.pop()
+
+        if value == ':' and leaf.parent.type in _SUITE_INTRODUCERS:
+            self._in_suite_introducer = False
 
         return value
 
