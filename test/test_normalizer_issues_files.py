@@ -3,10 +3,33 @@ To easily verify if our normalizer raises the right error codes, just use the
 tests of pydocstyle.
 """
 
+import difflib
 import re
 from textwrap import dedent
+from functools import total_ordering
 
 import parso
+
+
+@total_ordering
+class WantedIssue(object):
+    def __init__(self, code, line, column):
+        self.code = code
+        self._line = line
+        self._column = column
+
+    def __eq__(self, other):
+        return self.code == other.code and self.start_pos == other.start_pos
+
+    def __lt__(self, other):
+        return self.start_pos < other.start_pos or self.code < other.code
+
+    def __hash__(self):
+        return hash(str(self.code) + str(self._line) + str(self._column))
+
+    @property
+    def start_pos(self):
+        return self._line, self._column
 
 
 def collect_errors(code):
@@ -21,25 +44,26 @@ def collect_errors(code):
                 code, _, add_line = code.partition('+')
                 l = line_nr + 1 + int(add_line or 0)
 
-                yield "%s@(%s,%s)" % (code[1:], l, column)
+                yield WantedIssue(code[1:], l, column)
 
 
 def test_normalizer_issue(normalizer_issue_file):
+    def sort(issues):
+        issues = sorted(issues, key=lambda i: (i.start_pos, i.code))
+        return ["(%s, %s): %s" % (i.start_pos[0], i.start_pos[1], i.code)
+                for i in issues]
+
     with open(normalizer_issue_file.path) as f:
         code = f.read()
 
-    desired = list(collect_errors(code))
+    desired = sort(collect_errors(code))
 
     module = parso.parse(code)
     issues = module._get_normalizer_issues()
+    actual = sort(issues)
 
-    i = set("%s@(%s,%s)" % (i.code, i.start_pos[0], i.start_pos[1]) for i in issues)
-    d = set(desired)
-    assert i == d, dedent("""
-        Test %r failed (%s of %s passed).
-        not raised  = %s
-        unexpected = %s
-        """) % (
-            normalizer_issue_file.name, len(i & d), len(d),
-            sorted(d - i), sorted(i - d)
-        )
+    diff = '\n'.join(difflib.ndiff(desired, actual))
+    # To make the pytest -v diff a bit prettier, stop pytest to rewrite assert
+    # statements by executing the comparison earlier.
+    _bool = desired == actual
+    assert _bool, '\n' + diff
