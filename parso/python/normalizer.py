@@ -395,6 +395,19 @@ class PEP8Normalizer(Normalizer):
 
         return leaf.value
 
+    def add_issue(self, code, message, node):
+        try:
+            parent = node.parent
+        except AttributeError:
+            # TODO for prefix parts, there's no parents yet.
+            pass
+        else:
+            while parent:
+                if parent.type == 'error_node':
+                    return
+                parent = parent.parent
+        super(PEP8Normalizer, self).add_issue(code, message, node)
+
 
 class PEP8NormalizerConfig(NormalizerConfig):
     normalizer_class = PEP8Normalizer
