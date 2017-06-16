@@ -80,6 +80,13 @@ class IndentationNode(object):
         self.bracket_indentation = self.indentation = config.indentation * indentation_level
 
 
+class IndentationStack(list):
+    def get_latest_suite_node(self):
+        for node in reversed(self):
+            if node.type == IndentationNode.SUITE_TYPE:
+                return node
+
+
 class BracketNode(IndentationNode):
     def __init__(self, config, parent_indentation, leaf):
         self.leaf = leaf
@@ -125,7 +132,9 @@ class PEP8Normalizer(Normalizer):
         super(PEP8Normalizer, self).__init__(config)
         self._last_indentation_level = 0
         self._on_newline = True
-        self._indentation_stack = [IndentationNode(config, indentation_level=0)]
+        self._indentation_stack = IndentationStack(
+            [IndentationNode(config, indentation_level=0)]
+        )
         self._in_suite_introducer = False
 
         if ' ' in config.indentation:
@@ -250,7 +259,11 @@ class PEP8Normalizer(Normalizer):
                     should_be_indentation = node.bracket_indentation
                 else:
                     should_be_indentation = node.indentation
-                if info.indentation != should_be_indentation:
+                if self._in_suite_introducer and info.indentation == \
+                            self._indentation_stack.get_latest_suite_node().indentation \
+                            + self._config.indentation:
+                        self.add_issue(129, "Line with same indent as next logical block", leaf)
+                elif info.indentation != should_be_indentation:
                     if not self._check_tabs_spaces(info.indentation_part, info.indentation):
                         if value in '])}':
                             if node.type == IndentationNode.SAME_INDENT_TYPE:
@@ -271,9 +284,6 @@ class PEP8Normalizer(Normalizer):
                                 else:
                                     self.add_issue(126, 'Continuation line over-indented for hanging indent', leaf)
 
-                elif self._in_suite_introducer and \
-                        info.indentation == node.indentation:
-                    self.add_issue(129, "Line with same indent as next logical line", leaf)
 
         first = True
         for comment in info.comments:
@@ -322,6 +332,8 @@ class PEP8Normalizer(Normalizer):
                         break
                     index += 1
                 indentation = self._indentation_stack[-index].indentation
+                if self._in_suite_introducer and node.type == node.SUITE_TYPE:
+                    indentation += self._config.indentation
 
                 self._indentation_stack.append(
                     BracketNode(
@@ -414,8 +426,11 @@ class PEP8NormalizerConfig(NormalizerConfig):
     """
     Normalizing to PEP8. Not really implemented, yet.
     """
-    def __init__(self):
-        self.indentation = ' ' * 4
+    def __init__(self, indentation=' ' * 4, hanging_indentation=None):
+        self.indentation = indentation
+        if hanging_indentation is None:
+            hanging_indentation = indentation
+        self.hanging_indentation = hanging_indentation
 
 
 @PEP8NormalizerConfig.register_rule
