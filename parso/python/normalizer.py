@@ -114,11 +114,11 @@ class BracketNode(IndentationNode):
             #           a,
             #           b,
             #           )
-            self.expected_end_indent = leaf.end_pos[1]
+            expected_end_indent = leaf.end_pos[1]
             if '\t' in config.indentation:
                 self.indentation = None
             else:
-                self.indentation =  ' ' * self.expected_end_indent
+                self.indentation =  ' ' * expected_end_indent
             self.bracket_indentation = self.indentation
             self.type = IndentationTypes.VERTICAL_BRACKET
 
@@ -140,8 +140,20 @@ class ImplicitNode(BracketNode):
 class BackslashNode(IndentationNode):
     type = IndentationTypes.BACKSLASH
 
-    def __init__(self, config, parent_indentation):
-        self.bracket_indentation = self.indentation = parent_indentation + config.indentation
+    def __init__(self, config, parent_indentation, containing_leaf):
+        from parso.python.tree import search_ancestor
+        expr_stmt = search_ancestor(containing_leaf, 'expr_stmt')
+        if expr_stmt is not None:
+            equals = expr_stmt.children[-2]
+
+            if '\t' in config.indentation:
+                # TODO unite with the code of BracketNode
+                self.indentation = None
+            else:
+                # +1 because there is a space.
+                self.indentation =  ' ' * (equals.end_pos[1] + 1)
+        else:
+            self.bracket_indentation = self.indentation = parent_indentation + config.indentation
 
 
 def _is_magic_name(name):
@@ -275,7 +287,8 @@ class PEP8Normalizer(Normalizer):
 
                 node = BackslashNode(
                         self._config,
-                        indentation
+                        indentation,
+                        leaf
                     )
                 self._indentation_stack.append(node)
 
