@@ -216,7 +216,7 @@ if (a == 2 or
          "jkl mno"):
     return True
 
-#: E129+1:4 E127+2:9
+#: E129+1:4
 if (a == 2 or
     b == """abc def ghi
 jkl mno"""):

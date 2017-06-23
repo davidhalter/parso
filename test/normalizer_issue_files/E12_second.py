@@ -134,11 +134,11 @@ my_list = [
     4, 5, 6,
     #: E123:8
         ]
-#: E126+1:8 E126+2:8
+
 abris = 3 + \
         4 + \
         5 + 6
-#: E126+1:8
+
 fixed = re.sub(r'\t+', ' ', target[c::-1], 1)[::-1] + \
         target[c + 1:]
 
@@ -156,25 +156,26 @@ eat_a_dict_a_day({
 #: E129+1:4
 if (
     x == (
-        #: E126:12
             3
+            #: E129:4
     ) or
         y == 4):
     pass
-#: E129+1:4 E129+4:4
+#: E129+1:4 E121+2:8 E129+3:4
 if (
     x == (
         3
     ) or
-    x == (
-        #: E126:12
+        x == (
+            # This one has correct indentation.
             3
+            #: E129:4
     ) or
         y == 4):
     pass
 troublesome_hash = {
     "hash": "value",
-    #: E131+1:8
+    #: E135+1:8
     "long": "the quick brown fox jumps over the lazy dog before doing a "
         "somersault",
 }

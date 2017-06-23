@@ -60,14 +60,12 @@ rv.update(dict.fromkeys((
           '?'),
           "foo")
 
-#: E126+1:10 E126+2:10
 abricot = 3 + \
           4 + \
           5 + 6
 print "hello", (
 
     "there",
-    #: E131:5
      # "john",
     "dude")
 part = set_mimetype((

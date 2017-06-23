@@ -93,7 +93,7 @@ help = ur"print total number of errors " \
 help = b"print total number of errors " \
        b"to standard error"
 
-#: E126+1:5
+#: E122+1:5
 help = br"print total number of errors " \
      br"to standard error"
 

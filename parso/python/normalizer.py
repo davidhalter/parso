@@ -1,11 +1,14 @@
+import re
 from contextlib import contextmanager
+
 from parso.normalizer import Normalizer, Rule, NormalizerConfig
 
 
 _IMPORT_TYPES = ('import_name', 'import_from')
 _SUITE_INTRODUCERS = ('classdef', 'funcdef', 'if_stmt', 'while_stmt',
                       'for_stmt', 'try_stmt', 'with_stmt')
-_OPENING_BRACKETS = '([{'
+_OPENING_BRACKETS = '(', '[', '{'
+_CLOSING_BRACKETS = ')', ']', '}'
 _IMPLICIT_INDENTATION_TYPES = ('dictorsetmaker', 'argument')
 
 class CompressNormalizer(Normalizer):
@@ -163,6 +166,7 @@ def _is_magic_name(name):
 class PEP8Normalizer(Normalizer):
     def __init__(self, config):
         super(PEP8Normalizer, self).__init__(config)
+        self._previous_leaf = None
         self._last_indentation_level = 0
         self._on_newline = True
         self._implicit_indentation_possible = False
@@ -334,7 +338,19 @@ class PEP8Normalizer(Normalizer):
                                     self.add_issue(136, 'xxx', leaf)
                                 else:
                                     self.add_issue(126, 'Continuation line over-indented for hanging indent', leaf)
-
+        else:
+            spaces = info.indentation
+            if spaces:
+                if leaf in _CLOSING_BRACKETS:
+                    message = "Whitespace before '%s'" % leaf.value
+                    self.add_issue(202, message, info.indentation_part)
+                elif leaf in (',', ';') or leaf == ':' \
+                        and leaf.parent.type not in ('subscript', 'subscriptlist'):
+                    message = "Whitespace before '%s'" % leaf.value
+                    self.add_issue(203, message, info.indentation_part)
+                elif self._previous_leaf in _OPENING_BRACKETS:
+                    message = "Whitespace after '%s'" % leaf.value
+                    self.add_issue(201, message, info.indentation_part)
 
         first = True
         for comment in info.comments:
@@ -412,6 +428,7 @@ class PEP8Normalizer(Normalizer):
         if value == ':' and leaf.parent.type in _SUITE_INTRODUCERS:
             self._in_suite_introducer = False
 
+        self._previous_leaf = leaf
         return value
 
 
@@ -426,7 +443,7 @@ class PEP8Normalizer(Normalizer):
                     self.add_issue(743, message % 'function', leaf)
                 else:
                     self.add_issuadd_issue(741, message % 'variables', leaf)
-        if leaf.value == ':':
+        elif leaf.value == ':':
             from parso.python.tree import Flow, Scope
             if isinstance(leaf.parent, (Flow, Scope)) and leaf.parent.type != 'lambdef':
                 next_leaf = leaf.get_next_leaf()
@@ -435,12 +452,12 @@ class PEP8Normalizer(Normalizer):
                         self.add_issue(704, 'Multiple statements on one line (def)', next_leaf)
                     else:
                         self.add_issue(701, 'Multiple statements on one line (colon)', next_leaf)
-        if leaf.value == ';':
+        elif leaf.value == ';':
             if leaf.get_next_leaf().type in ('newline', 'endmarker'):
                 self.add_issue(703, 'Statement ends with a semicolon', leaf)
             else:
                 self.add_issue(702, 'Multiple statements on one line (semicolon)', leaf)
-        if leaf.value in ('==', '!='):
+        elif leaf.value in ('==', '!='):
             comparison = leaf.parent
             index = comparison.children.index(leaf)
             left = comparison.children[index - 1]
@@ -455,13 +472,19 @@ class PEP8Normalizer(Normalizer):
                         message = "comparison to False/True should be 'if cond is True:' or 'if cond:'"
                         self.add_issue(712, message, leaf)
                         break
-        if leaf.value in ('in', 'is'):
+        elif leaf.value in ('in', 'is'):
             comparison = leaf.parent
             if comparison.type == 'comparison' and comparison.parent.type == 'not_test':
                 if leaf.value == 'in':
                     self.add_issue(713, "test for membership should be 'not in'", leaf)
                 else:
                     self.add_issue(714, "test for object identity should be 'is not'", leaf)
+        elif typ == 'string':
+            # Checking multiline strings
+            for i, line in enumerate(leaf.value.splitlines()[1:]):
+                indentation = re.match('[ \t]*', line).group(0)
+                start_pos = leaf.line + i, len(indentation)
+                # TODO check multiline indentation.
 
         return leaf.value
 

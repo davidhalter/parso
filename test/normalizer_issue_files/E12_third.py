@@ -58,10 +58,13 @@ rv.update(d=('a', 'b', 'c'),
           #: E127:13
              e=42)
 
-#: E127+2:17
+#: E135+2:17
 rv.update(d=('a' + 'b', 'c'),
           e=42, f=42
                  + 42)
+rv.update(d=('a' + 'b', 'c'),
+          e=42, f=42
+                  + 42)
 #: E127+1:26
 input1 = {'a': {'calc': 1 + 2}, 'b': 1
                           + 42}
@@ -102,7 +105,7 @@ print dedent(
         mkdir -p ./{build}/
         mv ./build/ ./{build}/%(revision)s/
     '''.format(
-        #: E121:4 E121+1:5 E123+2:0
+        #: E121:4 E123+2:0
     build='build',
     # more stuff
 )
@@ -112,5 +115,5 @@ if True:\
 print(True)
 
 #: E128+1
-print(a
+foobar(a
 , end=' ')
