@@ -348,6 +348,9 @@ class PEP8Normalizer(Normalizer):
                         and leaf.parent.type not in ('subscript', 'subscriptlist'):
                     message = "Whitespace before '%s'" % leaf.value
                     self.add_issue(203, message, info.indentation_part)
+                elif leaf in _OPENING_BRACKETS:
+                    message = "Whitespace before '%s'" % leaf.value
+                    self.add_issue(211, message, info.indentation_part)
                 elif self._previous_leaf in _OPENING_BRACKETS:
                     message = "Whitespace after '%s'" % leaf.value
                     self.add_issue(201, message, info.indentation_part)
