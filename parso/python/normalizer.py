@@ -2,13 +2,23 @@ import re
 from contextlib import contextmanager
 
 from parso.normalizer import Normalizer, Rule, NormalizerConfig
+from parso.python.prefix import PrefixPart
 
 
 _IMPORT_TYPES = ('import_name', 'import_from')
 _SUITE_INTRODUCERS = ('classdef', 'funcdef', 'if_stmt', 'while_stmt',
                       'for_stmt', 'try_stmt', 'with_stmt')
+_NON_STAR_TYPES = ('term', 'import_from', 'power')
 _OPENING_BRACKETS = '(', '[', '{'
 _CLOSING_BRACKETS = ')', ']', '}'
+# TODO ~ << >> & | ^
+_FACTOR = '+', '-', '~'
+_ALLOW_SPACE = '*', '+', '-', '**', '/', '//', '@'
+_BITWISE_OPERATOR = '<<', '>>', '|', '&', '^'
+_NEEDS_SPACE = '=', '<', '>', '==', '>=', '<=', '<>', '!=', '%', \
+               '+=', '-=', '*=', '@=', '/=', '%=', '&=', '|=', '^=', '<<=', \
+               '>>=', '**=', '//='
+_NEEDS_SPACE += _BITWISE_OPERATOR
 _IMPLICIT_INDENTATION_TYPES = ('dictorsetmaker', 'argument')
 
 class CompressNormalizer(Normalizer):
@@ -44,7 +54,14 @@ class WhitespaceInfo(object):
 '''
         self.has_backslash = False
         self.comments = []
-        indentation_part = None
+        # TODO this should probably be moved to a function that gets the
+        # indentation part.
+        if parts:
+            start_pos = parts[0].start_pos
+        else:
+            start_pos = leaf.start_pos
+        indentation_part = PrefixPart(leaf, 'indentation', '', start_pos)
+
         self.newline_count = 0
         for part in parts:
             if part.type == 'backslash':
@@ -339,21 +356,7 @@ class PEP8Normalizer(Normalizer):
                                 else:
                                     self.add_issue(126, 'Continuation line over-indented for hanging indent', leaf)
         else:
-            spaces = info.indentation
-            if spaces:
-                if leaf in _CLOSING_BRACKETS:
-                    message = "Whitespace before '%s'" % leaf.value
-                    self.add_issue(202, message, info.indentation_part)
-                elif leaf in (',', ';') or leaf == ':' \
-                        and leaf.parent.type not in ('subscript', 'subscriptlist'):
-                    message = "Whitespace before '%s'" % leaf.value
-                    self.add_issue(203, message, info.indentation_part)
-                elif leaf in _OPENING_BRACKETS:
-                    message = "Whitespace before '%s'" % leaf.value
-                    self.add_issue(211, message, info.indentation_part)
-                elif self._previous_leaf in _OPENING_BRACKETS:
-                    message = "Whitespace after '%s'" % leaf.value
-                    self.add_issue(201, message, info.indentation_part)
+            self._check_spacing(leaf, info)
 
         first = True
         for comment in info.comments:
@@ -432,8 +435,86 @@ class PEP8Normalizer(Normalizer):
             self._in_suite_introducer = False
 
         self._previous_leaf = leaf
+        self._previous_whitespace_info = info
         return value
 
+    def _check_spacing(self, leaf, info):
+        spaces = info.indentation
+        prev = self._previous_leaf
+        if '\t' in spaces:
+            self.add_issue(223, 'Used tab to separate tokens', info.indentation_part)
+        elif len(spaces) > 1:
+            self.add_issue(221, 'Multiple spaces used', info.indentation_part)
+        elif info.comments:
+            pass
+        else:
+            def add_if_spaces(*args):
+                if spaces:
+                    return self.add_issue(*args)
+
+            def add_not_spaces(*args):
+                if not spaces:
+                    return self.add_issue(*args)
+
+            if leaf.type == 'newline':
+                add_if_spaces(291, 'Trailing whitespace', info.indentation_part)
+            elif prev in _OPENING_BRACKETS:
+                message = "Whitespace after '%s'" % leaf.value
+                add_if_spaces(201, message, info.indentation_part)
+            elif leaf in _CLOSING_BRACKETS:
+                message = "Whitespace before '%s'" % leaf.value
+                add_if_spaces(202, message, info.indentation_part)
+            #elif leaf in _OPENING_BRACKETS:
+                # TODO
+            #    if False:
+            #        message = "Whitespace before '%s'" % leaf.value
+            #        add_if_spaces(211, message, info.indentation_part)
+            elif leaf in (',', ';') or leaf == ':' \
+                    and leaf.parent.type not in ('subscript', 'subscriptlist'):
+                message = "Whitespace before '%s'" % leaf.value
+                add_if_spaces(203, message, info.indentation_part)
+            elif leaf == ':':  # Is a subscript
+                # TODO
+                pass
+            elif prev.type == 'keyword':
+                add_not_spaces(275, 'Missing whitespace around keyword', info.indentation_part)
+            elif leaf.type == 'keyword':
+                add_not_spaces(275, 'Missing whitespace around keyword', info.indentation_part)
+            elif prev in (',', ';', ':'):
+                # TODO
+                pass
+            elif leaf in ('*', '**') and leaf.parent.type not in _NON_STAR_TYPES \
+                    or prev in ('*', '**') \
+                    and prev.parent.type not in _NON_STAR_TYPES:
+                # TODO
+                pass
+            elif prev in _FACTOR and prev.parent.type == 'factor':
+                pass
+            elif leaf in _NEEDS_SPACE or prev in _NEEDS_SPACE:
+                if leaf == '=' and leaf.parent.type in ('argument', 'param') \
+                        or prev == '=' and prev.parent.type in ('argument', 'param'):
+                    add_if_spaces(251, 'Unexpected spaces around keyword / parameter equals', info.indentation_part)
+                elif leaf in _BITWISE_OPERATOR or prev in _BITWISE_OPERATOR:
+                    add_not_spaces(227, 'Missing whitespace around bitwise or shift operator', info.indentation_part)
+                elif leaf == '%' or prev == '%':
+                    add_not_spaces(228, 'Missing whitespace around modulo operator', info.indentation_part)
+                else:
+                    message_225 = 'Missing whitespace between tokens'
+                    add_not_spaces(225, message_225, info.indentation_part)
+                    #print('x', leaf.start_pos, leaf, prev)
+            else:
+                prev_info = self._previous_whitespace_info
+                message_225 = 'Missing whitespace between tokens'
+                if prev in _ALLOW_SPACE and spaces != prev_info.indentation:
+                    message = "Whitespace before operator doesn't match with whitespace after"
+                    self.add_issue(229, message, info.indentation_part)
+
+                if spaces and leaf not in _ALLOW_SPACE and prev not in _ALLOW_SPACE:
+                    #print(leaf, prev)
+                    self.add_issue(225, message_225, info.indentation_part)
+
+                #if not prev_info.indentation and leaf not in _ALLOW_SPACE:
+                    #self.add_issue(225, message_225, prev_info.indentation_part)
 
     def _analyse_non_prefix(self, leaf):
         typ = leaf.type
@@ -492,16 +573,10 @@ class PEP8Normalizer(Normalizer):
         return leaf.value
 
     def add_issue(self, code, message, node):
-        try:
-            parent = node.parent
-        except AttributeError:
-            # TODO for prefix parts, there's no parents yet.
-            pass
-        else:
-            while parent:
-                if parent.type == 'error_node':
-                    return
-                parent = parent.parent
+        from parso.python.tree import search_ancestor
+        if search_ancestor(node, 'error_node') is not None or \
+                search_ancestor(self._previous_leaf, 'error_node') is not None:
+            return
         super(PEP8Normalizer, self).add_issue(code, message, node)
 
 

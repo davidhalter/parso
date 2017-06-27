@@ -4,7 +4,8 @@ from parso.tokenize import group
 
 
 class PrefixPart(object):
-    def __init__(self, typ, value, start_pos):
+    def __init__(self, leaf, typ, value, start_pos):
+        self.parent = leaf
         self.type = typ
         self.value = value
         self.start_pos = start_pos
@@ -45,14 +46,14 @@ _types = {
 }
 
 
-def split_prefix(prefix, start_pos):
+def split_prefix(leaf, start_pos):
     line, column = start_pos
     start = 0
-    while start != len(prefix):
-        match =_regex.match(prefix, start)
+    while start != len(leaf.prefix):
+        match =_regex.match(leaf.prefix, start)
         value = match.group(0)
         typ = _types[value[0]]
-        yield PrefixPart(typ, value, (line, column + start))
+        yield PrefixPart(leaf, typ, value, (line, column + start))
 
         start = match.end(0)
         if value.endswith('\n'):
