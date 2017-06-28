@@ -233,6 +233,13 @@ class PEP8Normalizer(Normalizer):
                         and atom.value == 'type':
                     self.add_issue(721, "Do not compare types, use 'isinstance()", node)
                     break
+        elif typ == 'file_input':
+            endmarker = node.children[-1]
+            prev = endmarker.get_previous_leaf()
+            prefix = endmarker.prefix
+            if (not prefix.endswith('\n') and (
+                    prefix or prev is None or prev.value != '\n')):
+                self.add_issue(292, "Do not compare types, use 'isinstance()", endmarker)
 
         if typ in _IMPORT_TYPES:
             simple_stmt = node.parent
@@ -440,6 +447,14 @@ class PEP8Normalizer(Normalizer):
         return value
 
     def _check_spacing(self, leaf, info):
+        def add_if_spaces(*args):
+            if spaces:
+                return self.add_issue(*args)
+
+        def add_not_spaces(*args):
+            if not spaces:
+                return self.add_issue(*args)
+
         spaces = info.indentation
         prev = self._previous_leaf
         if prev is not None and prev.type == 'error_leaf' or leaf.type == 'error_leaf':
@@ -447,22 +462,14 @@ class PEP8Normalizer(Normalizer):
 
         if '\t' in spaces:
             self.add_issue(223, 'Used tab to separate tokens', info.indentation_part)
+        elif leaf.type == 'newline':
+            add_if_spaces(291, 'Trailing whitespace', info.indentation_part)
         elif len(spaces) > 1:
             self.add_issue(221, 'Multiple spaces used', info.indentation_part)
         elif info.comments:
             pass
         else:
-            def add_if_spaces(*args):
-                if spaces:
-                    return self.add_issue(*args)
-
-            def add_not_spaces(*args):
-                if not spaces:
-                    return self.add_issue(*args)
-
-            if leaf.type == 'newline':
-                add_if_spaces(291, 'Trailing whitespace', info.indentation_part)
-            elif prev in _OPENING_BRACKETS:
+            if prev in _OPENING_BRACKETS:
                 message = "Whitespace after '%s'" % leaf.value
                 add_if_spaces(201, message, info.indentation_part)
             elif leaf in _CLOSING_BRACKETS:
@@ -583,6 +590,7 @@ class PEP8Normalizer(Normalizer):
     def add_issue(self, code, message, node):
         from parso.python.tree import search_ancestor
         if search_ancestor(node, 'error_node') is not None or \
+                self._previous_leaf is not None and \
                 search_ancestor(self._previous_leaf, 'error_node') is not None:
             return
         super(PEP8Normalizer, self).add_issue(code, message, node)
