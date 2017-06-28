@@ -442,6 +442,9 @@ class PEP8Normalizer(Normalizer):
     def _check_spacing(self, leaf, info):
         spaces = info.indentation
         prev = self._previous_leaf
+        if prev is not None and prev.type == 'error_leaf' or leaf.type == 'error_leaf':
+            return
+
         if '\t' in spaces:
             self.add_issue(223, 'Used tab to separate tokens', info.indentation_part)
         elif len(spaces) > 1:
@@ -505,7 +508,7 @@ class PEP8Normalizer(Normalizer):
                     message_225 = 'Missing whitespace between tokens'
                     add_not_spaces(225, message_225, info.indentation_part)
                     #print('x', leaf.start_pos, leaf, prev)
-            elif leaf.type =='keyword' or prev.type == 'keyword':
+            elif leaf.type == 'keyword' or prev.type == 'keyword':
                 add_not_spaces(275, 'Missing whitespace around keyword', info.indentation_part)
             else:
                 prev_info = self._previous_whitespace_info
