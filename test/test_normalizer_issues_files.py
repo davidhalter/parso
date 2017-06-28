@@ -9,6 +9,7 @@ from textwrap import dedent
 from functools import total_ordering
 
 import parso
+from parso.utils import source_to_unicode
 
 
 @total_ordering
@@ -53,8 +54,8 @@ def test_normalizer_issue(normalizer_issue_file):
         return ["(%s, %s): %s" % (i.start_pos[0], i.start_pos[1], i.code)
                 for i in issues]
 
-    with open(normalizer_issue_file.path) as f:
-        code = f.read()
+    with open(normalizer_issue_file.path, 'rb') as f:
+        code = source_to_unicode(f.read())
 
     desired = sort(collect_errors(code))
 
