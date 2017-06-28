@@ -474,10 +474,9 @@ class PEP8Normalizer(Normalizer):
                     and leaf.parent.type not in ('subscript', 'subscriptlist'):
                 message = "Whitespace before '%s'" % leaf.value
                 add_if_spaces(203, message, info.indentation_part)
-            elif leaf == ':':  # Is a subscript
-                # TODO
-                pass
             elif prev in (',', ';', ':'):
+                add_not_spaces('231', "missing whitespace after '%s'", info.indentation_part)
+            elif leaf == ':':  # Is a subscript
                 # TODO
                 pass
             elif leaf in ('*', '**') and leaf.parent.type not in _NON_STAR_TYPES \
