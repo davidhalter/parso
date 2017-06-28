@@ -18,3 +18,4 @@ def test_eof_newline():
     assert_issue('asdf = 1\n#')
     assert_issue('# foobar')
     assert_issue('')
+    assert_issue('foo = 1  # comment')
