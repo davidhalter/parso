@@ -15,9 +15,10 @@ _CLOSING_BRACKETS = ')', ']', '}'
 _FACTOR = '+', '-', '~'
 _ALLOW_SPACE = '*', '+', '-', '**', '/', '//', '@'
 _BITWISE_OPERATOR = '<<', '>>', '|', '&', '^'
-_NEEDS_SPACE = '=', '<', '>', '==', '>=', '<=', '<>', '!=', '%', \
-               '+=', '-=', '*=', '@=', '/=', '%=', '&=', '|=', '^=', '<<=', \
-               '>>=', '**=', '//='
+_NEEDS_SPACE = ('=', '%', '->',
+                '<', '>', '==', '>=', '<=', '<>', '!=',
+                '+=', '-=', '*=', '@=', '/=', '%=', '&=', '|=', '^=', '<<=',
+                '>>=', '**=', '//=')
 _NEEDS_SPACE += _BITWISE_OPERATOR
 _IMPLICIT_INDENTATION_TYPES = ('dictorsetmaker', 'argument')
 
@@ -476,10 +477,6 @@ class PEP8Normalizer(Normalizer):
             elif leaf == ':':  # Is a subscript
                 # TODO
                 pass
-            elif prev.type == 'keyword':
-                add_not_spaces(275, 'Missing whitespace around keyword', info.indentation_part)
-            elif leaf.type == 'keyword':
-                add_not_spaces(275, 'Missing whitespace around keyword', info.indentation_part)
             elif prev in (',', ';', ':'):
                 # TODO
                 pass
@@ -493,7 +490,14 @@ class PEP8Normalizer(Normalizer):
             elif leaf in _NEEDS_SPACE or prev in _NEEDS_SPACE:
                 if leaf == '=' and leaf.parent.type in ('argument', 'param') \
                         or prev == '=' and prev.parent.type in ('argument', 'param'):
-                    add_if_spaces(251, 'Unexpected spaces around keyword / parameter equals', info.indentation_part)
+                    if leaf == '=':
+                        param = leaf.parent
+                    else:
+                        param = prev.parent
+                    if param.type == 'param' and param.annotation:
+                        add_not_spaces(252, 'Expected spaces around annotation equals', info.indentation_part)
+                    else:
+                        add_if_spaces(251, 'Unexpected spaces around keyword / parameter equals', info.indentation_part)
                 elif leaf in _BITWISE_OPERATOR or prev in _BITWISE_OPERATOR:
                     add_not_spaces(227, 'Missing whitespace around bitwise or shift operator', info.indentation_part)
                 elif leaf == '%' or prev == '%':
@@ -502,6 +506,8 @@ class PEP8Normalizer(Normalizer):
                     message_225 = 'Missing whitespace between tokens'
                     add_not_spaces(225, message_225, info.indentation_part)
                     #print('x', leaf.start_pos, leaf, prev)
+            elif leaf.type =='keyword' or prev.type == 'keyword':
+                add_not_spaces(275, 'Missing whitespace around keyword', info.indentation_part)
             else:
                 prev_info = self._previous_whitespace_info
                 message_225 = 'Missing whitespace between tokens'
