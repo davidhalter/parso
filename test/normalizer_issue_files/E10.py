@@ -2,7 +2,7 @@ for a in 'abc':
     for b in 'xyz':
         print a  # indented with 8 spaces
         #: W101:0
-	print b  # indented with 1 tab
+	print(b)  # indented with 1 tab
 if True:
     #: W101:0
 	pass
@@ -29,9 +29,8 @@ class TestP4Poller(unittest.TestCase):
 
 #
 if True:
-    #: E101:0
+    #: E101:0 E101+1:0
 	foo(1,
-            #: E101:0
 	    2)
 
 def test_keys(self):

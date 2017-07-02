@@ -26,11 +26,11 @@ assert type(res) == type((0,))
 #: E721:7
 assert type(res) == type((0))
 #: E721:7
-assert type(res) != type((1, ))
+assert type(res) != type((1,))
 #: E721:7
-assert type(res) is type((1, ))
+assert type(res) is type((1,))
 #: E721:7
-assert type(res) is not type((1, ))
+assert type(res) is not type((1,))
 
 # Okay
 #: E402
