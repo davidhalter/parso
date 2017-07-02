@@ -381,7 +381,10 @@ class PEP8Normalizer(Normalizer):
                         n = n.parent
 
                 if self._new_statement:
-                    if indentation != should_be_indentation:
+                    if leaf.type == 'newline':
+                        if indentation:
+                            self.add_issue(291, 'Trailing whitespace', spacing)
+                    elif indentation != should_be_indentation:
                         s = '%s %s' % (len(self._config.indentation), self._indentation_type)
                         self.add_issue(111, 'Indentation is not a multiple of ' + s, leaf)
                 else:
@@ -538,7 +541,6 @@ class PEP8Normalizer(Normalizer):
                 else:
                     message_225 = 'Missing whitespace between tokens'
                     add_not_spaces(225, message_225, spacing)
-                    #print('x', leaf.start_pos, leaf, prev)
             elif type_ == 'keyword' or prev.type == 'keyword':
                 add_not_spaces(275, 'Missing whitespace around keyword', spacing)
             else:
@@ -549,7 +551,6 @@ class PEP8Normalizer(Normalizer):
                     self.add_issue(229, message, spacing)
 
                 if spaces and leaf not in _ALLOW_SPACE and prev not in _ALLOW_SPACE:
-                    #print(leaf, prev)
                     self.add_issue(225, message_225, spacing)
 
     def _analyse_non_prefix(self, leaf):
