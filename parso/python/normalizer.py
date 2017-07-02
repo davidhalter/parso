@@ -106,8 +106,9 @@ class IndentationTypes(object):
 class IndentationNode(object):
     type = IndentationTypes.SUITE
 
-    def __init__(self, config, indentation_level):
-        self.bracket_indentation = self.indentation = config.indentation * indentation_level
+    def __init__(self, config, indentation, parent=None):
+        self.bracket_indentation = self.indentation = indentation
+        self.parent = parent
 
     def __repr__(self):
         return '<%s>' % self.__class__.__name__
@@ -121,7 +122,7 @@ class IndentationStack(list):
 
 
 class BracketNode(IndentationNode):
-    def __init__(self, config, parent_indentation, leaf):
+    def __init__(self, config, parent_indentation, leaf, parent):
         self.leaf = leaf
 
         next_leaf = leaf.get_next_leaf()
@@ -148,6 +149,7 @@ class BracketNode(IndentationNode):
                 self.indentation =  ' ' * expected_end_indent
             self.bracket_indentation = self.indentation
             self.type = IndentationTypes.VERTICAL_BRACKET
+        self.parent = parent
 
 
 class ImplicitNode(BracketNode):
@@ -155,8 +157,8 @@ class ImplicitNode(BracketNode):
     Implicit indentation after keyword arguments, default arguments,
     annotations and dict values.
     """
-    def __init__(self, config, parent_indentation, leaf):
-        super(ImplicitNode, self).__init__(config, parent_indentation, leaf)
+    def __init__(self, config, parent_indentation, leaf, parent):
+        super(ImplicitNode, self).__init__(config, parent_indentation, leaf, parent)
         self.type = IndentationTypes.IMPLICIT
 
         next_leaf = leaf.get_next_leaf()
@@ -167,7 +169,7 @@ class ImplicitNode(BracketNode):
 class BackslashNode(IndentationNode):
     type = IndentationTypes.BACKSLASH
 
-    def __init__(self, config, parent_indentation, containing_leaf):
+    def __init__(self, config, parent_indentation, containing_leaf, parent=None):
         from parso.python.tree import search_ancestor
         expr_stmt = search_ancestor(containing_leaf, 'expr_stmt')
         if expr_stmt is not None:
@@ -181,6 +183,7 @@ class BackslashNode(IndentationNode):
                 self.indentation =  ' ' * (equals.end_pos[1] + 1)
         else:
             self.bracket_indentation = self.indentation = parent_indentation + config.indentation
+        self.parent = parent
 
 
 def _is_magic_name(name):
@@ -191,12 +194,12 @@ class PEP8Normalizer(Normalizer):
     def __init__(self, config):
         super(PEP8Normalizer, self).__init__(config)
         self._previous_leaf = None
-        self._last_indentation_level = 0
         self._on_newline = True
+        self._new_statement = True
         self._implicit_indentation_possible = False
-        self._indentation_stack = IndentationStack(
-            [IndentationNode(config, indentation_level=0)]
-        )
+        # The top of stack of the indentation nodes.
+        self._indentation_tos = self._last_indentation_tos = \
+            IndentationNode(config, indentation='')
         self._in_suite_introducer = False
 
         if ' ' in config.indentation:
@@ -278,22 +281,24 @@ class PEP8Normalizer(Normalizer):
         if in_introducer:
             self._in_suite_introducer = True
         elif typ == 'suite':
-            if self._indentation_stack[-1].type == IndentationTypes.BACKSLASH:
-                self._indentation_stack.pop()
+            if self._indentation_tos.type == IndentationTypes.BACKSLASH:
+                self._indentation_tos = self._indentation_tos.parent
 
-            self._indentation_stack.append(
-                IndentationNode(self._config, len(self._indentation_stack))
+            self._indentation_tos = IndentationNode(
+                self._config,
+                self._indentation_tos.indentation + self._config.indentation,
+                parent=self._indentation_tos
             )
         elif implicit_indentation_possible:
             self._implicit_indentation_possible = True
         yield
         if typ == 'suite':
-            assert self._indentation_stack[-1].type == IndentationTypes.SUITE
-            self._indentation_stack.pop()
+            assert self._indentation_tos.type == IndentationTypes.SUITE
+            self._indentation_tos = self._indentation_tos.parent
         elif implicit_indentation_possible:
             self._implicit_indentation_possible = False
-            if self._indentation_stack[-1].type == IndentationTypes.IMPLICIT:
-                self._indentation_stack.pop()
+            if self._indentation_tos.type == IndentationTypes.IMPLICIT:
+                self._indentation_tos = self._indentation_tos.parent
         elif in_introducer:
             self._in_suite_introducer = False
 
@@ -309,15 +314,20 @@ class PEP8Normalizer(Normalizer):
                 # This part is used for the part call after for.
                 break
             self._old_normalize(part, part.create_spacing_part())
-        return self._old_normalize(leaf, part)
+
+        x = self._old_normalize(leaf, part)
+        self._last_indentation_tos = self._indentation_tos
+
+        self._new_statement = leaf.type == 'newline'
+        return x
 
     def _old_normalize(self, leaf, spacing):
         value = leaf.value
 
         if value == ',' and leaf.parent.type == 'dictorsetmaker':
-            self._indentation_stack.pop()
+            self._indentation_tos = self._indentation_tos.parent
 
-        node = self._indentation_stack[-1]
+        node = self._indentation_tos
 
         if False and info.has_backslash and node.type != IndentationTypes.BACKSLASH:
             if node.type != IndentationTypes.SUITE:
@@ -327,87 +337,74 @@ class PEP8Normalizer(Normalizer):
                 if self._in_suite_introducer and node.type == IndentationTypes.SUITE:
                     indentation += self._config.indentation
 
-                node = BackslashNode(
-                        self._config,
-                        indentation,
-                        leaf
-                    )
-                self._indentation_stack.append(node)
-
+                self._indentation_tos = BackslashNode(
+                    self._config,
+                    indentation,
+                    leaf,
+                    parent=self._indentation_tos
+                )
 
         if self._on_newline:
             indentation = spacing.value
             if node.type == IndentationTypes.BACKSLASH \
                     and self._previous_leaf.type == 'newline':
-                self._indentation_stack.pop()
+                self._indentation_tos = self._indentation_tos.parent
 
-            if indentation != node.indentation:
-                if not self._check_tabs_spaces(spacing):
-                    s = '%s %s' % (len(self._config.indentation), self._indentation_type)
-                    self.add_issue(111, 'Indentation is not a multiple of ' + s, leaf)
-            else:
-                if value in '])}':
-                    should_be_indentation = node.bracket_indentation
+            if not self._check_tabs_spaces(spacing):
+                should_be_indentation = node.indentation
+                if leaf.type == 'comment':
+                    # Comments can be dedented. So we have to care for that.
+                    n = self._last_indentation_tos
+                    while True:
+                        if len(indentation) > len(n.indentation):
+                            break
+
+                        should_be_indentation = n.indentation
+
+                        self._last_indentation_tos = n
+                        if n == node:
+                            break
+                        n = n.parent
+
+                if self._new_statement:
+                    if indentation != should_be_indentation:
+                        s = '%s %s' % (len(self._config.indentation), self._indentation_type)
+                        self.add_issue(111, 'Indentation is not a multiple of ' + s, leaf)
                 else:
-                    should_be_indentation = node.indentation
-                if self._in_suite_introducer and indentation == \
-                            self._indentation_stack.get_latest_suite_node().indentation \
-                            + self._config.indentation:
-                        self.add_issue(129, "Line with same indent as next logical block", leaf)
-                elif indentation != should_be_indentation:
-                    if not self._check_tabs_spaces(spacing):
-                        if value in '])}':
-                            if node.type == IndentationTypes.VERTICAL_BRACKET:
-                                self.add_issue(124, "Closing bracket does not match visual indentation", leaf)
-                            else:
-                                self.add_issue(123, "Losing bracket does not match indentation of opening bracket's line", leaf)
-                        else:
-                            if len(indentation) < len(should_be_indentation):
+                    if value in '])}':
+                        should_be_indentation = node.bracket_indentation
+                    else:
+                        should_be_indentation = node.indentation
+                    if self._in_suite_introducer and indentation == \
+                                self._indentation_stack.get_latest_suite_node().indentation \
+                                + self._config.indentation:
+                            self.add_issue(129, "Line with same indent as next logical block", leaf)
+                    elif indentation != should_be_indentation:
+                        if not self._check_tabs_spaces(spacing):
+                            if value in '])}':
                                 if node.type == IndentationTypes.VERTICAL_BRACKET:
-                                    self.add_issue(128, 'Continuation line under-indented for visual indent', leaf)
-                                elif node.type == IndentationTypes.BACKSLASH:
-                                    self.add_issue(122, 'Continuation line missing indentation or outdented', leaf)
-                                elif node.type == IndentationTypes.IMPLICIT:
-                                    self.add_issue(135, 'xxx', leaf)
+                                    self.add_issue(124, "Closing bracket does not match visual indentation", leaf)
                                 else:
-                                    self.add_issue(121, 'Continuation line under-indented for hanging indent', leaf)
+                                    self.add_issue(123, "Losing bracket does not match indentation of opening bracket's line", leaf)
                             else:
-                                if node.type == IndentationTypes.VERTICAL_BRACKET:
-                                    self.add_issue(127, 'Continuation line over-indented for visual indent', leaf)
-                                elif node.type == IndentationTypes.IMPLICIT:
-                                    self.add_issue(136, 'xxx', leaf)
+                                if len(indentation) < len(should_be_indentation):
+                                    if node.type == IndentationTypes.VERTICAL_BRACKET:
+                                        self.add_issue(128, 'Continuation line under-indented for visual indent', leaf)
+                                    elif node.type == IndentationTypes.BACKSLASH:
+                                        self.add_issue(122, 'Continuation line missing indentation or outdented', leaf)
+                                    elif node.type == IndentationTypes.IMPLICIT:
+                                        self.add_issue(135, 'xxx', leaf)
+                                    else:
+                                        self.add_issue(121, 'Continuation line under-indented for hanging indent', leaf)
                                 else:
-                                    self.add_issue(126, 'Continuation line over-indented for hanging indent', leaf)
+                                    if node.type == IndentationTypes.VERTICAL_BRACKET:
+                                        self.add_issue(127, 'Continuation line over-indented for visual indent', leaf)
+                                    elif node.type == IndentationTypes.IMPLICIT:
+                                        self.add_issue(136, 'xxx', leaf)
+                                    else:
+                                        self.add_issue(126, 'Continuation line over-indented for hanging indent', leaf)
         else:
             self._check_spacing(leaf, spacing)
-
-        first = True
-        for comment in []:#info.comments:
-            if first and not self._on_newline:
-                continue
-            first = False
-
-            actual_len = len(comment.indentation)
-            # Comments can be dedented. So we have to care for that.
-            for i in range(self._last_indentation_level, len(self._indentation_stack) - 2, -1):
-                should_be_indentation = i * self._config.indentation
-                should_len = len(should_be_indentation)
-                if actual_len >= should_len:
-                    break
-
-
-            if comment.indentation == should_be_indentation:
-                self._last_indentation_level = i
-            else:
-                if not self._check_tabs_spaces(spacing):
-                    if actual_len < should_len:
-                        self.add_issue(115, 'Expected an indented block (comment)', comment)
-                    elif actual_len > should_len:
-                        self.add_issue(116, 'Unexpected indentation (comment)', comment)
-                    else:
-                        self.add_issue(114, 'indentation is not a multiple of four (comment)', comment)
-
-            self._on_newline = True
 
         self._analyse_non_prefix(leaf)
 
@@ -420,39 +417,36 @@ class PEP8Normalizer(Normalizer):
                 # Figure out here what the indentation is. For chained brackets
                 # we can basically use the previous indentation.
                 previous_leaf = leaf
-                index = 1
-                while not info.newline_count:
+                n = self._indentation_tos
+                while True:#not info.newline_count:
                     previous_leaf = previous_leaf.get_previous_leaf()
-                    n = self._indentation_stack[-index]
                     if not isinstance(n, BracketNode) or previous_leaf != n.leaf:
                         break
-                    index += 1
-                indentation = self._indentation_stack[-index].indentation
+                    n = n.parent
+                indentation = n.indentation
                 if self._in_suite_introducer and node.type == IndentationTypes.SUITE:
                     indentation += self._config.indentation
 
-                self._indentation_stack.append(
-                    BracketNode(
-                        self._config, indentation,
-                        leaf
-                    )
+                self._indentation_tos = BracketNode(
+                    self._config, indentation, leaf,
+                    parent=self._indentation_tos
                 )
             else:
                 assert node.type != IndentationTypes.IMPLICIT
-                self._indentation_stack.pop()
+                self._indentation_tos = self._indentation_tos.parent
         elif value in ('=', ':') and self._implicit_indentation_possible \
                 and leaf.parent.type in _IMPLICIT_INDENTATION_TYPES:
             indentation = node.indentation
-            self._indentation_stack.append(
-                ImplicitNode(self._config, indentation, leaf)
+            self._indentation_tos = ImplicitNode(
+                self._config, indentation, leaf,
+                parent=self._indentation_tos
             )
 
         self._on_newline = leaf.type == 'newline'
         # TODO does this work? with brackets and stuff?
-        self._last_indentation_level = len(self._indentation_stack)
         if self._on_newline and \
-                self._indentation_stack[-1].type == IndentationTypes.BACKSLASH:
-            self._indentation_stack.pop()
+                self._indentation_tos.type == IndentationTypes.BACKSLASH:
+            self._indentation_tos = self._indentation_tos.parent
 
         if value == ':' and leaf.parent.type in _SUITE_INTRODUCERS:
             self._in_suite_introducer = False
@@ -475,9 +469,12 @@ class PEP8Normalizer(Normalizer):
         if prev is not None and prev.type == 'error_leaf' or leaf.type == 'error_leaf':
             return
 
+        type_ = leaf.type
         if '\t' in spaces:
             self.add_issue(223, 'Used tab to separate tokens', spacing)
-        elif leaf.type == 'newline':
+        elif type_ == 'comment':
+            pass  # TODO
+        elif type_ == 'newline':
             add_if_spaces(291, 'Trailing whitespace', spacing)
         elif len(spaces) > 1:
             self.add_issue(221, 'Multiple spaces used', spacing)
@@ -528,7 +525,7 @@ class PEP8Normalizer(Normalizer):
                     message_225 = 'Missing whitespace between tokens'
                     add_not_spaces(225, message_225, spacing)
                     #print('x', leaf.start_pos, leaf, prev)
-            elif leaf.type == 'keyword' or prev.type == 'keyword':
+            elif type_ == 'keyword' or prev.type == 'keyword':
                 add_not_spaces(275, 'Missing whitespace around keyword', spacing)
             else:
                 prev_info = self._previous_spacing

@@ -68,7 +68,6 @@ def split_prefix(leaf, start_pos):
         if not value:
             break
         type_ = _types[value[0]]
-        print(repr(spacing), repr(value), column)
         yield PrefixPart(
             leaf, type_, value, spacing,
             start_pos=(line, column + start + len(spacing))
@@ -79,7 +78,6 @@ def split_prefix(leaf, start_pos):
             line += 1
             column = -start
 
-    print('x', repr(value), repr(spacing))
     if value:
         spacing = ''
     yield PrefixPart(

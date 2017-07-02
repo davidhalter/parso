@@ -5,7 +5,6 @@ tests of pydocstyle.
 
 import difflib
 import re
-from textwrap import dedent
 from functools import total_ordering
 
 import parso
