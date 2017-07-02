@@ -113,12 +113,13 @@ class IndentationNode(object):
     def __repr__(self):
         return '<%s>' % self.__class__.__name__
 
-
-class IndentationStack(list):
     def get_latest_suite_node(self):
-        for node in reversed(self):
-            if node.type == IndentationTypes.SUITE:
-                return node
+        n = self
+        while n is not None:
+            if n.type == IndentationTypes.SUITE:
+                return n
+
+            n = n.parent
 
 
 class BracketNode(IndentationNode):
@@ -316,9 +317,20 @@ class PEP8Normalizer(Normalizer):
             self._old_normalize(part, part.create_spacing_part())
 
         x = self._old_normalize(leaf, part)
+
+        # Cleanup
         self._last_indentation_tos = self._indentation_tos
 
         self._new_statement = leaf.type == 'newline'
+
+        # TODO does this work? with brackets and stuff?
+        if leaf.type == 'newline' and \
+                self._indentation_tos.type == IndentationTypes.BACKSLASH:
+            self._indentation_tos = self._indentation_tos.parent
+
+        if leaf.value == ':' and leaf.parent.type in _SUITE_INTRODUCERS:
+            self._in_suite_introducer = False
+
         return x
 
     def _old_normalize(self, leaf, spacing):
@@ -329,22 +341,24 @@ class PEP8Normalizer(Normalizer):
 
         node = self._indentation_tos
 
-        if False and info.has_backslash and node.type != IndentationTypes.BACKSLASH:
-            if node.type != IndentationTypes.SUITE:
-                self.add_issue(502, 'The backslash is redundant between brackets', leaf)
-            else:
-                indentation = node.indentation
-                if self._in_suite_introducer and node.type == IndentationTypes.SUITE:
-                    indentation += self._config.indentation
+        if leaf.type == 'backslash':
+            # TODO is this enough checking? What about ==?
+            if node.type != IndentationTypes.BACKSLASH:
+                if node.type != IndentationTypes.SUITE:
+                    self.add_issue(502, 'The backslash is redundant between brackets', leaf)
+                else:
+                    indentation = node.indentation
+                    if self._in_suite_introducer and node.type == IndentationTypes.SUITE:
+                        indentation += self._config.indentation
 
-                self._indentation_tos = BackslashNode(
-                    self._config,
-                    indentation,
-                    leaf,
-                    parent=self._indentation_tos
-                )
+                    self._indentation_tos = BackslashNode(
+                        self._config,
+                        indentation,
+                        leaf,
+                        parent=self._indentation_tos
+                    )
 
-        if self._on_newline:
+        elif self._on_newline:
             indentation = spacing.value
             if node.type == IndentationTypes.BACKSLASH \
                     and self._previous_leaf.type == 'newline':
@@ -376,7 +390,7 @@ class PEP8Normalizer(Normalizer):
                     else:
                         should_be_indentation = node.indentation
                     if self._in_suite_introducer and indentation == \
-                                self._indentation_stack.get_latest_suite_node().indentation \
+                                node.get_latest_suite_node().indentation \
                                 + self._config.indentation:
                             self.add_issue(129, "Line with same indent as next logical block", leaf)
                     elif indentation != should_be_indentation:
@@ -442,14 +456,7 @@ class PEP8Normalizer(Normalizer):
                 parent=self._indentation_tos
             )
 
-        self._on_newline = leaf.type == 'newline'
-        # TODO does this work? with brackets and stuff?
-        if self._on_newline and \
-                self._indentation_tos.type == IndentationTypes.BACKSLASH:
-            self._indentation_tos = self._indentation_tos.parent
-
-        if value == ':' and leaf.parent.type in _SUITE_INTRODUCERS:
-            self._in_suite_introducer = False
+        self._on_newline = leaf.type in ('newline', 'backslash')
 
         self._previous_leaf = leaf
         self._previous_spacing = spacing
@@ -528,9 +535,9 @@ class PEP8Normalizer(Normalizer):
             elif type_ == 'keyword' or prev.type == 'keyword':
                 add_not_spaces(275, 'Missing whitespace around keyword', spacing)
             else:
-                prev_info = self._previous_spacing
+                prev_spacing = self._previous_spacing
                 message_225 = 'Missing whitespace between tokens'
-                if prev in _ALLOW_SPACE and spaces != prev_info.indentation:
+                if prev in _ALLOW_SPACE and spaces != prev_spacing.value:
                     message = "Whitespace before operator doesn't match with whitespace after"
                     self.add_issue(229, message, spacing)
 
