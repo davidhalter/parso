@@ -249,7 +249,7 @@ class PEP8Normalizer(Normalizer):
             prefix = endmarker.prefix
             if (not prefix.endswith('\n') and (
                     prefix or prev is None or prev.value != '\n')):
-                self.add_issue(292, "Do not compare types, use 'isinstance()", endmarker)
+                self.add_issue(292, "No newline at end of file", endmarker)
 
         if typ in _IMPORT_TYPES:
             simple_stmt = node.parent
