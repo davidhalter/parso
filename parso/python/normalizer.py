@@ -41,67 +41,13 @@ class Comment(object):
         self.start_pos = self.comment_part.start_pos
 
 
-class WhitespaceInfo(object):
-    def __init__(self, leaf):
-        parts = list(leaf._split_prefix())
-        '''
-    ' ': 'spaces',
-    '#': 'comment',
-    '\\': 'backslash',
-    '\f': 'formfeed',
-    '\n': 'newline',
-    '\r': 'newline',
-    '\t': 'tabs',
-'''
-        self.has_backslash = False
-        self.comments = []
-        # TODO this should probably be moved to a function that gets the
-        # indentation part.
-        if parts:
-            start_pos = parts[0].start_pos
-        else:
-            start_pos = leaf.start_pos
-        indentation_part = PrefixPart(
-            leaf,
-            type='spacing',
-            value='',
-            spacing='',
-            start_pos=start_pos
-        )
-
-        self.newline_count = 0
-        for part in parts:
-            if part.type == 'backslash':
-                self.has_backslash = True
-                self.newline_count += 1
-
-            if part.type == 'comment':
-                self.comments.append(Comment(part, indentation_part))
-
-            if part.type == 'spacing':
-                indentation_part = part
-            else:
-                indentation_part = None
-
-            if part.type == 'newline':
-                self.newline_count += 1
-
-        if indentation_part is None:
-            self.indentation = ''
-        else:
-            self.indentation = indentation_part.value
-        self.indentation_part = indentation_part
-
-        self.trailing_whitespace = []
-        self.comment_whitespace = []
-
-
 class IndentationTypes(object):
     VERTICAL_BRACKET = object()
     HANGING_BRACKET = object()
     BACKSLASH = object()
     SUITE = object()
     IMPLICIT = object()
+
 
 class IndentationNode(object):
     type = IndentationTypes.SUITE
@@ -196,6 +142,7 @@ class PEP8Normalizer(Normalizer):
         super(PEP8Normalizer, self).__init__(config)
         self._previous_leaf = None
         self._on_newline = True
+        self._newline_count = 0
         self._new_statement = True
         self._implicit_indentation_possible = False
         # The top of stack of the indentation nodes.
@@ -428,7 +375,8 @@ class PEP8Normalizer(Normalizer):
         if last_column > self._config.max_characters:
             self.add_issue(
                 501,
-                'Line too long (%s > %s characters)' % (last_column, self._config.max_characters),
+                'Line too long (%s > %s characters)' %
+                    (last_column, self._config.max_characters),
                 leaf
             )
 
@@ -520,6 +468,8 @@ class PEP8Normalizer(Normalizer):
                 pass
             elif prev in _FACTOR and prev.parent.type == 'factor':
                 pass
+            elif prev == '@' and prev.parent.type == 'decorator':
+                pass  # TODO should probably raise an error if there's a space here
             elif leaf in _NEEDS_SPACE or prev in _NEEDS_SPACE:
                 if leaf == '=' and leaf.parent.type in ('argument', 'param') \
                         or prev == '=' and prev.parent.type in ('argument', 'param'):
