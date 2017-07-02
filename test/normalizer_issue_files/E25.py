@@ -51,6 +51,6 @@ async  def add(a: int = 0, b: int = 0) -> int:
 def x(b: tuple = (1, 2))->int:
     return a + b
 
-#: E252:11 E252:12
+#: E252:11 E252:12 E231:8
 def b(a:int=1):
     pass

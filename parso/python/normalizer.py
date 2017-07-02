@@ -502,11 +502,6 @@ class PEP8Normalizer(Normalizer):
             elif leaf in _CLOSING_BRACKETS:
                 message = "Whitespace before '%s'" % leaf.value
                 add_if_spaces(202, message, spacing)
-            #elif leaf in _OPENING_BRACKETS:
-                # TODO
-            #    if False:
-            #        message = "Whitespace before '%s'" % leaf.value
-            #        add_if_spaces(211, message, spacing)
             elif leaf in (',', ';') or leaf == ':' \
                     and leaf.parent.type not in ('subscript', 'subscriptlist'):
                 message = "Whitespace before '%s'" % leaf.value
@@ -547,13 +542,18 @@ class PEP8Normalizer(Normalizer):
                 add_not_spaces(275, 'Missing whitespace around keyword', spacing)
             else:
                 prev_spacing = self._previous_spacing
-                message_225 = 'Missing whitespace between tokens'
                 if prev in _ALLOW_SPACE and spaces != prev_spacing.value:
                     message = "Whitespace before operator doesn't match with whitespace after"
                     self.add_issue(229, message, spacing)
 
                 if spaces and leaf not in _ALLOW_SPACE and prev not in _ALLOW_SPACE:
-                    self.add_issue(225, message_225, spacing)
+                    message_225 = 'Missing whitespace between tokens'
+                    #print('xy', spacing)
+                    #self.add_issue(225, message_225, spacing)
+                    # TODO why only brackets?
+                    if leaf in _OPENING_BRACKETS:
+                        message = "Whitespace before '%s'" % leaf.value
+                        add_if_spaces(211, message, spacing)
 
     def _analyse_non_prefix(self, leaf):
         typ = leaf.type
