@@ -421,6 +421,13 @@ class PEP8Normalizer(Normalizer):
             self._check_spacing(leaf, spacing)
 
         self._analyse_non_prefix(leaf)
+        last_column = leaf.end_pos[1]
+        if last_column > self._config.max_characters:
+            self.add_issue(
+                501,
+                'Line too long (%s > %s characters)' % (last_column, self._config.max_characters),
+                leaf
+            )
 
         # -------------------------------
         # Finalizing. Updating the state.
@@ -622,6 +629,7 @@ class PEP8NormalizerConfig(NormalizerConfig):
         self.hanging_indentation = hanging_indentation
         self.closing_bracket_hanging_indentation = ''
         self.break_after_binary = False
+        self.max_characters = 79
 
 
 @PEP8NormalizerConfig.register_rule
