@@ -278,6 +278,10 @@ class PEP8Normalizer(Normalizer):
         if leaf.value == ':' and leaf.parent.type in _SUITE_INTRODUCERS:
             self._in_suite_introducer = False
 
+        if not self._new_statement:
+            self._newline_count = 0
+
+
         return x
 
     def _old_normalize(self, leaf, spacing):
@@ -287,6 +291,18 @@ class PEP8Normalizer(Normalizer):
             self._indentation_tos = self._indentation_tos.parent
 
         node = self._indentation_tos
+
+        if leaf.type == 'comment':
+            self._newline_count = 0
+        elif leaf.type == 'newline':
+            suite_node = node.get_latest_suite_node()
+            max_lines = 3 if suite_node.parent is None else 2
+            if self._newline_count >= max_lines:
+                self.add_issue(303, "Too many blank lines (%s)" % self._newline_count, leaf)
+
+            self._newline_count += 1
+            #if | E302       | expected 2 blank lines, found 0
+            #    self.add_issue(302, "Too many blank lines (%s)" % self._newline_count, leaf)
 
         if leaf.type == 'backslash':
             # TODO is this enough checking? What about ==?
