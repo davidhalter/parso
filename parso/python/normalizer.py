@@ -143,6 +143,7 @@ class PEP8Normalizer(Normalizer):
         self._previous_leaf = None
         self._on_newline = True
         self._newline_count = 0
+        self._wanted_newline_count = None
         self._new_statement = True
         self._implicit_indentation_possible = False
         # The top of stack of the indentation nodes.
@@ -249,6 +250,8 @@ class PEP8Normalizer(Normalizer):
                 self._indentation_tos = self._indentation_tos.parent
         elif in_introducer:
             self._in_suite_introducer = False
+            if typ in ('classdef', 'funcdef'):
+                self._wanted_newline_count = self._get_wanted_blank_lines_count()
 
     def _check_tabs_spaces(self, spacing):
         if self._wrong_indentation_char in spacing.value:
@@ -256,14 +259,37 @@ class PEP8Normalizer(Normalizer):
             return True
         return False
 
+    def _get_wanted_blank_lines_count(self):
+        suite_node = self._indentation_tos.get_latest_suite_node()
+        return int(suite_node.parent is None) + 1
+
+    def _reset_newlines(self, spacing, actual_leaf, is_comment=False):
+        wanted = self._wanted_newline_count
+        if wanted is not None:
+            # Need to substract one
+            blank_lines = self._newline_count - 1
+            if wanted > blank_lines and actual_leaf.type != 'endmarker':
+                # In case of a comment we don't need to add the issue, yet.
+                if not is_comment:
+                    # TODO end_pos wrong.
+                    code = 302 if wanted == 2 else 301
+                    message = "expected %s blank line, found %s" \
+                        % (wanted, blank_lines)
+                    self.add_issue(code, message, spacing)
+                    self._wanted_newline_count = None
+            else:
+                self._wanted_newline_count = None
+
+        self._newline_count = 0
+
     def normalize(self, leaf):
         for part in leaf._split_prefix():
             if part.type == 'spacing':
                 # This part is used for the part call after for.
                 break
-            self._old_normalize(part, part.create_spacing_part())
+            self._old_normalize(part, part.create_spacing_part(), leaf)
 
-        x = self._old_normalize(leaf, part)
+        x = self._old_normalize(leaf, part, leaf)
 
         # Cleanup
         self._last_indentation_tos = self._indentation_tos
@@ -279,12 +305,11 @@ class PEP8Normalizer(Normalizer):
             self._in_suite_introducer = False
 
         if not self._new_statement:
-            self._newline_count = 0
-
+            self._reset_newlines(part, leaf)
 
         return x
 
-    def _old_normalize(self, leaf, spacing):
+    def _old_normalize(self, leaf, spacing, actual_leaf):
         value = leaf.value
 
         if value == ',' and leaf.parent.type == 'dictorsetmaker':
@@ -293,11 +318,9 @@ class PEP8Normalizer(Normalizer):
         node = self._indentation_tos
 
         if leaf.type == 'comment':
-            self._newline_count = 0
+            self._reset_newlines(spacing, actual_leaf, is_comment=True)
         elif leaf.type == 'newline':
-            suite_node = node.get_latest_suite_node()
-            max_lines = 3 if suite_node.parent is None else 2
-            if self._newline_count >= max_lines:
+            if self._newline_count > self._get_wanted_blank_lines_count():
                 self.add_issue(303, "Too many blank lines (%s)" % self._newline_count, leaf)
 
             self._newline_count += 1
