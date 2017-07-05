@@ -642,6 +642,9 @@ class PEP8Normalizer(Normalizer):
                 indentation = re.match('[ \t]*', line).group(0)
                 start_pos = leaf.line + i, len(indentation)
                 # TODO check multiline indentation.
+        elif typ == 'endmarker':
+            if self._newline_count >= 2:
+                self.add_issue(391, 'Blank line at end of file', leaf)
 
         return leaf.value
 
@@ -676,7 +679,7 @@ class FooRule(Rule):
 
 @PEP8NormalizerConfig.register_rule
 class BlankLineAtEnd(Rule):
-    code = 'W391'
+    code = 391
     message = 'blank line at end of file'
 
     leaf_event = ['endmarker']

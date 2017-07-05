@@ -19,3 +19,15 @@ def test_eof_newline():
     assert_issue('# foobar')
     assert_issue('')
     assert_issue('foo = 1  # comment')
+
+
+def test_eof_blankline():
+    def assert_issue(code):
+        found = issues(code)
+        assert len(found) == 1
+        issue, = found
+        assert issue.code == 391
+
+    assert_issue('asdf = 1\n\n')
+    assert_issue('# foobar\n\n')
+    assert_issue('\n\n')
