@@ -141,9 +141,11 @@ class PEP8Normalizer(Normalizer):
     def __init__(self, config):
         super(PEP8Normalizer, self).__init__(config)
         self._previous_leaf = None
+        self._actual_previous_leaf = None
         self._on_newline = True
         self._newline_count = 0
         self._wanted_newline_count = None
+        self._max_new_lines_in_prefix = 0
         self._new_statement = True
         self._implicit_indentation_possible = False
         # The top of stack of the indentation nodes.
@@ -264,6 +266,9 @@ class PEP8Normalizer(Normalizer):
         return int(suite_node.parent is None) + 1
 
     def _reset_newlines(self, spacing, actual_leaf, is_comment=False):
+        self._max_new_lines_in_prefix = \
+            max(self._max_new_lines_in_prefix, self._newline_count)
+
         wanted = self._wanted_newline_count
         if wanted is not None:
             # Need to substract one
@@ -279,6 +284,27 @@ class PEP8Normalizer(Normalizer):
                     self._wanted_newline_count = None
             else:
                 self._wanted_newline_count = None
+
+        if not is_comment:
+            wanted = self._get_wanted_blank_lines_count()
+            actual = self._max_new_lines_in_prefix - 1
+
+            val = actual_leaf.value
+            needs_lines = (
+                val == '@' and actual_leaf.parent.type == 'decorator'
+                or val == 'class'
+                or val == 'async' and actual_leaf.get_next_leaf() == 'def'
+                or val == 'def' and self._actual_previous_leaf != 'async'
+            )
+            if needs_lines and actual < wanted:
+                # The first leaf should not be added.
+                if self._actual_previous_leaf is not None:
+                    code = 302 if wanted == 2 else 301
+                    message = "expected %s blank line, found %s" \
+                        % (wanted, actual)
+                    self.add_issue(code, message, spacing)
+
+            self._max_new_lines_in_prefix = 0
 
         self._newline_count = 0
 
@@ -306,6 +332,9 @@ class PEP8Normalizer(Normalizer):
 
         if not self._new_statement:
             self._reset_newlines(part, leaf)
+            self._max_blank_lines = 0
+
+        self._actual_previous_leaf = leaf
 
         return x
 

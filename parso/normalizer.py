@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+from functools import total_ordering
 
 
 class Normalizer(object):
@@ -15,7 +16,8 @@ class Normalizer(object):
 
     def add_issue(self, code, message, node):
         issue = Issue(node, code, message)
-        self.issues.append(issue)
+        if issue not in self.issues:
+            self.issues.append(issue)
         return True
 
 
@@ -52,6 +54,16 @@ class Issue(object):
         self.code = code
         self.message = message
         self.start_pos = node.start_pos
+
+    def __eq__(self, other):
+        return self.start_pos == other.start_pos and self.code == other.code
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __hash__(self):
+        return hash((self.code, self.start_pos))
+
 
 
 class Rule(object):
