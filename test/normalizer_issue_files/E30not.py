@@ -3,12 +3,17 @@ class X:
     pass
 # Okay
 
+
 def foo():
     pass
+
+
 # Okay
 # -*- coding: utf-8 -*-
 class X:
     pass
+
+
 # Okay
 # -*- coding: utf-8 -*-
 def foo():
@@ -162,6 +167,8 @@ defined_properly = True
 # Okay
 defaults = {}
 defaults.update({})
+
+
 # Okay
 def foo(x):
     classification = x
