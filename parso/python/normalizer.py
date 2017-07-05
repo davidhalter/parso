@@ -299,8 +299,14 @@ class PEP8Normalizer(Normalizer):
                 ) and actual_leaf.parent.parent.type != 'decorated'
             )
             if needs_lines and actual < wanted:
-                # The first leaf should not be added.
-                if self._actual_previous_leaf is not None:
+                func_or_cls = actual_leaf.parent
+                suite = func_or_cls.parent
+                if suite.type == 'decorated':
+                    suite = suite.parent
+
+                # The first leaf of a file or a suite should not need blank
+                # lines.
+                if suite.children[int(suite.type == 'suite')] != func_or_cls:
                     code = 302 if wanted == 2 else 301
                     message = "expected %s blank line, found %s" \
                         % (wanted, actual)
