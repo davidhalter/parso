@@ -96,6 +96,8 @@ def a():
     print
 
 
+#: E302+2
+a = 3
 #: E304+1
 @decorator
 

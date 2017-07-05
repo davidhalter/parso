@@ -292,9 +292,11 @@ class PEP8Normalizer(Normalizer):
             val = actual_leaf.value
             needs_lines = (
                 val == '@' and actual_leaf.parent.type == 'decorator'
-                or val == 'class'
-                or val == 'async' and actual_leaf.get_next_leaf() == 'def'
-                or val == 'def' and self._actual_previous_leaf != 'async'
+                or (
+                    val == 'class'
+                    or val == 'async' and actual_leaf.get_next_leaf() == 'def'
+                    or val == 'def' and self._actual_previous_leaf != 'async'
+                ) and actual_leaf.parent.parent.type != 'decorated'
             )
             if needs_lines and actual < wanted:
                 # The first leaf should not be added.
@@ -340,23 +342,29 @@ class PEP8Normalizer(Normalizer):
 
     def _old_normalize(self, leaf, spacing, actual_leaf):
         value = leaf.value
+        type_ = leaf.type
+        # TODO get rid of error_leaf
 
         if value == ',' and leaf.parent.type == 'dictorsetmaker':
             self._indentation_tos = self._indentation_tos.parent
 
         node = self._indentation_tos
 
-        if leaf.type == 'comment':
+        if type_ == 'comment':
             self._reset_newlines(spacing, actual_leaf, is_comment=True)
-        elif leaf.type == 'newline':
+        elif type_ == 'newline':
             if self._newline_count > self._get_wanted_blank_lines_count():
                 self.add_issue(303, "Too many blank lines (%s)" % self._newline_count, leaf)
+            elif actual_leaf in ('def', 'class') \
+                    and actual_leaf.parent.parent.type == 'decorated':
+                self.add_issue(304, "Blank lines found after function decorator", leaf)
+
 
             self._newline_count += 1
             #if | E302       | expected 2 blank lines, found 0
             #    self.add_issue(302, "Too many blank lines (%s)" % self._newline_count, leaf)
 
-        if leaf.type == 'backslash':
+        if type_ == 'backslash':
             # TODO is this enough checking? What about ==?
             if node.type != IndentationTypes.BACKSLASH:
                 if node.type != IndentationTypes.SUITE:
@@ -381,7 +389,7 @@ class PEP8Normalizer(Normalizer):
 
             if not self._check_tabs_spaces(spacing):
                 should_be_indentation = node.indentation
-                if leaf.type == 'comment':
+                if type_ == 'comment':
                     # Comments can be dedented. So we have to care for that.
                     n = self._last_indentation_tos
                     while True:
@@ -396,7 +404,7 @@ class PEP8Normalizer(Normalizer):
                         n = n.parent
 
                 if self._new_statement:
-                    if leaf.type == 'newline':
+                    if type_ == 'newline':
                         if indentation:
                             self.add_issue(291, 'Trailing whitespace', spacing)
                     elif indentation != should_be_indentation:
@@ -451,7 +459,7 @@ class PEP8Normalizer(Normalizer):
         # -------------------------------
         # Finalizing. Updating the state.
         # -------------------------------
-        if value and value in '()[]{}' and leaf.type != 'error_leaf' \
+        if value and value in '()[]{}' and type_ != 'error_leaf' \
                 and leaf.parent.type != 'error_node':
             if value in _OPENING_BRACKETS:
                 # Figure out here what the indentation is. For chained brackets
@@ -482,7 +490,7 @@ class PEP8Normalizer(Normalizer):
                 parent=self._indentation_tos
             )
 
-        self._on_newline = leaf.type in ('newline', 'backslash')
+        self._on_newline = type_ in ('newline', 'backslash')
 
         self._previous_leaf = leaf
         self._previous_spacing = spacing
