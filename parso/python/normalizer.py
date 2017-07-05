@@ -246,6 +246,8 @@ class PEP8Normalizer(Normalizer):
         if typ == 'suite':
             assert self._indentation_tos.type == IndentationTypes.SUITE
             self._indentation_tos = self._indentation_tos.parent
+            # If we dedent, no lines are needed anymore.
+            self._wanted_newline_count = None
         elif implicit_indentation_possible:
             self._implicit_indentation_possible = False
             if self._indentation_tos.type == IndentationTypes.IMPLICIT:
