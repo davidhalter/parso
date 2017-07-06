@@ -27,11 +27,13 @@ class TestP4Poller(unittest.TestCase):
     def tearDown(self):
         pass
 
+
 #
 if True:
     #: E101:0 E101+1:0
 	foo(1,
 	    2)
+
 
 def test_keys(self):
     """areas.json - All regions are accounted for."""
@@ -41,6 +43,8 @@ def test_keys(self):
         #: E101:0
 	u'V\xe4sterbotten',
     ])
+
+
 if True:
     print("""
 	tab at start of this line

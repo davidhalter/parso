@@ -38,11 +38,14 @@ if start[1] > end_col and not (
 	return (0, "E121 continuation line over-"
 	        "indented for visual indent")
 
+
 #: E101+3
 def long_function_name(
         var_one, var_two, var_three,
         var_four):
 	print(var_one)
+
+
 #: E101+2
 if ((row < 0 or self.moduleCount <= row or
      col < 0 or self.moduleCount <= col)):
@@ -119,6 +122,8 @@ if True:
 	foo(
 		1,
 		2)
+
+
 #: E101+1 E101+2 E101+3 E101+4 E101+5
 def test_keys(self):
 	"""areas.json - All regions are accounted for."""
@@ -126,6 +131,8 @@ def test_keys(self):
 		u'Norrbotten',
 		u'V\xe4sterbotten',
 	])
+
+
 #: E101+1
 x = [
 	'abc'

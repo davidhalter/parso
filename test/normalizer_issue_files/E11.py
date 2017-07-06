@@ -24,6 +24,7 @@ mimetype = 'application/x-directory'
      # 'httpd/unix-directory'
 create_date = False
 
+
 def start(self):
     # foo
     #: E111:8
@@ -46,6 +47,8 @@ def start(self):
 #: E111:2
   # Also wrongly indented.
 # Indent is correct.
+
+
 def start(self):  # Correct comment
     if True:
         #: E111:0

@@ -100,8 +100,11 @@ x = x / 2-1
 hypot2 = x*x + y*y
 c = (a + b)*(a - b)
 
+
 def halves(n):
     return (i//2 for i in range(n))
+
+
 #: E227:11 E227:13
 _1kB = _1MB>>10
 #: E227:11 E227:13
