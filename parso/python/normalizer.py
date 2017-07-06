@@ -455,15 +455,7 @@ class PEP8Normalizer(Normalizer):
             self._check_spacing(leaf, spacing)
 
         self._analyse_non_prefix(leaf)
-        last_column = leaf.end_pos[1]
-        if last_column > self._config.max_characters:
-            self.add_issue(
-                501,
-                'Line too long (%s > %s characters)' %
-                    (last_column, self._config.max_characters),
-                leaf
-            )
-
+        self._check_line_length(leaf, spacing)
         # -------------------------------
         # Finalizing. Updating the state.
         # -------------------------------
@@ -503,6 +495,29 @@ class PEP8Normalizer(Normalizer):
         self._previous_leaf = leaf
         self._previous_spacing = spacing
         return value
+
+    def _check_line_length(self, leaf, spacing):
+        if leaf.type == 'backslash':
+            last_column = leaf.start_pos[1] + 1
+        else:
+            last_column = leaf.end_pos[1]
+        if last_column > self._config.max_characters \
+                and spacing.start_pos[1] <= self._config.max_characters :
+            # Special case for long URLs in multi-line docstrings or comments,
+            # but still report the error when the 72 first chars are whitespaces.
+            report = True
+            if leaf.type == 'comment':
+                splitted = leaf.value[1:].split()
+                if len(splitted) == 1 \
+                        and (leaf.end_pos[1] - len(splitted[0])) < 72:
+                    report = False
+            if report:
+                self.add_issue(
+                    501,
+                    'Line too long (%s > %s characters)' %
+                        (last_column, self._config.max_characters),
+                    leaf
+                )
 
     def _check_spacing(self, leaf, spacing):
         def add_if_spaces(*args):
