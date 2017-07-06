@@ -70,7 +70,8 @@ class IndentationNode(object):
 
 
 class BracketNode(IndentationNode):
-    def __init__(self, config, parent_indentation, leaf, parent):
+    def __init__(self, config, parent_indentation, leaf, parent,
+                 in_suite_introducer=False):
         self.leaf = leaf
 
         next_leaf = leaf.get_next_leaf()
@@ -97,6 +98,12 @@ class BracketNode(IndentationNode):
                 self.indentation =  ' ' * expected_end_indent
             self.bracket_indentation = self.indentation
             self.type = IndentationTypes.VERTICAL_BRACKET
+
+        if in_suite_introducer and parent.type == IndentationTypes.SUITE \
+                and self.indentation == parent_indentation + config.indentation:
+            self.indentation += config.indentation
+            # The closing bracket should have the same indentation.
+            self.bracket_indentation = self.indentation
         self.parent = parent
 
 
@@ -346,6 +353,8 @@ class PEP8Normalizer(Normalizer):
 
         if leaf.value == ':' and leaf.parent.type in _SUITE_INTRODUCERS:
             self._in_suite_introducer = False
+        elif leaf.value == 'elif':
+            self._in_suite_introducer = True
 
         if not self._new_statement:
             self._reset_newlines(part, leaf)
@@ -477,13 +486,11 @@ class PEP8Normalizer(Normalizer):
                     if not isinstance(n, BracketNode) or previous_leaf != n.leaf:
                         break
                     n = n.parent
-                indentation = n.indentation
-                if self._in_suite_introducer and node.type == IndentationTypes.SUITE:
-                    indentation += self._config.indentation
 
                 self._indentation_tos = BracketNode(
-                    self._config, indentation, leaf,
-                    parent=self._indentation_tos
+                    self._config, n.indentation, leaf,
+                    parent=self._indentation_tos,
+                    in_suite_introducer=self._in_suite_introducer
                 )
             else:
                 assert node.type != IndentationTypes.IMPLICIT
