@@ -21,6 +21,7 @@ _NEEDS_SPACE = ('=', '%', '->',
                 '>>=', '**=', '//=')
 _NEEDS_SPACE += _BITWISE_OPERATOR
 _IMPLICIT_INDENTATION_TYPES = ('dictorsetmaker', 'argument')
+_POSSIBLE_SLICE_PARENTS = ('subscript', 'subscriptlist', 'sliceop')
 
 class CompressNormalizer(Normalizer):
     """
@@ -428,7 +429,7 @@ class PEP8Normalizer(Normalizer):
                                 + self._config.indentation:
                             self.add_issue(129, "Line with same indent as next logical block", leaf)
                     elif indentation != should_be_indentation:
-                        if not self._check_tabs_spaces(spacing):
+                        if not self._check_tabs_spaces(spacing) and leaf.value != '\n':
                             if value in '])}':
                                 if node.type == IndentationTypes.VERTICAL_BRACKET:
                                     self.add_issue(124, "Closing bracket does not match visual indentation", leaf)
@@ -550,13 +551,13 @@ class PEP8Normalizer(Normalizer):
                 message = "Whitespace before '%s'" % leaf.value
                 add_if_spaces(202, message, spacing)
             elif leaf in (',', ';') or leaf == ':' \
-                    and leaf.parent.type not in ('subscript', 'subscriptlist'):
+                    and leaf.parent.type not in  _POSSIBLE_SLICE_PARENTS:
                 message = "Whitespace before '%s'" % leaf.value
                 add_if_spaces(203, message, spacing)
-            elif prev == ':' and prev.parent.type in ('subscript', 'subscriptlist'):
+            elif prev == ':' and prev.parent.type in _POSSIBLE_SLICE_PARENTS:
                 pass # TODO
             elif prev in (',', ';', ':'):
-                add_not_spaces('231', "missing whitespace after '%s'", spacing)
+                add_not_spaces(231, "missing whitespace after '%s'", spacing)
             elif leaf == ':':  # Is a subscript
                 # TODO
                 pass

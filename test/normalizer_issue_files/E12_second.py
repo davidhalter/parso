@@ -39,9 +39,7 @@ setup('',
       ])
 
 
-#TODO
-##: W291
-#: E123+2:4
+#: E123+2:4 E291:15
 print "E123", (   
     "bad", "hanging", "close"
     )
@@ -117,15 +115,15 @@ def long_function_name(
 
 
 def qualify_by_address(
-    #: E129
+        #: E129:4 E129+1:4
     self, cr, uid, ids, context=None,
-    #: E129
     params_to_check=frozenset(QUALIF_BY_ADDRESS_PARAM)):
     """ This gets called by the web server """
+
+
+#: E129+1:4 E129+2:4
 if (a == 2 or
-    #: E129
     b == "abc def ghi"
-    #: E129
     "jkl mno"):
     return True
 

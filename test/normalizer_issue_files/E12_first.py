@@ -66,6 +66,7 @@ abricot = 3 + \
 print "hello", (
 
     "there",
+    #: E126:5
      # "john",
     "dude")
 part = set_mimetype((
