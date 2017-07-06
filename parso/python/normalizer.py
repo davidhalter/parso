@@ -117,7 +117,7 @@ class ImplicitNode(BracketNode):
 class BackslashNode(IndentationNode):
     type = IndentationTypes.BACKSLASH
 
-    def __init__(self, config, parent_indentation, containing_leaf, parent=None):
+    def __init__(self, config, parent_indentation, containing_leaf, spacing, parent=None):
         from parso.python.tree import search_ancestor
         expr_stmt = search_ancestor(containing_leaf, 'expr_stmt')
         if expr_stmt is not None:
@@ -127,10 +127,16 @@ class BackslashNode(IndentationNode):
                 # TODO unite with the code of BracketNode
                 self.indentation = None
             else:
-                # +1 because there is a space.
-                self.indentation =  ' ' * (equals.end_pos[1] + 1)
+                # If the backslash follows the equals, use normal indentation
+                # otherwise it should align with the equals.
+                if equals.end_pos == spacing.start_pos:
+                    self.indentation = parent_indentation + config.indentation
+                else:
+                    # +1 because there is a space.
+                    self.indentation =  ' ' * (equals.end_pos[1] + 1)
         else:
-            self.bracket_indentation = self.indentation = parent_indentation + config.indentation
+            self.indentation = parent_indentation + config.indentation
+        self.bracket_indentation = self.indentation
         self.parent = parent
 
 
@@ -370,8 +376,6 @@ class PEP8Normalizer(Normalizer):
 
 
             self._newline_count += 1
-            #if | E302       | expected 2 blank lines, found 0
-            #    self.add_issue(302, "Too many blank lines (%s)" % self._newline_count, leaf)
 
         if type_ == 'backslash':
             # TODO is this enough checking? What about ==?
@@ -387,6 +391,7 @@ class PEP8Normalizer(Normalizer):
                         self._config,
                         indentation,
                         leaf,
+                        spacing,
                         parent=self._indentation_tos
                     )
 
