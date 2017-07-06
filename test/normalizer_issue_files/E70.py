@@ -10,12 +10,20 @@ import bdist_egg; bdist_egg.write_safety_flag(cmd.egg_info, safe)
 import shlex;
 #: E702:8 E703:22
 del a[:]; a.append(42);
+
+
 #: E704:10
 def f(x): return 2
+
+
 #: E704:16
 async def f(x): return 2
+
+
 #: E704:10
 def f(x): return 2 * x
+
+
 while all is round:
     #: E704:14
     def f(x): return 2 * x
