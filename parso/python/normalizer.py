@@ -481,7 +481,10 @@ class PEP8Normalizer(Normalizer):
                 # we can basically use the previous indentation.
                 previous_leaf = leaf
                 n = self._indentation_tos
-                while True:#not info.newline_count:
+                while True:
+                    if hasattr(n, 'leaf') and previous_leaf.line != n.leaf.line:
+                        break
+
                     previous_leaf = previous_leaf.get_previous_leaf()
                     if not isinstance(n, BracketNode) or previous_leaf != n.leaf:
                         break

@@ -196,7 +196,8 @@ d = {  # comment
     1: 2
 }
 
-# issue 138
+# issue 138 (we won't allow this in parso)
+#: E126+2:9
 [
     12,  # this is a multi-line inline
          # comment
@@ -253,15 +254,15 @@ if True:
 
     def example_issue254():
         return [node.copy(
-            (
-                replacement
-                # First, look at all the node's current children.
-                for child in node.children
-                # Replace them.
-                for replacement in replace(child)
-            ),
-            dict(name=token.undefined)
-        )]
+                    (
+                        replacement
+                        # First, look at all the node's current children.
+                        for child in node.children
+                        # Replace them.
+                        for replacement in replace(child)
+                    ),
+                    dict(name=token.undefined)
+                )]
 
 
 def valid_example():
