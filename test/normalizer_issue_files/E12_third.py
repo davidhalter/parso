@@ -86,13 +86,13 @@ if True:
                     ),
                     dict(name=token.undefined)
                 )]
-# TODO this is currently not handled.
+# TODO multiline docstring are currently not handled.
 ##: E125+1:4
 if ("""
     """):
     pass
 
-# TODO this is currently not handled.
+# TODO same
 for foo in """
     abc
     123
