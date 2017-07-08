@@ -88,10 +88,10 @@ if length > options.max_line_length:
 if os.path.exists(os.path.join(path, PEP8_BIN)):
 	cmd = ([os.path.join(path, PEP8_BIN)] +
 	       self._pep8_options(targetfile))
-#: E999+1
+# TODO Tabs in docstrings shouldn't be there, use \t.
 '''
 	multiline string with tab in it'''
-#: E999+1
+# Same here.
 '''multiline string
 	with tabs
    and spaces

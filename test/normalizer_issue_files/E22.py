@@ -94,7 +94,7 @@ c = (a+b) * (a-b)
 norman = True+False
 x = x*2 - 1
 x = x/2 - 1
-#: E999
+# TODO whitespace should be the other way around according to pep8.
 x = x / 2-1
 
 hypot2 = x*x + y*y

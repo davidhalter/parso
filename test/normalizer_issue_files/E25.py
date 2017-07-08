@@ -19,7 +19,7 @@ parser.add_argument('--long-option',
 parser.add_argument('--long-option',
                     default=
                         "/rather/long/filesystem")
-#: E999+1:44
+# TODO this looks so stupid.
 parser.add_argument('--long-option', default
                     ="/rather/long/filesystem/path/here/blah/blah/blah")
 #: E251+2:7 E251+2:9

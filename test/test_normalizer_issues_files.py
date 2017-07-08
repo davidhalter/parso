@@ -44,8 +44,6 @@ def collect_errors(code):
                 code, _, add_line = code.partition('+')
                 l = line_nr + 1 + int(add_line or 0)
 
-                if code == 'E999': continue # TODO delete
-
                 yield WantedIssue(code[1:], l, column)
 
 
