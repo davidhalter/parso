@@ -709,15 +709,16 @@ class PEP8NormalizerConfig(NormalizerConfig):
     """
     Normalizing to PEP8. Not really implemented, yet.
     """
-    def __init__(self, indentation=' ' * 4, hanging_indentation=None):
+    def __init__(self, indentation=' ' * 4, hanging_indentation=None,
+                 max_characters=79, spaces_before_comment=2):
         self.indentation = indentation
         if hanging_indentation is None:
             hanging_indentation = indentation
         self.hanging_indentation = hanging_indentation
         self.closing_bracket_hanging_indentation = ''
         self.break_after_binary = False
-        self.max_characters = 79
-        self.spaces_before_comment = 2
+        self.max_characters = max_characters
+        self.spaces_before_comment = spaces_before_comment
 
 
 @PEP8NormalizerConfig.register_rule
