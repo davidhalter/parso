@@ -70,9 +70,25 @@ class IndentationNode(object):
 
 
 class BracketNode(IndentationNode):
-    def __init__(self, config, parent_indentation, leaf, parent,
-                 in_suite_introducer=False):
+    def __init__(self, config, leaf, parent, in_suite_introducer=False):
         self.leaf = leaf
+
+        # Figure out here what the indentation is. For chained brackets
+        # we can basically use the previous indentation.
+        previous_leaf = leaf
+        n = parent
+        if n.type == IndentationTypes.IMPLICIT:
+            n = n.parent
+        while True:
+            if hasattr(n, 'leaf') and previous_leaf.line != n.leaf.line:
+                break
+
+            previous_leaf = previous_leaf.get_previous_leaf()
+            if not isinstance(n, BracketNode) or previous_leaf != n.leaf:
+                break
+            n = n.parent
+        parent_indentation = n.indentation
+
 
         next_leaf = leaf.get_next_leaf()
         if '\n' in next_leaf.prefix:
@@ -113,7 +129,8 @@ class ImplicitNode(BracketNode):
     annotations and dict values.
     """
     def __init__(self, config, parent_indentation, leaf, parent):
-        super(ImplicitNode, self).__init__(config, parent_indentation, leaf, parent)
+        # TODO remove parent_indentation?
+        super(ImplicitNode, self).__init__(config, leaf, parent)
         self.type = IndentationTypes.IMPLICIT
 
         next_leaf = leaf.get_next_leaf()
@@ -477,21 +494,8 @@ class PEP8Normalizer(Normalizer):
         if value and value in '()[]{}' and type_ != 'error_leaf' \
                 and leaf.parent.type != 'error_node':
             if value in _OPENING_BRACKETS:
-                # Figure out here what the indentation is. For chained brackets
-                # we can basically use the previous indentation.
-                previous_leaf = leaf
-                n = self._indentation_tos
-                while True:
-                    if hasattr(n, 'leaf') and previous_leaf.line != n.leaf.line:
-                        break
-
-                    previous_leaf = previous_leaf.get_previous_leaf()
-                    if not isinstance(n, BracketNode) or previous_leaf != n.leaf:
-                        break
-                    n = n.parent
-
                 self._indentation_tos = BracketNode(
-                    self._config, n.indentation, leaf,
+                    self._config, leaf,
                     parent=self._indentation_tos,
                     in_suite_introducer=self._in_suite_introducer
                 )
@@ -508,6 +512,7 @@ class PEP8Normalizer(Normalizer):
 
         self._on_newline = type_ in ('newline', 'backslash')
 
+        self._pre_previous_leaf = self._previous_leaf
         self._previous_leaf = leaf
         self._previous_spacing = spacing
         return value
@@ -607,7 +612,8 @@ class PEP8Normalizer(Normalizer):
                 add_not_spaces(275, 'Missing whitespace around keyword', spacing)
             else:
                 prev_spacing = self._previous_spacing
-                if prev in _ALLOW_SPACE and spaces != prev_spacing.value:
+                if prev in _ALLOW_SPACE and spaces != prev_spacing.value \
+                        and '\n' not in self._actual_previous_leaf.prefix:
                     message = "Whitespace before operator doesn't match with whitespace after"
                     self.add_issue(229, message, spacing)
 

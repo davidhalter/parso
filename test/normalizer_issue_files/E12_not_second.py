@@ -267,16 +267,9 @@ if True:
 
 def valid_example():
     return [node.copy(properties=dict(
-                (key, val if val is not None else token.undefined)
-                for key, val in node.items()
-            ))]
-
-
-def other_example():
-    return [node.copy(properties=dict(
-        (key, val if val is not None else token.undefined)
-        for key, val in node.items()
-    ))]
+                          (key, val if val is not None else token.undefined)
+                          for key, val in node.items()
+                      ))]
 
 
 foo([

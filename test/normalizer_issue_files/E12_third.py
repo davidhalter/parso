@@ -77,14 +77,12 @@ if True:
     def example_issue254():
         #: 
         return [node.copy(
-                    #: E121:12
-            (
-                    #: E121:16 E126+1:24 E126+2:24
+                    (
+                        #: E121:16 E121+3:20
                 replacement
                         # First, look at all the node's current children.
                         for child in node.children
                     for replacement in replace(child)
-                    #: E123
                     ),
                     dict(name=token.undefined)
                 )]
