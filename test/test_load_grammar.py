@@ -1,6 +1,6 @@
 import pytest
 from parso.grammar import load_grammar
-from parso import grammar
+from parso import utils
 
 
 def test_load_inexisting_grammar():
@@ -17,7 +17,7 @@ def test_load_inexisting_grammar():
     ('2', 27), ('3', 36), ('1.1', 11), ('1.1.1', 11), ('300.1.31', 3001)
 ])
 def test_parse_version(string, result):
-    assert grammar._parse_version(string) == result
+    assert utils._parse_version(string) == result
 
 
 @pytest.mark.parametrize('string', ['1.', 'a', '#', '1.3.4.5', '1.12'])

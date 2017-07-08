@@ -1,11 +1,9 @@
 import hashlib
 import os
-import sys
-import re
 
-from parso._compatibility import FileNotFoundError, unicode
+from parso._compatibility import FileNotFoundError
 from parso.pgen2.pgen import generate_grammar
-from parso.utils import splitlines, source_to_unicode
+from parso.utils import splitlines, source_to_unicode, version_string_to_int
 from parso.python.diff import DiffParser
 from parso.python.tokenize import tokenize_lines
 from parso.cache import parser_cache, load_module, save_module
@@ -21,8 +19,7 @@ class Grammar(object):
 
     :param text: A BNF representation of your grammar.
     """
-    def __init__(self, text, tokenizer, parser=BaseParser,
-                 diff_parser=None):
+    def __init__(self, text, tokenizer, parser=BaseParser, diff_parser=None):
         self._pgen_grammar = generate_grammar(text)
         self._parser = parser
         self._tokenizer = tokenizer
@@ -123,26 +120,6 @@ class Grammar(object):
         return '<%s:%s>' % (self.__class__.__name__, txt)
 
 
-def _parse_version(version):
-    match = re.match(r'(\d+)(?:\.(\d)(?:\.\d+)?)?$', version)
-    if match is None:
-        raise ValueError('The given version is not in the right format. '
-                         'Use something like "3.2" or "3".')
-
-    major = match.group(1)
-    minor = match.group(2)
-    if minor is None:
-        # Use the latest Python in case it's not exactly defined, because the
-        # grammars are typically backwards compatible?
-        if major == "2":
-            minor = "7"
-        elif major == "3":
-            minor = "6"
-        else:
-            raise NotImplementedError("Sorry, no support yet for those fancy new/old versions.")
-    return int(major + minor)
-
-
 def load_grammar(version=None):
     """
     Loads a Python grammar. The default version is the current Python version.
@@ -150,12 +127,7 @@ def load_grammar(version=None):
     If you need support for a specific version, please use e.g.
     `version='3.3'`.
     """
-    if version is None:
-        version = '%s.%s' % sys.version_info[:2]
-    if not isinstance(version, (unicode, str)):
-        raise TypeError("version must be a string like 3.2.")
-
-    version_int = _parse_version(version)
+    version_int = version_string_to_int(version)
 
     # For these versions we use the same grammar files, because nothing
     # changed.

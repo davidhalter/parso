@@ -1,5 +1,6 @@
 from collections import namedtuple
 import re
+import sys
 from ast import literal_eval
 
 from parso._compatibility import unicode
@@ -85,3 +86,36 @@ def version_info():
     from parso import __version__
     tupl = re.findall(r'[a-z]+|\d+', __version__)
     return Version(*[x if i == 3 else int(x) for i, x in enumerate(tupl)])
+
+
+def _parse_version(version):
+    match = re.match(r'(\d+)(?:\.(\d)(?:\.\d+)?)?$', version)
+    if match is None:
+        raise ValueError('The given version is not in the right format. '
+                         'Use something like "3.2" or "3".')
+
+    major = match.group(1)
+    minor = match.group(2)
+    if minor is None:
+        # Use the latest Python in case it's not exactly defined, because the
+        # grammars are typically backwards compatible?
+        if major == "2":
+            minor = "7"
+        elif major == "3":
+            minor = "6"
+        else:
+            raise NotImplementedError("Sorry, no support yet for those fancy new/old versions.")
+    return int(major + minor)
+
+
+def version_string_to_int(version):
+    """
+    Checks for a valid version number (e.g. `3.2` or `2.7.1` or `3`) and
+    returns a corresponding int that is always two characters long in decimal.
+    """
+    if version is None:
+        version = '%s.%s' % sys.version_info[:2]
+    if not isinstance(version, (unicode, str)):
+        raise TypeError("version must be a string like 3.2.")
+
+    return _parse_version(version)
