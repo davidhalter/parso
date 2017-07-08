@@ -15,7 +15,6 @@ if False:
     pass
 print
 print
-#: E111:4
     print
 mimetype = 'application/x-directory'
 #: E111:5

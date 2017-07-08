@@ -675,9 +675,12 @@ class PEP8Normalizer(Normalizer):
 
     def add_issue(self, code, message, node):
         from parso.python.tree import search_ancestor
-        if search_ancestor(node, 'error_node') is not None or \
-                self._previous_leaf is not None and \
-                search_ancestor(self._previous_leaf, 'error_node') is not None:
+        if self._previous_leaf is not None:
+            if search_ancestor(self._previous_leaf, 'error_node') is not None:
+                return
+            if self._previous_leaf.type == 'error_leaf':
+                return
+        if search_ancestor(node, 'error_node') is not None:
             return
         super(PEP8Normalizer, self).add_issue(code, message, node)
 

@@ -207,9 +207,9 @@ class Parser(BaseParser):
                 # For every deleted INDENT we have to delete a DEDENT as well.
                 # Otherwise the parser will get into trouble and DEDENT too early.
                 self._omit_dedent_list.append(self._indent_counter)
-            else:
-                error_leaf = tree.PythonErrorLeaf(tok_name[typ].lower(), value, start_pos, prefix)
-                stack[-1][2][1].append(error_leaf)
+
+            error_leaf = tree.PythonErrorLeaf(tok_name[typ].lower(), value, start_pos, prefix)
+            stack[-1][2][1].append(error_leaf)
 
     def _stack_removal(self, pgen_grammar, stack, arcs, start_index, value, start_pos):
         failed_stack = []

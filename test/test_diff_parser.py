@@ -259,7 +259,7 @@ def test_wrong_whitespace(differ):
     hello
     '''
     differ.initialize(code)
-    differ.parse(code + 'bar\n    ', parsers=1, copies=1)
+    differ.parse(code + 'bar\n    ', parsers=1)
 
     code += """abc(\npass\n    """
     differ.parse(code, parsers=1, copies=1, expect_error_leaves=True)
@@ -363,7 +363,7 @@ def test_totally_wrong_whitespace(differ):
     '''
 
     differ.initialize(code1)
-    differ.parse(code2, parsers=3, copies=1, expect_error_leaves=True)
+    differ.parse(code2, parsers=3, copies=0, expect_error_leaves=True)
 
 
 def test_node_insertion(differ):
