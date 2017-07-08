@@ -22,9 +22,6 @@ from parso._compatibility import py_version, u
 from parso.utils import splitlines
 
 
-cookie_re = re.compile("coding[:=]\s*([-\w.]+)")
-
-
 if py_version >= 30:
     # Python 3 has str.isidentifier() to check if a char is a valid identifier
     is_identifier = str.isidentifier
