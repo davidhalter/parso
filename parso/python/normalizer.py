@@ -347,7 +347,7 @@ class PEP8Normalizer(Normalizer):
 
         self._newline_count = 0
 
-    def normalize(self, leaf):
+    def visit_leaf(self, leaf):
         for part in leaf._split_prefix():
             if part.type == 'spacing':
                 # This part is used for the part call after for.

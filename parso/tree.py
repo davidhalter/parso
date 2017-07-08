@@ -162,26 +162,17 @@ class NodeOrLeaf(object):
                                  "there's no default normalizer for this tree.")
         return normalizer_config.create_normalizer()
 
-    def _will_be_normalize(self, normalizer_config=None):
+    def _normalize(self, normalizer_config=None):
         """
         TODO this is not public, yet.
         The returned code will be normalized, e.g. PEP8 for Python.
         """
         normalizer = self._get_normalizer(normalizer_config)
-        return self._normalize(normalizer)
-
-    def _normalize(self, normalizer):
-        try:
-            children = self.children
-        except AttributeError:
-            return normalizer.normalize(self)
-        else:
-           with normalizer.visit_node(self):
-               return ''.join(child._normalize(normalizer) for child in children)
+        return normalizer.visit(self)
 
     def _get_normalizer_issues(self, normalizer_config=None):
         normalizer = self._get_normalizer(normalizer_config)
-        self._normalize(normalizer)
+        normalizer.visit(self)
         return normalizer.issues
 
 

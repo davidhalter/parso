@@ -7,6 +7,15 @@ class Normalizer(object):
         self._config = config
         self.issues = []
 
+    def visit(self, node):
+        try:
+            children = node.children
+        except AttributeError:
+            return self.visit_leaf(node)
+        else:
+           with self.visit_node(node):
+               return ''.join(self.visit(child) for child in children)
+
     @contextmanager
     def visit_node(self):
         yield
