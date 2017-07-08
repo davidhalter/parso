@@ -707,6 +707,9 @@ class FooRule(Rule):
 @PEP8NormalizerConfig.register_rule
 class BlankLineAtEnd(Rule):
     code = 392
-    message = 'blank line at end of file'
+    message = 'Blank line at end of file'
 
     leaf_event = ['endmarker']
+
+    def check(self, leaf):
+        return self._newline_count >= 2
