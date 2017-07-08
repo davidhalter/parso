@@ -1,5 +1,4 @@
 from contextlib import contextmanager
-from functools import total_ordering
 
 
 class Normalizer(object):
