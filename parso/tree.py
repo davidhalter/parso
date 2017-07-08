@@ -164,6 +164,7 @@ class NodeOrLeaf(object):
 
     def _will_be_normalize(self, normalizer_config=None):
         """
+        TODO this is not public, yet.
         The returned code will be normalized, e.g. PEP8 for Python.
         """
         normalizer = self._get_normalizer(normalizer_config)
