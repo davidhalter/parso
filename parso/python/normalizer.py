@@ -29,17 +29,6 @@ class CompressNormalizer(Normalizer):
         return leaf.prefix + leaf.value
 
 
-class Comment(object):
-    def __init__(self, comment_part, indentation_part):
-        self.comment_part = comment_part
-        self.indentation_part = indentation_part
-        if indentation_part is None:
-            self.indentation = ''
-        else:
-            self.indentation = indentation_part.value
-        self.start_pos = self.comment_part.start_pos
-
-
 class IndentationTypes(object):
     VERTICAL_BRACKET = object()
     HANGING_BRACKET = object()
