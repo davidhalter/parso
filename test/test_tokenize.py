@@ -4,10 +4,10 @@ from textwrap import dedent
 
 from parso._compatibility import py_version
 from parso.utils import splitlines
-from parso.token import NAME, NEWLINE, STRING, INDENT, ERRORTOKEN, ENDMARKER
-from parso import tokenize
+from parso.python.token import NAME, NEWLINE, STRING, INDENT, ERRORTOKEN, ENDMARKER
+from parso.python import tokenize
 from parso import parse
-from parso.tokenize import TokenInfo
+from parso.python.tokenize import TokenInfo
 
 def _get_token_list(string):
     return list(tokenize.tokenize(string))

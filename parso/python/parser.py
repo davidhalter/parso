@@ -1,7 +1,7 @@
 from parso.python import tree
-from parso import tokenize
-from parso.token import (DEDENT, INDENT, ENDMARKER, NEWLINE, NUMBER,
-                               STRING, tok_name)
+from parso.python import tokenize
+from parso.python.token import (DEDENT, INDENT, ENDMARKER, NEWLINE, NUMBER,
+                                STRING, tok_name)
 from parso.parser import BaseParser
 from parso.pgen2.parse import token_to_ilabel
 

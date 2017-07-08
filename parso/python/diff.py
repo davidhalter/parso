@@ -13,8 +13,8 @@ import logging
 from parso.utils import splitlines
 from parso.python.parser import Parser
 from parso.python.tree import EndMarker
-from parso.tokenize import (tokenize_lines, NEWLINE, TokenInfo,
-                            ENDMARKER, INDENT, DEDENT)
+from parso.python.tokenize import (tokenize_lines, NEWLINE, TokenInfo,
+                                   ENDMARKER, INDENT, DEDENT)
 
 
 def _get_last_line(node_or_leaf):

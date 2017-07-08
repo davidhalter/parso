@@ -1,6 +1,6 @@
 import re
 
-from parso.tokenize import group
+from parso.python.tokenize import group
 
 
 class PrefixPart(object):

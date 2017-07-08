@@ -7,7 +7,7 @@ from parso._compatibility import FileNotFoundError, unicode
 from parso.pgen2.pgen import generate_grammar
 from parso.utils import splitlines, source_to_unicode
 from parso.python.diff import DiffParser
-from parso.tokenize import tokenize_lines
+from parso.python.tokenize import tokenize_lines
 from parso.cache import parser_cache, load_module, save_module
 from parso.parser import BaseParser
 from parso.python.parser import Parser as PythonParser

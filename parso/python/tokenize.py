@@ -16,8 +16,8 @@ import re
 from collections import namedtuple
 import itertools as _itertools
 
-from parso.token import (tok_name, N_TOKENS, ENDMARKER, STRING, NUMBER, opmap,
-                               NAME, OP, ERRORTOKEN, NEWLINE, INDENT, DEDENT)
+from parso.python.token import (tok_name, N_TOKENS, ENDMARKER, STRING, NUMBER, opmap,
+                                NAME, OP, ERRORTOKEN, NEWLINE, INDENT, DEDENT)
 from parso._compatibility import py_version, u
 from parso.utils import splitlines
 

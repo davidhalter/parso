@@ -6,8 +6,8 @@
 # Modifications are dual-licensed: MIT and PSF.
 
 from parso.pgen2 import grammar
-from parso import token
-from parso import tokenize
+from parso.python import token
+from parso.python import tokenize
 
 
 class ParserGenerator(object):

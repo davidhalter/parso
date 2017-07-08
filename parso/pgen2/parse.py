@@ -14,7 +14,7 @@ See Parser/parser.c in the Python distribution for additional info on
 how this parsing engine works.
 """
 
-from parso import tokenize
+from parso.python import tokenize
 
 
 class InternalParseError(Exception):
