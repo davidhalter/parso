@@ -162,7 +162,7 @@ class NodeOrLeaf(object):
                                  "there's no default normalizer for this tree.")
         return normalizer_config.create_normalizer()
 
-    def normalize(self, normalizer_config=None):
+    def _will_be_normalize(self, normalizer_config=None):
         """
         The returned code will be normalized, e.g. PEP8 for Python.
         """
