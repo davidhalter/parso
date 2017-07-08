@@ -108,8 +108,7 @@ class ImplicitNode(BracketNode):
     Implicit indentation after keyword arguments, default arguments,
     annotations and dict values.
     """
-    def __init__(self, config, parent_indentation, leaf, parent):
-        # TODO remove parent_indentation?
+    def __init__(self, config, leaf, parent):
         super(ImplicitNode, self).__init__(config, leaf, parent)
         self.type = IndentationTypes.IMPLICIT
 
@@ -497,8 +496,7 @@ class PEP8Normalizer(Normalizer):
                 and part.parent.type in _IMPLICIT_INDENTATION_TYPES:
             indentation = node.indentation
             self._indentation_tos = ImplicitNode(
-                self._config, indentation, part,
-                parent=self._indentation_tos
+                self._config, part, parent=self._indentation_tos
             )
 
         self._on_newline = type_ in ('newline', 'backslash')
