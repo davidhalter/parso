@@ -152,7 +152,7 @@ class PEP8Normalizer(Normalizer):
     def __init__(self, config):
         super(PEP8Normalizer, self).__init__(config)
         self._previous_part = None
-        self._actual_previous_leaf = None
+        self._previous_leaf = None
         self._on_newline = True
         self._newline_count = 0
         self._wanted_newline_count = None
@@ -308,7 +308,7 @@ class PEP8Normalizer(Normalizer):
                 or (
                     val == 'class'
                     or val == 'async' and leaf.get_next_leaf() == 'def'
-                    or val == 'def' and self._actual_previous_leaf != 'async'
+                    or val == 'def' and self._previous_leaf != 'async'
                 ) and leaf.parent.parent.type != 'decorated'
             )
             if needs_lines and actual < wanted:
@@ -336,6 +336,7 @@ class PEP8Normalizer(Normalizer):
                 break
             self._visit_part(part, part.create_spacing_part(), leaf)
 
+        self._analyse_non_prefix(leaf)
         self._visit_part(leaf, part, leaf)
 
         # Cleanup
@@ -357,7 +358,7 @@ class PEP8Normalizer(Normalizer):
             self._reset_newlines(part, leaf)
             self._max_blank_lines = 0
 
-        self._actual_previous_leaf = leaf
+        self._previous_leaf = leaf
 
         return leaf.value
 
@@ -477,7 +478,6 @@ class PEP8Normalizer(Normalizer):
         else:
             self._check_spacing(part, spacing)
 
-        self._analyse_non_prefix(part)
         self._check_line_length(part, spacing)
         # -------------------------------
         # Finalizing. Updating the state.
@@ -603,7 +603,7 @@ class PEP8Normalizer(Normalizer):
             else:
                 prev_spacing = self._previous_spacing
                 if prev in _ALLOW_SPACE and spaces != prev_spacing.value \
-                        and '\n' not in self._actual_previous_leaf.prefix:
+                        and '\n' not in self._previous_leaf.prefix:
                     message = "Whitespace before operator doesn't match with whitespace after"
                     self.add_issue(229, message, spacing)
 
@@ -673,13 +673,11 @@ class PEP8Normalizer(Normalizer):
             if self._newline_count >= 2:
                 self.add_issue(391, 'Blank line at end of file', leaf)
 
-        return leaf.value
-
     def add_issue(self, code, message, node):
         from parso.python.tree import search_ancestor
         if search_ancestor(node, 'error_node') is not None or \
-                self._previous_part is not None and \
-                search_ancestor(self._previous_part, 'error_node') is not None:
+                self._previous_leaf is not None and \
+                search_ancestor(self._previous_leaf, 'error_node') is not None:
             return
         super(PEP8Normalizer, self).add_issue(code, message, node)
 
