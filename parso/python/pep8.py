@@ -364,7 +364,8 @@ class PEP8Normalizer(Normalizer):
     def _visit_part(self, part, spacing, leaf):
         value = part.value
         type_ = part.type
-        # TODO get rid of error_leaf
+        if type_ == 'error_leaf':
+            return
 
         if value == ',' and part.parent.type == 'dictorsetmaker':
             self._indentation_tos = self._indentation_tos.parent
