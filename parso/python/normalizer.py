@@ -2,7 +2,6 @@ import re
 from contextlib import contextmanager
 
 from parso.normalizer import Normalizer, Rule, NormalizerConfig
-from parso.python.prefix import PrefixPart
 
 
 _IMPORT_TYPES = ('import_name', 'import_from')
@@ -11,7 +10,6 @@ _SUITE_INTRODUCERS = ('classdef', 'funcdef', 'if_stmt', 'while_stmt',
 _NON_STAR_TYPES = ('term', 'import_from', 'power')
 _OPENING_BRACKETS = '(', '[', '{'
 _CLOSING_BRACKETS = ')', ']', '}'
-# TODO ~ << >> & | ^
 _FACTOR = '+', '-', '~'
 _ALLOW_SPACE = '*', '+', '-', '**', '/', '//', '@'
 _BITWISE_OPERATOR = '<<', '>>', '|', '&', '^'
@@ -392,6 +390,18 @@ class PEP8Normalizer(Normalizer):
         node = self._indentation_tos
 
         if type_ == 'comment':
+            if value.startswith('##'):
+                # Whole blocks of # should not raise an error.
+                if value.lstrip('#'):
+                    self.add_issue(266, "Too many leading '#' for block comment.", leaf)
+            elif self._on_newline:
+                if not re.match('#:? ', value) and not value == '#' \
+                        and not (value.startswith('#!') and leaf.start_pos == (1, 0)):
+                    self.add_issue(265, "Block comment should start with '# '", leaf)
+            else:
+                if not re.match('#:? [^ ]', value):
+                    self.add_issue(262, "Inline comment should start with '# '", leaf)
+
             self._reset_newlines(spacing, actual_leaf, is_comment=True)
         elif type_ == 'newline':
             if self._newline_count > self._get_wanted_blank_lines_count():
@@ -420,7 +430,6 @@ class PEP8Normalizer(Normalizer):
                         spacing,
                         parent=self._indentation_tos
                     )
-
         elif self._on_newline:
             indentation = spacing.value
             if node.type == IndentationTypes.BACKSLASH \
@@ -558,7 +567,8 @@ class PEP8Normalizer(Normalizer):
         if '\t' in spaces:
             self.add_issue(223, 'Used tab to separate tokens', spacing)
         elif type_ == 'comment':
-            pass  # TODO
+            if len(spaces) < self._config.spaces_before_comment:
+                self.add_issue(261, 'At least two spaces before inline comment', spacing)
         elif type_ == 'newline':
             add_if_spaces(291, 'Trailing whitespace', spacing)
         elif len(spaces) > 1:
@@ -707,6 +717,7 @@ class PEP8NormalizerConfig(NormalizerConfig):
         self.closing_bracket_hanging_indentation = ''
         self.break_after_binary = False
         self.max_characters = 79
+        self.spaces_before_comment = 2
 
 
 @PEP8NormalizerConfig.register_rule

@@ -49,9 +49,6 @@ a = (123,
      )
 
 
-#
-
-
 if start[1] > end_col and not (
         over_indent == 4 and indent_next):
     return (0, "E121 continuation line over-"
@@ -91,7 +88,6 @@ print "hello", (
 foo = long_function_name(var_one, var_two,
                          var_three, var_four)
 
-#
 # Extra indentation is not necessary.
 foo = long_function_name(
     var_one, var_two,
@@ -173,8 +169,6 @@ foo = my.func({
 }, "baz")
 
 
-#
-
 fooff(aaaa,
       cca(
           vvv,
@@ -189,7 +183,6 @@ fooff(aaaa,
           aaa,
           dadd),
       "visual indentation is not a multiple of four",)
-#
 
 if bar:
     return (
@@ -198,7 +191,7 @@ if bar:
         "to match that of the opening "
         "bracket's line"
     )
-#
+
 # you want vertical alignment, so use a parens
 if ((foo.bar("baz") and
      foo.bar("frop")
@@ -331,9 +324,6 @@ rv.update(
         'alpha': 4, 'beta': 53242234, 'gamma': 17,
     },
 )
-
-
-#
 
 
 event_obj.write(cursor, user_id, {

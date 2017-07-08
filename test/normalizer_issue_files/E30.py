@@ -17,7 +17,6 @@ class X:
         pass
 
 
-#!python
 # -*- coding: utf-8 -*-
 def a():
     pass
@@ -106,7 +105,7 @@ def function():
 
 
 #: E303+3
-#!python
+# something
 
 
 

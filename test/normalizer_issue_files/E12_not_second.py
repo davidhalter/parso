@@ -52,7 +52,6 @@ def unicode2html(s):
                             .replace('\n', '<br>\n'))
 
 
-#
 parser.add_option('--count', action='store_true',
                   help="print total number of errors and warnings "
                        "to standard error and set exit code to 1 if "
@@ -73,9 +72,6 @@ add_option('--count',
            help="print total number of errors "
                 "to standard error "
            "total is not null")
-
-
-#
 
 
 help = ("print total number of errors " +
@@ -163,7 +159,6 @@ troublesome_hash = {
     "when you're indented": "stringwithalongtoken you don't want to break",
 }
 
-#
 d = dict('foo',
          help="exclude files or directories which match these "
               "comma separated patterns (default: %s)" %
@@ -207,7 +202,7 @@ d = {  # comment
 if a > b and \
    c > d:
     moo_like_a_cow()
-#
+
 my_list = [
     1, 2, 3,
     4, 5, 6,
@@ -249,7 +244,7 @@ bar(
 bar(
     1).zap(
     2)
-#
+
 if True:
 
     def example_issue254():

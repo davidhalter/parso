@@ -62,8 +62,7 @@ ddd = \
 #: E501:67 E225:21 E225:22
 very_long_identifiers=and_terrible_whitespace_habits(are_no_excuse+for_long_lines)
 #
-# TODO Long multiline strings are not handled.
-##: E501
+# TODO Long multiline strings are not handled. E501?
 '''multiline string
 with a long long long long long long long long long long long long long long long long line
 '''

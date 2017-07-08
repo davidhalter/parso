@@ -64,6 +64,9 @@ class Issue(object):
     def __hash__(self):
         return hash((self.code, self.start_pos))
 
+    def __repr__(self):
+        return '<%s: %s>' % (self.__class__.__name__, self.code)
+
 
 
 class Rule(object):

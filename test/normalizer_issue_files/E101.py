@@ -58,7 +58,7 @@ if bar:
 	    "to match that of the opening "
 	    "bracket's line"
 	)
-#
+
 # you want vertical alignment, so use a parens
 #: E101+3
 if ((foo.bar("baz") and
@@ -83,7 +83,6 @@ if length > options.max_line_length:
 	    "E501 line too long (%d characters)" % length
 
 
-#
 #: E101+1 E101+2
 if os.path.exists(os.path.join(path, PEP8_BIN)):
 	cmd = ([os.path.join(path, PEP8_BIN)] +
@@ -109,14 +108,13 @@ or long long long long long long long long long long long long long long long lo
 	will get no warning
 even though the noqa comment is not immediately after the string
 ''' + foo  # noqa
-#
+
 #: E101+2
 if foo is None and bar is "frop" and \
         blah == 'yeah':
 	blah = 'yeahnah'
 
 
-#
 #: E101+1 E101+2 E101+3
 if True:
 	foo(

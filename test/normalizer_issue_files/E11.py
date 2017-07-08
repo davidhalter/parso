@@ -27,8 +27,8 @@ def start(self):
     # foo
     #: E111:8
         # bar
-    if True: # Hello
-        self.master.start() # Comment
+    if True:  # Hello
+        self.master.start()  # Comment
         # try:
         #: E111:12
             # self.master.start()
@@ -57,4 +57,4 @@ def start(self):  # Correct comment
 #       except MasterExit:
         #: E111:0
 #           self.shutdown()
-        self.master.start() # comment
+        self.master.start()  # comment
