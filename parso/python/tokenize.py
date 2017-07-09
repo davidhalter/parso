@@ -277,6 +277,9 @@ def tokenize_lines(lines):
                         yield TokenInfo(INDENT, '', spos, '')
                         indents.append(start)
                     while start < indents[-1]:
+                        if start > indents[-2]:
+                            yield TokenInfo(ERRORTOKEN, '', spos, '')
+                            break
                         yield TokenInfo(DEDENT, '', spos, '')
                         indents.pop()
 

@@ -1,10 +1,10 @@
 for a in 'abc':
     for b in 'xyz':
         print a  # indented with 8 spaces
-        #: W101:0
+        # TODO currently not an error, because the indentation matches.
 	print(b)  # indented with 1 tab
 if True:
-    #: W101:0
+    #: E101:0
 	pass
 
 #: E122+1

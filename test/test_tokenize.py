@@ -2,12 +2,16 @@
 
 from textwrap import dedent
 
+import pytest
+
 from parso._compatibility import py_version
 from parso.utils import splitlines
-from parso.python.token import NAME, NEWLINE, STRING, INDENT, ERRORTOKEN, ENDMARKER
+from parso.python.token import (
+    NAME, NEWLINE, STRING, INDENT, DEDENT, ERRORTOKEN, ENDMARKER)
 from parso.python import tokenize
 from parso import parse
 from parso.python.tokenize import TokenInfo
+
 
 def _get_token_list(string):
     return list(tokenize.tokenize(string))
@@ -211,3 +215,28 @@ def test_endmarker_end_pos():
     check('a')
     check(r'a\\n')
     check('a\\')
+
+
+@pytest.mark.parametrize(
+    ('code', 'types'), [
+        (' foo', ['error_leaf', 'name'])
+    ]
+)
+def test_indentation(code, types):
+    return
+    actual_types = [t.type for t in _get_token_list(code)]
+    print(actual_types)
+    assert False
+
+@pytest.mark.parametrize(
+    ('code', 'types'), [
+        (' foo', [INDENT, NAME, DEDENT]),
+        ('  foo\n bar', [INDENT, NAME, NEWLINE, ERRORTOKEN, NAME, DEDENT]),
+        ('  foo\n bar \n baz', [INDENT, NAME, NEWLINE, ERRORTOKEN, NAME,
+                                NEWLINE, ERRORTOKEN, NAME, DEDENT]),
+        (' foo\nbar', [INDENT, NAME, NEWLINE, DEDENT, NAME]),
+    ]
+)
+def test_indentation(code, types):
+    actual_types = [t.type for t in _get_token_list(code)]
+    assert actual_types == types + [ENDMARKER]
