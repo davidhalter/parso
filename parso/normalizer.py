@@ -6,6 +6,11 @@ class Normalizer(object):
         self._config = config
         self.issues = []
 
+    def walk(self, node):
+        value = self.visit(node)
+        self.finalize()
+        return value
+
     def visit(self, node):
         try:
             children = node.children
@@ -16,11 +21,14 @@ class Normalizer(object):
                return ''.join(self.visit(child) for child in children)
 
     @contextmanager
-    def visit_node(self):
+    def visit_node(self, node):
         yield
 
-    def normalize(self, leaf):
+    def visit_leaf(self, leaf):
         return leaf.prefix + leaf.value
+
+    def finalize(self):
+        pass
 
     def add_issue(self, code, message, node):
         issue = Issue(node, code, message)

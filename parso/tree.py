@@ -168,11 +168,11 @@ class NodeOrLeaf(object):
         The returned code will be normalized, e.g. PEP8 for Python.
         """
         normalizer = self._get_normalizer(normalizer_config)
-        return normalizer.visit(self)
+        return normalizer.walk(self)
 
     def _get_normalizer_issues(self, normalizer_config=None):
         normalizer = self._get_normalizer(normalizer_config)
-        normalizer.visit(self)
+        normalizer.walk(self)
         return normalizer.issues
 
 
