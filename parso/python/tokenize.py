@@ -248,7 +248,6 @@ def tokenize_lines(lines):
                 txt = line[pos:]
                 if txt.endswith('\n'):
                     new_line = True
-                # TODO remove prefix?
                 yield TokenInfo(ERRORTOKEN, txt, (lnum, pos), additional_prefix)
                 additional_prefix = ''
                 break
@@ -279,6 +278,7 @@ def tokenize_lines(lines):
                     while start < indents[-1]:
                         if start > indents[-2]:
                             yield TokenInfo(ERRORTOKEN, '', spos, '')
+                            print(spos, repr(line))
                             break
                         yield TokenInfo(DEDENT, '', spos, '')
                         indents.pop()

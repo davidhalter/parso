@@ -463,6 +463,20 @@ def test_in_parentheses_newlines(differ):
     b = 2""")
 
 
+def test_indentation_issue(differ):
+    code1 = dedent("""
+        import module
+    """)
+
+    code2 = dedent("""
+        class L1:
+            class L2:
+                class L3:
+                    def f(): pass
+                def f(): pass
+            def f(): pass
+        def f(): pass
+    """)
+
     differ.initialize(code1)
-    differ.parse(code2, parsers=2, copies=1)
-    differ.parse(code1, parsers=2, copies=1)
+    differ.parse(code2, parsers=2)

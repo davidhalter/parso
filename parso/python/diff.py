@@ -14,7 +14,7 @@ from parso.utils import splitlines
 from parso.python.parser import Parser
 from parso.python.tree import EndMarker
 from parso.python.tokenize import (tokenize_lines, NEWLINE, TokenInfo,
-                                   ENDMARKER, INDENT, DEDENT)
+                                   ENDMARKER, INDENT, DEDENT, ERRORTOKEN)
 
 
 def _get_last_line(node_or_leaf):
@@ -301,7 +301,11 @@ class DiffParser(object):
                     continue
             is_first_token = False
 
-            if typ == DEDENT:
+            # In case of omitted_first_indent, it might not be dedented fully.
+            # However this is a sign for us that a dedent happened.
+            if typ == DEDENT \
+                    or typ == ERRORTOKEN and not string \
+                    and omitted_first_indent and len(indents) == 1:
                 indents.pop()
                 if omitted_first_indent and not indents:
                     # We are done here, only thing that can come now is an
