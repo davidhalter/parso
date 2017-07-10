@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from typing import ClassVar, List
 
+print(1, 2)
 
 # Annotated function (Issue #29)
 def foo(x: int) -> int:
