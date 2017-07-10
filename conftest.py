@@ -1,3 +1,4 @@
+import re
 import tempfile
 import shutil
 import logging
@@ -36,12 +37,12 @@ def pytest_addoption(parser):
 
 
 def pytest_generate_tests(metafunc):
-    if 'normalizer_issue_file' in metafunc.fixturenames:
+    if 'normalizer_issue_case' in metafunc.fixturenames:
         base_dir = os.path.join(os.path.dirname(__file__), 'test', 'normalizer_issue_files')
 
         cases = list(colllect_normalizer_tests(base_dir))
         metafunc.parametrize(
-            'normalizer_issue_file',
+            'normalizer_issue_case',
             cases,
             ids=[c.name for c in cases]
         )
@@ -55,6 +56,8 @@ class NormalizerIssueCase(object):
     def __init__(self, path):
         self.path = path
         self.name = os.path.basename(path)
+        match = re.search(r'python([\d.]+)\.py', self.name)
+        self.python_version = match and match.group(1)
 
 
 def colllect_normalizer_tests(base_dir):

@@ -47,18 +47,19 @@ def collect_errors(code):
                 yield WantedIssue(code[1:], l, column)
 
 
-def test_normalizer_issue(normalizer_issue_file):
+def test_normalizer_issue(normalizer_issue_case):
     def sort(issues):
         issues = sorted(issues, key=lambda i: (i.start_pos, i.code))
         return ["(%s, %s): %s" % (i.start_pos[0], i.start_pos[1], i.code)
                 for i in issues]
 
-    with open(normalizer_issue_file.path, 'rb') as f:
+    with open(normalizer_issue_case.path, 'rb') as f:
         code = source_to_unicode(f.read())
 
     desired = sort(collect_errors(code))
 
-    module = parso.parse(code)
+    grammar = parso.load_grammar(version=normalizer_issue_case.python_version)
+    module = grammar.parse(code)
     issues = module._get_normalizer_issues()
     actual = sort(issues)
 
