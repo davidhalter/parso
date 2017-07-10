@@ -506,7 +506,7 @@ class PEP8Normalizer(ErrorFinder):
                 self._config, part, parent=self._indentation_tos
             )
 
-        self._on_newline = type_ in ('newline', 'backslash')
+        self._on_newline = type_ in ('newline', 'backslash', 'bom')
 
         self._previous_part = part
         self._previous_spacing = spacing
