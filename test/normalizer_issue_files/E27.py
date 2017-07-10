@@ -22,6 +22,7 @@ True  and False
 if   1:
     pass
 # Syntax Error, no indentation
+#: E901+1
 if   1:
 pass
 #: E223:8

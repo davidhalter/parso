@@ -23,6 +23,7 @@ if True:
     or another_very_long_variable_name:
         raise Exception()
 
+#: E901+1:8 E901+5
 dictionary = [
     "is": {
         # Might be a E122:4, but is not because the code is invalid Python.
@@ -40,7 +41,7 @@ setup('',
 
 
 #: E123+2:4 E291:15
-print "E123", (   
+abc = "E123", (   
     "bad", "hanging", "close"
     )
 

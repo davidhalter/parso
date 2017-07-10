@@ -97,7 +97,7 @@ for foo in """
     123
     """.strip().split():
     print(foo)
-print dedent(
+abc = dedent(
     '''
         mkdir -p ./{build}/
         mv ./build/ ./{build}/%(revision)s/

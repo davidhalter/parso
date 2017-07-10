@@ -55,32 +55,32 @@ if start[1] > end_col and not (
             "indented for visual indent")
 
 
-print "OK", ("visual",
+abc = "OK", ("visual",
              "indent")
 
-print "Okay", ("visual",
+abc = "Okay", ("visual",
                "indent_three"
                )
 
-print "a-ok", (
+abc = "a-ok", (
     "there",
     "dude",
 )
 
-print "hello", (
+abc = "hello", (
     "there",
     "dude")
 
-print "hello", (
+abc = "hello", (
 
     "there",
     # "john",
     "dude")
 
-print "hello", (
+abc = "hello", (
     "there", "dude")
 
-print "hello", (
+abc = "hello", (
     "there", "dude",
 )
 
@@ -196,12 +196,12 @@ if bar:
 if ((foo.bar("baz") and
      foo.bar("frop")
      )):
-    print "yes"
+    print("yes")
 
 # also ok, but starting to look like LISP
 if ((foo.bar("baz") and
      foo.bar("frop"))):
-    print "yes"
+    print("yes")
 
 #: E129+1:4 E127+2:9
 if (a == 2 or
@@ -223,7 +223,7 @@ if length > options.max_line_length:
 # blub
 
 
-print 'l.{line}\t{pos}\t{name}\t{text}'.format(
+asd = 'l.{line}\t{pos}\t{name}\t{text}'.format(
     line=token[2][0],
     pos=pos,
     name=tokenize.tok_name[token[0]],

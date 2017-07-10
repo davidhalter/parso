@@ -7,6 +7,7 @@ class Normalizer(object):
         self.issues = []
 
     def walk(self, node):
+        self.initialize(node)
         value = self.visit(node)
         self.finalize()
         return value
@@ -26,6 +27,9 @@ class Normalizer(object):
 
     def visit_leaf(self, leaf):
         return leaf.prefix + leaf.value
+
+    def initialize(self, node):
+        pass
 
     def finalize(self):
         pass

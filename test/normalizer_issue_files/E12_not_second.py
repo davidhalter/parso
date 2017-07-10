@@ -83,9 +83,6 @@ help = "print total number of errors " \
 help = u"print total number of errors " \
        u"to standard error"
 
-help = ur"print total number of errors " \
-       ur"to standard error"
-
 help = b"print total number of errors " \
        b"to standard error"
 
@@ -187,6 +184,8 @@ try: %s -d5
 ''' % sys.argv[0])
 
 
+# The try statement above was not finished.
+#: E901
 d = {  # comment
     1: 2
 }
@@ -284,7 +283,7 @@ some_hash = {
 }
 
 
-print dedent(
+abc = dedent(
     '''
         mkdir -p ./{build}/
         mv ./build/ ./{build}/%(revision)s/

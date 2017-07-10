@@ -1,7 +1,8 @@
 import re
 from contextlib import contextmanager
 
-from parso.normalizer import Normalizer, Rule, NormalizerConfig
+from parso.python.normalizer import ErrorFinder, ErrorFinderConfig
+from parso.normalizer import Rule
 
 
 _IMPORT_TYPES = ('import_name', 'import_from')
@@ -147,7 +148,7 @@ def _is_magic_name(name):
     return name.value.startswith('__') and name.value.startswith('__')
 
 
-class PEP8Normalizer(Normalizer):
+class PEP8Normalizer(ErrorFinder):
     def __init__(self, config):
         super(PEP8Normalizer, self).__init__(config)
         self._previous_part = None
@@ -172,6 +173,10 @@ class PEP8Normalizer(Normalizer):
 
     @contextmanager
     def visit_node(self, node):
+        with super(PEP8Normalizer, self).visit_node(node):
+            return self._visit_node(node)
+
+    def _visit_node(self, node):
         typ = node.type
 
         if typ in 'import_name':
@@ -329,6 +334,7 @@ class PEP8Normalizer(Normalizer):
         self._newline_count = 0
 
     def visit_leaf(self, leaf):
+        super(PEP8Normalizer, self).visit_leaf(leaf)
         for part in leaf._split_prefix():
             if part.type == 'spacing':
                 # This part is used for the part call after for.
@@ -684,7 +690,7 @@ class PEP8Normalizer(Normalizer):
         super(PEP8Normalizer, self).add_issue(code, message, node)
 
 
-class PEP8NormalizerConfig(NormalizerConfig):
+class PEP8NormalizerConfig(ErrorFinderConfig):
     normalizer_class = PEP8Normalizer
     """
     Normalizing to PEP8. Not really implemented, yet.

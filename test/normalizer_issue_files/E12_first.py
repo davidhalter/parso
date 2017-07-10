@@ -1,7 +1,7 @@
-print "E121", (
+abc = "E121", (
     #: E121:2
   "dent")
-print "E122", (
+abc = "E122", (
     #: E121:0
 "dent")
 my_list = [
@@ -9,11 +9,11 @@ my_list = [
     4, 5, 6,
     #: E123
     ]
-print "E124", ("visual",
+abc = "E124", ("visual",
                "indent_two"
                #: E124:14
               )
-print "E124", ("visual",
+abc = "E124", ("visual",
                "indent_five"
                #: E124:0
 )
@@ -25,19 +25,19 @@ if (row < 0 or self.moduleCount <= row or
     col < 0 or self.moduleCount <= col):
     raise Exception("%s,%s - %s" % (row, col, self.moduleCount))
 
-print "E126", (
+abc = "E126", (
     #: E126:12
             "dent")
-print "E126", (
+abc = "E126", (
     #: E126:8
         "dent")
-print "E127", ("over-",
+abc = "E127", ("over-",
                #: E127:18
                   "over-indent")
-print "E128", ("visual",
+abc = "E128", ("visual",
                #: E128:4
     "hanging")
-print "E128", ("under-",
+abc = "E128", ("under-",
                #: E128:14
               "under-indent")
 
@@ -63,7 +63,7 @@ rv.update(dict.fromkeys((
 abricot = 3 + \
           4 + \
           5 + 6
-print "hello", (
+abc = "hello", (
 
     "there",
     #: E126:5
