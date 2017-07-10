@@ -1,4 +1,9 @@
-from itertools import zip_longest
+try:
+    from itertools import zip_longest
+except ImportError:
+    # Python 2
+    from itertools import izip_longest as zip_longest
+
 from codecs import BOM_UTF8
 
 import pytest
