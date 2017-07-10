@@ -1,8 +1,11 @@
 from itertools import zip_longest
+from codecs import BOM_UTF8
 
 import pytest
 
 import parso
+
+unicode_bom = BOM_UTF8.decode('utf-8')
 
 
 @pytest.mark.parametrize(('string', 'tokens'), [
@@ -48,6 +51,7 @@ def test_simple_prefix_splitting(string, tokens):
     ('\\\n', ['backslash', 'spacing']),
     (' \t', ['spacing']),
     (' \t ', ['spacing']),
+    (unicode_bom + ' # ', ['bom', 'comment', 'spacing']),
 ])
 def test_prefix_splitting_types(string, types):
     tree = parso.parse(string)

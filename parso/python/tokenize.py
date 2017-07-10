@@ -15,12 +15,15 @@ import string
 import re
 from collections import namedtuple
 import itertools as _itertools
+from codecs import BOM_UTF8
 
 from parso.python.token import (tok_name, N_TOKENS, ENDMARKER, STRING, NUMBER, opmap,
                                 NAME, OP, ERRORTOKEN, NEWLINE, INDENT, DEDENT)
 from parso._compatibility import py_version, u
 from parso.utils import splitlines
 
+
+BOM_UTF8_STRING = BOM_UTF8.decode('utf-8')
 
 if py_version >= 30:
     # Python 3 has str.isidentifier() to check if a char is a valid identifier
@@ -227,9 +230,15 @@ def tokenize_lines(lines):
     new_line = True
     prefix = ''  # Should never be required, but here for safety
     additional_prefix = ''
+    first = True
     for lnum, line in enumerate(lines, 1):  # loop over lines in stream
-        pos, max = 0, len(line)
+        if first:
+            if line.startswith(BOM_UTF8_STRING):
+                additional_prefix = BOM_UTF8_STRING
+                line = line[1:]
+            first = False
 
+        pos, max = 0, len(line)
         if contstr:                                         # continued string
             endmatch = endprog.match(line)
             if endmatch:

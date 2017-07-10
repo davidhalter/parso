@@ -1,4 +1,5 @@
 import re
+from codecs import BOM_UTF8
 
 from parso.python.tokenize import group
 
@@ -34,15 +35,18 @@ class PrefixPart(object):
         )
 
 
+unicode_bom = BOM_UTF8.decode('utf-8')
+
 _comment = r'#[^\n\r\f]*'
 _backslash = r'\\\r?\n'
 _newline = r'\r?\n'
 _form_feed = r'\f'
 _only_spacing = '$'
 _spacing = r'[ \t]*'
+_bom = unicode_bom
 
 _regex = group(
-    _comment, _backslash, _newline, _form_feed, _only_spacing,
+    _comment, _backslash, _newline, _form_feed, _only_spacing, _bom,
     capture=True
 )
 _regex = re.compile(group(_spacing, capture=True) + _regex)
@@ -54,6 +58,7 @@ _types = {
     '\f': 'formfeed',
     '\n': 'newline',
     '\r': 'newline',
+    unicode_bom: 'bom'
 }
 
 
