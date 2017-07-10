@@ -43,7 +43,7 @@ if start[1] > end_col and not (
 def long_function_name(
         var_one, var_two, var_three,
         var_four):
-	print(var_one)
+	hello(var_one)
 
 
 #: E101+2
@@ -64,12 +64,12 @@ if bar:
 if ((foo.bar("baz") and
      foo.bar("frop")
      )):
-	print("yes")
+	hello("yes")
 #: E101+3
 # also ok, but starting to look like LISP
 if ((foo.bar("baz") and
      foo.bar("frop"))):
-	print("yes")
+	hello("yes")
 #: E101+1
 if (a == 2 or b == "abc def ghi" "jkl mno"):
 	return True

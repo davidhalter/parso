@@ -90,8 +90,6 @@ c = (a+ b)*(a - b)
 
 z = 2//30
 c = (a+b) * (a-b)
-#: E275:13 E275:14
-norman = True+False
 x = x*2 - 1
 x = x/2 - 1
 # TODO whitespace should be the other way around according to pep8.

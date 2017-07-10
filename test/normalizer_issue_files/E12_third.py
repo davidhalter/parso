@@ -96,7 +96,7 @@ for foo in """
     abc
     123
     """.strip().split():
-    print(foo)
+    hello(foo)
 abc = dedent(
     '''
         mkdir -p ./{build}/
@@ -109,7 +109,7 @@ abc = dedent(
 )
 #: E701+1: E122+1
 if True:\
-print(True)
+hello(True)
 
 #: E128+1
 foobar(a

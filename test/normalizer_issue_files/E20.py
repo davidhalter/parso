@@ -35,19 +35,18 @@ result = [
 
 #: E203:9
 if x == 4 :
-    print(x, y)
+    foo(x, y)
     x, y = y, x
 if x == 4:
     #: E203:12 E702:13
     a = x, y ; x, y = y, x
 if x == 4:
-    print(x, y)
+    foo(x, y)
     #: E203:12
     x, y = y , x
 # Okay
 if x == 4:
-    print(x, y)
+    foo(x, y)
     x, y = y, x
-a[b1, :] == a[b1, ...]
 a[b1, :1] == 3
 b = a[:, b1]

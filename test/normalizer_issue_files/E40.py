@@ -26,9 +26,9 @@ try:
 except ImportError:
     pass
 else:
-    print('imported foo')
+    hello('imported foo')
 finally:
-    print('made attempt to import foo')
+    hello('made attempt to import foo')
 
 import bar
 VERSION = '1.2.3'

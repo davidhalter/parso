@@ -178,7 +178,7 @@ rv.update(dict.fromkeys(
 def f():
     try:
         if not Debug:
-            print('''
+            hello('''
 If you would like to see debugging output,
 try: %s -d5
 ''' % sys.argv[0])

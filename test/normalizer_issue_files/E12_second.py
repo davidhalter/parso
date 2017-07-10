@@ -112,7 +112,7 @@ if foo is None and bar is "frop" and \
 def long_function_name(
     var_one, var_two, var_three,
     var_four):
-    print(var_one)
+    hello(var_one)
 
 
 def qualify_by_address(
@@ -185,7 +185,7 @@ foo = long_function_name(var_one, var_two,
     var_three, var_four)
 
 #: E128+1:4
-print('l.%s\t%s\t%s\t%r' %
+hello('l.%s\t%s\t%s\t%r' %
     (token[2][0], pos, tokenize.tok_name[token[0]], token[1]))
 
 

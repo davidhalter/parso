@@ -52,14 +52,6 @@ def b():
     pass
 
 
-#: E302+3:0
-def a():
-    pass
-
-async def b():
-    pass
-
-
 #: E303+3:0
 print
 
@@ -183,12 +175,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-# Previously just E272+1:5 E272+4:5
-#: E302+3 E221:5 E221+3:5
-async  def x():
-    pass
-
-async  def x(y: int = 1):
-    pass

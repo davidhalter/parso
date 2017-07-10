@@ -147,7 +147,7 @@ fnct(1, 2, 3,
 def long_function_name(
         var_one, var_two, var_three,
         var_four):
-    print(var_one)
+    hello(var_one)
 
 
 if ((row < 0 or self.moduleCount <= row or
@@ -196,12 +196,12 @@ if bar:
 if ((foo.bar("baz") and
      foo.bar("frop")
      )):
-    print("yes")
+    hello("yes")
 
 # also ok, but starting to look like LISP
 if ((foo.bar("baz") and
      foo.bar("frop"))):
-    print("yes")
+    hello("yes")
 
 #: E129+1:4 E127+2:9
 if (a == 2 or
@@ -231,7 +231,7 @@ asd = 'l.{line}\t{pos}\t{name}\t{text}'.format(
 )
 
 #: E121+1:6 E121+2:6
-print('%-7d %s per second (%d total)' % (
+hello('%-7d %s per second (%d total)' % (
       options.counters[key] / elapsed, key,
       options.counters[key]))
 

@@ -1,8 +1,8 @@
 for a in 'abc':
     for b in 'xyz':
-        print(a)  # indented with 8 spaces
+        hello(a)  # indented with 8 spaces
         #: E901:1
-	print(b)  # indented with 1 tab
+	hello(b)  # indented with 1 tab
 if True:
     #: E101:0
 	pass
@@ -46,6 +46,6 @@ def test_keys(self):
 
 
 if True:
-    print("""
+    hello("""
 	tab at start of this line
 """)

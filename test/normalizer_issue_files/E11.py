@@ -1,6 +1,6 @@
 if x > 2:
     #: E111:2
-  print(x)
+  hello(x)
 if True:
     #: E111:5
      print

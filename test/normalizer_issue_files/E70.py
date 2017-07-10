@@ -16,10 +16,6 @@ del a[:]; a.append(42);
 def f(x): return 2
 
 
-#: E704:16
-async def f(x): return 2
-
-
 #: E704:10
 def f(x): return 2 * x
 
