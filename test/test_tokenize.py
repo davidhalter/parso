@@ -5,7 +5,7 @@ from textwrap import dedent
 import pytest
 
 from parso._compatibility import py_version
-from parso.utils import splitlines
+from parso.utils import splitlines, version_string_to_int
 from parso.python.token import (
     NAME, NEWLINE, STRING, INDENT, DEDENT, ERRORTOKEN, ENDMARKER)
 from parso.python import tokenize
@@ -14,7 +14,9 @@ from parso.python.tokenize import TokenInfo
 
 
 def _get_token_list(string):
-    return list(tokenize.tokenize(string))
+    # Load the current version.
+    version_int = version_string_to_int()
+    return list(tokenize.tokenize(string, version_int))
 
 
 def test_end_pos_one_line():
@@ -41,8 +43,7 @@ def test_end_pos_multi_line():
 def test_simple_no_whitespace():
     # Test a simple one line string, no preceding whitespace
     simple_docstring = '"""simple one line docstring"""'
-    tokens = tokenize.tokenize(simple_docstring)
-    token_list = list(tokens)
+    token_list = _get_token_list(simple_docstring)
     _, value, _, prefix = token_list[0]
     assert prefix == ''
     assert value == '"""simple one line docstring"""'
@@ -51,8 +52,7 @@ def test_simple_no_whitespace():
 def test_simple_with_whitespace():
     # Test a simple one line string with preceding whitespace and newline
     simple_docstring = '  """simple one line docstring""" \r\n'
-    tokens = tokenize.tokenize(simple_docstring)
-    token_list = list(tokens)
+    token_list = _get_token_list(simple_docstring)
     assert token_list[0][0] == INDENT
     typ, value, start_pos, prefix = token_list[1]
     assert prefix == '  '
@@ -71,8 +71,7 @@ def test_function_whitespace():
         if x > 0:
             print(True)
     ''')
-    tokens = tokenize.tokenize(fundef)
-    token_list = list(tokens)
+    token_list = _get_token_list(fundef)
     for _, value, _, prefix in token_list:
         if value == 'test_whitespace':
             assert prefix == ' '
@@ -92,8 +91,7 @@ def test_tokenize_multiline_I():
     # Make sure multiline string having newlines have the end marker on the
     # next line
     fundef = '''""""\n'''
-    tokens = tokenize.tokenize(fundef)
-    token_list = list(tokens)
+    token_list = _get_token_list(fundef)
     assert token_list == [TokenInfo(ERRORTOKEN, '""""\n', (1, 0), ''),
                           TokenInfo(ENDMARKER ,       '', (2, 0), '')]
 
@@ -102,8 +100,7 @@ def test_tokenize_multiline_II():
     # Make sure multiline string having no newlines have the end marker on
     # same line
     fundef = '''""""'''
-    tokens = tokenize.tokenize(fundef)
-    token_list = list(tokens)
+    token_list = _get_token_list(fundef)
     assert token_list == [TokenInfo(ERRORTOKEN, '""""', (1, 0), ''),
                           TokenInfo(ENDMARKER,      '', (1, 4), '')]
 
@@ -112,8 +109,7 @@ def test_tokenize_multiline_III():
     # Make sure multiline string having newlines have the end marker on the
     # next line even if several newline
     fundef = '''""""\n\n'''
-    tokens = tokenize.tokenize(fundef)
-    token_list = list(tokens)
+    token_list = _get_token_list(fundef)
     assert token_list == [TokenInfo(ERRORTOKEN, '""""\n\n', (1, 0), ''),
                           TokenInfo(ENDMARKER,          '', (3, 0), '')]
 
@@ -123,8 +119,7 @@ def test_identifier_contains_unicode():
     def 我あφ():
         pass
     ''')
-    tokens = tokenize.tokenize(fundef)
-    token_list = list(tokens)
+    token_list = _get_token_list(fundef)
     unicode_token = token_list[1]
     if py_version >= 30:
         assert unicode_token[0] == NAME

@@ -65,7 +65,11 @@ class Differ(object):
     def parse(self, code, copies=0, parsers=0, expect_error_leaves=False):
         logging.debug('differ: parse copies=%s parsers=%s', copies, parsers)
         lines = splitlines(code, keepends=True)
-        diff_parser = DiffParser(self.grammar._pgen_grammar, self.module)
+        diff_parser = DiffParser(
+            self.grammar._pgen_grammar,
+            self.grammar._tokenizer,
+            self.module,
+        )
         new_module = diff_parser.update(self.lines, lines)
         self.lines = lines
         assert code == new_module.get_code()

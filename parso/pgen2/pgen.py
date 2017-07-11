@@ -13,7 +13,7 @@ from parso.python import tokenize
 class ParserGenerator(object):
     def __init__(self, bnf_text):
         self._bnf_text = bnf_text
-        self.generator = tokenize.tokenize(bnf_text)
+        self.generator = tokenize.tokenize(bnf_text, version_int=36)
         self._gettoken()  # Initialize lookahead
         self.dfas, self.startsymbol = self._parse()
         self.first = {}  # map from symbol name to set of tokens

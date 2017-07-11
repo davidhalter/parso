@@ -96,7 +96,9 @@ class Grammar(object):
                 if old_lines == lines:
                     return module_node
 
-                new_node = self._diff_parser(self._pgen_grammar, module_node).update(
+                new_node = self._diff_parser(
+                    self._pgen_grammar, self._tokenizer, module_node
+                ).update(
                     old_lines=old_lines,
                     new_lines=lines
                 )
@@ -106,7 +108,11 @@ class Grammar(object):
 
         tokens = self._tokenizer(lines)
 
-        p = self._parser(self._pgen_grammar, error_recovery=error_recovery, start_symbol=start_symbol)
+        p = self._parser(
+            self._pgen_grammar,
+            error_recovery=error_recovery,
+            start_symbol=start_symbol
+        )
         root_node = p.parse(tokens=tokens)
 
         if cache or diff_cache:
@@ -118,6 +124,20 @@ class Grammar(object):
         labels = self._pgen_grammar.symbol2number.values()
         txt = ' '.join(list(labels)[:3]) + ' ...'
         return '<%s:%s>' % (self.__class__.__name__, txt)
+
+
+class PythonGrammar(Grammar):
+    def __init__(self, version_int, bnf_text):
+        super(PythonGrammar, self).__init__(
+            bnf_text,
+            tokenizer=self._tokenize_lines,
+            parser=PythonParser,
+            diff_parser=DiffParser
+        )
+        self._version_int = version_int
+
+    def _tokenize_lines(self, lines):
+        return tokenize_lines(lines, self._version_int)
 
 
 def load_grammar(version=None):
@@ -147,12 +167,7 @@ def load_grammar(version=None):
             with open(path) as f:
                 bnf_text = f.read()
 
-            grammar = Grammar(
-                bnf_text,
-                tokenizer=tokenize_lines,
-                parser=PythonParser,
-                diff_parser=DiffParser
-            )
+            grammar = PythonGrammar(version_int, bnf_text)
             return _loaded_grammars.setdefault(path, grammar)
         except FileNotFoundError:
             message = "Python version %s is currently not supported." % version

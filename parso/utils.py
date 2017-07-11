@@ -108,7 +108,7 @@ def _parse_version(version):
     return int(major + minor)
 
 
-def version_string_to_int(version):
+def version_string_to_int(version=None):
     """
     Checks for a valid version number (e.g. `3.2` or `2.7.1` or `3`) and
     returns a corresponding int that is always two characters long in decimal.

@@ -13,7 +13,7 @@ import logging
 from parso.utils import splitlines
 from parso.python.parser import Parser
 from parso.python.tree import EndMarker
-from parso.python.tokenize import (tokenize_lines, NEWLINE, TokenInfo,
+from parso.python.tokenize import (NEWLINE, TokenInfo,
                                    ENDMARKER, INDENT, DEDENT, ERRORTOKEN)
 
 
@@ -89,8 +89,9 @@ class DiffParser(object):
     An advanced form of parsing a file faster. Unfortunately comes with huge
     side effects. It changes the given module.
     """
-    def __init__(self, pgen_grammar, module):
+    def __init__(self, pgen_grammar, tokenizer, module):
         self._pgen_grammar = pgen_grammar
+        self._tokenizer = tokenizer
         self._module = module
 
     def _reset(self):
@@ -286,7 +287,7 @@ class DiffParser(object):
         is_first_token = True
         omitted_first_indent = False
         indents = []
-        tokens = tokenize_lines(lines)
+        tokens = self._tokenizer(lines)
         stack = self._active_parser.pgen_parser.stack
         for typ, string, start_pos, prefix in tokens:
             start_pos = start_pos[0] + line_offset, start_pos[1]
