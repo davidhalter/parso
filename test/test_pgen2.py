@@ -15,7 +15,7 @@ from parso import load_grammar
 from parso import ParserSyntaxError
 
 
-def parse(code, version=None):
+def _parse(code, version=None):
     code = dedent(code) + "\n\n"
     grammar = load_grammar(version=version)
     return grammar.parse(code, error_recovery=False)
@@ -23,41 +23,41 @@ def parse(code, version=None):
 
 def test_formfeed():
     s = """print 1\n\x0Cprint 2\n"""
-    t = parse(s, '2.7')
+    t = _parse(s, '2.7')
     assert t.children[0].children[0].type == 'print_stmt'
     assert t.children[1].children[0].type == 'print_stmt'
     s = """1\n\x0C\x0C2\n"""
-    t = parse(s, '2.7')
+    t = _parse(s, '2.7')
 
 
 def _invalid_syntax(code, version=None, **kwargs):
     with pytest.raises(ParserSyntaxError):
-        module = parse(code, **kwargs)
+        module = _parse(code, **kwargs)
         # For debugging
         print(module.children)
 
 
 @pytest.mark.skipif('sys.version_info[:2] < (3, 5)')
 def test_matrix_multiplication_operator():
-    parse("a @ b", "3.5")
-    parse("a @= b", "3.5")
+    _parse("a @ b", "3.5")
+    _parse("a @= b", "3.5")
 
 
 def test_yield_from():
     yfrom = "yield from x"
-    parse(yfrom, '3.3')
+    _parse(yfrom, '3.3')
     _invalid_syntax(yfrom, '2.7')
-    parse("(yield from x) + y", '3.3')
+    _parse("(yield from x) + y", '3.3')
     _invalid_syntax("yield from", '3.3')
 
 
 @pytest.mark.skipif('sys.version_info[:2] < (3, 5)')
 def test_await_expr():
-    parse("""async def foo():
+    _parse("""async def foo():
                          await x
                   """, "3.5")
 
-    parse("""async def foo():
+    _parse("""async def foo():
 
         def foo(): pass
 
@@ -66,9 +66,9 @@ def test_await_expr():
         await x
     """, "3.5")
 
-    parse("""async def foo(): return await a""", "3.5")
+    _parse("""async def foo(): return await a""", "3.5")
 
-    parse("""def foo():
+    _parse("""def foo():
         def foo(): pass
         async def foo(): await x
     """, "3.5")
@@ -91,14 +91,14 @@ def test_await_expr_invalid():
 @pytest.mark.skipif('sys.version_info[:2] < (3, 5)')
 @pytest.mark.xfail(reason="acting like python 3.7")
 def test_async_var():
-    parse("""async = 1""", "3.5")
-    parse("""await = 1""", "3.5")
-    parse("""def async(): pass""", "3.5")
+    _parse("""async = 1""", "3.5")
+    _parse("""await = 1""", "3.5")
+    _parse("""def async(): pass""", "3.5")
 
 
 @pytest.mark.skipif('sys.version_info[:2] < (3, 5)')
 def test_async_for():
-    parse("""async def foo():
+    _parse("""async def foo():
                          async for a in b: pass""", "3.5")
 
 
@@ -111,7 +111,7 @@ def test_async_for_invalid():
 
 @pytest.mark.skipif('sys.version_info[:2] < (3, 5)')
 def test_async_with():
-    parse("""async def foo():
+    _parse("""async def foo():
                          async with a: pass""", "3.5")
 
     @pytest.mark.skipif('sys.version_info[:2] < (3, 5)')
@@ -122,20 +122,20 @@ def test_async_with():
 
 
 def test_raise_3x_style_1(each_version):
-    parse("raise", each_version)
+    _parse("raise", each_version)
 
 
 def test_raise_2x_style_2(each_py2_version):
-    parse("raise E, V", version=each_py2_version)
+    _parse("raise E, V", version=each_py2_version)
 
 def test_raise_2x_style_3(each_py2_version):
-    parse("raise E, V, T", version=each_py2_version)
+    _parse("raise E, V, T", version=each_py2_version)
 
 def test_raise_2x_style_invalid_1(each_py2_version):
     _invalid_syntax("raise E, V, T, Z", version=each_py2_version)
 
 def test_raise_3x_style():
-    parse("raise E1 from E2", '3.3')
+    _parse("raise E1 from E2", '3.3')
 
 def test_raise_3x_style_invalid_1():
     _invalid_syntax("raise E, V from E1", '3.3')
@@ -152,19 +152,19 @@ def test_raise_3x_style_invalid_4():
 
 # Adapted from Python 3's Lib/test/test_grammar.py:GrammarTests.testFuncdef
 def test_annotation_1():
-    parse("""def f(x) -> list: pass""")
+    _parse("""def f(x) -> list: pass""")
 
 def test_annotation_2(each_py3_version):
-    parse("""def f(x:int): pass""", each_py3_version)
+    _parse("""def f(x:int): pass""", each_py3_version)
 
 def test_annotation_3(each_py3_version):
-    parse("""def f(*x:str): pass""", each_py3_version)
+    _parse("""def f(*x:str): pass""", each_py3_version)
 
 def test_annotation_4(each_py3_version):
-    parse("""def f(**x:float): pass""", each_py3_version)
+    _parse("""def f(**x:float): pass""", each_py3_version)
 
 def test_annotation_5(each_py3_version):
-    parse("""def f(x, y:1+2): pass""", each_py3_version)
+    _parse("""def f(x, y:1+2): pass""", each_py3_version)
 
 def test_annotation_6():
     _invalid_syntax("""def f(a, (b:1, c:2, d)): pass""")
@@ -184,7 +184,7 @@ def test_except_new():
             x
         except E as N:
             y"""
-    parse(s)
+    _parse(s)
 
 def test_except_old():
     s = """
@@ -192,50 +192,50 @@ def test_except_old():
             x
         except E, N:
             y"""
-    parse(s, version='2.7')
+    _parse(s, version='2.7')
 
 
 # Adapted from Python 3's Lib/test/test_grammar.py:GrammarTests.testAtoms
 def test_set_literal_1():
-    parse("""x = {'one'}""")
+    _parse("""x = {'one'}""")
 
 def test_set_literal_2():
-    parse("""x = {'one', 1,}""")
+    _parse("""x = {'one', 1,}""")
 
 def test_set_literal_3():
-    parse("""x = {'one', 'two', 'three'}""")
+    _parse("""x = {'one', 'two', 'three'}""")
 
 def test_set_literal_4():
-    parse("""x = {2, 3, 4,}""")
+    _parse("""x = {2, 3, 4,}""")
 
 
 def test_new_octal_notation():
     code = """0o7777777777777"""
     if py_version >= 30:
-        parse(code)
+        _parse(code)
     else:
         _invalid_syntax(code)
     _invalid_syntax("""0o7324528887""")
 
 def test_new_binary_notation():
-    parse("""0b101010""")
+    _parse("""0b101010""")
     _invalid_syntax("""0b0101021""")
 
 
 def test_class_new_syntax():
-    parse("class B(t=7): pass")
-    parse("class B(t, *args): pass")
-    parse("class B(t, **kwargs): pass")
-    parse("class B(t, *args, **kwargs): pass")
-    parse("class B(t, y=9, *args, **kwargs): pass")
+    _parse("class B(t=7): pass")
+    _parse("class B(t, *args): pass")
+    _parse("class B(t, **kwargs): pass")
+    _parse("class B(t, *args, **kwargs): pass")
+    _parse("class B(t, y=9, *args, **kwargs): pass")
 
 
 def test_parser_idempotency_extended_unpacking():
     """A cut-down version of pytree_idempotency.py."""
-    parse("a, *b, c = x\n")
-    parse("[*a, b] = x\n")
-    parse("(z, *y, w) = m\n")
-    parse("for *z, m in d: pass\n")
+    _parse("a, *b, c = x\n")
+    _parse("[*a, b] = x\n")
+    _parse("(z, *y, w) = m\n")
+    _parse("for *z, m in d: pass\n")
 
 
 @pytest.mark.skipif('sys.version_info[0] < 3')
@@ -250,7 +250,7 @@ def test_multiline_bytes_literals():
                  b"and Larger Than One Block-Size Data"),
                 "6f630fad67cda0ee1fb1f562db3aa53e")
         """
-    parse(s)
+    _parse(s)
 
 def test_multiline_bytes_tripquote_literals():
     s = '''
@@ -259,7 +259,7 @@ def test_multiline_bytes_tripquote_literals():
         <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN">
         """
         '''
-    parse(s)
+    _parse(s)
 
 @pytest.mark.skipif('sys.version_info[0] < 3')
 def test_multiline_str_literals():
@@ -269,4 +269,4 @@ def test_multiline_str_literals():
                  "and Larger Than One Block-Size Data"),
                 "6f630fad67cda0ee1fb1f562db3aa53e")
         """
-    parse(s)
+    _parse(s)
