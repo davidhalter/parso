@@ -31,5 +31,6 @@ def parse(code=None, **kwargs):
     A utility function to parse Python with the current Python version. Params
     are documented in ``Grammar.parse``.
     """
-    grammar = load_grammar()
+    version = kwargs.pop('version', None)
+    grammar = load_grammar(version=version)
     return grammar.parse(code, **kwargs)
