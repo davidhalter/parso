@@ -35,9 +35,8 @@ stmt: simple_stmt | compound_stmt
 simple_stmt: small_stmt (';' small_stmt)* [';'] NEWLINE
 small_stmt: (expr_stmt | print_stmt  | del_stmt | pass_stmt | flow_stmt |
              import_stmt | global_stmt | exec_stmt | assert_stmt)
-expr_stmt: testlist_star_expr (augassign (yield_expr|testlist) |
-                     ('=' (yield_expr|testlist_star_expr))*)
-testlist_star_expr: (test|star_expr) (',' (test|star_expr))* [',']
+expr_stmt: testlist (augassign (yield_expr|testlist) |
+                     ('=' (yield_expr|testlist))*)
 augassign: ('+=' | '-=' | '*=' | '/=' | '%=' | '&=' | '|=' | '^=' |
             '<<=' | '>>=' | '**=' | '//=')
 # For normal assignments, additional restrictions enforced by the interpreter
@@ -98,7 +97,6 @@ and_test: not_test ('and' not_test)*
 not_test: 'not' not_test | comparison
 comparison: expr (comp_op expr)*
 comp_op: '<'|'>'|'=='|'>='|'<='|'<>'|'!='|'in'|'not' 'in'|'is'|'is' 'not'
-star_expr: '*' expr
 expr: xor_expr ('|' xor_expr)*
 xor_expr: and_expr ('^' and_expr)*
 and_expr: shift_expr ('&' shift_expr)*
@@ -113,20 +111,20 @@ atom: ('(' [yield_expr|testlist_comp] ')' |
        '`' testlist1 '`' |
        NAME | NUMBER | STRING+ | '.' '.' '.')
 # Modification by David Halter, remove `testlist_gexp` and `listmaker`
-testlist_comp: (test|star_expr) ( comp_for | (',' (test|star_expr))* [','] )
+testlist_comp: test ( comp_for | (',' test)* [','] )
 lambdef: 'lambda' [varargslist] ':' test
 trailer: '(' [arglist] ')' | '[' subscriptlist ']' | '.' NAME
 subscriptlist: subscript (',' subscript)* [',']
 subscript: test | [test] ':' [test] [sliceop]
 sliceop: ':' [test]
-exprlist: (expr|star_expr) (',' (expr|star_expr))* [',']
+exprlist: expr (',' expr)* [',']
 testlist: test (',' test)* [',']
 # Modification by David Halter, dictsetmaker -> dictorsetmaker (so that it's
 # the same as in the 3.4 grammar).
 dictorsetmaker: ( (test ':' test (comp_for | (',' test ':' test)* [','])) |
                 (test (comp_for | (',' test)* [','])) )
 
-classdef: 'class' NAME ['(' [arglist] ')'] ':' suite
+classdef: 'class' NAME ['(' [testlist] ')'] ':' suite
 
 arglist: (argument ',')* (argument [',']
                          |'*' test (',' argument)* [',' '**' test] 

@@ -125,7 +125,7 @@ def _create_token_collection(version_int):
         if version_int >= 30:
             Octnumber = r'0[oO][0-7]+'
         else:
-            Octnumber = '0[0-7]+'
+            Octnumber = '0[oO]?[0-7]+'
         Decnumber = r'(?:0+|[1-9][0-9]*)'
         Intnumber = group(Hexnumber, Binnumber, Octnumber, Decnumber)
         Exponent = r'[eE][-+]?[0-9]+'

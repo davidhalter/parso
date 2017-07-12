@@ -200,68 +200,68 @@ def test_annotation_8(each_py3_version):
     _invalid_syntax(s, each_py3_version)
 
 
-def test_except_new():
+def test_except_new(each_version):
     s = """
         try:
             x
         except E as N:
             y"""
-    _parse(s)
+    _parse(s, each_version)
 
-def test_except_old():
+def test_except_old(works_in_py2):
     s = """
         try:
             x
         except E, N:
             y"""
-    _parse(s, version='2.7')
+    works_in_py2.parse(s)
 
 
 # Adapted from Python 3's Lib/test/test_grammar.py:GrammarTests.testAtoms
-def test_set_literal_1():
-    _parse("""x = {'one'}""")
+def test_set_literal_1(each_version):
+    _parse("""x = {'one'}""", each_version)
 
-def test_set_literal_2():
-    _parse("""x = {'one', 1,}""")
+def test_set_literal_2(each_version):
+    _parse("""x = {'one', 1,}""", each_version)
 
-def test_set_literal_3():
-    _parse("""x = {'one', 'two', 'three'}""")
+def test_set_literal_3(each_version):
+    _parse("""x = {'one', 'two', 'three'}""", each_version)
 
-def test_set_literal_4():
-    _parse("""x = {2, 3, 4,}""")
-
-
-def test_new_octal_notation():
-    code = """0o7777777777777"""
-    if py_version >= 30:
-        _parse(code)
-    else:
-        _invalid_syntax(code)
-    _invalid_syntax("""0o7324528887""")
-
-def test_new_binary_notation():
-    _parse("""0b101010""")
-    _invalid_syntax("""0b0101021""")
+def test_set_literal_4(each_version):
+    _parse("""x = {2, 3, 4,}""", each_version)
 
 
-def test_class_new_syntax():
-    _parse("class B(t=7): pass")
-    _parse("class B(t, *args): pass")
-    _parse("class B(t, **kwargs): pass")
-    _parse("class B(t, *args, **kwargs): pass")
-    _parse("class B(t, y=9, *args, **kwargs): pass")
+def test_new_octal_notation(each_version):
+    _parse("""0o7777777777777""", each_version)
+    _invalid_syntax("""0o7324528887""", each_version)
 
 
-def test_parser_idempotency_extended_unpacking():
+def test_old_octal_notation(works_in_py2):
+    works_in_py2.parse("07")
+
+
+def test_new_binary_notation(each_version):
+    _parse("""0b101010""", each_version)
+    _invalid_syntax("""0b0101021""", each_version)
+
+
+def test_class_new_syntax(works_ge_py3):
+    works_ge_py3.parse("class B(t=7): pass")
+    works_ge_py3.parse("class B(t, *args): pass")
+    works_ge_py3.parse("class B(t, **kwargs): pass")
+    works_ge_py3.parse("class B(t, *args, **kwargs): pass")
+    works_ge_py3.parse("class B(t, y=9, *args, **kwargs): pass")
+
+
+def test_parser_idempotency_extended_unpacking(works_ge_py3):
     """A cut-down version of pytree_idempotency.py."""
-    _parse("a, *b, c = x\n")
-    _parse("[*a, b] = x\n")
-    _parse("(z, *y, w) = m\n")
-    _parse("for *z, m in d: pass\n")
+    works_ge_py3.parse("a, *b, c = x\n")
+    works_ge_py3.parse("[*a, b] = x\n")
+    works_ge_py3.parse("(z, *y, w) = m\n")
+    works_ge_py3.parse("for *z, m in d: pass\n")
 
 
-@pytest.mark.skipif('sys.version_info[0] < 3')
-def test_multiline_bytes_literals():
+def test_multiline_bytes_literals(each_version):
     """
     It's not possible to get the same result when using \xaa in Python 2/3,
     because it's treated differently.
@@ -272,23 +272,24 @@ def test_multiline_bytes_literals():
                  b"and Larger Than One Block-Size Data"),
                 "6f630fad67cda0ee1fb1f562db3aa53e")
         """
-    _parse(s)
+    _parse(s, each_version)
 
-def test_multiline_bytes_tripquote_literals():
+
+def test_multiline_bytes_tripquote_literals(each_version):
     s = '''
         b"""
         <?xml version="1.0" encoding="UTF-8"?>
         <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN">
         """
         '''
-    _parse(s)
+    _parse(s, each_version)
 
-@pytest.mark.skipif('sys.version_info[0] < 3')
-def test_multiline_str_literals():
+
+def test_multiline_str_literals(each_version):
     s = """
         md5test("\xaa" * 80,
                 ("Test Using Larger Than Block-Size Key "
                  "and Larger Than One Block-Size Data"),
                 "6f630fad67cda0ee1fb1f562db3aa53e")
         """
-    _parse(s)
+    _parse(s, each_version)
