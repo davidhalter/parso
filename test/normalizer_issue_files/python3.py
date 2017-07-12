@@ -75,3 +75,7 @@ def x(b: tuple = (1, 2))->int:
 #: E252:11 E252:12 E231:8
 def b(a:int=1):
     pass
+
+
+if alpha[:-i]:
+    *a, b = (1, 2, 3)

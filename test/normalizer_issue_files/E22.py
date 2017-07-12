@@ -145,9 +145,6 @@ if not -5 < x < +5:
 print >> sys.stdout, "x is an integer."
 x = x / 2 - 1
 
-if alpha[:-i]:
-    *a, b = (1, 2, 3)
-
 
 def squares(n):
     return (i**2 for i in range(n))
