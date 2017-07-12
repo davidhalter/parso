@@ -13,6 +13,7 @@ import pytest
 from parso._compatibility import py_version
 from parso import load_grammar
 from parso import ParserSyntaxError
+from parso.utils import version_string_to_int
 
 
 class Checker():
@@ -30,15 +31,19 @@ def works_in_py2(each_version):
 
 
 @pytest.fixture
-def works_in_py3(each_version):
-    return Checker(each_version, each_version.startswith('3'))
+def works_ge_py3(each_version):
+    version_int = version_string_to_int(each_version)
+    return Checker(each_version, version_int >= 30)
+
 
 @pytest.fixture
-def works_ge_py33(each_version):
+def works_ge_py35(each_version):
     """
     Works only greater equal Python 3.3.
     """
-    return Checker(each_version, each_version.startswith('3'))
+    version_int = version_string_to_int(each_version)
+    return Checker(each_version, version_int >= 35)
+
 
 def _parse(code, version=None):
     code = dedent(code) + "\n\n"
@@ -62,39 +67,37 @@ def test_formfeed(each_py2_version):
     t = _parse(s, each_py2_version)
 
 
-def test_matrix_multiplication_operator():
-    # Introduced in 3.5
-    _parse("a @ b", "3.5")
-    _parse("a @= b", "3.5")
+def test_matrix_multiplication_operator(works_ge_py35):
+    works_ge_py35.parse("a @ b")
+    works_ge_py35.parse("a @= b")
 
 
-def test_yield_from(works_ge_py33, each_version):
-    works_ge_py33.parse("yield from x")
-    works_ge_py33.parse("(yield from x) + y")
+def test_yield_from(works_ge_py3, each_version):
+    works_ge_py3.parse("yield from x")
+    works_ge_py3.parse("(yield from x) + y")
     _invalid_syntax("yield from", each_version)
 
 
-@pytest.mark.skipif('sys.version_info[:2] < (3, 5)')
-def test_await_expr():
-    _parse("""async def foo():
+def test_await_expr(works_ge_py35):
+    works_ge_py35.parse("""async def foo():
                          await x
-                  """, "3.5")
+                  """)
 
-    _parse("""async def foo():
+    works_ge_py35.parse("""async def foo():
 
         def foo(): pass
 
         def foo(): pass
 
         await x
-    """, "3.5")
+    """)
 
-    _parse("""async def foo(): return await a""", "3.5")
+    works_ge_py35.parse("""async def foo(): return await a""")
 
-    _parse("""def foo():
+    works_ge_py35.parse("""def foo():
         def foo(): pass
         async def foo(): await x
-    """, "3.5")
+    """)
 
 
 @pytest.mark.skipif('sys.version_info[:2] < (3, 5)')
@@ -119,10 +122,8 @@ def test_async_var():
     _parse("""def async(): pass""", "3.5")
 
 
-@pytest.mark.skipif('sys.version_info[:2] < (3, 5)')
-def test_async_for():
-    _parse("""async def foo():
-                         async for a in b: pass""", "3.5")
+def test_async_for(works_ge_py35):
+    works_ge_py35.parse("async def foo():\n async for a in b: pass")
 
 
 @pytest.mark.skipif('sys.version_info[:2] < (3, 5)')
@@ -132,10 +133,8 @@ def test_async_for_invalid():
                                async for a in b: pass""", version="3.5")
 
 
-@pytest.mark.skipif('sys.version_info[:2] < (3, 5)')
-def test_async_with():
-    _parse("""async def foo():
-                         async with a: pass""", "3.5")
+def test_async_with(works_ge_py35):
+    works_ge_py35.parse("async def foo():\n async with a: pass")
 
     @pytest.mark.skipif('sys.version_info[:2] < (3, 5)')
     @pytest.mark.xfail(reason="acting like python 3.7")
@@ -148,17 +147,17 @@ def test_raise_3x_style_1(each_version):
     _parse("raise", each_version)
 
 
-def test_raise_2x_style_2(each_py2_version):
-    _parse("raise E, V", version=each_py2_version)
+def test_raise_2x_style_2(works_in_py2):
+    works_in_py2.parse("raise E, V")
 
-def test_raise_2x_style_3(each_py2_version):
-    _parse("raise E, V, T", version=each_py2_version)
+def test_raise_2x_style_3(works_in_py2):
+    works_in_py2.parse("raise E, V, T")
 
-def test_raise_2x_style_invalid_1(each_py2_version):
-    _invalid_syntax("raise E, V, T, Z", version=each_py2_version)
+def test_raise_2x_style_invalid_1(each_version):
+    _invalid_syntax("raise E, V, T, Z", version=each_version)
 
-def test_raise_3x_style():
-    _parse("raise E1 from E2", '3.3')
+def test_raise_3x_style(works_ge_py3):
+    works_ge_py3.parse("raise E1 from E2")
 
 def test_raise_3x_style_invalid_1():
     _invalid_syntax("raise E, V from E1", '3.3')
