@@ -15,40 +15,63 @@ from parso import load_grammar
 from parso import ParserSyntaxError
 
 
+class Checker():
+    def __init__(self, version, is_passing):
+        self._version = version
+        self._is_passing = is_passing
+
+    def parse(self, code):
+        func = _parse if self._is_passing else _invalid_syntax
+        return func(code, version=self._version)
+
+@pytest.fixture
+def works_in_py2(each_version):
+    return Checker(each_version, each_version.startswith('2'))
+
+
+@pytest.fixture
+def works_in_py3(each_version):
+    return Checker(each_version, each_version.startswith('3'))
+
+@pytest.fixture
+def works_ge_py33(each_version):
+    """
+    Works only greater equal Python 3.3.
+    """
+    return Checker(each_version, each_version.startswith('3'))
+
 def _parse(code, version=None):
     code = dedent(code) + "\n\n"
     grammar = load_grammar(version=version)
     return grammar.parse(code, error_recovery=False)
 
 
-def test_formfeed():
-    s = """print 1\n\x0Cprint 2\n"""
-    t = _parse(s, '2.7')
-    assert t.children[0].children[0].type == 'print_stmt'
-    assert t.children[1].children[0].type == 'print_stmt'
-    s = """1\n\x0C\x0C2\n"""
-    t = _parse(s, '2.7')
-
-
 def _invalid_syntax(code, version=None, **kwargs):
     with pytest.raises(ParserSyntaxError):
-        module = _parse(code, **kwargs)
+        module = _parse(code, version=version, **kwargs)
         # For debugging
         print(module.children)
 
 
-@pytest.mark.skipif('sys.version_info[:2] < (3, 5)')
+def test_formfeed(each_py2_version):
+    s = """print 1\n\x0Cprint 2\n"""
+    t = _parse(s, each_py2_version)
+    assert t.children[0].children[0].type == 'print_stmt'
+    assert t.children[1].children[0].type == 'print_stmt'
+    s = """1\n\x0C\x0C2\n"""
+    t = _parse(s, each_py2_version)
+
+
 def test_matrix_multiplication_operator():
+    # Introduced in 3.5
     _parse("a @ b", "3.5")
     _parse("a @= b", "3.5")
 
 
-def test_yield_from():
-    yfrom = "yield from x"
-    _parse(yfrom, '3.3')
-    _invalid_syntax(yfrom, '2.7')
-    _parse("(yield from x) + y", '3.3')
-    _invalid_syntax("yield from", '3.3')
+def test_yield_from(works_ge_py33, each_version):
+    works_ge_py33.parse("yield from x")
+    works_ge_py33.parse("(yield from x) + y")
+    _invalid_syntax("yield from", each_version)
 
 
 @pytest.mark.skipif('sys.version_info[:2] < (3, 5)')

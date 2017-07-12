@@ -102,4 +102,4 @@ def each_py3_version():
 
 @pytest.fixture
 def each_py2_version():
-    return '3.3', '3.4', '3.5', '3.6'
+    return '2.6', '2.7'
