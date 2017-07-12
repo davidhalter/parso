@@ -142,21 +142,13 @@ def test_started_lambda_stmt():
     assert m.children[0].type == 'error_node'
 
 
-def test_python2_octal():
-    module = parse('0660')
+def test_python2_octal(each_version):
+    module = parse('0660', version=each_version)
     first = module.children[0]
-    if py_version >= 30:
+    if each_version.startswith('3'):
         assert first.type == 'error_node'
     else:
         assert first.type == 'number'
-
-
-def test_python3_octal():
-    module = parse('0o660')
-    if py_version >= 30:
-        assert module.children[0].type == 'number'
-    else:
-        assert module.children[0].type == 'error_node'
 
 
 @pytest.mark.parametrize('code', ['foo "', 'foo """\n', 'foo """\nbar'])

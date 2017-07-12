@@ -26,7 +26,7 @@ class TestsFunctionAndLambdaParsing(object):
 
     @pytest.fixture(params=FIXTURES)
     def node(self, request):
-        parsed = parse(dedent(request.param[0]))
+        parsed = parse(dedent(request.param[0]), version='3.5')
         request.keywords['expected'] = request.param[1]
         child = parsed.children[0]
         if child.type == 'simple_stmt':
@@ -61,10 +61,11 @@ class TestsFunctionAndLambdaParsing(object):
             assert node.annotation.value == expected_annotation
 
 
-def test_end_pos_line():
+def test_end_pos_line(each_version):
     # jedi issue #150
     s = "x()\nx( )\nx(  )\nx (  )\n"
-    module = parse(s)
+
+    module = parse(s, version=each_version)
     for i, simple_stmt in enumerate(module.children[:-1]):
         expr_stmt = simple_stmt.children[0]
         assert expr_stmt.end_pos == (i + 1, i + 3)
