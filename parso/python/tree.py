@@ -418,14 +418,14 @@ def _create_params(parent, argslist_list):
         basically a way of unpacking tuples in params. Python 3 has ditched
         this behavior. Jedi currently just ignores those constructs.
         """
-        return node.type == 'tfpdef' and node.children[0] == '('
+        return node.type == 'fpdef' and node.children[0] == '('
 
     try:
         first = argslist_list[0]
     except IndexError:
         return []
 
-    if first.type in ('name', 'tfpdef'):
+    if first.type in ('name', 'fpdef'):
         if check_python2_nested_param(first):
             return [first]
         else:

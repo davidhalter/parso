@@ -8,13 +8,14 @@ test_grammar.py files from both Python 2 and Python 3.
 
 from textwrap import dedent
 
+import pytest
+
 from parso._compatibility import py_version
 from parso import load_grammar
 from parso import ParserSyntaxError
-import pytest
 
 
-def parse(code, version='3.4'):
+def parse(code, version=None):
     code = dedent(code) + "\n\n"
     grammar = load_grammar(version=version)
     return grammar.parse(code, error_recovery=False)
@@ -29,13 +30,11 @@ def test_formfeed():
     t = parse(s, '2.7')
 
 
-def _invalid_syntax(code, **kwargs):
-    try:
-        parse(code, **kwargs)
-    except ParserSyntaxError:
-        pass
-    else:
-        raise AssertionError("Syntax shouldn't have been valid")
+def _invalid_syntax(code, version=None, **kwargs):
+    with pytest.raises(ParserSyntaxError):
+        module = parse(code, **kwargs)
+        # For debugging
+        print(module.children)
 
 
 @pytest.mark.skipif('sys.version_info[:2] < (3, 5)')
@@ -45,9 +44,11 @@ def test_matrix_multiplication_operator():
 
 
 def test_yield_from():
-    parse("yield from x")
-    parse("(yield from x) + y")
-    _invalid_syntax("yield from")
+    yfrom = "yield from x"
+    parse(yfrom, '3.3')
+    _invalid_syntax(yfrom, '2.7')
+    parse("(yield from x) + y", '3.3')
+    _invalid_syntax("yield from", '3.3')
 
 
 @pytest.mark.skipif('sys.version_info[:2] < (3, 5)')
@@ -120,49 +121,50 @@ def test_async_with():
                                    async with a: pass""", version="3.5")
 
 
-def test_raise_2x_style_1():
-    parse("raise")
+def test_raise_3x_style_1(each_version):
+    parse("raise", each_version)
 
-def test_raise_2x_style_2():
-    parse("raise E, V", version='2.7')
 
-def test_raise_2x_style_3():
-    parse("raise E, V, T", version='2.7')
+def test_raise_2x_style_2(each_py2_version):
+    parse("raise E, V", version=each_py2_version)
 
-def test_raise_2x_style_invalid_1():
-    _invalid_syntax("raise E, V, T, Z", version='2.7')
+def test_raise_2x_style_3(each_py2_version):
+    parse("raise E, V, T", version=each_py2_version)
+
+def test_raise_2x_style_invalid_1(each_py2_version):
+    _invalid_syntax("raise E, V, T, Z", version=each_py2_version)
 
 def test_raise_3x_style():
-    parse("raise E1 from E2")
+    parse("raise E1 from E2", '3.3')
 
 def test_raise_3x_style_invalid_1():
-    _invalid_syntax("raise E, V from E1")
+    _invalid_syntax("raise E, V from E1", '3.3')
 
 def test_raise_3x_style_invalid_2():
-    _invalid_syntax("raise E from E1, E2")
+    _invalid_syntax("raise E from E1, E2", '3.3')
 
 def test_raise_3x_style_invalid_3():
-    _invalid_syntax("raise from E1, E2")
+    _invalid_syntax("raise from E1, E2", '3.3')
 
 def test_raise_3x_style_invalid_4():
-    _invalid_syntax("raise E from")
+    _invalid_syntax("raise E from", '3.3')
 
 
 # Adapted from Python 3's Lib/test/test_grammar.py:GrammarTests.testFuncdef
 def test_annotation_1():
     parse("""def f(x) -> list: pass""")
 
-def test_annotation_2():
-    parse("""def f(x:int): pass""")
+def test_annotation_2(each_py3_version):
+    parse("""def f(x:int): pass""", each_py3_version)
 
-def test_annotation_3():
-    parse("""def f(*x:str): pass""")
+def test_annotation_3(each_py3_version):
+    parse("""def f(*x:str): pass""", each_py3_version)
 
-def test_annotation_4():
-    parse("""def f(**x:float): pass""")
+def test_annotation_4(each_py3_version):
+    parse("""def f(**x:float): pass""", each_py3_version)
 
-def test_annotation_5():
-    parse("""def f(x, y:1+2): pass""")
+def test_annotation_5(each_py3_version):
+    parse("""def f(x, y:1+2): pass""", each_py3_version)
 
 def test_annotation_6():
     _invalid_syntax("""def f(a, (b:1, c:2, d)): pass""")

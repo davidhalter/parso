@@ -46,6 +46,21 @@ def pytest_generate_tests(metafunc):
             cases,
             ids=[c.name for c in cases]
         )
+    elif 'each_version' in metafunc.fixturenames:
+        metafunc.parametrize(
+            'each_version',
+            ['2.6', '2.7', '3.3', '3.4', '3.5', '3.6'],
+        )
+    elif 'each_py2_version' in metafunc.fixturenames:
+        metafunc.parametrize(
+            'each_py2_version',
+            ['2.6', '2.7'],
+        )
+    elif 'each_py3_version' in metafunc.fixturenames:
+        metafunc.parametrize(
+            'each_py3_version',
+            ['3.3', '3.4', '3.5', '3.6'],
+        )
 
 
 class NormalizerIssueCase(object):
@@ -78,3 +93,13 @@ def pytest_configure(config):
         #ch.setFormatter(formatter)
 
         root.addHandler(ch)
+
+
+@pytest.fixture
+def each_py3_version():
+    return '3.3', '3.4', '3.5', '3.6'
+
+
+@pytest.fixture
+def each_py2_version():
+    return '3.3', '3.4', '3.5', '3.6'

@@ -121,7 +121,8 @@ def test_param_splitting():
             # We don't want b and c to be a part of the param enumeration. Just
             # ignore them, because it's not what we want to support in the
             # future.
-            assert [param.name.value for param in next(m.iter_funcdefs()).params] == result
+            func = next(m.iter_funcdefs())
+            assert [param.name.value for param in func.params] == result
 
     check('def x(a, (b, c)):\n pass', ['a'])
     check('def x((b, c)):\n pass', [])
