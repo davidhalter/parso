@@ -159,45 +159,45 @@ def test_raise_2x_style_invalid_1(each_version):
 def test_raise_3x_style(works_ge_py3):
     works_ge_py3.parse("raise E1 from E2")
 
-def test_raise_3x_style_invalid_1():
-    _invalid_syntax("raise E, V from E1", '3.3')
+def test_raise_3x_style_invalid_1(each_version):
+    _invalid_syntax("raise E, V from E1", each_version)
 
-def test_raise_3x_style_invalid_2():
-    _invalid_syntax("raise E from E1, E2", '3.3')
+def test_raise_3x_style_invalid_2(each_version):
+    _invalid_syntax("raise E from E1, E2", each_version)
 
-def test_raise_3x_style_invalid_3():
-    _invalid_syntax("raise from E1, E2", '3.3')
+def test_raise_3x_style_invalid_3(each_version):
+    _invalid_syntax("raise from E1, E2", each_version)
 
-def test_raise_3x_style_invalid_4():
-    _invalid_syntax("raise E from", '3.3')
+def test_raise_3x_style_invalid_4(each_version):
+    _invalid_syntax("raise E from", each_version)
 
 
 # Adapted from Python 3's Lib/test/test_grammar.py:GrammarTests.testFuncdef
-def test_annotation_1():
-    _parse("""def f(x) -> list: pass""")
+def test_annotation_1(works_ge_py3):
+    works_ge_py3.parse("""def f(x) -> list: pass""")
 
-def test_annotation_2(each_py3_version):
-    _parse("""def f(x:int): pass""", each_py3_version)
+def test_annotation_2(works_ge_py3):
+    works_ge_py3.parse("""def f(x:int): pass""")
 
-def test_annotation_3(each_py3_version):
-    _parse("""def f(*x:str): pass""", each_py3_version)
+def test_annotation_3(works_ge_py3):
+    works_ge_py3.parse("""def f(*x:str): pass""")
 
-def test_annotation_4(each_py3_version):
-    _parse("""def f(**x:float): pass""", each_py3_version)
+def test_annotation_4(works_ge_py3):
+    works_ge_py3.parse("""def f(**x:float): pass""")
 
-def test_annotation_5(each_py3_version):
-    _parse("""def f(x, y:1+2): pass""", each_py3_version)
+def test_annotation_5(works_ge_py3):
+    works_ge_py3.parse("""def f(x, y:1+2): pass""")
 
-def test_annotation_6():
-    _invalid_syntax("""def f(a, (b:1, c:2, d)): pass""")
+def test_annotation_6(each_py3_version):
+    _invalid_syntax("""def f(a, (b:1, c:2, d)): pass""", each_py3_version)
 
-def test_annotation_7():
-    _invalid_syntax("""def f(a, (b:1, c:2, d), e:3=4, f=5, *g:6): pass""")
+def test_annotation_7(each_py3_version):
+    _invalid_syntax("""def f(a, (b:1, c:2, d), e:3=4, f=5, *g:6): pass""", each_py3_version)
 
-def test_annotation_8():
+def test_annotation_8(each_py3_version):
     s = """def f(a, (b:1, c:2, d), e:3=4, f=5,
                     *g:6, h:7, i=8, j:9=10, **k:11) -> 12: pass"""
-    _invalid_syntax(s)
+    _invalid_syntax(s, each_py3_version)
 
 
 def test_except_new():
