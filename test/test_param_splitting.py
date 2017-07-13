@@ -8,13 +8,13 @@ from textwrap import dedent
 from parso import parse
 
 
-def assert_params(param_string, **wanted_dct):
+def assert_params(param_string, version=None, **wanted_dct):
     source = dedent('''
     def x(%s):
         pass
     ''') % param_string
 
-    module = parse(source)
+    module = parse(source, version=version)
     funcdef = next(module.iter_funcdefs())
     dct = dict((p.name.value, p.default and p.default.get_code())
                for p in funcdef.params)
@@ -23,9 +23,9 @@ def assert_params(param_string, **wanted_dct):
 
 
 def test_split_params_with_separation_star():
-    assert_params(u'x, y=1, *, z=3', x=None, y='1', z='3')
-    assert_params(u'*, x', x=None)
-    assert_params(u'*')
+    assert_params(u'x, y=1, *, z=3', x=None, y='1', z='3', version='3.5')
+    assert_params(u'*, x', x=None, version='3.5')
+    assert_params(u'*', version='3.5')
 
 
 def test_split_params_with_stars():
