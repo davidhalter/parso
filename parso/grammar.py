@@ -5,7 +5,7 @@ from parso._compatibility import FileNotFoundError
 from parso.pgen2.pgen import generate_grammar
 from parso.utils import splitlines, source_to_unicode, version_string_to_int
 from parso.python.diff import DiffParser
-from parso.python.tokenize import tokenize_lines
+from parso.python.tokenize import tokenize_lines, tokenize
 from parso.cache import parser_cache, load_module, save_module
 from parso.parser import BaseParser
 from parso.python.parser import Parser as PythonParser
@@ -138,6 +138,10 @@ class PythonGrammar(Grammar):
 
     def _tokenize_lines(self, lines):
         return tokenize_lines(lines, self._version_int)
+
+    def _tokenize(self, code):
+        # Used by Jedi.
+        return tokenize(code, self._version_int)
 
 
 def load_grammar(version=None):
