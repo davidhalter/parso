@@ -329,8 +329,8 @@ class ParserGenerator(object):
                 msg = msg % args
             except:
                 msg = " ".join([msg] + list(map(str, args)))
-        line = open(self.filename).readlines()[self.begin[0]]
-        raise SyntaxError(msg, (self.filename, self.begin[0],
+        line = self._bnf_text.splitlines()[self.begin[0] - 1]
+        raise SyntaxError(msg, ('<grammar>', self.begin[0],
                                 self.begin[1], line))
 
 
