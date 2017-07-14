@@ -877,7 +877,7 @@ def _defined_names(current):
     list comprehensions.
     """
     names = []
-    if current.type in ('testlist_star_expr', 'testlist_comp', 'exprlist'):
+    if current.type in ('testlist_star_expr', 'testlist_comp', 'exprlist', 'testlist'):
         for child in current.children[::2]:
             names += _defined_names(child)
     elif current.type in ('atom', 'star_expr'):
