@@ -69,3 +69,40 @@ def test_end_pos_line(each_version):
     for i, simple_stmt in enumerate(module.children[:-1]):
         expr_stmt = simple_stmt.children[0]
         assert expr_stmt.end_pos == (i + 1, i + 3)
+
+
+def test_default_param(each_version):
+    func = parse('def x(foo=42): pass', version=each_version).children[0]
+    param, = func.params
+    assert param.default.value == '42'
+    assert param.annotation is None
+    assert not param.star_count
+
+
+def test_annotation_param(each_py3_version):
+    func = parse('def x(foo: 3): pass', version=each_py3_version).children[0]
+    param, = func.params
+    assert param.default is None
+    assert param.annotation.value == '3'
+    assert not param.star_count
+
+
+def test_annotation_params(each_py3_version):
+    func = parse('def x(foo: 3, bar: 4): pass', version=each_py3_version).children[0]
+    param1, param2 = func.params
+
+    assert param1.default is None
+    assert param1.annotation.value == '3'
+    assert not param1.star_count
+
+    assert param2.default is None
+    assert param2.annotation.value == '4'
+    assert not param2.star_count
+
+
+def test_default_and_annotation_param(each_py3_version):
+    func = parse('def x(foo:3=42): pass', version=each_py3_version).children[0]
+    param, = func.params
+    assert param.default.value == '42'
+    assert param.annotation.value == '3'
+    assert not param.star_count

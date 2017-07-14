@@ -433,7 +433,10 @@ def _create_params(parent, argslist_list):
     elif first == '*':
         return [first]
     else:  # argslist is a `typedargslist` or a `varargslist`.
-        children = first.children
+        if first.type == 'tfpdef':
+            children = [first]
+        else:
+            children = first.children
         new_children = []
         start = 0
         # Start with offset 1, because the end is higher.
@@ -958,8 +961,10 @@ class Param(PythonBaseNode):
         The default is the test node that appears after the `=`. Is `None` in
         case no default is present.
         """
+        has_comma = self.children[-1] == ','
         try:
-            return self.children[int(self.children[0] in ('*', '**')) + 2]
+            if self.children[-2 - int(has_comma)] == '=':
+                return self.children[-1 - int(has_comma)]
         except IndexError:
             return None
 
