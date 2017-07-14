@@ -8,7 +8,7 @@ import parso
 from parso.python.normalizer import ErrorFinderConfig
 
 def _get_error_list(code, version=None):
-    grammar = parso.load_grammar(version)
+    grammar = parso.load_grammar(version=version)
     tree = grammar.parse(code)
     config = ErrorFinderConfig()
     return list(tree._get_normalizer_issues(config))

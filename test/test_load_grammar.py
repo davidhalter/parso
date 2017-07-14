@@ -6,11 +6,11 @@ from parso import utils
 def test_load_inexisting_grammar():
     # This version shouldn't be out for a while, but if we ever do, wow!
     with pytest.raises(NotImplementedError):
-        load_grammar('15.8')
+        load_grammar(version='15.8')
     # The same is true for very old grammars (even though this is probably not
     # going to be an issue.
     with pytest.raises(NotImplementedError):
-        load_grammar('1.5')
+        load_grammar(version='1.5')
 
 
 @pytest.mark.parametrize(('string', 'result'), [
@@ -23,9 +23,9 @@ def test_parse_version(string, result):
 @pytest.mark.parametrize('string', ['1.', 'a', '#', '1.3.4.5', '1.12'])
 def test_invalid_grammar_version(string):
     with pytest.raises(ValueError):
-        load_grammar(string)
+        load_grammar(version=string)
 
 
 def test_grammar_int_version():
     with pytest.raises(TypeError):
-        load_grammar(3.2)
+        load_grammar(version=3.2)

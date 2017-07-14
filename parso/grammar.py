@@ -144,35 +144,37 @@ class PythonGrammar(Grammar):
         return tokenize(code, self._version_int)
 
 
-def load_grammar(version=None):
+def load_grammar(**kwargs):
     """
     Loads a Python grammar. The default version is the current Python version.
 
     If you need support for a specific version, please use e.g.
     `version='3.3'`.
     """
-    version_int = version_string_to_int(version)
+    def load_grammar(version=None):
+        version_int = version_string_to_int(version)
 
-    # For these versions we use the same grammar files, because nothing
-    # changed.
-    if version_int == 33:
-        version_int = 34
-    elif version_int == 26:
-        version_int = 27
+        # For these versions we use the same grammar files, because nothing
+        # changed.
+        if version_int == 33:
+            version_int = 34
+        elif version_int == 26:
+            version_int = 27
 
-    file = 'python/grammar' + str(version_int) + '.txt'
+        file = 'python/grammar' + str(version_int) + '.txt'
 
-    global _loaded_grammars
-    path = os.path.join(os.path.dirname(__file__), file)
-    try:
-        return _loaded_grammars[path]
-    except KeyError:
+        global _loaded_grammars
+        path = os.path.join(os.path.dirname(__file__), file)
         try:
-            with open(path) as f:
-                bnf_text = f.read()
+            return _loaded_grammars[path]
+        except KeyError:
+            try:
+                with open(path) as f:
+                    bnf_text = f.read()
 
-            grammar = PythonGrammar(version_int, bnf_text)
-            return _loaded_grammars.setdefault(path, grammar)
-        except FileNotFoundError:
-            message = "Python version %s is currently not supported." % version
-            raise NotImplementedError(message)
+                grammar = PythonGrammar(version_int, bnf_text)
+                return _loaded_grammars.setdefault(path, grammar)
+            except FileNotFoundError:
+                message = "Python version %s is currently not supported." % version
+                raise NotImplementedError(message)
+    return load_grammar(**kwargs)
