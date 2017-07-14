@@ -985,7 +985,7 @@ class Param(PythonBaseNode):
 
     def _tfpdef(self):
         """
-        tfpdef: see grammar.txt.
+        tfpdef: see e.g. grammar36.txt.
         """
         offset = int(self.children[0] in ('*', '**'))
         return self.children[offset]
