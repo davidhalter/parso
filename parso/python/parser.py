@@ -38,6 +38,10 @@ class Parser(BaseParser):
         'while_stmt': tree.WhileStmt,
         'try_stmt': tree.TryStmt,
         'comp_for': tree.CompFor,
+        # Not sure if this is the best idea, but IMO it's the easiest way to
+        # avoid extreme amounts of work around the subtle difference of 2/3
+        # grammar in list comoprehensions.
+        'list_for': tree.CompFor,
         'decorator': tree.Decorator,
         'lambdef': tree.Lambda,
         'old_lambdef': tree.Lambda,
@@ -101,6 +105,12 @@ class Parser(BaseParser):
                 # ones and therefore have pseudo start/end positions and no
                 # prefixes. Just ignore them.
                 children = [children[0]] + children[2:-1]
+            elif symbol == 'list_if':
+                # Make transitioning from 2 to 3 easier.
+                symbol = 'comp_if'
+            elif symbol == 'listmaker':
+                # Same as list_if above.
+                symbol = 'testlist_comp'
             return self.default_node(symbol, children)
 
     def convert_leaf(self, pgen_grammar, type, value, prefix, start_pos):
