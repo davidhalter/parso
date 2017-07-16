@@ -285,6 +285,11 @@ def test_multiline_bytes_tripquote_literals(each_version):
     _parse(s, each_version)
 
 
+def test_ellipsis(works_ge_py3, each_version):
+    works_ge_py3.parse("...")
+    _parse("[0][...]", version=each_version)
+
+
 def test_multiline_str_literals(each_version):
     s = """
         md5test("\xaa" * 80,

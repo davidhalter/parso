@@ -159,7 +159,12 @@ def _create_token_collection(version_int):
                      r"~")
 
     Bracket = '[][(){}]'
-    Special = group(r'\r?\n', r'\.\.\.', r'[:;.,@]')
+
+    special_args = [r'\r?\n', r'[:;.,@]']
+    if version_int >= 30:
+        special_args.insert(0, r'\.\.\.')
+    Special = group(*special_args)
+
     Funny = group(Operator, Bracket, Special)
 
     # First (or only) line of ' or " string.

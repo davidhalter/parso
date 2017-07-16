@@ -106,3 +106,13 @@ def test_default_and_annotation_param(each_py3_version):
     assert param.default.value == '42'
     assert param.annotation.value == '3'
     assert not param.star_count
+
+
+def test_ellipsis_py2(each_py2_version):
+    module = parse('[0][...]', version=each_py2_version, error_recovery=False)
+    expr = module.children[0]
+    trailer = expr.children[-1]
+    print(expr)
+    subscript = trailer.children[1]
+    assert subscript.type == 'subscript'
+    assert [leaf.value for leaf in subscript.children] == ['.', '.', '.']
