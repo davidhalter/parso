@@ -222,15 +222,14 @@ class Parser(BaseParser):
             stack[-1][2][1].append(error_leaf)
 
     def _stack_removal(self, pgen_grammar, stack, arcs, start_index, value, start_pos):
-        failed_stack = []
+        failed_stack = False
         found = False
         all_nodes = []
-        for dfa, state, (typ, nodes) in stack[start_index:]:
+        for dfa, state, (type_, nodes) in stack[start_index:]:
             if nodes:
                 found = True
             if found:
-                symbol = pgen_grammar.number2symbol[typ]
-                failed_stack.append((symbol, nodes))
+                failed_stack = True
                 all_nodes += nodes
         if failed_stack:
             stack[start_index - 1][2][1].append(tree.PythonErrorNode(all_nodes))
