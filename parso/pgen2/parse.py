@@ -62,7 +62,7 @@ class PgenParser(object):
     p = Parser(grammar, [converter])  # create instance
     p.setup([start])                  # prepare for parsing
     <for each input token>:
-        if p.addtoken(...):           # parse a token
+        if p.add_token(...):           # parse a token
             break
     root = p.rootnode                 # root of abstract syntax tree
 
@@ -75,7 +75,7 @@ class PgenParser(object):
     See driver.py for how to get input tokens by tokenizing a file or
     string.
 
-    Parsing is complete when addtoken() returns True; the root of the
+    Parsing is complete when add_token() returns True; the root of the
     abstract syntax tree can then be retrieved from the rootnode
     instance variable.  When a syntax error occurs, error_recovery()
     is called. There is no error recovery; the parser cannot be used
@@ -125,7 +125,7 @@ class PgenParser(object):
 
     def parse(self, tokens):
         for type_, value, start_pos, prefix in tokens:
-            if self.addtoken(type_, value, start_pos, prefix):
+            if self.add_token(type_, value, start_pos, prefix):
                 break
         else:
             # We never broke out -- EOF is too soon -- Unfinished statement.
@@ -135,7 +135,7 @@ class PgenParser(object):
                 raise InternalParseError("incomplete input", type_, value, start_pos)
         return self.rootnode
 
-    def addtoken(self, type_, value, start_pos, prefix):
+    def add_token(self, type_, value, start_pos, prefix):
         """Add a token; return True if this is the end of the program."""
         ilabel = token_to_ilabel(self.grammar, type_, value)
 
@@ -185,7 +185,7 @@ class PgenParser(object):
                         raise InternalParseError("too much input", type_, value, start_pos)
                 else:
                     self.error_recovery(self.grammar, self.stack, arcs, type_,
-                                        value, start_pos, prefix, self.addtoken)
+                                        value, start_pos, prefix, self.add_token)
                     break
 
     def _shift(self, type_, value, newstate, prefix, start_pos):
