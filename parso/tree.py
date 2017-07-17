@@ -341,5 +341,5 @@ class ErrorLeaf(Leaf):
         self.original_type = original_type
 
     def __repr__(self):
-        return "<%s: %s:%s, %s)>" % \
+        return "<%s: %s:%s, %s>" % \
             (type(self).__name__, self.original_type, repr(self.value), self.start_pos)
