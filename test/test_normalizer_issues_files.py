@@ -5,9 +5,9 @@ tests of pydocstyle.
 
 import difflib
 import re
-from test._compatibility import total_ordering
 
 import parso
+from parso._compatibility import total_ordering
 from parso.utils import source_to_unicode
 
 
