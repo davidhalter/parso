@@ -82,6 +82,7 @@ class Grammar(object):
         self.keywords = {}
         self.tokens = {}
         self.symbol2label = {}
+        self.label2symbol = {}
         self.start = 256
 
     def dump(self, filename):

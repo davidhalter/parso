@@ -221,6 +221,17 @@ class Parser(BaseParser):
             error_leaf = tree.PythonErrorLeaf(tok_name[typ].lower(), value, start_pos, prefix)
             stack[-1][2][1].append(error_leaf)
 
+        if symbol == 'suite':
+            dfa, state, node = stack[-1]
+            states, first = dfa
+            arcs = states[state]
+            intended_label = pgen_grammar.symbol2label['stmt']
+            # Introduce a proper state transition. We're basically allowing
+            # there to be no valid statements inside a suite.
+            if [x[0] for x in arcs] == [intended_label]:
+                new_state = arcs[0][1]
+                stack[-1] = dfa, new_state, node
+
     def _stack_removal(self, pgen_grammar, stack, arcs, start_index, value, start_pos):
         failed_stack = False
         found = False

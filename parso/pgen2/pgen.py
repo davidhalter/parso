@@ -65,6 +65,7 @@ class ParserGenerator(object):
                 else:
                     c.labels.append((c.symbol2number[label], None))
                     c.symbol2label[label] = ilabel
+                    c.label2symbol[ilabel] = label
                     return ilabel
             else:
                 # A named token (NAME, NUMBER, STRING)
