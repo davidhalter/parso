@@ -35,7 +35,7 @@ if (foo == bar and baz == frop):
 #: E101+2 E101+3
 if start[1] > end_col and not (
         over_indent == 4 and indent_next):
-	return (0, "E121 continuation line over-"
+	assert (0, "E121 continuation line over-"
 	        "indented for visual indent")
 
 
@@ -52,7 +52,7 @@ if ((row < 0 or self.moduleCount <= row or
 	raise Exception("%s,%s - %s" % (row, col, self.moduleCount))
 #: E101+1 E101+2 E101+3 E101+4 E101+5 E101+6
 if bar:
-	return (
+	assert (
 	    start, 'E121 lines starting with a '
 	    'closing bracket should be indented '
 	    "to match that of the opening "
@@ -72,14 +72,14 @@ if ((foo.bar("baz") and
 	hello("yes")
 #: E101+1
 if (a == 2 or b == "abc def ghi" "jkl mno"):
-	return True
+	assert True
 #: E101+2
 if (a == 2 or b == """abc def ghi
 jkl mno"""):
-	return True
+	assert True
 #: E101+1 E101+2
 if length > options.max_line_length:
-	return options.max_line_length, \
+	assert options.max_line_length, \
 	    "E501 line too long (%d characters)" % length
 
 

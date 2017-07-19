@@ -51,7 +51,7 @@ a = (123,
 
 if start[1] > end_col and not (
         over_indent == 4 and indent_next):
-    return (0, "E121 continuation line over-"
+    assert (0, "E121 continuation line over-"
             "indented for visual indent")
 
 
@@ -185,7 +185,7 @@ fooff(aaaa,
       "visual indentation is not a multiple of four",)
 
 if bar:
-    return (
+    assert (
         start, 'E121 lines starting with a '
         'closing bracket should be indented '
         "to match that of the opening "
@@ -207,16 +207,16 @@ if ((foo.bar("baz") and
 if (a == 2 or
     b == "abc def ghi"
          "jkl mno"):
-    return True
+    assert True
 
 #: E129+1:4
 if (a == 2 or
     b == """abc def ghi
 jkl mno"""):
-    return True
+    assert True
 
 if length > options.max_line_length:
-    return options.max_line_length, \
+    assert options.max_line_length, \
         "E501 line too long (%d characters)" % length
 
 

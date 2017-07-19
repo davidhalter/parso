@@ -126,7 +126,7 @@ def qualify_by_address(
 if (a == 2 or
     b == "abc def ghi"
     "jkl mno"):
-    return True
+    True
 
 my_list = [
     1, 2, 3,

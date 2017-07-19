@@ -1,7 +1,7 @@
 #: E701:6
 if a: a = False
 #: E701:41
-if not header or header[:6] != 'bytes=': return
+if not header or header[:6] != 'bytes=': pass
 #: E702:9
 a = False; b = True
 #: E702:16 E402

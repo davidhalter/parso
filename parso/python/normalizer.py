@@ -27,9 +27,7 @@ class Context(object):
 
     @contextmanager
     def add_context(self, node):
-        self.blocks.append(node)
         yield Context(node, parent_context=self)
-        self.blocks.pop()
 
 
 class ErrorFinder(Normalizer):
@@ -42,7 +40,11 @@ class ErrorFinder(Normalizer):
 
     def initialize(self, node):
         from parso.python.tree import search_ancestor
-        parent_scope = search_ancestor(node, 'classdef', 'funcdef', 'file_input')
+        allowed = 'classdef', 'funcdef', 'file_input'
+        if node.type in allowed:
+            parent_scope = node
+        else:
+            parent_scope = search_ancestor(node, allowed)
         self._context = Context(parent_scope)
 
     @contextmanager
@@ -105,6 +107,9 @@ class ErrorFinder(Normalizer):
                     in_loop = True
             if not in_loop:
                 self._add_syntax_error("'break' outside loop", leaf)
+        elif leaf.value == 'return':
+            if self._context.node.type != 'funcdef':
+                self._add_syntax_error("'return' outside function", leaf)
         return ''
 
     def _add_indentation_error(self, message, spacing):
