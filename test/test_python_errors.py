@@ -78,7 +78,7 @@ def test_python_exception_matches(code):
 
 def test_statically_nested_blocks():
     def indent(code):
-        lines = code.splitlines(keepends=True)
+        lines = code.splitlines(True)
         return ''.join([' ' + line for line in lines])
 
     def build(code, depth):
