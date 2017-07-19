@@ -70,6 +70,7 @@ def test_indentation_errors(code, positions):
         'continue',
         'break',
         'return',
+        'try: pass\nexcept: pass\nexcept X: pass',
 
         # IndentationError
         ' foo',

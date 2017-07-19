@@ -14,3 +14,19 @@ for x in [1]:
 for x in [1]:
     break
     continue
+
+try:
+    pass
+except ZeroDivisionError:
+    pass
+    #: E722:0
+except:
+    pass
+
+try:
+    pass
+    #: E722:0 E901:0
+except:
+    pass
+except ZeroDivisionError:
+    pass
