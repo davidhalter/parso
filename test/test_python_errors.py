@@ -3,6 +3,7 @@ Testing if parso finds syntax errors and indentation errors.
 """
 
 import pytest
+import ast
 
 import parso
 from parso.python.normalizer import ErrorFinderConfig
@@ -46,7 +47,26 @@ def test_syntax_errors(code, positions):
     ('code', 'positions'), [
         (' 1', [(1, 0)]),
         ('def x():\n    1\n 2', [(3, 0)]),
+        ('def x():\n 1\n  2', [(3, 0)]),
     ]
 )
 def test_indentation_errors(code, positions):
     assert_comparison(code, 903, positions)
+
+
+@pytest.mark.parametrize(
+    'code', [
+        ' foo',
+        'def x():\n    1\n 2',
+        'def x():\n 1\n  2',
+    ]
+)
+def test_python_exception_matches(code):
+    error, = _get_error_list(code)
+    try:
+        ast.parse(code)
+    except (SyntaxError, IndentationError) as e:
+        wanted = e.__class__.__name__ + ': ' + e.msg
+    else:
+        assert False, "The piece of code should raise an exception."
+    assert wanted == error.message

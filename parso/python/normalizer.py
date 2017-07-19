@@ -73,7 +73,11 @@ class ErrorFinder(Normalizer):
                 # Therefore in case of an error we also have to check for this.
                 print(repr(leaf.prefix), leaf.get_next_leaf())
                 spacing = list(leaf.get_next_leaf()._split_prefix())[-1]
-                self._add_indentation_error("Indentation Error", spacing)
+                if leaf.original_type == 'indent':
+                    message = 'unexpected indent'
+                else:
+                    message = 'unindent does not match any outer indentation level'
+                self._add_indentation_error("IndentationError: " + message, spacing)
             else:
                 self._add_syntax_error("Syntax Error", leaf)
 
