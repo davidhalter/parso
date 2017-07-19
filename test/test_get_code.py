@@ -39,7 +39,6 @@ def diff_code_assert(a, b, n=4):
     pass
 
 
-@pytest.mark.skipif('True', reason='Refactor a few parser things first.')
 def test_basic_parsing():
     """Validate the parsing features"""
 
