@@ -51,13 +51,13 @@ class ErrorFinder(Normalizer):
             self._add_syntax_error("invalid syntax", leaf)
         elif node.type in _BLOCK_STMTS:
             with self._context.add_block(node):
+                if len(self._context.blocks) == _MAX_BLOCK_SIZE:
+                    self._add_syntax_error("too many statically nested blocks", node)
                 yield
             return
         elif node.type in ('classdef', 'funcdef'):
             context = self._context
             with self._context.add_context(node) as new_context:
-                if len(context.blocks) == _MAX_BLOCK_SIZE:
-                    self._add_syntax_error("Too many statically nested blocks", node)
                 self._context = new_context
                 yield
                 self._context = context

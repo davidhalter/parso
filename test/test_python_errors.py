@@ -58,6 +58,7 @@ def test_indentation_errors(code, positions):
     'code', [
         # SyntaxError
         '1 +',
+        '?',
         # IndentationError
         ' foo',
         'def x():\n    1\n 2',
@@ -73,3 +74,32 @@ def test_python_exception_matches(code):
     else:
         assert False, "The piece of code should raise an exception."
     assert wanted == error.message
+
+
+def test_statically_nested_blocks():
+    def indent(code):
+        lines = code.splitlines(keepends=True)
+        return ''.join([' ' + line for line in lines])
+
+    def build(code, depth):
+        if depth == 0:
+            return code
+
+        new_code = 'if 1:\n' + indent(code)
+        return build(new_code, depth - 1)
+
+    def get_error(depth, add_func=False):
+        code = build('foo', depth)
+        if add_func:
+            code = 'def bar():\n' + indent(code)
+        errors = _get_error_list(code)
+        if errors:
+            assert errors[0].message == 'SyntaxError: too many statically nested blocks'
+            return errors[0]
+        return None
+
+    assert get_error(19) is None
+    assert get_error(19, add_func=True) is None
+
+    assert get_error(20)
+    assert get_error(20, add_func=True)
