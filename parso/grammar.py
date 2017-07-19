@@ -3,7 +3,7 @@ import os
 
 from parso._compatibility import FileNotFoundError
 from parso.pgen2.pgen import generate_grammar
-from parso.utils import splitlines, source_to_unicode, version_string_to_int
+from parso.utils import splitlines, source_to_unicode, parse_version_string
 from parso.python.diff import DiffParser
 from parso.python.tokenize import tokenize_lines, tokenize
 from parso.cache import parser_cache, load_module, save_module
@@ -127,14 +127,14 @@ class Grammar(object):
 
 
 class PythonGrammar(Grammar):
-    def __init__(self, version_int, bnf_text):
+    def __init__(self, version_info, bnf_text):
         super(PythonGrammar, self).__init__(
             bnf_text,
             tokenizer=self._tokenize_lines,
             parser=PythonParser,
             diff_parser=DiffParser
         )
-        self._version_int = version_int
+        self._version_int = version_info
 
     def _tokenize_lines(self, lines):
         return tokenize_lines(lines, self._version_int)
@@ -152,16 +152,16 @@ def load_grammar(**kwargs):
     `version='3.3'`.
     """
     def load_grammar(version=None):
-        version_int = version_string_to_int(version)
+        version_info = parse_version_string(version)
 
         # For these versions we use the same grammar files, because nothing
         # changed.
-        if version_int == 33:
-            version_int = 34
-        elif version_int == 26:
-            version_int = 27
+        if version_info == (3, 3):
+            version_info = parse_version_string('3.4')
+        elif version_info == (2, 6):
+            version_info = parse_version_string('2.7')
 
-        file = 'python/grammar' + str(version_int) + '.txt'
+        file = 'python/grammar%s%s.txt' % (version_info.major, version_info.minor)
 
         global _loaded_grammars
         path = os.path.join(os.path.dirname(__file__), file)
@@ -172,7 +172,7 @@ def load_grammar(**kwargs):
                 with open(path) as f:
                     bnf_text = f.read()
 
-                grammar = PythonGrammar(version_int, bnf_text)
+                grammar = PythonGrammar(version_info, bnf_text)
                 return _loaded_grammars.setdefault(path, grammar)
             except FileNotFoundError:
                 message = "Python version %s is currently not supported." % version

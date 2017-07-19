@@ -14,7 +14,7 @@ def test_load_inexisting_grammar():
 
 
 @pytest.mark.parametrize(('string', 'result'), [
-    ('2', 27), ('3', 36), ('1.1', 11), ('1.1.1', 11), ('300.1.31', 3001)
+    ('2', (2, 7)), ('3', (3, 6)), ('1.1', (1, 1)), ('1.1.1', (1, 1)), ('300.1.31', (300, 1))
 ])
 def test_parse_version(string, result):
     assert utils._parse_version(string) == result

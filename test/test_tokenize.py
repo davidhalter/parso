@@ -5,7 +5,7 @@ from textwrap import dedent
 import pytest
 
 from parso._compatibility import py_version
-from parso.utils import splitlines, version_string_to_int
+from parso.utils import splitlines, parse_version_string
 from parso.python.token import (
     NAME, NEWLINE, STRING, INDENT, DEDENT, ERRORTOKEN, ENDMARKER)
 from parso.python import tokenize
@@ -15,8 +15,8 @@ from parso.python.tokenize import TokenInfo
 
 def _get_token_list(string):
     # Load the current version.
-    version_int = version_string_to_int()
-    return list(tokenize.tokenize(string, version_int))
+    version_info = parse_version_string()
+    return list(tokenize.tokenize(string, version_info))
 
 
 def test_end_pos_one_line():

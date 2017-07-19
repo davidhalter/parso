@@ -64,14 +64,14 @@ def maybe(*choices):
 
 
 # Return the empty string, plus all of the valid string prefixes.
-def _all_string_prefixes(version_int):
+def _all_string_prefixes(version_info):
     # The valid string prefixes. Only contain the lower case versions,
     #  and don't contain any permuations (include 'fr', but not
     #  'rf'). The various permutations will be generated.
     _valid_string_prefixes = ['b', 'r', 'u', 'br']
-    if version_int >= 36:
+    if version_info >= (3, 6):
         _valid_string_prefixes += ['f', 'fr']
-    if version_int <= 27:
+    if version_info <= (2, 7):
         # TODO this is actually not 100% valid. ur is valid in Python 2.7,
         # while ru is not.
         _valid_string_prefixes.append('ur')
@@ -91,23 +91,23 @@ def _compile(expr):
     return re.compile(expr, re.UNICODE)
 
 
-def _get_token_collection(version_int):
+def _get_token_collection(version_info):
     try:
-        return _token_collection_cache[version_int]
+        return _token_collection_cache[tuple(version_info)]
     except KeyError:
-        _token_collection_cache[version_int] = result = \
-            _create_token_collection(version_int)
+        _token_collection_cache[tuple(version_info)] = result = \
+            _create_token_collection(version_info)
         return result
 
 
-def _create_token_collection(version_int):
+def _create_token_collection(version_info):
     # Note: we use unicode matching for names ("\w") but ascii matching for
     # number literals.
     Whitespace = r'[ \f\t]*'
     Comment = r'#[^\r\n]*'
     Name = r'\w+'
 
-    if version_int >= 36:
+    if version_info >= (3, 6):
         Hexnumber = r'0[xX](?:_?[0-9a-fA-F])+'
         Binnumber = r'0[bB](?:_?[01])+'
         Octnumber = r'0[oO](?:_?[0-7])+'
@@ -122,7 +122,7 @@ def _create_token_collection(version_int):
     else:
         Hexnumber = r'0[xX][0-9a-fA-F]+'
         Binnumber = r'0[bB][01]+'
-        if version_int >= 30:
+        if version_info >= (3, 0):
             Octnumber = r'0[oO][0-7]+'
         else:
             Octnumber = '0[oO]?[0-7]+'
@@ -137,7 +137,7 @@ def _create_token_collection(version_int):
 
     # Note that since _all_string_prefixes includes the empty string,
     #  StringPrefix can be the empty string (making it optional).
-    possible_prefixes = _all_string_prefixes(version_int)
+    possible_prefixes = _all_string_prefixes(version_info)
     StringPrefix = group(*possible_prefixes)
 
     # Tail end of ' string.
@@ -161,7 +161,7 @@ def _create_token_collection(version_int):
     Bracket = '[][(){}]'
 
     special_args = [r'\r?\n', r'[:;.,@]']
-    if version_int >= 30:
+    if version_info >= (3, 0):
         special_args.insert(0, r'\.\.\.')
     Special = group(*special_args)
 
@@ -233,13 +233,13 @@ class TokenInfo(namedtuple('Token', ['type', 'string', 'start_pos', 'prefix'])):
             return self.start_pos[0], self.start_pos[1] + len(self.string)
 
 
-def tokenize(code, version_int):
+def tokenize(code, version_info):
     """Generate tokens from a the source code (string)."""
     lines = splitlines(code, keepends=True)
-    return tokenize_lines(lines, version_int)
+    return tokenize_lines(lines, version_info)
 
 
-def tokenize_lines(lines, version_int):
+def tokenize_lines(lines, version_info):
     """
     A heavily modified Python standard library tokenizer.
 
@@ -248,7 +248,7 @@ def tokenize_lines(lines, version_int):
     that is irrelevant for the parser like newlines in parentheses or comments.
     """
     pseudo_token, single_quoted, triple_quoted, endpats, always_break_tokens, = \
-        _get_token_collection(version_int)
+        _get_token_collection(version_info)
     paren_level = 0  # count parentheses
     indents = [0]
     max = 0

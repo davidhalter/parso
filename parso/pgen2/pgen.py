@@ -8,12 +8,16 @@
 from parso.pgen2 import grammar
 from parso.python import token
 from parso.python import tokenize
+from parso.utils import parse_version_string
 
 
 class ParserGenerator(object):
     def __init__(self, bnf_text):
         self._bnf_text = bnf_text
-        self.generator = tokenize.tokenize(bnf_text, version_int=36)
+        self.generator = tokenize.tokenize(
+            bnf_text,
+            version_info=parse_version_string('3.6')
+        )
         self._gettoken()  # Initialize lookahead
         self.dfas, self.startsymbol = self._parse()
         self.first = {}  # map from symbol name to set of tokens

@@ -3,7 +3,10 @@ import re
 import sys
 from ast import literal_eval
 
-from parso._compatibility import unicode
+from parso._compatibility import unicode, total_ordering
+
+
+Version = namedtuple('Version', 'major, minor, micro')
 
 
 def splitlines(string, keepends=False):
@@ -82,7 +85,6 @@ def version_info():
     Returns a namedtuple of parso's version, similar to Python's
     ``sys.version_info``.
     """
-    Version = namedtuple('Version', 'major, minor, micro')
     from parso import __version__
     tupl = re.findall(r'[a-z]+|\d+', __version__)
     return Version(*[x if i == 3 else int(x) for i, x in enumerate(tupl)])
@@ -94,24 +96,48 @@ def _parse_version(version):
         raise ValueError('The given version is not in the right format. '
                          'Use something like "3.2" or "3".')
 
-    major = match.group(1)
+    major = int(match.group(1))
     minor = match.group(2)
     if minor is None:
         # Use the latest Python in case it's not exactly defined, because the
         # grammars are typically backwards compatible?
-        if major == "2":
+        if major == 2:
             minor = "7"
-        elif major == "3":
+        elif major == 3:
             minor = "6"
         else:
             raise NotImplementedError("Sorry, no support yet for those fancy new/old versions.")
-    return int(major + minor)
+    minor = int(minor)
+    return PythonVersionInfo(major, minor)
 
 
-def version_string_to_int(version=None):
+@total_ordering
+class PythonVersionInfo(namedtuple('Version', 'major, minor')):
+    def __gt__(self, other):
+        if isinstance(other, tuple):
+            if len(other) != 2:
+                raise ValueError("Can only compare to tuples of length 2.")
+            return (self.major, self.minor) > other
+        super(PythonVersionInfo, self).__gt__(other)
+
+        return (self.major, self.minor)
+
+    def __eq__(self, other):
+        if isinstance(other, tuple):
+            if len(other) != 2:
+                raise ValueError("Can only compare to tuples of length 2.")
+            return (self.major, self.minor) == other
+        super(PythonVersionInfo, self).__eq__(other)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+
+def parse_version_string(version=None):
     """
     Checks for a valid version number (e.g. `3.2` or `2.7.1` or `3`) and
-    returns a corresponding int that is always two characters long in decimal.
+    returns a corresponding version info that is always two characters long in
+    decimal.
     """
     if version is None:
         version = '%s.%s' % sys.version_info[:2]

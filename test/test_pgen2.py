@@ -10,10 +10,9 @@ from textwrap import dedent
 
 import pytest
 
-from parso._compatibility import py_version
 from parso import load_grammar
 from parso import ParserSyntaxError
-from parso.utils import version_string_to_int
+from parso.utils import parse_version_string
 
 
 class Checker():
@@ -32,8 +31,8 @@ def works_in_py2(each_version):
 
 @pytest.fixture
 def works_ge_py3(each_version):
-    version_int = version_string_to_int(each_version)
-    return Checker(each_version, version_int >= 30)
+    version_info = parse_version_string(each_version)
+    return Checker(each_version, version_info >= (3, 0))
 
 
 @pytest.fixture
@@ -41,8 +40,8 @@ def works_ge_py35(each_version):
     """
     Works only greater equal Python 3.3.
     """
-    version_int = version_string_to_int(each_version)
-    return Checker(each_version, version_int >= 35)
+    version_info = parse_version_string(each_version)
+    return Checker(each_version, version_info >= (3, 5))
 
 
 def _parse(code, version=None):
