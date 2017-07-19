@@ -92,8 +92,6 @@ class ErrorFinder(Normalizer):
                         message = "'continue' not supported inside 'finally' clause"
                         self._add_syntax_error(message, leaf)
 
-        return ''
-
     def _add_indentation_error(self, message, spacing):
         self._add_error(903, "IndentationError: " + message, spacing)
 
