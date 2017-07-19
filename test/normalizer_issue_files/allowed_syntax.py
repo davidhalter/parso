@@ -9,3 +9,8 @@ for x in [1]:
     finally:
         #: E901
         continue
+
+
+for x in [1]:
+    break
+    continue

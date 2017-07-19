@@ -367,6 +367,8 @@ class PEP8Normalizer(ErrorFinder):
 
         self._previous_leaf = leaf
 
+        return leaf.value
+
     def _visit_part(self, part, spacing, leaf):
         value = part.value
         type_ = part.type

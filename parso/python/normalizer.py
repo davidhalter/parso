@@ -85,12 +85,19 @@ class ErrorFinder(Normalizer):
             else:
                 self._add_syntax_error('invalid syntax', leaf)
         elif leaf.value == 'continue':
+            in_loop = False
             for block in self._context.blocks:
+                if block.type == 'for_stmt':
+                    in_loop = True
                 if block.type == 'try_stmt':
                     last_block = block.children[-3]
                     if last_block == 'finally' and leaf.start_pos > last_block.start_pos:
                         message = "'continue' not supported inside 'finally' clause"
                         self._add_syntax_error(message, leaf)
+            if not in_loop:
+                message = "'continue' not properly in loop"
+                self._add_syntax_error(message, leaf)
+        return ''
 
     def _add_indentation_error(self, message, spacing):
         self._add_error(903, "IndentationError: " + message, spacing)

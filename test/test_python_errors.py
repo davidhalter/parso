@@ -67,6 +67,7 @@ def test_indentation_errors(code, positions):
                 finally:
                     continue
             '''), # 'continue' not supported inside 'finally' clause"
+        'continue'
 
         # IndentationError
         ' foo',
