@@ -15,7 +15,8 @@ class CompressNormalizer(Normalizer):
 
 
 class Context(object):
-    def __init__(self, scope, parent_context=None):
+    def __init__(self, node, parent_context=None):
+        self.node = node
         self.blocks = []
 
     @contextmanager
@@ -97,6 +98,13 @@ class ErrorFinder(Normalizer):
             if not in_loop:
                 message = "'continue' not properly in loop"
                 self._add_syntax_error(message, leaf)
+        elif leaf.value == 'break':
+            in_loop = False
+            for block in self._context.blocks:
+                if block.type == 'for_stmt':
+                    in_loop = True
+            if not in_loop:
+                self._add_syntax_error("'break' outside loop", leaf)
         return ''
 
     def _add_indentation_error(self, message, spacing):
