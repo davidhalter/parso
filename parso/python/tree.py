@@ -103,6 +103,19 @@ class PythonLeaf(PythonMixin, Leaf):
     def _split_prefix(self):
         return split_prefix(self, self.get_start_pos_of_prefix())
 
+    def get_start_pos_of_prefix(self):
+        # TODO it is really ugly that we have to override it. Maybe change
+        #   indent error leafs somehow? No idea how, though.
+        previous_leaf = self.get_previous_leaf()
+        if previous_leaf is not None and previous_leaf.type == 'error_leaf' \
+                and previous_leaf.original_type == 'indent':
+            previous_leaf = previous_leaf.get_previous_leaf()
+
+        if previous_leaf is None:
+            return self.line - self.prefix.count('\n'), 0  # It's the first leaf.
+        return previous_leaf.end_pos
+
+
 
 class _LeafWithoutNewlines(PythonLeaf):
     """

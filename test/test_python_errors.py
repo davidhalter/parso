@@ -14,6 +14,11 @@ def _get_error_list(code, version=None):
     return list(tree._get_normalizer_issues(config))
 
 
+def assert_comparison(code, error_code, positions):
+    errors = [(error.start_pos, error.code) for error in _get_error_list(code)]
+    assert [(pos, error_code) for pos in positions] == errors
+
+
 @pytest.mark.parametrize(
     ('code', 'positions'), [
         ('1 +', [(1, 3)]),
@@ -34,9 +39,13 @@ def _get_error_list(code, version=None):
     ]
 )
 def test_syntax_errors(code, positions):
-    errors = [(error.start_pos, error.code) for error in _get_error_list(code)]
-    assert [(pos, 901) for pos in positions] == errors
+    assert_comparison(code, 901, positions)
 
 
-def test_indentation_errors():
-    pass
+@pytest.mark.parametrize(
+    ('code', 'positions'), [
+        (' 1', [(1, 0)]),
+    ]
+)
+def test_indentation_errors(code, positions):
+    assert_comparison(code, 903, positions)
