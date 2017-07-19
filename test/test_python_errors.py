@@ -48,6 +48,7 @@ def test_syntax_errors(code, positions):
         (' 1', [(1, 0)]),
         ('def x():\n    1\n 2', [(3, 0)]),
         ('def x():\n 1\n  2', [(3, 0)]),
+        ('def x():\n1', [(2, 0)]),
     ]
 )
 def test_indentation_errors(code, positions):
@@ -63,6 +64,7 @@ def test_indentation_errors(code, positions):
         ' foo',
         'def x():\n    1\n 2',
         'def x():\n 1\n  2',
+        'if 1:\nfoo',
     ]
 )
 def test_python_exception_matches(code):

@@ -48,7 +48,12 @@ class ErrorFinder(Normalizer):
     def visit_node(self, node):
         if node.type == 'error_node':
             leaf = node.get_next_leaf()
-            self._add_syntax_error("invalid syntax", leaf)
+            if node.children[-1].type == 'newline':
+                # This is the beginning of a suite that is not indented.
+                spacing = list(leaf._split_prefix())[-1]
+                self._add_indentation_error('expected an indented block', spacing)
+            else:
+                self._add_syntax_error("invalid syntax", leaf)
         elif node.type in _BLOCK_STMTS:
             with self._context.add_block(node):
                 if len(self._context.blocks) == _MAX_BLOCK_SIZE:
