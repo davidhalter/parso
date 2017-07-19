@@ -48,7 +48,7 @@ class ErrorFinder(Normalizer):
     def visit_node(self, node):
         if node.type == 'error_node':
             leaf = node.get_next_leaf()
-            self._add_syntax_error("Syntax Error", leaf)
+            self._add_syntax_error("invalid syntax", leaf)
         elif node.type in _BLOCK_STMTS:
             with self._context.add_block(node):
                 yield
@@ -77,17 +77,17 @@ class ErrorFinder(Normalizer):
                     message = 'unexpected indent'
                 else:
                     message = 'unindent does not match any outer indentation level'
-                self._add_indentation_error("IndentationError: " + message, spacing)
+                self._add_indentation_error(message, spacing)
             else:
-                self._add_syntax_error("Syntax Error", leaf)
+                self._add_syntax_error('invalid syntax', leaf)
 
         return ''
 
     def _add_indentation_error(self, message, spacing):
-        self._add_error(903, message, spacing)
+        self._add_error(903, "IndentationError: " + message, spacing)
 
     def _add_syntax_error(self, message, node):
-        self._add_error(901, message, node)
+        self._add_error(901, "SyntaxError: " + message, node)
 
     def _add_error(self, code, message, node):
         # Check if the issues are on the same line.
