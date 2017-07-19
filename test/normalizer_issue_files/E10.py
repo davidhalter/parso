@@ -1,7 +1,7 @@
 for a in 'abc':
     for b in 'xyz':
         hello(a)  # indented with 8 spaces
-        #: E901:1
+        #: E903:0
 	hello(b)  # indented with 1 tab
 if True:
     #: E101:0

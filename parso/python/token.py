@@ -29,6 +29,11 @@ if not py_version >= 35:
     tok_name[ATEQUAL] = 'ATEQUAL'
     N_TOKENS += 1
 
+ERROR_DEDENT = N_TOKENS
+tok_name[ERROR_DEDENT] = 'ERROR_DEDENT'
+N_TOKENS += 1
+
+
 
 
 # Map from operator to number (since tokenize doesn't do this)

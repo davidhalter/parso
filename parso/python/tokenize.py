@@ -19,7 +19,8 @@ import itertools as _itertools
 from codecs import BOM_UTF8
 
 from parso.python.token import (tok_name, N_TOKENS, ENDMARKER, STRING, NUMBER, opmap,
-                                NAME, OP, ERRORTOKEN, NEWLINE, INDENT, DEDENT)
+                                NAME, OP, ERRORTOKEN, NEWLINE, INDENT, DEDENT,
+                                ERROR_DEDENT)
 from parso._compatibility import py_version
 from parso.utils import splitlines
 
@@ -39,10 +40,6 @@ if py_version >= 30:
 else:
     namechars = string.ascii_letters + '_'
     is_identifier = lambda s: s in namechars
-
-
-COMMENT = N_TOKENS
-tok_name[COMMENT] = 'COMMENT'
 
 
 def group(*choices, **kwargs):
@@ -318,8 +315,7 @@ def tokenize_lines(lines, version_info):
                         indents.append(start)
                     while start < indents[-1]:
                         if start > indents[-2]:
-                            yield TokenInfo(ERRORTOKEN, '', spos, '')
-                            print(spos, repr(line))
+                            yield TokenInfo(ERROR_DEDENT, '', (lnum, 0), '')
                             break
                         yield TokenInfo(DEDENT, '', spos, '')
                         indents.pop()

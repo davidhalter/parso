@@ -67,13 +67,13 @@ class ErrorFinder(Normalizer):
 
     def visit_leaf(self, leaf):
         if leaf.type == 'error_leaf':
-            if leaf.original_type == 'indent':
+            if leaf.original_type in ('indent', 'error_dedent'):
                 # Indents/Dedents itself never have a prefix. They are just
                 # "pseudo" tokens that get removed by the syntax tree later.
                 # Therefore in case of an error we also have to check for this.
+                print(repr(leaf.prefix), leaf.get_next_leaf())
                 spacing = list(leaf.get_next_leaf()._split_prefix())[-1]
                 self._add_indentation_error("Indentation Error", spacing)
-                print(leaf, repr(leaf.prefix), repr(leaf.value), leaf.get_previous_leaf())
             else:
                 self._add_syntax_error("Syntax Error", leaf)
 

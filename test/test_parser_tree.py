@@ -112,7 +112,6 @@ def test_ellipsis_py2(each_py2_version):
     module = parse('[0][...]', version=each_py2_version, error_recovery=False)
     expr = module.children[0]
     trailer = expr.children[-1]
-    print(expr)
     subscript = trailer.children[1]
     assert subscript.type == 'subscript'
     assert [leaf.value for leaf in subscript.children] == ['.', '.', '.']

@@ -45,6 +45,7 @@ def test_syntax_errors(code, positions):
 @pytest.mark.parametrize(
     ('code', 'positions'), [
         (' 1', [(1, 0)]),
+        ('def x():\n    1\n 2', [(3, 0)]),
     ]
 )
 def test_indentation_errors(code, positions):

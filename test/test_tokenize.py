@@ -7,7 +7,7 @@ import pytest
 from parso._compatibility import py_version
 from parso.utils import splitlines, parse_version_string
 from parso.python.token import (
-    NAME, NEWLINE, STRING, INDENT, DEDENT, ERRORTOKEN, ENDMARKER)
+    NAME, NEWLINE, STRING, INDENT, DEDENT, ERRORTOKEN, ENDMARKER, ERROR_DEDENT)
 from parso.python import tokenize
 from parso import parse
 from parso.python.tokenize import TokenInfo
@@ -214,21 +214,10 @@ def test_endmarker_end_pos():
 
 @pytest.mark.parametrize(
     ('code', 'types'), [
-        (' foo', ['error_leaf', 'name'])
-    ]
-)
-def test_indentation(code, types):
-    return
-    actual_types = [t.type for t in _get_token_list(code)]
-    print(actual_types)
-    assert False
-
-@pytest.mark.parametrize(
-    ('code', 'types'), [
         (' foo', [INDENT, NAME, DEDENT]),
-        ('  foo\n bar', [INDENT, NAME, NEWLINE, ERRORTOKEN, NAME, DEDENT]),
-        ('  foo\n bar \n baz', [INDENT, NAME, NEWLINE, ERRORTOKEN, NAME,
-                                NEWLINE, ERRORTOKEN, NAME, DEDENT]),
+        ('  foo\n bar', [INDENT, NAME, NEWLINE, ERROR_DEDENT, NAME, DEDENT]),
+        ('  foo\n bar \n baz', [INDENT, NAME, NEWLINE, ERROR_DEDENT, NAME,
+                                NEWLINE, ERROR_DEDENT, NAME, DEDENT]),
         (' foo\nbar', [INDENT, NAME, NEWLINE, DEDENT, NAME]),
     ]
 )
