@@ -76,7 +76,6 @@ class ErrorFinder(Normalizer):
                 # Indents/Dedents itself never have a prefix. They are just
                 # "pseudo" tokens that get removed by the syntax tree later.
                 # Therefore in case of an error we also have to check for this.
-                print(repr(leaf.prefix), leaf.get_next_leaf())
                 spacing = list(leaf.get_next_leaf()._split_prefix())[-1]
                 if leaf.original_type == 'indent':
                     message = 'unexpected indent'
@@ -85,6 +84,13 @@ class ErrorFinder(Normalizer):
                 self._add_indentation_error(message, spacing)
             else:
                 self._add_syntax_error('invalid syntax', leaf)
+        elif leaf.value == 'continue':
+            for block in self._context.blocks:
+                if block.type == 'try_stmt':
+                    last_block = block.children[-3]
+                    if last_block == 'finally' and leaf.start_pos > last_block.start_pos:
+                        message = "'continue' not supported inside 'finally' clause"
+                        self._add_syntax_error(message, leaf)
 
         return ''
 

@@ -3,7 +3,7 @@ Testing if parso finds syntax errors and indentation errors.
 """
 
 import pytest
-import ast
+from textwrap import dedent
 
 import parso
 from parso.python.normalizer import ErrorFinderConfig
@@ -60,6 +60,14 @@ def test_indentation_errors(code, positions):
         # SyntaxError
         '1 +',
         '?',
+        dedent('''\
+            for a in [1]:
+                try:
+                    pass
+                finally:
+                    continue
+            '''), # 'continue' not supported inside 'finally' clause"
+
         # IndentationError
         ' foo',
         'def x():\n    1\n 2',
@@ -70,7 +78,7 @@ def test_indentation_errors(code, positions):
 def test_python_exception_matches(code):
     error, = _get_error_list(code)
     try:
-        ast.parse(code)
+        compile(code, '<unknown>', 'exec')
     except (SyntaxError, IndentationError) as e:
         wanted = e.__class__.__name__ + ': ' + e.msg
     else:

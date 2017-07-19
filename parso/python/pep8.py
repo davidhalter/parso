@@ -174,8 +174,10 @@ class PEP8Normalizer(ErrorFinder):
     @contextmanager
     def visit_node(self, node):
         with super(PEP8Normalizer, self).visit_node(node):
-            return self._visit_node(node)
+            with self._visit_node(node):
+                yield
 
+    @contextmanager
     def _visit_node(self, node):
         typ = node.type
 
