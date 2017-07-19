@@ -101,20 +101,6 @@ def test_await_expr(works_ge_py35):
 
 @pytest.mark.skipif('sys.version_info[:2] < (3, 5)')
 @pytest.mark.xfail(reason="acting like python 3.7")
-def test_await_expr_invalid():
-    _invalid_syntax("await x", version="3.5")
-    _invalid_syntax("""def foo():
-                               await x""", version="3.5")
-
-    _invalid_syntax("""def foo():
-        def foo(): pass
-        async def foo(): pass
-        await x
-    """, version="3.5")
-
-
-@pytest.mark.skipif('sys.version_info[:2] < (3, 5)')
-@pytest.mark.xfail(reason="acting like python 3.7")
 def test_async_var():
     _parse("""async = 1""", "3.5")
     _parse("""await = 1""", "3.5")
@@ -123,13 +109,6 @@ def test_async_var():
 
 def test_async_for(works_ge_py35):
     works_ge_py35.parse("async def foo():\n async for a in b: pass")
-
-
-@pytest.mark.skipif('sys.version_info[:2] < (3, 5)')
-@pytest.mark.xfail(reason="acting like python 3.7")
-def test_async_for_invalid():
-    _invalid_syntax("""def foo():
-                               async for a in b: pass""", version="3.5")
 
 
 def test_async_with(works_ge_py35):
