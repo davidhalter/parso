@@ -1,9 +1,10 @@
 """
 Testing if parso finds syntax errors and indentation errors.
 """
+import sys
+from textwrap import dedent
 
 import pytest
-from textwrap import dedent
 
 import parso
 from parso.python.normalizer import ErrorFinderConfig
@@ -80,6 +81,27 @@ def test_indentation_errors(code, positions):
     ]
 )
 def test_python_exception_matches(code):
+    error, = _get_error_list(code)
+    try:
+        compile(code, '<unknown>', 'exec')
+    except (SyntaxError, IndentationError) as e:
+        wanted = e.__class__.__name__ + ': ' + e.msg
+    else:
+        assert False, "The piece of code should raise an exception."
+    assert wanted == error.message
+
+
+@pytest.mark.parametrize(
+    ('code', 'version'), [
+        # SyntaxError
+        ('async def bla():\n def x():  await bla()', '3.5'),
+
+    ]
+)
+def test_python_exception_matches_version(code, version):
+    if '.'.join(str(v) for v in sys.version_info[:2]) != version:
+        pytest.skip()
+
     error, = _get_error_list(code)
     try:
         compile(code, '<unknown>', 'exec')

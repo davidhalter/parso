@@ -128,6 +128,10 @@ class ErrorFinder(Normalizer):
         elif leaf.value == 'return':
             if self._context.node.type != 'funcdef':
                 self._add_syntax_error("'return' outside function", leaf)
+        elif leaf.value == 'await':
+            if self._context.node.type != 'funcdef' \
+                    or self._context.node.parent.type != 'async_funcdef':
+                self._add_syntax_error("'await' outside async function", leaf)
         return ''
 
     def _add_indentation_error(self, message, spacing):
