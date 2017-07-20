@@ -25,6 +25,8 @@ class Context(object):
         self.parent_context = parent_context
 
     def is_async_funcdef(self):
+        # Stupidly enough async funcdefs can have two different forms,
+        # depending if a decorator is used or not.
         return self.node.type == 'funcdef' \
             and self.node.parent.type in ('async_funcdef', 'async_stmt')
 
