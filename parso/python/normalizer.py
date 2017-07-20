@@ -14,6 +14,10 @@ class CompressNormalizer(Normalizer):
         return leaf.prefix + leaf.value
 
 
+def is_future_import(from_import):
+    from_names = from_import.get_from_names()
+    return [n.value for n in from_names] == ['__future__']
+
 class Context(object):
     def __init__(self, node, parent_context=None):
         self.node = node
@@ -80,6 +84,10 @@ class ErrorFinder(Normalizer):
                 yield
                 self._context = context
             return
+        elif node.type == 'import_from' and node.level == 0 \
+                and is_future_import(node):
+            message = "from __future__ imports must occur at the beginning of the file"
+            self._add_syntax_error(message, node)
 
         yield
 
