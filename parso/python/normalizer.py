@@ -3,7 +3,6 @@ from contextlib import contextmanager
 from parso.normalizer import Normalizer, NormalizerConfig, Issue
 
 _BLOCK_STMTS = ('if_stmt', 'while_stmt', 'for_stmt', 'try_stmt', 'with_stmt')
-_ASYNC_FUNC_TYPES = 'async_funcdef', 'async_stmt'
 # This is the maximal block size given by python.
 _MAX_BLOCK_SIZE = 20
 
@@ -24,6 +23,10 @@ class Context(object):
         self.node = node
         self.blocks = []
         self.parent_context = parent_context
+
+    def is_async_funcdef(self):
+        return self.node.type == 'funcdef' \
+            and self.node.parent.type in ('async_funcdef', 'async_stmt')
 
     @contextmanager
     def add_block(self, node):
@@ -131,12 +134,10 @@ class ErrorFinder(Normalizer):
             if self._context.node.type != 'funcdef':
                 self._add_syntax_error("'%s' outside function" % leaf.value, leaf)
         elif leaf.value == 'await':
-            if self._context.node.type != 'funcdef' \
-                    or self._context.node.parent.type not in _ASYNC_FUNC_TYPES:
+            if not self._context.is_async_funcdef():
                 self._add_syntax_error("'await' outside async function", leaf)
         elif leaf.value == 'from' and leaf.parent.type == 'yield_arg' \
-                and self._context.node.type == 'funcdef' \
-                and self._context.node.parent.type in _ASYNC_FUNC_TYPES:
+                and self._context.is_async_funcdef():
             yield_ = leaf.parent.parent
             self._add_syntax_error("'yield from' inside async function", yield_)
         return ''
