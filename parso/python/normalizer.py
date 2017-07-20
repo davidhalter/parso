@@ -125,9 +125,9 @@ class ErrorFinder(Normalizer):
                     in_loop = True
             if not in_loop:
                 self._add_syntax_error("'break' outside loop", leaf)
-        elif leaf.value == 'return':
+        elif leaf.value in ('yield', 'return'):
             if self._context.node.type != 'funcdef':
-                self._add_syntax_error("'return' outside function", leaf)
+                self._add_syntax_error("'%s' outside function" % leaf.value, leaf)
         elif leaf.value == 'await':
             if self._context.node.type != 'funcdef' \
                     or self._context.node.parent.type != 'async_funcdef':

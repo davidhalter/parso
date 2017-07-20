@@ -71,6 +71,7 @@ def test_indentation_errors(code, positions):
         'continue',
         'break',
         'return',
+        'yield',
         'try: pass\nexcept: pass\nexcept X: pass',
 
         # IndentationError
@@ -95,6 +96,7 @@ def test_python_exception_matches(code):
     ('code', 'version'), [
         # SyntaxError
         ('async def bla():\n def x():  await bla()', '3.5'),
+        ('yield from', '3.5'),
 
     ]
 )
