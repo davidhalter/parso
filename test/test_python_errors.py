@@ -59,8 +59,9 @@ def test_indentation_errors(code, positions):
 @pytest.mark.parametrize(
     'code', [
         # SyntaxError
-        pytest.mark.skipif('sys.version_info < (2, 6)', '1 +'),
-        pytest.mark.skipif('sys.version_info < (2, 6)', '?'),
+        # Python 2.6 has a bit different error messages here, so skip it.
+        pytest.mark.skipif('sys.version_info <= (2, 6)', '1 +'),
+        pytest.mark.skipif('sys.version_info <= (2, 6)', '?'),
         dedent('''\
             for a in [1]:
                 try:
@@ -97,6 +98,7 @@ def test_python_exception_matches(code):
         # SyntaxError
         ('async def bla():\n def x():  await bla()', '3.5'),
         ('yield from []', '3.5'),
+        ('async def foo(): yield from []', '3.5'),
     ]
 )
 def test_python_exception_matches_version(code, version):
