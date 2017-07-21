@@ -15,9 +15,42 @@ class CompressNormalizer(Normalizer):
         return leaf.prefix + leaf.value
 
 
-def is_future_import(from_import):
-    from_names = from_import.get_from_names()
+def _iter_stmts(scope):
+    """
+    Iterates over all statements and splits up  simple_stmt.
+    """
+    for child in scope.children:
+        if child.type == 'simple_stmt':
+            for child2 in child.children:
+                if child2.type == 'newline' or child2 == ';':
+                    continue
+                yield child2
+        else:
+            yield child
+
+
+def _is_future_import(import_from):
+    if import_from.level != 0:
+        return False
+    from_names = import_from.get_from_names()
     return [n.value for n in from_names] == ['__future__']
+
+
+def _is_future_import_first(import_from):
+    """
+    Checks if the import is the first statement of a file.
+    """
+    found_docstring = False
+    for stmt in _iter_stmts(import_from.get_root_node()):
+        if stmt == import_from:
+            return True
+        if stmt.type == 'import_from' and _is_future_import(stmt):
+            continue
+        if stmt.type == 'string' and not found_docstring:
+            found_docstring = True
+            continue
+        return False
+
 
 class Context(object):
     def __init__(self, node, parent_context=None):
@@ -92,8 +125,8 @@ class ErrorFinder(Normalizer):
                 yield
                 self._context = context
             return
-        elif node.type == 'import_from' and node.level == 0 \
-                and is_future_import(node):
+        elif node.type == 'import_from' \
+                and _is_future_import(node) and not _is_future_import_first(node):
             message = "from __future__ imports must occur at the beginning of the file"
             self._add_syntax_error(message, node)
         elif node.type in _STAR_EXPR_PARENTS:

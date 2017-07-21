@@ -10,8 +10,7 @@ import parso
 from parso.python.normalizer import ErrorFinderConfig
 
 def _get_error_list(code, version=None):
-    grammar = parso.load_grammar(version=version)
-    tree = grammar.parse(code)
+    tree = parso.parse(code, version=version)
     config = ErrorFinderConfig()
     return list(tree._get_normalizer_issues(config))
 
@@ -148,3 +147,26 @@ def test_statically_nested_blocks():
 
     assert get_error(20)
     assert get_error(20, add_func=True)
+
+
+def test_future_import_first():
+    def is_issue(code, *args):
+        code = code % args
+        return bool(_get_error_list(code))
+
+    i1 = 'from __future__ import division'
+    i2 = 'from __future__ import absolute_import'
+    assert not is_issue(i1)
+    assert not is_issue(i1 + ';' + i2)
+    assert not is_issue(i1 + '\n' + i2)
+    assert not is_issue('"";' + i1)
+    assert not is_issue('"";' + i1)
+    assert not is_issue('""\n' + i1)
+    assert not is_issue('""\n%s\n%s', i1, i2)
+    assert not is_issue('""\n%s;%s', i1, i2)
+    assert not is_issue('"";%s;%s ', i1, i2)
+    assert not is_issue('"";%s\n%s ', i1, i2)
+    assert is_issue('1;' + i1)
+    assert is_issue('1\n' + i1)
+    assert is_issue('"";1\n' + i1)
+    assert is_issue('""\n%s\nfrom x import a\n%s', i1, i2)
