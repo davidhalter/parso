@@ -230,7 +230,13 @@ class PEP8Normalizer(ErrorFinder):
                     if child.type == 'simple_stmt':
                         # Remove the newline.
                         children = child.children[:-1]
+
+                    found_docstring = False
                     for c in children:
+                        if c.type == 'string' and not found_docstring:
+                            continue
+                        found_docstring = True
+
                         if c.type == 'expr_stmt' and \
                                 all(_is_magic_name(n) for n in c.get_defined_names()):
                             continue

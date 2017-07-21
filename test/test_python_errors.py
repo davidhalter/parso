@@ -170,3 +170,4 @@ def test_future_import_first():
     assert is_issue('1\n' + i1)
     assert is_issue('"";1\n' + i1)
     assert is_issue('""\n%s\nfrom x import a\n%s', i1, i2)
+    assert is_issue('%s\n""\n%s', i1, i2)

@@ -42,12 +42,13 @@ def _is_future_import_first(import_from):
     """
     found_docstring = False
     for stmt in _iter_stmts(import_from.get_root_node()):
+        if stmt.type == 'string' and not found_docstring:
+            continue
+        found_docstring = True
+
         if stmt == import_from:
             return True
         if stmt.type == 'import_from' and _is_future_import(stmt):
-            continue
-        if stmt.type == 'string' and not found_docstring:
-            found_docstring = True
             continue
         return False
 
