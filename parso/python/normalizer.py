@@ -3,6 +3,7 @@ from contextlib import contextmanager
 from parso.normalizer import Normalizer, NormalizerConfig, Issue
 
 _BLOCK_STMTS = ('if_stmt', 'while_stmt', 'for_stmt', 'try_stmt', 'with_stmt')
+_STAR_EXPR_PARENTS = ('testlist_star_expr', 'testlist_comp', 'exprlist')
 # This is the maximal block size given by python.
 _MAX_BLOCK_SIZE = 20
 
@@ -95,6 +96,24 @@ class ErrorFinder(Normalizer):
                 and is_future_import(node):
             message = "from __future__ imports must occur at the beginning of the file"
             self._add_syntax_error(message, node)
+        elif node.type in _STAR_EXPR_PARENTS:
+            if node.parent.type == 'del_stmt':
+                self._add_syntax_error("can't use starred expression here", node.parent)
+            else:
+                starred = [c for c in node.children if c.type == 'star_expr']
+                if len(starred) > 1:
+                    message = "two starred expressions in assignment"
+                    self._add_syntax_error(message, starred[1])
+                    "can't use starred expression here"
+        elif node.type == 'star_expr':
+            if node.parent.type not in _STAR_EXPR_PARENTS:
+                message = "starred assignment target must be in a list or tuple"
+                self._add_syntax_error(message, node)
+        elif node.type == 'comp_for':
+            if node.children[0] == 'async' \
+                    and not self._context.is_async_funcdef():
+                message = "asynchronous comprehension outside of an asynchronous function"
+                self._add_syntax_error(message, node)
 
         yield
 
@@ -134,10 +153,14 @@ class ErrorFinder(Normalizer):
                 self._add_syntax_error("'break' outside loop", leaf)
         elif leaf.value in ('yield', 'return'):
             if self._context.node.type != 'funcdef':
-                self._add_syntax_error("'%s' outside function" % leaf.value, leaf)
+                self._add_syntax_error("'%s' outside function" % leaf.value, leaf.parent)
+            elif self._context.is_async_funcdef() and leaf.value == 'return' \
+                    and leaf.parent.type == 'return_stmt' \
+                    and any(self._context.node.iter_yield_exprs()):
+                self._add_syntax_error("'return' with value in async generator", leaf.parent)
         elif leaf.value == 'await':
             if not self._context.is_async_funcdef():
-                self._add_syntax_error("'await' outside async function", leaf)
+                self._add_syntax_error("'await' outside async function", leaf.parent)
         elif leaf.value == 'from' and leaf.parent.type == 'yield_arg' \
                 and self._context.is_async_funcdef():
             yield_ = leaf.parent.parent

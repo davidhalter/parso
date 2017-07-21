@@ -99,6 +99,12 @@ def test_python_exception_matches(code):
         ('async def bla():\n def x():  await bla()', '3.5'),
         ('yield from []', '3.5'),
         ('async def foo(): yield from []', '3.5'),
+        ('async def foo():\n yield x\n return 1', '3.6'),
+        ('async def foo():\n yield x\n return 1', '3.6'),
+        ('*a, *b = 3, 3', '3.3'),
+        ('*a = 3', '3.5'),
+        ('del *a, b', '3.5'),
+        ('async def foo():\n def nofoo():[x async for x in []]', '3.6'),
     ]
 )
 def test_python_exception_matches_version(code, version):
