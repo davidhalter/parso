@@ -28,6 +28,7 @@ Any subclasses of :class:`Scope`, including :class:`Module` has an attribute
 from parso._compatibility import utf8_repr, unicode
 from parso.tree import Node, BaseNode, Leaf, ErrorNode, ErrorLeaf, \
     search_ancestor
+from parso.python import normalizer
 from parso.python import pep8
 from parso.python.prefix import split_prefix
 
@@ -95,6 +96,10 @@ class PythonMixin(object):
                 if result is not None:
                     return result
         return None
+
+    def _iter_errors(self):
+        config = normalizer.ErrorFinderConfig()
+        return self._get_normalizer_issues(config)
 
 
 class PythonLeaf(PythonMixin, Leaf):
@@ -457,9 +462,10 @@ def _create_params(parent, argslist_list):
             if child is None or child == ',':
                 param_children = children[start:end]
                 if param_children:  # Could as well be comma and then end.
-                    if check_python2_nested_param(param_children[0]):
-                        new_children += param_children
-                    elif param_children[0] == '*' and param_children[1] == ',':
+                    if param_children[0] == '*' and param_children[1] == ',' \
+                            or check_python2_nested_param(param_children[0]):
+                        for p in param_children:
+                            p.parent = parent
                         new_children += param_children
                     else:
                         new_children.append(Param(param_children, parent))
