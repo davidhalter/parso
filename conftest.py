@@ -107,27 +107,23 @@ def each_py2_version():
     return '2.6', '2.7'
 
 
-def _parse(code, version=None):
-    code = code + "\n\n"
-    grammar = parso.load_grammar(version=version)
-    return grammar.parse(code, error_recovery=False)
-
-
-def _invalid_syntax(code, version=None, **kwargs):
-    with pytest.raises(parso.ParserSyntaxError):
-        module = _parse(code, version=version, **kwargs)
-        # For debugging
-        print(module.children)
-
-
 class Checker():
     def __init__(self, version, is_passing):
         self._version = version
         self._is_passing = is_passing
 
     def parse(self, code):
-        func = _parse if self._is_passing else _invalid_syntax
-        return func(code, version=self._version)
+        if self._is_passing:
+            return parso.parse(code, version=self._version, error_recovery=False)
+        else:
+            self._invalid_syntax(code)
+
+    def _invalid_syntax(self, code):
+        with pytest.raises(parso.ParserSyntaxError):
+            module = parso.parse(code, version=self._version, error_recovery=False)
+            # For debugging
+            print(module.children)
+
 
 @pytest.fixture
 def works_in_py2(each_version):
