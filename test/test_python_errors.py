@@ -106,6 +106,7 @@ def test_python_exception_matches(code):
         ('*a, *b = 3, 3', '3.3'),
         ('*a = 3', '3.5'),
         ('del *a, b', '3.5'),
+        ('def x(*): pass', '3.5'),
         ('async def foo():\n def nofoo():[x async for x in []]', '3.6'),
     ]
 )
@@ -180,7 +181,9 @@ def test_named_argument_issues(works_not_in_py):
     message = works_not_in_py.get_error_message('def foo(*, **dict): pass')
     message = works_not_in_py.get_error_message('def foo(*): pass')
     if works_not_in_py.version.startswith('2'):
-        message
+        assert message == 'SyntaxError: invalid syntax'
+    else:
+        assert message == 'SyntaxError: named arguments must follow bare *'
 
     works_not_in_py.assert_no_error_in_passing('def foo(*, name): pass')
     works_not_in_py.assert_no_error_in_passing('def foo(bar, *, name=1): pass')
