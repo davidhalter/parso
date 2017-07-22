@@ -79,3 +79,12 @@ def b(a:int=1):
 
 if alpha[:-i]:
     *a, b = (1, 2, 3)
+
+
+# Named only arguments
+def foo(*, asdf):
+    pass
+
+
+def foo2(bar, *, asdf=2):
+    pass

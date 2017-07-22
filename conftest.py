@@ -109,20 +109,41 @@ def each_py2_version():
 
 class Checker():
     def __init__(self, version, is_passing):
-        self._version = version
+        self.version = version
         self._is_passing = is_passing
 
     def parse(self, code):
         if self._is_passing:
-            return parso.parse(code, version=self._version, error_recovery=False)
+            return parso.parse(code, version=self.version, error_recovery=False)
         else:
             self._invalid_syntax(code)
 
     def _invalid_syntax(self, code):
         with pytest.raises(parso.ParserSyntaxError):
-            module = parso.parse(code, version=self._version, error_recovery=False)
+            module = parso.parse(code, version=self.version, error_recovery=False)
             # For debugging
             print(module.children)
+
+    def get_error(self, code):
+        errors = list(parso.parse(code, version=self.version)._iter_errors())
+        assert bool(errors) != self._is_passing
+        if errors:
+            return errors[0]
+
+    def get_error_message(self, code):
+        error = self.get_error(code)
+        if error is None:
+            return
+        return error.message
+
+    def assert_no_error_in_passing(self, code):
+        if self._is_passing:
+            assert not list(parso.parse(code, version=self.version)._iter_errors())
+
+
+@pytest.fixture
+def works_not_in_py(each_version):
+    return Checker(each_version, False)
 
 
 @pytest.fixture

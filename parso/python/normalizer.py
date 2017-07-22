@@ -199,6 +199,13 @@ class ErrorFinder(Normalizer):
                 and self._context.is_async_funcdef():
             yield_ = leaf.parent.parent
             self._add_syntax_error("'yield from' inside async function", yield_)
+        elif leaf.value == '*':
+            params = leaf.parent
+            if params.type == 'parameters' and params:
+                after = params.children[params.children.index(leaf) + 1:]
+                after = [child for child in after if child not in (',', ')')]
+                if len(after) == 0:
+                    self._add_syntax_error("named arguments must follow bare *", leaf)
         return ''
 
     def _add_indentation_error(self, message, spacing):
