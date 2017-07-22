@@ -203,7 +203,8 @@ class ErrorFinder(Normalizer):
             params = leaf.parent
             if params.type == 'parameters' and params:
                 after = params.children[params.children.index(leaf) + 1:]
-                after = [child for child in after if child not in (',', ')')]
+                after = [child for child in after
+                         if child not in (',', ')') and not child.star_count]
                 if len(after) == 0:
                     self._add_syntax_error("named arguments must follow bare *", leaf)
         return ''

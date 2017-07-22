@@ -177,9 +177,11 @@ def test_future_import_first():
 
 
 def test_named_argument_issues(works_not_in_py):
+    message = works_not_in_py.get_error_message('def foo(*, **dict): pass')
     message = works_not_in_py.get_error_message('def foo(*): pass')
     if works_not_in_py.version.startswith('2'):
         message
 
     works_not_in_py.assert_no_error_in_passing('def foo(*, name): pass')
     works_not_in_py.assert_no_error_in_passing('def foo(bar, *, name=1): pass')
+    works_not_in_py.assert_no_error_in_passing('def foo(bar, *, name=1, **dct): pass')
