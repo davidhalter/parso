@@ -7,7 +7,9 @@ import os
 
 import pytest
 
+import parso
 from parso import cache
+from parso.utils import parse_version_string
 
 
 collect_ignore = ["setup.py"]
@@ -103,3 +105,45 @@ def each_py3_version():
 @pytest.fixture
 def each_py2_version():
     return '2.6', '2.7'
+
+
+def _parse(code, version=None):
+    code = code + "\n\n"
+    grammar = parso.load_grammar(version=version)
+    return grammar.parse(code, error_recovery=False)
+
+
+def _invalid_syntax(code, version=None, **kwargs):
+    with pytest.raises(parso.ParserSyntaxError):
+        module = _parse(code, version=version, **kwargs)
+        # For debugging
+        print(module.children)
+
+
+class Checker():
+    def __init__(self, version, is_passing):
+        self._version = version
+        self._is_passing = is_passing
+
+    def parse(self, code):
+        func = _parse if self._is_passing else _invalid_syntax
+        return func(code, version=self._version)
+
+@pytest.fixture
+def works_in_py2(each_version):
+    return Checker(each_version, each_version.startswith('2'))
+
+
+@pytest.fixture
+def works_ge_py3(each_version):
+    version_info = parse_version_string(each_version)
+    return Checker(each_version, version_info >= (3, 0))
+
+
+@pytest.fixture
+def works_ge_py35(each_version):
+    """
+    Works only greater equal Python 3.3.
+    """
+    version_info = parse_version_string(each_version)
+    return Checker(each_version, version_info >= (3, 5))

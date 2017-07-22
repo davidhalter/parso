@@ -12,36 +12,6 @@ import pytest
 
 from parso import load_grammar
 from parso import ParserSyntaxError
-from parso.utils import parse_version_string
-
-
-class Checker():
-    def __init__(self, version, is_passing):
-        self._version = version
-        self._is_passing = is_passing
-
-    def parse(self, code):
-        func = _parse if self._is_passing else _invalid_syntax
-        return func(code, version=self._version)
-
-@pytest.fixture
-def works_in_py2(each_version):
-    return Checker(each_version, each_version.startswith('2'))
-
-
-@pytest.fixture
-def works_ge_py3(each_version):
-    version_info = parse_version_string(each_version)
-    return Checker(each_version, version_info >= (3, 0))
-
-
-@pytest.fixture
-def works_ge_py35(each_version):
-    """
-    Works only greater equal Python 3.3.
-    """
-    version_info = parse_version_string(each_version)
-    return Checker(each_version, version_info >= (3, 5))
 
 
 def _parse(code, version=None):
@@ -179,19 +149,19 @@ def test_annotation_8(each_py3_version):
 
 
 def test_except_new(each_version):
-    s = """
+    s = dedent("""
         try:
             x
         except E as N:
-            y"""
+            y""")
     _parse(s, each_version)
 
 def test_except_old(works_in_py2):
-    s = """
+    s = dedent("""
         try:
             x
         except E, N:
-            y"""
+            y""")
     works_in_py2.parse(s)
 
 
