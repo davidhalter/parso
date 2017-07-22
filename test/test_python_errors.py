@@ -57,10 +57,8 @@ def test_indentation_errors(code, positions):
 
 @pytest.mark.parametrize(
     'code', [
-        # SyntaxError
-        # Python 2.6 has a bit different error messages here, so skip it.
-        pytest.mark.skipif('sys.version_info <= (2, 6)', '1 +'),
-        pytest.mark.skipif('sys.version_info <= (2, 6)', '?'),
+        '1 +',
+        '?',
         dedent('''\
             for a in [1]:
                 try:
@@ -89,6 +87,11 @@ def test_python_exception_matches(code):
         wanted = e.__class__.__name__ + ': ' + e.msg
     else:
         assert False, "The piece of code should raise an exception."
+
+    # SyntaxError
+    # Python 2.6 has a bit different error messages here, so skip it.
+    if sys.version_info[:2] == (2, 6) and wanted == 'SyntaxError: unexpected EOF while parsing':
+        wanted = 'SyntaxError: invalid syntax'
     assert wanted == error.message
 
 
