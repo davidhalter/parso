@@ -110,6 +110,7 @@ def test_python_exception_matches(code):
         ('def x(*): pass', '3.5'),
         ('async def foo():\n def nofoo():[x async for x in []]', '3.6'),
         ('[*[] for a in [1]]', '3.5'),
+        ('{**{} for a in [1]}', '3.5'),
     ]
 )
 def test_python_exception_matches_version(code, version):

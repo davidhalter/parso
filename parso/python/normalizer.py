@@ -212,6 +212,15 @@ class ErrorFinder(Normalizer):
                          if child not in (',', ')') and not child.star_count]
                 if len(after) == 0:
                     self._add_syntax_error("named arguments must follow bare *", leaf)
+        elif leaf.value == '**':
+            if leaf.parent.type == 'dictorsetmaker':
+                comp_for = leaf.get_next_sibling().get_next_sibling()
+                if comp_for is not None and comp_for.type == 'comp_for':
+                    # {**{} for a in [1]}
+                    message = "dict unpacking cannot be used in dict comprehension"
+                    # TODO probably this should get a better end_pos including
+                    # the next sibling of leaf.
+                    self._add_syntax_error(message, leaf)
         return ''
 
     def _add_indentation_error(self, message, spacing):
