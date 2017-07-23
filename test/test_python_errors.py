@@ -71,6 +71,7 @@ def test_indentation_errors(code, positions):
         'return',
         'yield',
         'try: pass\nexcept: pass\nexcept X: pass',
+        'f(x for x in bar, 1)',
 
         # IndentationError
         ' foo',

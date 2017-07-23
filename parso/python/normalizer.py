@@ -141,6 +141,14 @@ class ErrorFinder(Normalizer):
                     and not self._context.is_async_funcdef():
                 message = "asynchronous comprehension outside of an asynchronous function"
                 self._add_syntax_error(message, node)
+        elif node.type == 'arglist':
+            first_arg = node.children[0]
+            if first_arg.type == 'argument' \
+                    and first_arg.children[1].type == 'comp_for' \
+                    and len(node.children) >= 2:
+                # foo(x for x in [], b)
+                message = "Generator expression must be parenthesized if not sole argument"
+                self._add_syntax_error(message, node)
 
         yield
 
