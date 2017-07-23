@@ -238,6 +238,10 @@ def test_ellipsis(works_ge_py3, each_version):
     _parse("[0][...]", version=each_version)
 
 
+def test_dict_unpacking(works_ge_py35):
+    works_ge_py35.parse("{**dict(a=3), foo:2}")
+
+
 def test_multiline_str_literals(each_version):
     s = """
         md5test("\xaa" * 80,
