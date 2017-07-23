@@ -136,6 +136,10 @@ class ErrorFinder(Normalizer):
             if node.parent.type not in _STAR_EXPR_PARENTS:
                 message = "starred assignment target must be in a list or tuple"
                 self._add_syntax_error(message, node)
+            if node.parent.type == 'testlist_comp':
+                # [*[] for a in [1]]
+                message = "iterable unpacking cannot be used in comprehension"
+                self._add_syntax_error(message, node)
         elif node.type == 'comp_for':
             if node.children[0] == 'async' \
                     and not self._context.is_async_funcdef():
