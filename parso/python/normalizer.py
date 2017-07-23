@@ -7,13 +7,6 @@ _STAR_EXPR_PARENTS = ('testlist_star_expr', 'testlist_comp', 'exprlist')
 # This is the maximal block size given by python.
 _MAX_BLOCK_SIZE = 20
 
-class CompressNormalizer(Normalizer):
-    """
-    Removes comments and whitespace.
-    """
-    def normalize(self, leaf):
-        return leaf.prefix + leaf.value
-
 
 def _iter_stmts(scope):
     """
