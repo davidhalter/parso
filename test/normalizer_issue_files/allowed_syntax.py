@@ -5,6 +5,10 @@ gather some of the potentially dangerous ones.
 
 from __future__ import division
 
+'' ''
+''r''u''
+b'' BR''
+
 for x in [1]:
     try:
         continue  # Only the other continue and pass is an error.

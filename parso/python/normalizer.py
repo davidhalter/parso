@@ -8,6 +8,10 @@ _STAR_EXPR_PARENTS = ('testlist_star_expr', 'testlist_comp', 'exprlist')
 _MAX_BLOCK_SIZE = 20
 
 
+def _is_bytes_literal(string):
+    return 'b' in string.string_prefix.lower()
+
+
 def _iter_stmts(scope):
     """
     Iterates over all statements and splits up  simple_stmt.
@@ -123,6 +127,11 @@ class ErrorFinder(Normalizer):
                 and _is_future_import(node) and not _is_future_import_first(node):
             message = "from __future__ imports must occur at the beginning of the file"
             self._add_syntax_error(message, node)
+        elif node.type == 'import_as_names':
+            if node.children[-1] == ',':
+                # from foo import a,
+                message = "trailing comma not allowed without surrounding parentheses"
+                self._add_syntax_error(message, node)
         elif node.type in _STAR_EXPR_PARENTS:
             if node.parent.type == 'del_stmt':
                 self._add_syntax_error("can't use starred expression here", node.parent)
@@ -153,6 +162,17 @@ class ErrorFinder(Normalizer):
                 # foo(x for x in [], b)
                 message = "Generator expression must be parenthesized if not sole argument"
                 self._add_syntax_error(message, node)
+        elif node.type == 'atom':
+            first = node.children[0]
+            # e.g. 's' b''
+            message = "cannot mix bytes and nonbytes literals"
+            # TODO this check is only relevant for Python 3+
+            if first.type == 'string':
+                first_is_bytes = _is_bytes_literal(first)
+                for string in node.children[1:]:
+                    if first_is_bytes != _is_bytes_literal(string):
+                        self._add_syntax_error(message, node)
+                        break
 
         yield
 

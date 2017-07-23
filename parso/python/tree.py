@@ -25,6 +25,8 @@ Any subclasses of :class:`Scope`, including :class:`Module` has an attribute
 [<ImportName: import os@1,0>]
 """
 
+import re
+
 from parso._compatibility import utf8_repr, unicode
 from parso.tree import Node, BaseNode, Leaf, ErrorNode, ErrorLeaf, \
     search_ancestor
@@ -207,6 +209,10 @@ class Number(Literal):
 class String(Literal):
     type = 'string'
     __slots__ = ()
+
+    @property
+    def string_prefix(self):
+        return re.match('\w*(?=[\'"])', self.value).group(0)
 
 
 class _StringComparisonMixin(object):

@@ -72,6 +72,7 @@ def test_indentation_errors(code, positions):
         'yield',
         'try: pass\nexcept: pass\nexcept X: pass',
         'f(x for x in bar, 1)',
+        'from foo import a,',
 
         # IndentationError
         ' foo',
@@ -111,6 +112,7 @@ def test_python_exception_matches(code):
         ('async def foo():\n def nofoo():[x async for x in []]', '3.6'),
         ('[*[] for a in [1]]', '3.5'),
         ('{**{} for a in [1]}', '3.5'),
+        ('"s" b""', '3.5'),
     ]
 )
 def test_python_exception_matches_version(code, version):
