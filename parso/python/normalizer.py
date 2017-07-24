@@ -176,25 +176,46 @@ class ErrorFinder(Normalizer):
         elif node.type == 'arglist':
             first_arg = node.children[0]
             if first_arg.type == 'argument' \
-                    and first_arg.children[1].type == 'comp_for' \
-                    and len(node.children) >= 2:
-                # foo(x for x in [], b)
-                message = "Generator expression must be parenthesized if not sole argument"
-                self._add_syntax_error(message, node)
+                    and first_arg.children[1].type == 'comp_for':
+                if len(node.children) >= 2:
+                    # foo(x for x in [], b)
+                    message = "Generator expression must be parenthesized if not sole argument"
+                    self._add_syntax_error(message, node)
+            else:
+                arg_set = set()
+                star_count = 0
+                kw_only = False
+                kw_unpacking_only = False
+                # In python 3 this would be a bit easier (stars are part of
+                # argument), but we have to understand both.
+                for argument in node.children:
+                    if argument == ',':
+                        star_count = 0
+                        continue
+                    if argument == '*':
+                        star_count = len(argument.value)
+                        continue
 
-            ###
-            arg_set = set()
-            for argument in node.children[::2]:
-                if argument.type == 'argument' and argument.children[1] == '=':
-                    kw_only = True
-                    keyword = argument.children[0]
-                    if keyword.type == 'name':
-                        if keyword.value in arg_set:
-                            # f(x=1, x=2)
-                            message = "keyword argument repeated"
-                            self._add_syntax_error(message, keyword)
-                        else:
-                            arg_set.add(keyword.value)
+                    if argument.type == 'argument':
+                        first = argument.children[0]
+                        if first in ('*', '**'):
+                            star_count = len(argument.children[0].value)
+                            if first == '**':
+                                kw_unpacking_only = True
+                        else:  # Is a keyword argument.
+                            kw_only = True
+                            if first.type == 'name':
+                                if first.value in arg_set:
+                                    # f(x=1, x=2)
+                                    message = "keyword argument repeated"
+                                    self._add_syntax_error(message, first)
+                                else:
+                                    arg_set.add(first.value)
+                    else:
+                        if kw_unpacking_only:
+                            # f(**x, y) >= 3.5
+                            message = "positional argument follows keyword argument unpacking"
+                            self._add_syntax_error(message, argument)
         elif node.type == 'atom':
             first = node.children[0]
             # e.g. 's' b''
