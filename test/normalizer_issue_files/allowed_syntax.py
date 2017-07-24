@@ -9,6 +9,12 @@ from __future__ import division
 ''r''u''
 b'' BR''
 
+foo: int = 4
+(foo): int = 3
+((foo)): int = 3
+foo.bar: int
+foo[3]: int
+
 for x in [1]:
     try:
         continue  # Only the other continue and pass is an error.

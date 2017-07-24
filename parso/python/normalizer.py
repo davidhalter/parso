@@ -33,6 +33,21 @@ def _is_future_import(import_from):
     return [n.value for n in from_names] == ['__future__']
 
 
+def _remove_parens(atom):
+    """
+    Returns the inner part of an expression like `(foo)`. Also removes nested
+    parens.
+    """
+    try:
+        children = atom.children
+    except AttributeError:
+        pass
+    else:
+        if len(children) == 3 and children[0] == '(':
+            return _remove_parens(atom.children[1])
+    return atom
+
+
 def _iter_params(parent_node):
     return (n for n in parent_node.children if n.type == 'param')
 
@@ -187,6 +202,35 @@ class ErrorFinder(Normalizer):
                         self._add_syntax_error(message, node)
                 else:
                     default_only = True
+        elif node.type == 'annassign':
+            # x, y: str
+            type_ = None
+            message = "only single target (not %s) can be annotated"
+            lhs = node.parent.children[0]
+            lhs = _remove_parens(lhs)
+            try:
+                children = lhs.children
+            except AttributeError:
+                pass
+            else:
+                if ',' in children or lhs.type == 'atom' and children[0] == '(':
+                    type_ = 'tuple'
+                elif lhs.type == 'atom' and children[0] == '[':
+                    type_ = 'list'
+                trailer = children[-1]
+
+            if type_ is None:
+                if not (lhs.type == 'name'
+                        # subscript/attributes are allowed
+                        or lhs.type in ('atom_expr', 'power')
+                            and trailer.type == 'trailer'
+                            and trailer.children[0] != '('):
+                    # True: int
+                    # {}: float
+                    message = "illegal target for annotation"
+                    self._add_syntax_error(message, lhs.parent)
+            else:
+                self._add_syntax_error(message % type_, lhs.parent)
 
         yield
 

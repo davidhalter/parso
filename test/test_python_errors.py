@@ -79,6 +79,17 @@ def test_indentation_errors(code, positions):
         #'(True,) = x',
         #'([False], a) = x',
         #'__debug__ = 1'
+        # Mostly 3.6 relevant
+        '[]: int',
+        '[a, b]: int',
+        '(): int',
+        '(()): int',
+        '((())): int',
+        '{}: int',
+        'True: int',
+        '(a, b): int',
+        '*star,: int',
+        'a, b: int = 3',
 
         # IndentationError
         ' foo',
