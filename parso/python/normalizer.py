@@ -231,6 +231,10 @@ class ErrorFinder(Normalizer):
                     self._add_syntax_error(message, lhs.parent)
             else:
                 self._add_syntax_error(message % type_, lhs.parent)
+        elif node.type == 'argument':
+            if node.children[1] == '=' and node.children[0].type != 'name':
+                message = "keyword can't be an expression"
+                self._add_syntax_error(message, node.children[0])
 
         yield
 

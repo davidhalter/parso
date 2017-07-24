@@ -90,6 +90,7 @@ def test_indentation_errors(code, positions):
         '(a, b): int',
         '*star,: int',
         'a, b: int = 3',
+        'foo(+a=3)',
 
         # IndentationError
         ' foo',
