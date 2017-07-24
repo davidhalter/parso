@@ -73,6 +73,12 @@ def test_indentation_errors(code, positions):
         'try: pass\nexcept: pass\nexcept X: pass',
         'f(x for x in bar, 1)',
         'from foo import a,',
+        'def f(x=3, y): pass',
+        'lambda x=3, y: x',
+        #'None = 1',
+        #'(True,) = x',
+        #'([False], a) = x',
+        #'__debug__ = 1'
 
         # IndentationError
         ' foo',
@@ -82,7 +88,6 @@ def test_indentation_errors(code, positions):
     ]
 )
 def test_python_exception_matches(code):
-    error, = _get_error_list(code)
     try:
         compile(code, '<unknown>', 'exec')
     except (SyntaxError, IndentationError) as e:
@@ -94,6 +99,8 @@ def test_python_exception_matches(code):
     # Python 2.6 has a bit different error messages here, so skip it.
     if sys.version_info[:2] == (2, 6) and wanted == 'SyntaxError: unexpected EOF while parsing':
         wanted = 'SyntaxError: invalid syntax'
+
+    error, = _get_error_list(code)
     assert wanted == error.message
 
 

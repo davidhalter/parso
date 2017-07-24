@@ -33,6 +33,10 @@ def _is_future_import(import_from):
     return [n.value for n in from_names] == ['__future__']
 
 
+def _iter_params(parent_node):
+    return (n for n in parent_node.children if n.type == 'param')
+
+
 def _is_future_import_first(import_from):
     """
     Checks if the import is the first statement of a file.
@@ -173,6 +177,16 @@ class ErrorFinder(Normalizer):
                     if first_is_bytes != _is_bytes_literal(string):
                         self._add_syntax_error(message, node)
                         break
+        elif node.type in ('parameters', 'lambdef'):
+            default_only = False
+            for p in _iter_params(node):
+                if p.default is None:
+                    if default_only:
+                        # def f(x=3, y): pass
+                        message = "non-default argument follows default argument"
+                        self._add_syntax_error(message, node)
+                else:
+                    default_only = True
 
         yield
 
