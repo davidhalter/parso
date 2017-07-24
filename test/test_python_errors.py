@@ -91,6 +91,8 @@ def test_indentation_errors(code, positions):
         '*star,: int',
         'a, b: int = 3',
         'foo(+a=3)',
+        'f(lambda: 1=1)',
+        'f(x=1, x=2)',
 
         # IndentationError
         ' foo',

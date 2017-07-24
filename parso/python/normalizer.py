@@ -181,6 +181,20 @@ class ErrorFinder(Normalizer):
                 # foo(x for x in [], b)
                 message = "Generator expression must be parenthesized if not sole argument"
                 self._add_syntax_error(message, node)
+
+            ###
+            arg_set = set()
+            for argument in node.children[::2]:
+                if argument.type == 'argument' and argument.children[1] == '=':
+                    kw_only = True
+                    keyword = argument.children[0]
+                    if keyword.type == 'name':
+                        if keyword.value in arg_set:
+                            # f(x=1, x=2)
+                            message = "keyword argument repeated"
+                            self._add_syntax_error(message, keyword)
+                        else:
+                            arg_set.add(keyword.value)
         elif node.type == 'atom':
             first = node.children[0]
             # e.g. 's' b''
@@ -232,9 +246,15 @@ class ErrorFinder(Normalizer):
             else:
                 self._add_syntax_error(message % type_, lhs.parent)
         elif node.type == 'argument':
-            if node.children[1] == '=' and node.children[0].type != 'name':
-                message = "keyword can't be an expression"
-                self._add_syntax_error(message, node.children[0])
+            first = node.children[0]
+            if node.children[1] == '=' and first.type != 'name':
+                if first.type == 'lambdef':
+                    # f(lambda: 1=1)
+                    message = "lambda cannot contain assignment"
+                else:
+                    # f(+x=1)
+                    message = "keyword can't be an expression"
+                self._add_syntax_error(message, first)
 
         yield
 
