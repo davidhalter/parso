@@ -120,6 +120,7 @@ def test_python_exception_matches(code):
         ('[*[] for a in [1]]', '3.5'),
         ('{**{} for a in [1]}', '3.5'),
         ('"s" b""', '3.5'),
+        ('b"ä"', '3.5'),
     ]
 )
 def test_python_exception_matches_version(code, version):

@@ -204,6 +204,13 @@ class ErrorFinder(Normalizer):
                 self._add_indentation_error(message, spacing)
             else:
                 self._add_syntax_error('invalid syntax', leaf)
+        elif leaf.type == 'string':
+            if 'b' in leaf.string_prefix.lower() \
+                    and any(c for c in leaf.value if ord(c) > 127):
+                # TODO add check for python 3
+                # b'ä'
+                message = "bytes can only contain ASCII literal characters."
+                self._add_syntax_error(message, leaf)
         elif leaf.value == 'continue':
             in_loop = False
             for block in self._context.blocks:
