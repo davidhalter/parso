@@ -6,6 +6,12 @@ _BLOCK_STMTS = ('if_stmt', 'while_stmt', 'for_stmt', 'try_stmt', 'with_stmt')
 _STAR_EXPR_PARENTS = ('testlist_star_expr', 'testlist_comp', 'exprlist')
 # This is the maximal block size given by python.
 _MAX_BLOCK_SIZE = 20
+ALLOWED_FUTURES = (
+    'all_feature_names', 'nested_scopes', 'generators', 'division',
+    'absolute_import', 'with_statement', 'print_function', 'unicode_literals',
+    # TODO make this one optional in lower python versions.
+    'generator_stop'
+)
 
 
 def _is_bytes_literal(string):
@@ -27,8 +33,10 @@ def _iter_stmts(scope):
 
 
 def _is_future_import(import_from):
-    if import_from.level != 0:
-        return False
+    # It looks like a __future__ import that is relative is still a future
+    # import. That feels kind of odd, but whatever.
+    # if import_from.level != 0:
+        # return False
     from_names = import_from.get_from_names()
     return [n.value for n in from_names] == ['__future__']
 
@@ -142,10 +150,22 @@ class ErrorFinder(Normalizer):
                 yield
                 self._context = context
             return
-        elif node.type == 'import_from' \
-                and _is_future_import(node) and not _is_future_import_first(node):
-            message = "from __future__ imports must occur at the beginning of the file"
-            self._add_syntax_error(message, node)
+        elif node.type == 'import_from' and _is_future_import(node):
+            if not _is_future_import_first(node):
+                message = "from __future__ imports must occur at the beginning of the file"
+                self._add_syntax_error(message, node)
+
+            for from_name, future_name in node.get_paths():
+                name = future_name.value
+                if name== 'braces':
+                    message = "not a chance"
+                    self._add_syntax_error(message, node)
+                elif name == 'barry_as_FLUFL':
+                    message = "Seriously I'm not implementing this :) ~ Dave"
+                    self._add_syntax_error(message, node)
+                elif name not in ALLOWED_FUTURES:
+                    message = "future feature %s is not defined" % name
+                    self._add_syntax_error(message, node)
         elif node.type == 'import_as_names':
             if node.children[-1] == ',':
                 # from foo import a,

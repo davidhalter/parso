@@ -5,6 +5,9 @@ gather some of the potentially dangerous ones.
 
 from __future__ import division
 
+# With a dot it's not a future import anymore.
+from .__future__ import absolute_import
+
 '' ''
 ''r''u''
 b'' BR''
