@@ -313,6 +313,10 @@ class ErrorFinder(Normalizer):
                     # f(+x=1)
                     message = "keyword can't be an expression"
                 self._add_syntax_error(message, first)
+        elif node.type == 'nonlocal_stmt':
+            if self._context.parent_context is None:
+                message = "nonlocal declaration not allowed at module level"
+                self._add_syntax_error(message, node)
 
         yield
 

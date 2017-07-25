@@ -105,6 +105,7 @@ def test_indentation_errors(code, positions):
         # SyntaxErrors from Python/symtable.c
         'def f(x, x): pass',
         'def x(): from math import *',
+        'nonlocal a',
 
         # IndentationError
         ' foo',

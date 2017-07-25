@@ -45,3 +45,7 @@ except:
     pass
 except ZeroDivisionError:
     pass
+
+
+class X():
+    nonlocal a
