@@ -183,24 +183,27 @@ class ErrorFinder(Normalizer):
                     self._add_syntax_error(message, node)
             else:
                 arg_set = set()
-                star_count = 0
                 kw_only = False
                 kw_unpacking_only = False
                 # In python 3 this would be a bit easier (stars are part of
                 # argument), but we have to understand both.
                 for argument in node.children:
                     if argument == ',':
-                        star_count = 0
                         continue
-                    if argument == '*':
-                        star_count = len(argument.value)
+                    if argument in ('*', '**'):
+                        # Python 2 has the order engraved in the grammar file.
+                        # No need to do anything here.
                         continue
 
                     if argument.type == 'argument':
                         first = argument.children[0]
                         if first in ('*', '**'):
-                            star_count = len(argument.children[0].value)
-                            if first == '**':
+                            if first == '*':
+                                if kw_unpacking_only:
+                                    # foo(**kwargs, *args)
+                                    message = "iterable argument unpacking follows keyword argument unpacking"
+                                    self._add_syntax_error(message, argument)
+                            else:
                                 kw_unpacking_only = True
                         else:  # Is a keyword argument.
                             kw_only = True
@@ -213,8 +216,12 @@ class ErrorFinder(Normalizer):
                                     arg_set.add(first.value)
                     else:
                         if kw_unpacking_only:
-                            # f(**x, y) >= 3.5
+                            # f(**x, y)
                             message = "positional argument follows keyword argument unpacking"
+                            self._add_syntax_error(message, argument)
+                        elif kw_only:
+                            # f(x=2, y)
+                            message = "positional argument follows keyword argument"
                             self._add_syntax_error(message, argument)
         elif node.type == 'atom':
             first = node.children[0]
