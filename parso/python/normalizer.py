@@ -255,8 +255,14 @@ class ErrorFinder(Normalizer):
                         self._add_syntax_error(message, node)
                         break
         elif node.type in ('parameters', 'lambdef'):
+            param_names = set()
             default_only = False
             for p in _iter_params(node):
+                if p.name.value in param_names:
+                    message = "duplicate argument '%s' in function definition"
+                    self._add_syntax_error(message % p.name.value, p.name)
+                param_names.add(p.name.value)
+
                 if p.default is None:
                     if default_only:
                         # def f(x=3, y): pass

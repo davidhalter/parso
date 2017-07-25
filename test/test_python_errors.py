@@ -101,6 +101,9 @@ def test_indentation_errors(code, positions):
         'f(**x, *y)',
         'f(**x, y=3, z)',
 
+        # SyntaxErrors from Python/symtable.c
+        'def f(x, x): pass',
+
         # IndentationError
         ' foo',
         'def x():\n    1\n 2',
@@ -121,8 +124,11 @@ def test_python_exception_matches(code):
     if sys.version_info[:2] == (2, 6) and wanted == 'SyntaxError: unexpected EOF while parsing':
         wanted = 'SyntaxError: invalid syntax'
 
-    error, = _get_error_list(code)
-    assert wanted == error.message
+    errors = _get_error_list(code)
+    actual = None
+    if errors:
+        actual = errors[0].message
+    assert wanted == actual
 
 
 @pytest.mark.parametrize(
