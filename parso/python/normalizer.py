@@ -166,6 +166,10 @@ class ErrorFinder(Normalizer):
                 elif name not in ALLOWED_FUTURES:
                     message = "future feature %s is not defined" % name
                     self._add_syntax_error(message, node)
+        elif node.type == 'import_from':
+            if node.is_star_import() and self._context.parent_context is not None:
+                message = "import * only allowed at module level"
+                self._add_syntax_error(message, node)
         elif node.type == 'import_as_names':
             if node.children[-1] == ',':
                 # from foo import a,

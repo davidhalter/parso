@@ -59,6 +59,7 @@ def test_indentation_errors(code, positions):
     'code', [
         '1 +',
         '?',
+        # Python/compile.c
         dedent('''\
             for a in [1]:
                 try:
@@ -103,6 +104,7 @@ def test_indentation_errors(code, positions):
 
         # SyntaxErrors from Python/symtable.c
         'def f(x, x): pass',
+        'def x(): from math import *',
 
         # IndentationError
         ' foo',
