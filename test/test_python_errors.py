@@ -100,6 +100,7 @@ def test_indentation_errors(code, positions):
         'f(x=2, y)',
         'f(**x, *y)',
         'f(**x, y=3, z)',
+        # All assignment tests
         'lambda a: 1 = 1',
         '[x for x in y] = 1',
         '{x for x in y} = 1',
@@ -116,6 +117,7 @@ def test_indentation_errors(code, positions):
         'b"" = 1',
         '"" "" = 1',
         '1 | 1 = 3',
+        '1**1 = 3',
         '~ 1 = 3',
         'not 1 = 3',
         '1 and 1 = 3',
@@ -126,6 +128,7 @@ def test_indentation_errors(code, positions):
         '(True,) = x',
         '([False], a) = x',
         'a, 1 = x',
+        'foo() = 1',
 
         # SyntaxErrors from Python/symtable.c
         'def f(x, x): pass',
