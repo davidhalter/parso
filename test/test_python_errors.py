@@ -136,6 +136,10 @@ def test_indentation_errors(code, positions):
         'for x, 1 in []: pass',
         'for (not 1) in []: pass',
         '[x for 1 in y]',
+        '[x for a, 3 in y]',
+        '(x for 1 in y)',
+        '{x for 1 in y}',
+        '{x:x for 1 in y}',
 
         # SyntaxErrors from Python/symtable.c
         'def f(x, x): pass',
