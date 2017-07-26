@@ -32,6 +32,21 @@ def _iter_stmts(scope):
             yield child
 
 
+def _get_comprehension_type(atom):
+    first, second = atom.children[:2]
+    if second.type == 'testlist_comp' and second.children[1].type == 'comp_for':
+        if first == '[':
+            return 'list comprehension'
+        else:
+            return 'generator expression'
+    elif second.type == 'dictorsetmaker' and second.children[-1].type == 'comp_for':
+        if second.children[1] == ':':
+            return 'dict comprehension'
+        else:
+            return 'set comprehension'
+    return None
+
+
 def _is_future_import(import_from):
     # It looks like a __future__ import that is relative is still a future
     # import. That feels kind of odd, but whatever.
@@ -86,8 +101,12 @@ class Context(object):
     def is_async_funcdef(self):
         # Stupidly enough async funcdefs can have two different forms,
         # depending if a decorator is used or not.
-        return self.node.type == 'funcdef' \
+        return self.is_function() \
             and self.node.parent.type in ('async_funcdef', 'async_stmt')
+
+
+    def is_function(self):
+        return self.node.type == 'funcdef'
 
     @contextmanager
     def add_block(self, node):
@@ -317,6 +336,29 @@ class ErrorFinder(Normalizer):
             if self._context.parent_context is None:
                 message = "nonlocal declaration not allowed at module level"
                 self._add_syntax_error(message, node)
+            elif self._context.is_function():
+                for nonlocal_name in node.children[1::2]:
+                    param_names = [p.name.value for p in self._context.node.params]
+                    if nonlocal_name.value == node:
+                        pass
+        elif node.type == 'expr_stmt':
+            for before_equal in node.children[:-2:2]:
+                self._check_assignment(before_equal)
+        elif node.type == 'with_item':
+            self._check_assignment(node.children[2])
+        elif node.type == 'del_stmt':
+            child = node.children[1]
+            if child.type != 'expr_list':  # Already handled.
+                self._check_assignment(child, is_deletion=True)
+        elif node.type == 'expr_list':
+            for expr in node.children[::2]:
+                self._check_assignment(expr)
+
+        # Some of the nodes here are already used, so no else if
+        if node.type in ('for_stmt', 'comp_for', 'list_for'):
+            child = node.children[1]
+            if child.type != 'expr_list':  # Already handled.
+                self._check_assignment(child)
 
         yield
 
@@ -392,7 +434,20 @@ class ErrorFinder(Normalizer):
                     # TODO probably this should get a better end_pos including
                     # the next sibling of leaf.
                     self._add_syntax_error(message, leaf)
+
         return ''
+
+    def _check_assignment(self, node, is_deletion=False):
+        error = None
+        if node.type == 'lambdef':
+            error = 'lambda'
+        elif node.type == 'atom':
+            first, second = node.children[:2]
+            error = _get_comprehension_type(node)
+
+        if error is not None:
+            message = "can't %s %s" % ("delete" if is_deletion else "assign to", error)
+            self._add_syntax_error(message, node)
 
     def _add_indentation_error(self, message, spacing):
         self._add_error(903, "IndentationError: " + message, spacing)

@@ -72,6 +72,8 @@ def test_indentation_errors(code, positions):
         'return',
         'yield',
         'try: pass\nexcept: pass\nexcept X: pass',
+
+        # SyntaxError from Python/ast.c
         'f(x for x in bar, 1)',
         'from foo import a,',
         'from __future__ import whatever',
@@ -101,6 +103,11 @@ def test_indentation_errors(code, positions):
         'f(x=2, y)',
         'f(**x, *y)',
         'f(**x, y=3, z)',
+        'lambda a: 1 = 1',
+        '[x for x in y] = 1',
+        '{x for x in y} = 1',
+        '{x:x for x in y} = 1',
+        '(x for x in y) = 1',
 
         # SyntaxErrors from Python/symtable.c
         'def f(x, x): pass',
