@@ -81,9 +81,6 @@ def test_indentation_errors(code, positions):
         'from .__future__ import whatever',
         'def f(x=3, y): pass',
         'lambda x=3, y: x',
-        #'None = 1',
-        #'(True,) = x',
-        #'([False], a) = x',
         #'__debug__ = 1'
         # Mostly 3.6 relevant
         '[]: int',
@@ -108,6 +105,21 @@ def test_indentation_errors(code, positions):
         '{x for x in y} = 1',
         '{x:x for x in y} = 1',
         '(x for x in y) = 1',
+        'None = 1',
+        '... = 1',
+        'a == b = 1',
+        '{a, b} = 1',
+        '{a: b} = 1',
+        '1 = 1',
+        '"" = 1',
+        'b"" = 1',
+        'b"" = 1',
+        '"" "" = 1',
+        'def foo(): (yield 1) = 3',
+        'def foo(): x = yield 1 = 3'
+        '',
+        #'(True,) = x',
+        #'([False], a) = x',
 
         # SyntaxErrors from Python/symtable.c
         'def f(x, x): pass',

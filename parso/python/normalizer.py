@@ -439,11 +439,31 @@ class ErrorFinder(Normalizer):
 
     def _check_assignment(self, node, is_deletion=False):
         error = None
-        if node.type == 'lambdef':
+        type_ = node.type
+        if type_ == 'lambdef':
             error = 'lambda'
-        elif node.type == 'atom':
+        elif type_ == 'atom':
             first, second = node.children[:2]
             error = _get_comprehension_type(node)
+            if error is None:
+                if second.type in ('dictorsetmaker', 'string'):
+                    error = 'literal'
+                elif first == '(':
+                    if second.type == 'yield_expr':
+                        error = 'yield expression'
+        elif type_ == 'keyword':
+            error = 'keyword'
+        elif type_ == 'operator':
+            if node.value == '...':
+                error = 'Ellipsis'
+        elif type_ == 'comparison':
+            error = 'comparison'
+        elif type_ in ('string', 'number'):
+            error = 'literal'
+        elif type_ == 'yield_expr':
+            # This one seems to be a slightly different warning in Python.
+            message = 'assignment to yield expression not possible'
+            self._add_syntax_error(message, node)
 
         if error is not None:
             message = "can't %s %s" % ("delete" if is_deletion else "assign to", error)
