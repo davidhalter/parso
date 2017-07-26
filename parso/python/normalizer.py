@@ -157,6 +157,12 @@ class ErrorFinder(Normalizer):
                     elif default_except is not None:
                         self._add_syntax_error("default 'except:' must be last", default_except)
 
+            if node.type == 'for_stmt':
+                # Some of the nodes here are already used, so no else if
+                expr_list = node.children[1]
+                if expr_list.type != 'expr_list':  # Already handled.
+                    self._check_assignment(expr_list)
+
             with self._context.add_block(node):
                 if len(self._context.blocks) == _MAX_BLOCK_SIZE:
                     self._add_syntax_error("too many statically nested blocks", node)
@@ -212,6 +218,11 @@ class ErrorFinder(Normalizer):
                 message = "iterable unpacking cannot be used in comprehension"
                 self._add_syntax_error(message, node)
         elif node.type == 'comp_for':
+            # Some of the nodes here are already used, so no else if
+            expr_list = node.children[1 + int(node.children[0] == 'async')]
+            if expr_list.type != 'expr_list':  # Already handled.
+                self._check_assignment(expr_list)
+
             if node.children[0] == 'async' \
                     and not self._context.is_async_funcdef():
                 message = "asynchronous comprehension outside of an asynchronous function"
@@ -353,12 +364,6 @@ class ErrorFinder(Normalizer):
         elif node.type == 'expr_list':
             for expr in node.children[::2]:
                 self._check_assignment(expr)
-
-        # Some of the nodes here are already used, so no else if
-        if node.type in ('for_stmt', 'comp_for', 'list_for'):
-            child = node.children[1]
-            if child.type != 'expr_list':  # Already handled.
-                self._check_assignment(child)
 
         yield
 
