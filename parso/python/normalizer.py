@@ -448,9 +448,16 @@ class ErrorFinder(Normalizer):
             if error is None:
                 if second.type in ('dictorsetmaker', 'string'):
                     error = 'literal'
-                elif first == '(':
+                elif first in ('(', '['):
                     if second.type == 'yield_expr':
                         error = 'yield expression'
+                    elif second.type == 'testlist_comp':
+                        # This is not a comprehension, they were handled
+                        # further above.
+                        for child in second.children[::2]:
+                            self._check_assignment(child, is_deletion)
+                    else:  # Everything handled, must be useless brackets.
+                        self._check_assignment(second, is_deletion)
         elif type_ == 'keyword':
             error = 'keyword'
         elif type_ == 'operator':
@@ -464,6 +471,9 @@ class ErrorFinder(Normalizer):
             # This one seems to be a slightly different warning in Python.
             message = 'assignment to yield expression not possible'
             self._add_syntax_error(message, node)
+        elif type_ == 'test':
+            error = 'conditional expression'
+        print(node)
 
         if error is not None:
             message = "can't %s %s" % ("delete" if is_deletion else "assign to", error)
