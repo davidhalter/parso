@@ -100,6 +100,10 @@ def test_indentation_errors(code, positions):
         'f(x=2, y)',
         'f(**x, *y)',
         'f(**x, y=3, z)',
+        'a, b += 3',
+        '(a, b) += 3',
+        '[a, b] += 3',
+        '[a, 1] += 3',
         # All assignment tests
         'lambda a: 1 = 1',
         '[x for x in y] = 1',

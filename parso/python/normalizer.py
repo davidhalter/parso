@@ -355,6 +355,12 @@ class ErrorFinder(Normalizer):
         elif node.type == 'expr_stmt':
             for before_equal in node.children[:-2:2]:
                 self._check_assignment(before_equal)
+
+            augassign = node.children[1]
+            if augassign != '=' and augassign.type != 'annassign':  # Is augassign.
+                if node.children[0].type in ('testlist_star_expr', 'atom'):
+                    message = "illegal expression for augmented assignment"
+                    self._add_syntax_error(message, node)
         elif node.type == 'with_item':
             self._check_assignment(node.children[2])
         elif node.type == 'del_stmt':
@@ -496,8 +502,6 @@ class ErrorFinder(Normalizer):
               or '_test' in type_
               or type_ in ('term', 'factor')):
             error = 'operator'
-
-        print(node)
 
         if error is not None:
             message = "can't %s %s" % ("delete" if is_deletion else "assign to", error)
