@@ -473,6 +473,17 @@ class ErrorFinder(Normalizer):
             self._add_syntax_error(message, node)
         elif type_ == 'test':
             error = 'conditional expression'
+        elif type_ == 'atom_expr':
+            if node.children[0] == 'await':
+                error = 'await expression'
+        elif type_ in ('testlist_star_expr', 'exprlist'):
+            for child in node.children[::2]:
+                self._check_assignment(child, is_deletion)
+        elif ('expr' in type_ and type_ != 'star_expr' # is a substring
+              or '_test' in type_
+              or type_ in ('term', 'factor')):
+            error = 'operator'
+
         print(node)
 
         if error is not None:

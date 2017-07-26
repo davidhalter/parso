@@ -115,11 +115,17 @@ def test_indentation_errors(code, positions):
         'b"" = 1',
         'b"" = 1',
         '"" "" = 1',
+        '1 | 1 = 3',
+        '~ 1 = 3',
+        'not 1 = 3',
+        '1 and 1 = 3',
         'def foo(): (yield 1) = 3',
         'def foo(): x = yield 1 = 3',
+        'async def foo(): await x = 3',
         '(a if a else a) = a',
         '(True,) = x',
         '([False], a) = x',
+        'a, 1 = x',
 
         # SyntaxErrors from Python/symtable.c
         'def f(x, x): pass',
