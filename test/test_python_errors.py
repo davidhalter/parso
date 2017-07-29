@@ -150,6 +150,32 @@ def test_indentation_errors(code, positions):
         'def f(x, x): pass',
         'def x(): from math import *',
         'nonlocal a',
+        dedent('''
+            def glob():
+                x = 3
+                x.z
+                global x'''),
+        dedent('''
+            def glob():
+                x = 3
+                global x'''),
+        dedent('''
+            def glob():
+                x
+                global x'''),
+        dedent('''
+            def glob():
+                x = 3
+                x.z
+                nonlocal x'''),
+        dedent('''
+            def glob():
+                x = 3
+                nonlocal x'''),
+        dedent('''
+            def glob():
+                x
+                nonlocal x'''),
 
         # IndentationError
         ' foo',
@@ -195,6 +221,7 @@ def test_python_exception_matches(code):
         ('{**{} for a in [1]}', '3.5'),
         ('"s" b""', '3.5'),
         ('b"ä"', '3.5'),
+        #('(%s *d) = x' % ('a,' * 256), '3.5')
     ]
 )
 def test_python_exception_matches_version(code, version):
