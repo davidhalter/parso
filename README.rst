@@ -32,10 +32,18 @@ Installation
 
     pip install parso
 
+Future
+======
+
+- There will be better support for refactoring and comments. Stay tuned.
+- There's a WIP PEP8 validator. It's however not in a good shape, yet.
+
 Known Issues
 ============
 
 - Python3.6's f-strings are not parsed, yet. This means no errors are found in them.
+- `async`/`await` are already used as keywords in Python3.6.
+- `from __future__ import print_function` is not supported,
 
 Testing
 =======
