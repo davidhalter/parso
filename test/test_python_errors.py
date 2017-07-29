@@ -81,7 +81,8 @@ def test_indentation_errors(code, positions):
         'from .__future__ import whatever',
         'def f(x=3, y): pass',
         'lambda x=3, y: x',
-        #'__debug__ = 1'
+        '__debug__ = 1',
+        'with x() as __debug__: pass',
         # Mostly 3.6 relevant
         '[]: int',
         '[a, b]: int',

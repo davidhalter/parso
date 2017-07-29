@@ -97,6 +97,7 @@ class Context(object):
         self.node = node
         self.blocks = []
         self.parent_context = parent_context
+        self.used_names = dict()
 
     def is_async_funcdef(self):
         # Stupidly enough async funcdefs can have two different forms,
@@ -387,6 +388,10 @@ class ErrorFinder(Normalizer):
                 self._add_indentation_error(message, spacing)
             else:
                 self._add_syntax_error('invalid syntax', leaf)
+        elif leaf.type == 'name':
+            if leaf.value == '__debug__' and leaf.is_definition():
+                message = 'assignment to keyword'
+                self._add_syntax_error(message, leaf)
         elif leaf.type == 'string':
             if 'b' in leaf.string_prefix.lower() \
                     and any(c for c in leaf.value if ord(c) > 127):
