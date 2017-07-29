@@ -32,6 +32,10 @@ Installation
 
     pip install parso
 
+Known Issues
+============
+
+- Python3.6's f-strings are not parsed, yet. This means no errors are found in them.
 
 Testing
 =======
