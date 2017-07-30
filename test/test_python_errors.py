@@ -202,16 +202,25 @@ def test_indentation_errors(code, positions):
             def glob():
                 global x
                 x: foo = 3
-                '''),
+            '''),
         # global/nonlocal + param
         dedent('''
             def glob(x):
                 global x
-                '''),
+            '''),
         dedent('''
             def glob(x):
                 nonlocal x
-                '''),
+            '''),
+        dedent('''
+            def x():
+                a =3
+                def z():
+                    nonlocal a
+                    a = 3
+                    nonlocal a
+            '''),
+
 
         # IndentationError
         ' foo',

@@ -128,6 +128,8 @@ class Context(object):
         self._analyze_names(self._global_names, 'global')
         self._analyze_names(self._nonlocal_names, 'nonlocal')
 
+        #for self.global_names
+
     def _analyze_names(self, globals_or_nonlocals, type_):
         def raise_(message):
             self._add_syntax_error(message % (base_name.value, type_), base_name)
@@ -136,11 +138,10 @@ class Context(object):
         if self.node.type == 'funcdef':
             params = self.node.params
 
-        found_global_or_nonlocal = False
         for base_name in globals_or_nonlocals:
-            search = base_name.value
+            found_global_or_nonlocal = False
             # Somehow Python does it the reversed way.
-            for name in reversed(self._used_name_dict.get(search, [])):
+            for name in reversed(self._used_name_dict.get(base_name.value, [])):
                 if name.start_pos > base_name.start_pos:
                     # All following names don't have to be checked.
                     found_global_or_nonlocal = True
