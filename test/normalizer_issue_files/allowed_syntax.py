@@ -52,6 +52,8 @@ class X():
 
 
 a = *args, *args
+error[(*args, *args)] = 3
+*args, *args
 
 
 def glob():

@@ -286,8 +286,20 @@ class ErrorFinder(Normalizer):
             if node.parent.type == 'del_stmt':
                 self._add_syntax_error("can't use starred expression here", node.parent)
             else:
-                is_definition = True
-                if is_definition:
+                def is_definition(node, ancestor):
+                    if ancestor is None:
+                        return False
+
+                    type_ = ancestor.type
+                    if type_ == 'trailer':
+                        return False
+
+                    if type_ == 'expr_stmt':
+                        return node.start_pos < ancestor.children[-1].start_pos
+
+                    return is_definition(node, ancestor.parent)
+
+                if is_definition(node, node.parent):
                     args = [c for c in node.children if c != ',']
                     starred = [c for c in args if c.type == 'star_expr']
                     if len(starred) > 1:
@@ -304,7 +316,7 @@ class ErrorFinder(Normalizer):
                 self._add_syntax_error(message, node)
             if node.parent.type == 'testlist_comp':
                 # [*[] for a in [1]]
-                if node.parent.children[0] == node:
+                if node.parent.children[1].type == 'comp_for':
                     message = "iterable unpacking cannot be used in comprehension"
                     self._add_syntax_error(message, node)
         elif node.type == 'comp_for':
