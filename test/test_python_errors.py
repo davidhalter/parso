@@ -176,6 +176,42 @@ def test_indentation_errors(code, positions):
             def glob():
                 x
                 nonlocal x'''),
+        # Annotation issues
+        dedent('''
+            def glob():
+                x[0]: foo
+                global x'''),
+        dedent('''
+            def glob():
+                x.a: foo
+                global x'''),
+        dedent('''
+            def glob():
+                x: foo
+                global x'''),
+        dedent('''
+            def glob():
+                x: foo = 5
+                global x'''),
+        dedent('''
+            def glob():
+                x: foo = 5
+                x
+                global x'''),
+        dedent('''
+            def glob():
+                global x
+                x: foo = 3
+                '''),
+        # global/nonlocal + param
+        dedent('''
+            def glob(x):
+                global x
+                '''),
+        dedent('''
+            def glob(x):
+                nonlocal x
+                '''),
 
         # IndentationError
         ' foo',

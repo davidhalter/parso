@@ -129,22 +129,46 @@ class Context(object):
         self._analyze_names(self._nonlocal_names, 'nonlocal')
 
     def _analyze_names(self, globals_or_nonlocals, type_):
+        def raise_(message):
+            self._add_syntax_error(message % (base_name.value, type_), base_name)
+
+        params = []
+        if self.node.type == 'funcdef':
+            params = self.node.params
+
+        found_global_or_nonlocal = False
         for base_name in globals_or_nonlocals:
             search = base_name.value
             # Somehow Python does it the reversed way.
             for name in reversed(self._used_name_dict.get(search, [])):
-                print(name, name.parent)
                 if name.start_pos > base_name.start_pos:
                     # All following names don't have to be checked.
-                    break
+                    found_global_or_nonlocal = True
+
+                parent = name.parent
+                if parent.type == 'param' and parent.name == name:
+                    # Skip those here, these definitions belong to the next
+                    # scope.
+                    continue
 
                 if name.is_definition():
-                    message = "name '%s' is assigned to before %s declaration"
+                    if parent.type == 'expr_stmt' \
+                            and parent.children[1].type == 'annassign':
+                        raise_("annotated name '%s' can't be %s")
+                        break
+                    else:
+                        message = "name '%s' is assigned to before %s declaration"
                 else:
                     message = "name '%s' is used prior to %s declaration"
-                self._add_syntax_error(message % (name.value, type_), base_name)
-                # Only add an error for the first occurence.
-                break
+
+                if not found_global_or_nonlocal:
+                    raise_(message)
+                    # Only add an error for the first occurence.
+                    break
+
+            for param in params:
+                if param.name.value == base_name.value:
+                    raise_("name '%s' is parameter and %s"),
 
     @contextmanager
     def add_block(self, node):

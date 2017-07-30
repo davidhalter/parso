@@ -49,3 +49,8 @@ except ZeroDivisionError:
 
 class X():
     nonlocal a
+
+
+def glob():
+    global x
+    y: foo = x
