@@ -100,6 +100,7 @@ class Context(object):
         self._used_name_dict = {}
         self._global_names = []
         self._nonlocal_names = []
+        self._nonlocal_names_in_subscopes = []
         self._add_syntax_error = add_syntax_error
 
     def is_async_funcdef(self):
@@ -125,14 +126,17 @@ class Context(object):
             self._used_name_dict.setdefault(name.value, []).append(name)
 
     def finalize(self):
+        """
+        Returns a list of nonlocal names that need to be part of that scope.
+        """
         self._analyze_names(self._global_names, 'global')
         self._analyze_names(self._nonlocal_names, 'nonlocal')
 
         # Python2.6 doesn't have dict comprehensions.
-        nonlocal_name_strs = dict((n.value, n) for n in self._nonlocal_names)
-        for global_name in self._global_names:
+        global_name_strs = dict((n.value, n) for n in self._global_names)
+        for nonlocal_name in self._nonlocal_names:
             try:
-                nonlocal_name = nonlocal_name_strs[global_name.value]
+                global_name = global_name_strs[nonlocal_name.value]
             except KeyError:
                 continue
 
@@ -142,6 +146,17 @@ class Context(object):
             else:
                 error_name = nonlocal_name
             self._add_syntax_error(message, error_name)
+
+        nonlocals_not_handled = []
+        for nonlocal_name in self._nonlocal_names_in_subscopes:
+            search = nonlocal_name.value
+            if search in global_name_strs or self.parent_context is None:
+                message = "no binding for nonlocal '%s' found" % nonlocal_name.value
+                self._add_syntax_error(message, nonlocal_name)
+            elif not self.is_function() or \
+                    nonlocal_name.value not in self._used_name_dict:
+                nonlocals_not_handled.append(nonlocal_name)
+        return self._nonlocal_names + nonlocals_not_handled
 
     def _analyze_names(self, globals_or_nonlocals, type_):
         def raise_(message):
@@ -198,7 +213,7 @@ class Context(object):
     def add_context(self, node):
         new_context = Context(node, self._add_syntax_error, parent_context=self)
         yield new_context
-        new_context.finalize()
+        self._nonlocal_names_in_subscopes += new_context.finalize()
 
 
 class ErrorFinder(Normalizer):
@@ -627,6 +642,8 @@ class ErrorFinder(Normalizer):
         self._error_dict.setdefault(line, (code, message, node))
 
     def finalize(self):
+        self._context.finalize()
+
         for code, message, node in self._error_dict.values():
             self.issues.append(Issue(node, code, message))
 

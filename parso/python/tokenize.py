@@ -71,6 +71,7 @@ def _all_string_prefixes(version_info):
     if version_info <= (2, 7):
         # TODO this is actually not 100% valid. ur is valid in Python 2.7,
         # while ru is not.
+        # TODO rb is also not valid.
         _valid_string_prefixes.append('ur')
 
     # if we add binary f-strings, add: ['fb', 'fbr']

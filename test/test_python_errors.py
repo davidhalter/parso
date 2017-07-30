@@ -175,10 +175,30 @@ FAILING_EXAMPLES = [
         '''),
     dedent('''
         def x():
-            global a
-            nonlocal a
+            a = 4
+            def y():
+                global a
+                nonlocal a
         '''),
     # Missing binding of nonlocal
+    dedent('''
+        def x():
+            nonlocal a
+        '''),
+    dedent('''
+        def x():
+            def y():
+                nonlocal a
+        '''),
+    dedent('''
+        def x():
+            a = 4
+            def y():
+                global a
+                print(a)
+                def z():
+                    nonlocal a
+        '''),
 
 
 

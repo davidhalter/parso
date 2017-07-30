@@ -47,13 +47,12 @@ except ZeroDivisionError:
     pass
 
 
-class X():
-    nonlocal a
-
-
 def c():
-    class X():
-        nonlocal a
+    a = 3
+
+    def d():
+        class X():
+            nonlocal a
 
 
 def x():
