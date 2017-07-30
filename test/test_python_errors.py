@@ -2,6 +2,7 @@
 Testing if parso finds syntax errors and indentation errors.
 """
 import sys
+import warnings
 from textwrap import dedent
 
 import pytest
@@ -103,6 +104,15 @@ FAILING_EXAMPLES = [
     'def f(x, x): pass',
     'def x(): from math import *',
     'nonlocal a',
+
+    # IndentationError
+    ' foo',
+    'def x():\n    1\n 2',
+    'def x():\n 1\n  2',
+    'if 1:\nfoo',
+]
+
+GLOBAL_NONLOCAL_ERROR = [
     dedent('''
         def glob():
             x = 3
@@ -199,15 +209,11 @@ FAILING_EXAMPLES = [
                 def z():
                     nonlocal a
         '''),
-
-
-
-    # IndentationError
-    ' foo',
-    'def x():\n    1\n 2',
-    'def x():\n 1\n  2',
-    'if 1:\nfoo',
 ]
+
+if sys.version_info >= (3, 6):
+    FAILING_EXAMPLES += GLOBAL_NONLOCAL_ERROR
+
 
 def _get_error_list(code, version=None):
     tree = parso.parse(code, version=version)
@@ -265,17 +271,22 @@ def test_python_exception_matches(code):
         error, = errors
         actual = error.message
     assert wanted == actual
-    assert line_nr == error.start_pos[0]
+    # Somehow in Python3.3 the SyntaxError().lineno is sometimes None
+    assert line_nr is None or line_nr == error.start_pos[0]
 
 
 def _get_actual_exception(code):
-    try:
-        compile(code, '<unknown>', 'exec')
-    except (SyntaxError, IndentationError) as e:
-        wanted = e.__class__.__name__ + ': ' + e.msg
-        line_nr = e.lineno
-    else:
-        assert False, "The piece of code should raise an exception."
+    with warnings.catch_warnings():
+        # We don't care about warnings where locals/globals misbehave here.
+        # It's as simple as either an error or not.
+        warnings.filterwarnings('ignore', category=SyntaxWarning)
+        try:
+            compile(code, '<unknown>', 'exec')
+        except (SyntaxError, IndentationError) as e:
+            wanted = e.__class__.__name__ + ': ' + e.msg
+            line_nr = e.lineno
+        else:
+            assert False, "The piece of code should raise an exception."
 
     # SyntaxError
     # Python 2.6 has a bit different error messages here, so skip it.
