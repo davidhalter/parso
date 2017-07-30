@@ -290,20 +290,15 @@ def test_default_except_error_postition():
         ('{**{} for a in [1]}', '3.5'),
         ('"s" b""', '3.5'),
         ('b"ä"', '3.5'),
-        #('(%s *d) = x' % ('a,' * 256), '3.5')
+        ('(%s *d) = x' % ('a,' * 256), '3.6')
     ]
 )
 def test_python_exception_matches_version(code, version):
     if '.'.join(str(v) for v in sys.version_info[:2]) != version:
         pytest.skip()
 
+    wanted, line_nr = _get_actual_exception(code)
     error, = _get_error_list(code)
-    try:
-        compile(code, '<unknown>', 'exec')
-    except (SyntaxError, IndentationError) as e:
-        wanted = e.__class__.__name__ + ': ' + e.msg
-    else:
-        assert False, "The piece of code should raise an exception."
     assert wanted == error.message
 
 

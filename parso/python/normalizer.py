@@ -286,19 +286,27 @@ class ErrorFinder(Normalizer):
             if node.parent.type == 'del_stmt':
                 self._add_syntax_error("can't use starred expression here", node.parent)
             else:
-                starred = [c for c in node.children if c.type == 'star_expr']
-                if len(starred) > 1:
-                    message = "two starred expressions in assignment"
-                    self._add_syntax_error(message, starred[1])
-                    "can't use starred expression here"
+                is_definition = True
+                if is_definition:
+                    args = [c for c in node.children if c != ',']
+                    starred = [c for c in args if c.type == 'star_expr']
+                    if len(starred) > 1:
+                        message = "two starred expressions in assignment"
+                        self._add_syntax_error(message, starred[1])
+                    elif starred:
+                        count = args.index(starred[0])
+                        if count >= 256:
+                            message = "too many expressions in star-unpacking assignment"
+                            self._add_syntax_error(message, starred[0])
         elif node.type == 'star_expr':
             if node.parent.type not in _STAR_EXPR_PARENTS:
                 message = "starred assignment target must be in a list or tuple"
                 self._add_syntax_error(message, node)
             if node.parent.type == 'testlist_comp':
                 # [*[] for a in [1]]
-                message = "iterable unpacking cannot be used in comprehension"
-                self._add_syntax_error(message, node)
+                if node.parent.children[0] == node:
+                    message = "iterable unpacking cannot be used in comprehension"
+                    self._add_syntax_error(message, node)
         elif node.type == 'comp_for':
             # Some of the nodes here are already used, so no else if
             expr_list = node.children[1 + int(node.children[0] == 'async')]

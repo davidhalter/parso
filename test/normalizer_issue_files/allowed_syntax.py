@@ -51,6 +51,9 @@ class X():
     nonlocal a
 
 
+a = *args, *args
+
+
 def glob():
     global x
     y: foo = x
