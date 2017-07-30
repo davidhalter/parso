@@ -168,6 +168,10 @@ class Context(object):
                 if name.is_definition():
                     if parent.type == 'expr_stmt' \
                             and parent.children[1].type == 'annassign':
+                        if found_global_or_nonlocal:
+                            # If it's after the global the error seems to be
+                            # placed there.
+                            base_name = name
                         raise_("annotated name '%s' can't be %s")
                         break
                     else:

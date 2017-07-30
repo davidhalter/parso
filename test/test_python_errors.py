@@ -71,7 +71,6 @@ def test_indentation_errors(code, positions):
         'break',
         'return',
         'yield',
-        'try: pass\nexcept: pass\nexcept X: pass',
 
         # SyntaxError from Python/ast.c
         'f(x for x in bar, 1)',
@@ -235,10 +234,23 @@ def test_indentation_errors(code, positions):
     ]
 )
 def test_python_exception_matches(code):
+    wanted, line_nr = _get_actual_exception(code)
+
+    errors = _get_error_list(code)
+    actual = None
+    if errors:
+        error, = errors
+        actual = error.message
+    assert wanted == actual
+    assert line_nr == error.start_pos[0]
+
+
+def _get_actual_exception(code):
     try:
         compile(code, '<unknown>', 'exec')
     except (SyntaxError, IndentationError) as e:
         wanted = e.__class__.__name__ + ': ' + e.msg
+        line_nr = e.lineno
     else:
         assert False, "The piece of code should raise an exception."
 
@@ -246,12 +258,19 @@ def test_python_exception_matches(code):
     # Python 2.6 has a bit different error messages here, so skip it.
     if sys.version_info[:2] == (2, 6) and wanted == 'SyntaxError: unexpected EOF while parsing':
         wanted = 'SyntaxError: invalid syntax'
+    return wanted, line_nr
 
-    errors = _get_error_list(code)
-    actual = None
-    if errors:
-        actual = errors[0].message
-    assert wanted == actual
+
+def test_default_except_error_postition():
+    # For this error the position seemed to be one line off, but that doesn't
+    # really matter.
+    code = 'try: pass\nexcept: pass\nexcept X: pass'
+    wanted, line_nr = _get_actual_exception(code)
+    error, = _get_error_list(code)
+    assert wanted == error.message
+    assert line_nr != error.start_pos[0]
+    # I think this is the better position.
+    assert error.start_pos[0] == 2
 
 
 @pytest.mark.parametrize(
