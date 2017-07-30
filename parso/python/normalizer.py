@@ -128,7 +128,20 @@ class Context(object):
         self._analyze_names(self._global_names, 'global')
         self._analyze_names(self._nonlocal_names, 'nonlocal')
 
-        #for self.global_names
+        # Python2.6 doesn't have dict comprehensions.
+        nonlocal_name_strs = dict((n.value, n) for n in self._nonlocal_names)
+        for global_name in self._global_names:
+            try:
+                nonlocal_name = nonlocal_name_strs[global_name.value]
+            except KeyError:
+                continue
+
+            message = "name '%s' is nonlocal and global" % global_name.value
+            if global_name.start_pos < nonlocal_name.start_pos:
+                error_name = global_name
+            else:
+                error_name = nonlocal_name
+            self._add_syntax_error(message, error_name)
 
     def _analyze_names(self, globals_or_nonlocals, type_):
         def raise_(message):

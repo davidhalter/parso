@@ -220,6 +220,11 @@ def test_indentation_errors(code, positions):
                     a = 3
                     nonlocal a
             '''),
+        dedent('''
+            def x():
+                global a
+                nonlocal a
+            '''),
 
 
         # IndentationError
