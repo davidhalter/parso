@@ -292,6 +292,10 @@ def _get_actual_exception(code):
     # Python 2.6 has a bit different error messages here, so skip it.
     if sys.version_info[:2] == (2, 6) and wanted == 'SyntaxError: unexpected EOF while parsing':
         wanted = 'SyntaxError: invalid syntax'
+
+    if wanted == 'SyntaxError: non-keyword arg after keyword arg':
+        # The python 3.5+ way, a bit nicer.
+        wanted = 'SyntaxError: positional argument follows keyword argument'
     return wanted, line_nr
 
 
