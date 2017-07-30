@@ -9,6 +9,186 @@ import pytest
 import parso
 from parso.python.normalizer import ErrorFinderConfig
 
+
+FAILING_EXAMPLES = [
+    '1 +',
+    '?',
+    # Python/compile.c
+    dedent('''\
+        for a in [1]:
+            try:
+                pass
+            finally:
+                continue
+        '''), # 'continue' not supported inside 'finally' clause"
+    'continue',
+    'break',
+    'return',
+    'yield',
+
+    # SyntaxError from Python/ast.c
+    'f(x for x in bar, 1)',
+    'from foo import a,',
+    'from __future__ import whatever',
+    'from __future__ import braces',
+    'from .__future__ import whatever',
+    'def f(x=3, y): pass',
+    'lambda x=3, y: x',
+    '__debug__ = 1',
+    'with x() as __debug__: pass',
+    # Mostly 3.6 relevant
+    '[]: int',
+    '[a, b]: int',
+    '(): int',
+    '(()): int',
+    '((())): int',
+    '{}: int',
+    'True: int',
+    '(a, b): int',
+    '*star,: int',
+    'a, b: int = 3',
+    'foo(+a=3)',
+    'f(lambda: 1=1)',
+    'f(x=1, x=2)',
+    'f(**x, y)',
+    'f(x=2, y)',
+    'f(**x, *y)',
+    'f(**x, y=3, z)',
+    'a, b += 3',
+    '(a, b) += 3',
+    '[a, b] += 3',
+    '[a, 1] += 3',
+    # All assignment tests
+    'lambda a: 1 = 1',
+    '[x for x in y] = 1',
+    '{x for x in y} = 1',
+    '{x:x for x in y} = 1',
+    '(x for x in y) = 1',
+    'None = 1',
+    '... = 1',
+    'a == b = 1',
+    '{a, b} = 1',
+    '{a: b} = 1',
+    '1 = 1',
+    '"" = 1',
+    'b"" = 1',
+    'b"" = 1',
+    '"" "" = 1',
+    '1 | 1 = 3',
+    '1**1 = 3',
+    '~ 1 = 3',
+    'not 1 = 3',
+    '1 and 1 = 3',
+    'def foo(): (yield 1) = 3',
+    'def foo(): x = yield 1 = 3',
+    'async def foo(): await x = 3',
+    '(a if a else a) = a',
+    '(True,) = x',
+    '([False], a) = x',
+    'a, 1 = x',
+    'foo() = 1',
+    # Cases without the equals but other assignments.
+    'with x as foo(): pass',
+    'del None',
+    'del bar, 1',
+    'for x, 1 in []: pass',
+    'for (not 1) in []: pass',
+    '[x for 1 in y]',
+    '[x for a, 3 in y]',
+    '(x for 1 in y)',
+    '{x for 1 in y}',
+    '{x:x for 1 in y}',
+
+    # SyntaxErrors from Python/symtable.c
+    'def f(x, x): pass',
+    'def x(): from math import *',
+    'nonlocal a',
+    dedent('''
+        def glob():
+            x = 3
+            x.z
+            global x'''),
+    dedent('''
+        def glob():
+            x = 3
+            global x'''),
+    dedent('''
+        def glob():
+            x
+            global x'''),
+    dedent('''
+        def glob():
+            x = 3
+            x.z
+            nonlocal x'''),
+    dedent('''
+        def glob():
+            x = 3
+            nonlocal x'''),
+    dedent('''
+        def glob():
+            x
+            nonlocal x'''),
+    # Annotation issues
+    dedent('''
+        def glob():
+            x[0]: foo
+            global x'''),
+    dedent('''
+        def glob():
+            x.a: foo
+            global x'''),
+    dedent('''
+        def glob():
+            x: foo
+            global x'''),
+    dedent('''
+        def glob():
+            x: foo = 5
+            global x'''),
+    dedent('''
+        def glob():
+            x: foo = 5
+            x
+            global x'''),
+    dedent('''
+        def glob():
+            global x
+            x: foo = 3
+        '''),
+    # global/nonlocal + param
+    dedent('''
+        def glob(x):
+            global x
+        '''),
+    dedent('''
+        def glob(x):
+            nonlocal x
+        '''),
+    dedent('''
+        def x():
+            a =3
+            def z():
+                nonlocal a
+                a = 3
+                nonlocal a
+        '''),
+    dedent('''
+        def x():
+            global a
+            nonlocal a
+        '''),
+    # Missing binding of nonlocal
+
+
+
+    # IndentationError
+    ' foo',
+    'def x():\n    1\n 2',
+    'def x():\n 1\n  2',
+    'if 1:\nfoo',
+]
+
 def _get_error_list(code, version=None):
     tree = parso.parse(code, version=version)
     config = ErrorFinderConfig()
@@ -55,184 +235,7 @@ def test_indentation_errors(code, positions):
     assert_comparison(code, 903, positions)
 
 
-@pytest.mark.parametrize(
-    'code', [
-        '1 +',
-        '?',
-        # Python/compile.c
-        dedent('''\
-            for a in [1]:
-                try:
-                    pass
-                finally:
-                    continue
-            '''), # 'continue' not supported inside 'finally' clause"
-        'continue',
-        'break',
-        'return',
-        'yield',
-
-        # SyntaxError from Python/ast.c
-        'f(x for x in bar, 1)',
-        'from foo import a,',
-        'from __future__ import whatever',
-        'from __future__ import braces',
-        'from .__future__ import whatever',
-        'def f(x=3, y): pass',
-        'lambda x=3, y: x',
-        '__debug__ = 1',
-        'with x() as __debug__: pass',
-        # Mostly 3.6 relevant
-        '[]: int',
-        '[a, b]: int',
-        '(): int',
-        '(()): int',
-        '((())): int',
-        '{}: int',
-        'True: int',
-        '(a, b): int',
-        '*star,: int',
-        'a, b: int = 3',
-        'foo(+a=3)',
-        'f(lambda: 1=1)',
-        'f(x=1, x=2)',
-        'f(**x, y)',
-        'f(x=2, y)',
-        'f(**x, *y)',
-        'f(**x, y=3, z)',
-        'a, b += 3',
-        '(a, b) += 3',
-        '[a, b] += 3',
-        '[a, 1] += 3',
-        # All assignment tests
-        'lambda a: 1 = 1',
-        '[x for x in y] = 1',
-        '{x for x in y} = 1',
-        '{x:x for x in y} = 1',
-        '(x for x in y) = 1',
-        'None = 1',
-        '... = 1',
-        'a == b = 1',
-        '{a, b} = 1',
-        '{a: b} = 1',
-        '1 = 1',
-        '"" = 1',
-        'b"" = 1',
-        'b"" = 1',
-        '"" "" = 1',
-        '1 | 1 = 3',
-        '1**1 = 3',
-        '~ 1 = 3',
-        'not 1 = 3',
-        '1 and 1 = 3',
-        'def foo(): (yield 1) = 3',
-        'def foo(): x = yield 1 = 3',
-        'async def foo(): await x = 3',
-        '(a if a else a) = a',
-        '(True,) = x',
-        '([False], a) = x',
-        'a, 1 = x',
-        'foo() = 1',
-        # Cases without the equals but other assignments.
-        'with x as foo(): pass',
-        'del None',
-        'del bar, 1',
-        'for x, 1 in []: pass',
-        'for (not 1) in []: pass',
-        '[x for 1 in y]',
-        '[x for a, 3 in y]',
-        '(x for 1 in y)',
-        '{x for 1 in y}',
-        '{x:x for 1 in y}',
-
-        # SyntaxErrors from Python/symtable.c
-        'def f(x, x): pass',
-        'def x(): from math import *',
-        'nonlocal a',
-        dedent('''
-            def glob():
-                x = 3
-                x.z
-                global x'''),
-        dedent('''
-            def glob():
-                x = 3
-                global x'''),
-        dedent('''
-            def glob():
-                x
-                global x'''),
-        dedent('''
-            def glob():
-                x = 3
-                x.z
-                nonlocal x'''),
-        dedent('''
-            def glob():
-                x = 3
-                nonlocal x'''),
-        dedent('''
-            def glob():
-                x
-                nonlocal x'''),
-        # Annotation issues
-        dedent('''
-            def glob():
-                x[0]: foo
-                global x'''),
-        dedent('''
-            def glob():
-                x.a: foo
-                global x'''),
-        dedent('''
-            def glob():
-                x: foo
-                global x'''),
-        dedent('''
-            def glob():
-                x: foo = 5
-                global x'''),
-        dedent('''
-            def glob():
-                x: foo = 5
-                x
-                global x'''),
-        dedent('''
-            def glob():
-                global x
-                x: foo = 3
-            '''),
-        # global/nonlocal + param
-        dedent('''
-            def glob(x):
-                global x
-            '''),
-        dedent('''
-            def glob(x):
-                nonlocal x
-            '''),
-        dedent('''
-            def x():
-                a =3
-                def z():
-                    nonlocal a
-                    a = 3
-                    nonlocal a
-            '''),
-        dedent('''
-            def x():
-                global a
-                nonlocal a
-            '''),
-
-
-        # IndentationError
-        ' foo',
-        'def x():\n    1\n 2',
-        'def x():\n 1\n  2',
-        'if 1:\nfoo',
-    ]
-)
+@pytest.mark.parametrize('code', FAILING_EXAMPLES)
 def test_python_exception_matches(code):
     wanted, line_nr = _get_actual_exception(code)
 
