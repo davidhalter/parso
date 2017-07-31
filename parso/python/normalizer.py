@@ -482,7 +482,6 @@ class ErrorFinder(Normalizer):
                 self._check_assignment(before_equal)
 
             augassign = node.children[1]
-            print(augassign)
             if augassign != '=' and augassign.type != 'annassign':  # Is augassign.
                 if node.children[0].type in ('testlist_star_expr', 'atom', 'testlist'):
                     message = "illegal expression for augmented assignment"

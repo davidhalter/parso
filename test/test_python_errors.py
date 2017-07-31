@@ -58,7 +58,6 @@ FAILING_EXAMPLES = [
     'a, b += 3',
     '(a, b) += 3',
     '[a, b] += 3',
-    '[a, 1] += 3',
     # All assignment tests
     'lambda a: 1 = 1',
     '[x for x in y] = 1',
@@ -221,6 +220,10 @@ if sys.version_info >= (3,):
         # A symtable error that raises only a SyntaxWarning in Python 2.
         'def x(): from math import *',
     ]
+if sys.version_info >= (2, 7):
+    # This is something that raises a different error in 2.6 than in the other
+    # versions. Just skip it for 2.6.
+    FAILING_EXAMPLES.append('[a, 1] += 3')
 
 
 def _get_error_list(code, version=None):
@@ -306,6 +309,12 @@ def _get_actual_exception(code):
         wanted = 'SyntaxError: positional argument follows keyword argument'
     elif wanted == 'SyntaxError: assignment to keyword':
         return [wanted, "SyntaxError: can't assign to keyword"], line_nr
+    elif wanted == 'SyntaxError: assignment to None':
+        # Python 2.6 does has a slightly different error.
+        return [wanted, 'SyntaxError: cannot assign to None'], line_nr
+    elif wanted == 'SyntaxError: can not assign to __debug__':
+        # Python 2.6 does has a slightly different error.
+        return [wanted, 'SyntaxError: cannot assign to __debug__'], line_nr
     return [wanted], line_nr
 
 

@@ -154,12 +154,9 @@ def load_grammar(**kwargs):
     def load_grammar(version=None):
         version_info = parse_version_string(version)
 
-        # For these versions we use the same grammar files, because nothing
-        # changed.
+        # The 3.3 grammar didn't change with the update to 3.4.
         if version_info == (3, 3):
             version_info = parse_version_string('3.4')
-        elif version_info == (2, 6):
-            version_info = parse_version_string('2.7')
 
         file = 'python/grammar%s%s.txt' % (version_info.major, version_info.minor)
 

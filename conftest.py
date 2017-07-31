@@ -153,6 +153,12 @@ def works_in_py2(each_version):
 
 
 @pytest.fixture
+def works_ge_py27(each_version):
+    version_info = parse_version_string(each_version)
+    return Checker(each_version, version_info >= (2, 7))
+
+
+@pytest.fixture
 def works_ge_py3(each_version):
     version_info = parse_version_string(each_version)
     return Checker(each_version, version_info >= (3, 0))

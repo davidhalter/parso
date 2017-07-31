@@ -166,17 +166,17 @@ def test_except_old(works_in_py2):
 
 
 # Adapted from Python 3's Lib/test/test_grammar.py:GrammarTests.testAtoms
-def test_set_literal_1(each_version):
-    _parse("""x = {'one'}""", each_version)
+def test_set_literal_1(works_ge_py27):
+    works_ge_py27.parse("""x = {'one'}""")
 
-def test_set_literal_2(each_version):
-    _parse("""x = {'one', 1,}""", each_version)
+def test_set_literal_2(works_ge_py27):
+    works_ge_py27.parse("""x = {'one', 1,}""")
 
-def test_set_literal_3(each_version):
-    _parse("""x = {'one', 'two', 'three'}""", each_version)
+def test_set_literal_3(works_ge_py27):
+    works_ge_py27.parse("""x = {'one', 'two', 'three'}""")
 
-def test_set_literal_4(each_version):
-    _parse("""x = {2, 3, 4,}""", each_version)
+def test_set_literal_4(works_ge_py27):
+    works_ge_py27.parse("""x = {2, 3, 4,}""")
 
 
 def test_new_octal_notation(each_version):
