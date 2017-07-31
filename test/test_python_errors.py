@@ -90,7 +90,6 @@ FAILING_EXAMPLES = [
     'foo() = 1',
     # Cases without the equals but other assignments.
     'with x as foo(): pass',
-    'del None',
     'del bar, 1',
     'for x, 1 in []: pass',
     'for (not 1) in []: pass',
@@ -213,6 +212,9 @@ GLOBAL_NONLOCAL_ERROR = [
 
 if sys.version_info >= (3, 6):
     FAILING_EXAMPLES += GLOBAL_NONLOCAL_ERROR
+if sys.version_info >= (3, 4):
+    # Before that del None works like del list, it gives a NameError.
+    FAILING_EXAMPLES.append('del None')
 
 
 def _get_error_list(code, version=None):
@@ -270,7 +272,7 @@ def test_python_exception_matches(code):
     if errors:
         error, = errors
         actual = error.message
-    assert wanted == actual
+    assert actual in wanted
     # Somehow in Python3.3 the SyntaxError().lineno is sometimes None
     assert line_nr is None or line_nr == error.start_pos[0]
 
@@ -296,7 +298,9 @@ def _get_actual_exception(code):
     if wanted == 'SyntaxError: non-keyword arg after keyword arg':
         # The python 3.5+ way, a bit nicer.
         wanted = 'SyntaxError: positional argument follows keyword argument'
-    return wanted, line_nr
+    elif wanted == 'SyntaxError: assignment to keyword':
+        return [wanted, "SyntaxError: can't assign to keyword"], line_nr
+    return [wanted], line_nr
 
 
 def test_default_except_error_postition():
@@ -305,7 +309,7 @@ def test_default_except_error_postition():
     code = 'try: pass\nexcept: pass\nexcept X: pass'
     wanted, line_nr = _get_actual_exception(code)
     error, = _get_error_list(code)
-    assert wanted == error.message
+    assert error.message in wanted
     assert line_nr != error.start_pos[0]
     # I think this is the better position.
     assert error.start_pos[0] == 2
@@ -337,7 +341,7 @@ def test_python_exception_matches_version(code, version):
 
     wanted, line_nr = _get_actual_exception(code)
     error, = _get_error_list(code)
-    assert wanted == error.message
+    assert error.message in wanted
 
 
 def test_statically_nested_blocks():
