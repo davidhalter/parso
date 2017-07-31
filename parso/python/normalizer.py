@@ -482,8 +482,9 @@ class ErrorFinder(Normalizer):
                 self._check_assignment(before_equal)
 
             augassign = node.children[1]
+            print(augassign)
             if augassign != '=' and augassign.type != 'annassign':  # Is augassign.
-                if node.children[0].type in ('testlist_star_expr', 'atom'):
+                if node.children[0].type in ('testlist_star_expr', 'atom', 'testlist'):
                     message = "illegal expression for augmented assignment"
                     self._add_syntax_error(message, node)
         elif node.type == 'with_item':
@@ -515,10 +516,12 @@ class ErrorFinder(Normalizer):
         elif leaf.type == 'name':
             if leaf.value == '__debug__' and leaf.is_definition():
                 if self._version <= (2, 7):
-                    message = 'assignment to __debug__'
+                    message = 'cannot assign to __debug__'
                 else:
                     message = 'assignment to keyword'
                 self._add_syntax_error(message, leaf)
+            if leaf.value == 'None' and self._version <= (2, 7) and leaf.is_definition():
+                self._add_syntax_error('cannot assign to None', leaf)
 
             self._context.add_name(leaf)
         elif leaf.type == 'string':
@@ -629,7 +632,7 @@ class ErrorFinder(Normalizer):
                 assert trailer.type == 'trailer'
                 if trailer.children[0] == '(':
                     error = 'function call'
-        elif type_ in ('testlist_star_expr', 'exprlist'):
+        elif type_ in ('testlist_star_expr', 'exprlist', 'testlist'):
             for child in node.children[::2]:
                 self._check_assignment(child, is_deletion)
         elif ('expr' in type_ and type_ != 'star_expr' # is a substring

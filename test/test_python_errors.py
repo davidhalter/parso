@@ -84,8 +84,6 @@ FAILING_EXAMPLES = [
     'def foo(): x = yield 1 = 3',
     'async def foo(): await x = 3',
     '(a if a else a) = a',
-    '(True,) = x',
-    '([False], a) = x',
     'a, 1 = x',
     'foo() = 1',
     # Cases without the equals but other assignments.
@@ -101,7 +99,6 @@ FAILING_EXAMPLES = [
 
     # SyntaxErrors from Python/symtable.c
     'def f(x, x): pass',
-    'def x(): from math import *',
     'nonlocal a',
 
     # IndentationError
@@ -215,6 +212,15 @@ if sys.version_info >= (3, 6):
 if sys.version_info >= (3, 4):
     # Before that del None works like del list, it gives a NameError.
     FAILING_EXAMPLES.append('del None')
+if sys.version_info >= (3,):
+    FAILING_EXAMPLES += [
+        # Unfortunately assigning to False and True do not raise an error in
+        # 2.x.
+        '(True,) = x',
+        '([False], a) = x',
+        # A symtable error that raises only a SyntaxWarning in Python 2.
+        'def x(): from math import *',
+    ]
 
 
 def _get_error_list(code, version=None):
