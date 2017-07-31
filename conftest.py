@@ -111,6 +111,7 @@ class Checker():
     def __init__(self, version, is_passing):
         self.version = version
         self._is_passing = is_passing
+        self.grammar = parso.load_grammar(version=self.version)
 
     def parse(self, code):
         if self._is_passing:
@@ -125,7 +126,7 @@ class Checker():
             print(module.children)
 
     def get_error(self, code):
-        errors = list(parso.parse(code, version=self.version)._iter_errors())
+        errors = list(self.grammar.parse(code)._iter_errors(self.grammar))
         assert bool(errors) != self._is_passing
         if errors:
             return errors[0]
@@ -138,7 +139,7 @@ class Checker():
 
     def assert_no_error_in_passing(self, code):
         if self._is_passing:
-            assert not list(parso.parse(code, version=self.version)._iter_errors())
+            assert not list(self.grammar.parse(code)._iter_errors(self.grammar))
 
 
 @pytest.fixture

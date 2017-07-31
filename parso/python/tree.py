@@ -99,8 +99,8 @@ class PythonMixin(object):
                     return result
         return None
 
-    def _iter_errors(self):
-        config = normalizer.ErrorFinderConfig()
+    def _iter_errors(self, grammar):
+        config = normalizer.ErrorFinderConfig(grammar)
         return self._get_normalizer_issues(config)
 
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from contextlib import contextmanager
 
 from parso.normalizer import Normalizer, NormalizerConfig, Issue
@@ -656,3 +657,6 @@ class ErrorFinder(Normalizer):
 
 class ErrorFinderConfig(NormalizerConfig):
     normalizer_class = ErrorFinder
+
+    def __init__(self, grammar):
+        self.grammar = grammar

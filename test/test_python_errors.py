@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Testing if parso finds syntax errors and indentation errors.
 """
@@ -218,8 +219,9 @@ if sys.version_info >= (3, 4):
 
 
 def _get_error_list(code, version=None):
-    tree = parso.parse(code, version=version)
-    config = ErrorFinderConfig()
+    grammar = parso.load_grammar(version=version)
+    tree = grammar.parse(code)
+    config = ErrorFinderConfig(grammar=grammar)
     return list(tree._get_normalizer_issues(config))
 
 
