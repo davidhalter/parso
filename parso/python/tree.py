@@ -100,8 +100,8 @@ class PythonMixin(object):
         return None
 
     def _iter_errors(self, grammar):
-        config = normalizer.ErrorFinderConfig(grammar)
-        return self._get_normalizer_issues(config)
+        config = normalizer.ErrorFinderConfig()
+        return self._get_normalizer_issues(grammar, config)
 
 
 class PythonLeaf(PythonMixin, Leaf):

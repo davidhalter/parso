@@ -224,6 +224,7 @@ class ErrorFinder(Normalizer):
     def __init__(self, *args, **kwargs):
         super(ErrorFinder, self).__init__(*args, **kwargs)
         self._error_dict = {}
+        self._version = self._grammar._version_int
 
     def initialize(self, node):
         from parso.python.tree import search_ancestor
@@ -513,7 +514,10 @@ class ErrorFinder(Normalizer):
                 self._add_syntax_error('invalid syntax', leaf)
         elif leaf.type == 'name':
             if leaf.value == '__debug__' and leaf.is_definition():
-                message = 'assignment to keyword'
+                if self._version <= (2, 7):
+                    message = 'assignment to __debug__'
+                else:
+                    message = 'assignment to keyword'
                 self._add_syntax_error(message, leaf)
 
             self._context.add_name(leaf)
@@ -657,6 +661,3 @@ class ErrorFinder(Normalizer):
 
 class ErrorFinderConfig(NormalizerConfig):
     normalizer_class = ErrorFinder
-
-    def __init__(self, grammar):
-        self.grammar = grammar

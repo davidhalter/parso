@@ -149,8 +149,8 @@ def _is_magic_name(name):
 
 
 class PEP8Normalizer(ErrorFinder):
-    def __init__(self, config):
-        super(PEP8Normalizer, self).__init__(config)
+    def __init__(self, *args, **kwargs):
+        super(PEP8Normalizer, self).__init__(*args, **kwargs)
         self._previous_part = None
         self._previous_leaf = None
         self._on_newline = True
@@ -161,10 +161,10 @@ class PEP8Normalizer(ErrorFinder):
         self._implicit_indentation_possible = False
         # The top of stack of the indentation nodes.
         self._indentation_tos = self._last_indentation_tos = \
-            IndentationNode(config, indentation='')
+            IndentationNode(self._config, indentation='')
         self._in_suite_introducer = False
 
-        if ' ' in config.indentation:
+        if ' ' in self._config.indentation:
             self._indentation_type = 'spaces'
             self._wrong_indentation_char = '\t'
         else:

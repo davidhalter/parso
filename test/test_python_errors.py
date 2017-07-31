@@ -9,7 +9,6 @@ from textwrap import dedent
 import pytest
 
 import parso
-from parso.python.normalizer import ErrorFinderConfig
 
 
 FAILING_EXAMPLES = [
@@ -221,8 +220,7 @@ if sys.version_info >= (3, 4):
 def _get_error_list(code, version=None):
     grammar = parso.load_grammar(version=version)
     tree = grammar.parse(code)
-    config = ErrorFinderConfig(grammar=grammar)
-    return list(tree._get_normalizer_issues(config))
+    return list(tree._iter_errors(grammar))
 
 
 def assert_comparison(code, error_code, positions):

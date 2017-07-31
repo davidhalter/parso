@@ -2,8 +2,9 @@ import parso
 
 
 def issues(code):
+    grammar = parso.load_grammar()
     module = parso.parse(code)
-    return module._get_normalizer_issues()
+    return module._get_normalizer_issues(grammar)
 
 
 def test_eof_newline():

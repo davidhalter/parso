@@ -2,7 +2,8 @@ from contextlib import contextmanager
 
 
 class Normalizer(object):
-    def __init__(self, config):
+    def __init__(self, grammar, config):
+        self._grammar = grammar
         self._config = config
         self.issues = []
 
@@ -44,11 +45,11 @@ class Normalizer(object):
 class NormalizerConfig(object):
     normalizer_class = Normalizer
 
-    def create_normalizer(self):
+    def create_normalizer(self, grammar):
         if self.normalizer_class is None:
             return None
 
-        return self.normalizer_class(self)
+        return self.normalizer_class(grammar, self)
 
     @classmethod
     def register_rule(cls, rule):
