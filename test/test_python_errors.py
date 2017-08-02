@@ -442,3 +442,43 @@ def test_named_argument_issues(works_not_in_py):
     works_not_in_py.assert_no_error_in_passing('def foo(*, name): pass')
     works_not_in_py.assert_no_error_in_passing('def foo(bar, *, name=1): pass')
     works_not_in_py.assert_no_error_in_passing('def foo(bar, *, name=1, **dct): pass')
+
+
+def test_escape_decode_literals(each_version):
+    """
+    We are using internal functions to assure that unicode/bytes escaping is
+    without syntax errors. Here we make a bit of quality assurance that this
+    works through versions, because the internal function might change over
+    time.
+    """
+    def get_msg(end, to=1):
+        base = "SyntaxError: (unicode error) 'unicodeescape' " \
+               "codec can't decode bytes in position 0-%s: " % to
+        return base + end
+
+    def get_msgs(escape):
+        return (get_msg('end of string in escape sequence'),
+                get_msg(r"truncated %s escape" % escape))
+
+    error, = _get_error_list(r'u"\x"', version=each_version)
+    assert error.message in get_msgs(r'\xXX')
+
+    error, = _get_error_list(r'u"\u"', version=each_version)
+    assert error.message in get_msgs(r'\uXXXX')
+
+    error, = _get_error_list(r'u"\U"', version=each_version)
+    assert error.message in get_msgs(r'\UXXXXXXXX')
+
+    error, = _get_error_list(r'u"\N{}"', version=each_version)
+    assert error.message == get_msg(r'malformed \N character escape', to=2)
+
+    error, = _get_error_list(r'u"\N{foo}"', version=each_version)
+    assert error.message == get_msg(r'unknown Unicode character name', to=6)
+
+    # Finally bytes.
+    error, = _get_error_list(r'b"\x"', version=each_version)
+    wanted = r'SyntaxError: (value error) invalid \x escape'
+    if sys.version_info >= (3, 0):
+        # The positioning information is only available in Python 3.
+        wanted += ' at position 0'
+    assert error.message == wanted
