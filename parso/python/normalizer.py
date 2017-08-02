@@ -541,9 +541,16 @@ class ErrorFinder(Normalizer):
                     is_bytes = True
                 if 'u' in string_prefix:
                     is_bytes = False
-                func = codecs.escape_decode if is_bytes else codecs.unicode_escape_decode
+
+                payload = leaf._get_payload()
+                if is_bytes:
+                    payload = payload.encode('utf-8')
+                    func = codecs.escape_decode
+                else:
+                    func = codecs.unicode_escape_decode
+
                 try:
-                    func(leaf._get_payload())
+                    func(payload)
                 except UnicodeDecodeError as e:
                     self._add_syntax_error('(unicode error) ' + str(e), leaf)
                 except ValueError as e:

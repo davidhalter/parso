@@ -306,6 +306,11 @@ def _get_actual_exception(code):
         except (SyntaxError, IndentationError) as e:
             wanted = e.__class__.__name__ + ': ' + e.msg
             line_nr = e.lineno
+        except ValueError as e:
+            # The ValueError comes from byte literals in Python 2 like '\x'
+            # that are oddly enough not SyntaxErrors.
+            wanted = 'SyntaxError: (value error) ' + str(e)
+            line_nr = None
         else:
             assert False, "The piece of code should raise an exception."
 
