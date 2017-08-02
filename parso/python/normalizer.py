@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import codecs
 from contextlib import contextmanager
 
 from parso.normalizer import Normalizer, NormalizerConfig, Issue
@@ -514,22 +515,40 @@ class ErrorFinder(Normalizer):
                 self._add_syntax_error('invalid syntax', leaf)
         elif leaf.type == 'name':
             if leaf.value == '__debug__' and leaf.is_definition():
-                if self._version <= (2, 7):
+                if self._version < (3, 0):
                     message = 'cannot assign to __debug__'
                 else:
                     message = 'assignment to keyword'
                 self._add_syntax_error(message, leaf)
-            if leaf.value == 'None' and self._version <= (2, 7) and leaf.is_definition():
+            if leaf.value == 'None' and self._version < (3, 0) and leaf.is_definition():
                 self._add_syntax_error('cannot assign to None', leaf)
 
             self._context.add_name(leaf)
         elif leaf.type == 'string':
-            if 'b' in leaf.string_prefix.lower() \
+            string_prefix = leaf.string_prefix.lower()
+            if 'b' in string_prefix \
                     and any(c for c in leaf.value if ord(c) > 127):
                 # TODO add check for python 3
                 # b'ä'
                 message = "bytes can only contain ASCII literal characters."
                 self._add_syntax_error(message, leaf)
+
+            if 'r' not in string_prefix:
+                # Raw strings don't need to be checked if they have proper
+                # escaping.
+                is_bytes = self._version < (3, 0)
+                if 'b' in string_prefix:
+                    is_bytes = True
+                if 'u' in string_prefix:
+                    is_bytes = False
+                func = codecs.escape_decode if is_bytes else codecs.unicode_escape_decode
+                try:
+                    func(leaf._get_payload())
+                except UnicodeDecodeError as e:
+                    self._add_syntax_error('(unicode error) ' + str(e), leaf)
+                except ValueError as e:
+                    self._add_syntax_error('(value error) ' + str(e), leaf)
+
         elif leaf.value == 'continue':
             in_loop = False
             for block in self._context.blocks:

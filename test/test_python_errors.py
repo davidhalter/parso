@@ -95,6 +95,16 @@ FAILING_EXAMPLES = [
     '(x for 1 in y)',
     '{x for 1 in y}',
     '{x:x for 1 in y}',
+    # Unicode/Bytes issues.
+    r'u"\x"',
+    r'u"\"',
+    r'u"\u"',
+    r'u"""\U"""',
+    r'u"\Uffffffff"',
+    r"u'''\N{}'''",
+    r"u'\N{foo}'",
+    r'b"\x"',
+    r'b"\"',
 
     # SyntaxErrors from Python/symtable.c
     'def f(x, x): pass',
@@ -302,6 +312,10 @@ def _get_actual_exception(code):
     # SyntaxError
     # Python 2.6 has a bit different error messages here, so skip it.
     if sys.version_info[:2] == (2, 6) and wanted == 'SyntaxError: unexpected EOF while parsing':
+        wanted = 'SyntaxError: invalid syntax'
+
+    if wanted == 'SyntaxError: EOL while scanning string literal':
+        # TODO This is not what we want in the future. Remove this.
         wanted = 'SyntaxError: invalid syntax'
 
     if wanted == 'SyntaxError: non-keyword arg after keyword arg':

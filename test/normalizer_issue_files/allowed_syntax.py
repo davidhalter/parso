@@ -39,3 +39,8 @@ except:
     pass
 except ZeroDivisionError:
     pass
+
+
+r'\n'
+r'\x'
+b'\n'

@@ -214,6 +214,14 @@ class String(Literal):
     def string_prefix(self):
         return re.match('\w*(?=[\'"])', self.value).group(0)
 
+    def _get_payload(self):
+        match = re.search(
+            r'''('{3}|"{3}|'|")(.*)$''',
+            self.value,
+            flags=re.DOTALL
+        )
+        return match.group(2)[:-len(match.group(1))]
+
 
 class _StringComparisonMixin(object):
     def __eq__(self, other):
