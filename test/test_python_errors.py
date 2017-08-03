@@ -106,6 +106,12 @@ FAILING_EXAMPLES = [
     r'b"\x"',
     r'b"\"',
 
+    # Parser/tokenize.c
+    r'"""',
+    r'"',
+    r"'''",
+    r"'",
+
     # SyntaxErrors from Python/symtable.c
     'def f(x, x): pass',
     'nonlocal a',
@@ -317,10 +323,6 @@ def _get_actual_exception(code):
     # SyntaxError
     # Python 2.6 has a bit different error messages here, so skip it.
     if sys.version_info[:2] == (2, 6) and wanted == 'SyntaxError: unexpected EOF while parsing':
-        wanted = 'SyntaxError: invalid syntax'
-
-    if wanted == 'SyntaxError: EOL while scanning string literal':
-        # TODO This is not what we want in the future. Remove this.
         wanted = 'SyntaxError: invalid syntax'
 
     if wanted == 'SyntaxError: non-keyword arg after keyword arg':

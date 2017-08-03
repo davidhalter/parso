@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import codecs
+import re
 from contextlib import contextmanager
 
 from parso.normalizer import Normalizer, NormalizerConfig, Issue
@@ -512,7 +513,16 @@ class ErrorFinder(Normalizer):
                     message = 'unindent does not match any outer indentation level'
                 self._add_indentation_error(message, spacing)
             else:
-                self._add_syntax_error('invalid syntax', leaf)
+                match = re.match('\\w{,2}("{1,3}|\'{1,3})', leaf.value)
+                if match is None:
+                    message = 'invalid syntax'
+                else:
+                    if len(match.group(1)) == 1:
+                        print(match.group(1))
+                        message = 'EOL while scanning string literal'
+                    else:
+                        message = 'EOF while scanning triple-quoted string literal'
+                self._add_syntax_error(message, leaf, overwrite=True)
         elif leaf.type == 'name':
             if leaf.value == '__debug__' and leaf.is_definition():
                 if self._version < (3, 0):
@@ -672,13 +682,17 @@ class ErrorFinder(Normalizer):
     def _add_indentation_error(self, message, spacing):
         self._add_error(903, "IndentationError: " + message, spacing)
 
-    def _add_syntax_error(self, message, node):
-        self._add_error(901, "SyntaxError: " + message, node)
+    def _add_syntax_error(self, message, node, overwrite=False):
+        self._add_error(901, "SyntaxError: " + message, node, overwrite)
 
-    def _add_error(self, code, message, node):
+    def _add_error(self, code, message, node, overwrite=False):
         # Check if the issues are on the same line.
         line = node.start_pos[0]
-        self._error_dict.setdefault(line, (code, message, node))
+        args = (code, message, node)
+        if overwrite:
+            self._error_dict[line] = args
+        else:
+            self._error_dict.setdefault(line, args)
 
     def finalize(self):
         self._context.finalize()
