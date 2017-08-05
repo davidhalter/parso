@@ -415,8 +415,7 @@ class ErrorFinder(Normalizer):
             first = node.children[0]
             # e.g. 's' b''
             message = "cannot mix bytes and nonbytes literals"
-            # TODO this check is only relevant for Python 3+
-            if first.type == 'string':
+            if first.type == 'string' and self._version >= (3, 0):
                 first_is_bytes = _is_bytes_literal(first)
                 for string in node.children[1:]:
                     if first_is_bytes != _is_bytes_literal(string):
@@ -550,8 +549,8 @@ class ErrorFinder(Normalizer):
         elif leaf.type == 'string':
             string_prefix = leaf.string_prefix.lower()
             if 'b' in string_prefix \
+                    and self._version >= (3, 0) \
                     and any(c for c in leaf.value if ord(c) > 127):
-                # TODO add check for python 3
                 # b'ä'
                 message = "bytes can only contain ASCII literal characters."
                 self._add_syntax_error(message, leaf)
