@@ -9,6 +9,7 @@ _BLOCK_STMTS = ('if_stmt', 'while_stmt', 'for_stmt', 'try_stmt', 'with_stmt')
 _STAR_EXPR_PARENTS = ('testlist_star_expr', 'testlist_comp', 'exprlist')
 # This is the maximal block size given by python.
 _MAX_BLOCK_SIZE = 20
+_MAX_INDENT_COUNT = 100
 ALLOWED_FUTURES = (
     'all_feature_names', 'nested_scopes', 'generators', 'division',
     'absolute_import', 'with_statement', 'print_function', 'unicode_literals',
@@ -236,6 +237,7 @@ class ErrorFinder(Normalizer):
         else:
             parent_scope = search_ancestor(node, allowed)
         self._context = Context(parent_scope, self._add_syntax_error)
+        self._indentation_count = 0
 
     @contextmanager
     def visit_node(self, node):
@@ -497,6 +499,10 @@ class ErrorFinder(Normalizer):
         elif node.type == 'expr_list':
             for expr in node.children[::2]:
                 self._check_assignment(expr)
+        elif node.type == 'suite':
+            self._indentation_count += 1
+            if self._indentation_count == _MAX_INDENT_COUNT:
+                self._add_indentation_error("too many levels of indentation", node.children[1])
 
         yield
 

@@ -11,6 +11,19 @@ import pytest
 import parso
 
 
+def indent(code):
+    lines = code.splitlines(True)
+    return ''.join([' ' + line for line in lines])
+
+
+def _build_nested(code, depth):
+    if depth == 0:
+        return code
+
+    new_code = 'def f():\n' + indent(code)
+    return _build_nested(new_code, depth - 1)
+
+
 FAILING_EXAMPLES = [
     '1 +',
     '?',
@@ -112,6 +125,8 @@ FAILING_EXAMPLES = [
     r"'''",
     r"'",
     r"\blub",
+    # IndentationError: too many levels of indentation
+    _build_nested('pass', 100),
 
     # SyntaxErrors from Python/symtable.c
     'def f(x, x): pass',
@@ -248,7 +263,6 @@ def _get_error_list(code, version=None):
     tree = grammar.parse(code)
     return list(tree._iter_errors(grammar))
 
-
 def assert_comparison(code, error_code, positions):
     errors = [(error.start_pos, error.code) for error in _get_error_list(code)]
     assert [(pos, error_code) for pos in positions] == errors
@@ -382,10 +396,6 @@ def test_python_exception_matches_version(code, version):
 
 
 def test_statically_nested_blocks():
-    def indent(code):
-        lines = code.splitlines(True)
-        return ''.join([' ' + line for line in lines])
-
     def build(code, depth):
         if depth == 0:
             return code
@@ -485,3 +495,7 @@ def test_escape_decode_literals(each_version):
         # The positioning information is only available in Python 3.
         wanted += ' at position 0'
     assert error.message == wanted
+
+
+def test_passes():
+    assert not _get_error_list(_build_nested('pass', 99))
