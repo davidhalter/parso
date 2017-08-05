@@ -603,10 +603,14 @@ class ErrorFinder(Normalizer):
         elif leaf.value in ('yield', 'return'):
             if self._context.node.type != 'funcdef':
                 self._add_syntax_error("'%s' outside function" % leaf.value, leaf.parent)
-            elif self._context.is_async_funcdef() and leaf.value == 'return' \
-                    and leaf.parent.type == 'return_stmt' \
+            elif self._context.is_async_funcdef() \
                     and any(self._context.node.iter_yield_exprs()):
-                self._add_syntax_error("'return' with value in async generator", leaf.parent)
+                if leaf.value == 'return' and leaf.parent.type == 'return_stmt':
+                    self._add_syntax_error("'return' with value in async generator", leaf.parent)
+                elif leaf.value == 'yield' \
+                        and leaf.get_next_leaf() != 'from' \
+                        and self._version == (3, 5):
+                    self._add_syntax_error("'yield' inside async function", leaf.parent)
         elif leaf.value == 'await':
             if not self._context.is_async_funcdef():
                 self._add_syntax_error("'await' outside async function", leaf.parent)

@@ -119,6 +119,7 @@ FAILING_EXAMPLES = [
     r'b"\x"',
     r'b"\"',
     '*a, *b = 3, 3',
+    'async def foo(): yield from []',
 
     # Parser/tokenize.c
     r'"""',
@@ -264,6 +265,17 @@ if sys.version_info >= (2, 7):
     # versions. Just skip it for 2.6.
     FAILING_EXAMPLES.append('[a, 1] += 3')
 
+if sys.version_info[:2] == (3, 5):
+    FAILING_EXAMPLES += [
+        'async def foo():\n yield x',
+        'async def foo():\n yield x',
+    ]
+else:
+    FAILING_EXAMPLES += [
+        'async def foo():\n yield x\n return 1',
+        'async def foo():\n yield x\n return 1',
+    ]
+
 
 def _get_error_list(code, version=None):
     grammar = parso.load_grammar(version=version)
@@ -378,9 +390,6 @@ def test_default_except_error_postition():
         # SyntaxError
         ('async def bla():\n def x():  await bla()', '3.5'),
         ('yield from []', '3.5'),
-        ('async def foo(): yield from []', '3.5'),
-        ('async def foo():\n yield x\n return 1', '3.6'),
-        ('async def foo():\n yield x\n return 1', '3.6'),
         ('*a = 3', '3.5'),
         ('del *a, b', '3.5'),
         ('def x(*): pass', '3.5'),
