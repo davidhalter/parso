@@ -246,7 +246,10 @@ GLOBAL_NONLOCAL_ERROR = [
 
 if sys.version_info >= (3, 6):
     FAILING_EXAMPLES += GLOBAL_NONLOCAL_ERROR
-    FAILING_EXAMPLES.append('(%s *d) = x' % ('a,' * 256))
+    FAILING_EXAMPLES += [
+        '(%s *d) = x' % ('a,' * 256),
+        'async def foo():\n def nofoo():[x async for x in []]',
+    ]
 if sys.version_info >= (3, 5):
     FAILING_EXAMPLES += [
         '[*[] for a in [1]]',
@@ -395,20 +398,6 @@ def test_default_except_error_postition():
     assert line_nr != error.start_pos[0]
     # I think this is the better position.
     assert error.start_pos[0] == 2
-
-
-@pytest.mark.parametrize(
-    ('code', 'version'), [
-        ('async def foo():\n def nofoo():[x async for x in []]', '3.6'),
-    ]
-)
-def test_python_exception_matches_version(code, version):
-    if '.'.join(str(v) for v in sys.version_info[:2]) != version:
-        pytest.skip()
-
-    wanted, line_nr = _get_actual_exception(code)
-    error, = _get_error_list(code)
-    assert error.message in wanted
 
 
 def test_statically_nested_blocks():
