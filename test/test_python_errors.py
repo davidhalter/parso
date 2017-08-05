@@ -120,6 +120,7 @@ FAILING_EXAMPLES = [
     r'b"\"',
     '*a, *b = 3, 3',
     'async def foo(): yield from []',
+    'yield from []',
 
     # Parser/tokenize.c
     r'"""',
@@ -244,7 +245,10 @@ if sys.version_info >= (3, 6):
     FAILING_EXAMPLES += GLOBAL_NONLOCAL_ERROR
     FAILING_EXAMPLES.append('(%s *d) = x' % ('a,' * 256))
 if sys.version_info >= (3, 5):
-    FAILING_EXAMPLES.append('[*[] for a in [1]]')
+    FAILING_EXAMPLES += [
+        '[*[] for a in [1]]',
+        'async def bla():\n def x():  await bla()',
+    ]
 if sys.version_info >= (3, 4):
     # Before that del None works like del list, it gives a NameError.
     FAILING_EXAMPLES.append('del None')
@@ -266,6 +270,8 @@ if sys.version_info >= (2, 7):
     FAILING_EXAMPLES.append('[a, 1] += 3')
 
 if sys.version_info[:2] == (3, 5):
+    # yields are not allowed in 3.5 async functions. Therefore test them
+    # separately, here.
     FAILING_EXAMPLES += [
         'async def foo():\n yield x',
         'async def foo():\n yield x',
@@ -387,9 +393,6 @@ def test_default_except_error_postition():
 
 @pytest.mark.parametrize(
     ('code', 'version'), [
-        # SyntaxError
-        ('async def bla():\n def x():  await bla()', '3.5'),
-        ('yield from []', '3.5'),
         ('*a = 3', '3.5'),
         ('del *a, b', '3.5'),
         ('def x(*): pass', '3.5'),
