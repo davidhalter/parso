@@ -13,15 +13,15 @@ import parso
 
 def indent(code):
     lines = code.splitlines(True)
-    return ''.join([' ' + line for line in lines])
+    return ''.join([' ' * 2 + line for line in lines])
 
 
-def _build_nested(code, depth):
+def _build_nested(code, depth, base='def f():\n'):
     if depth == 0:
         return code
 
-    new_code = 'def f():\n' + indent(code)
-    return _build_nested(new_code, depth - 1)
+    new_code = base + indent(code)
+    return _build_nested(new_code, depth - 1, base=base)
 
 
 FAILING_EXAMPLES = [
@@ -497,5 +497,9 @@ def test_escape_decode_literals(each_version):
     assert error.message == wanted
 
 
-def test_passes():
+def test_too_many_levels_of_indentation():
     assert not _get_error_list(_build_nested('pass', 99))
+    assert _get_error_list(_build_nested('pass', 100))
+    base = 'def x():\n if x:\n'
+    assert not _get_error_list(_build_nested('pass', 49, base=base))
+    assert _get_error_list(_build_nested('pass', 50, base=base))
