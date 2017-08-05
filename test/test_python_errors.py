@@ -121,6 +121,9 @@ FAILING_EXAMPLES = [
     '*a, *b = 3, 3',
     'async def foo(): yield from []',
     'yield from []',
+    '*a = 3',
+    'del *a, b',
+    'def x(*): pass',
 
     # Parser/tokenize.c
     r'"""',
@@ -376,6 +379,9 @@ def _get_actual_exception(code):
     elif wanted == 'SyntaxError: can not assign to __debug__':
         # Python 2.6 does has a slightly different error.
         return [wanted, 'SyntaxError: cannot assign to __debug__'], line_nr
+    elif wanted == 'SyntaxError: can use starred expression only as assignment target':
+        # Python 3.4/3.4 have a bit of a different warning than 3.5/3.6
+        wanted = "SyntaxError: can't use starred expression here"
     return [wanted], line_nr
 
 
@@ -393,9 +399,6 @@ def test_default_except_error_postition():
 
 @pytest.mark.parametrize(
     ('code', 'version'), [
-        ('*a = 3', '3.5'),
-        ('del *a, b', '3.5'),
-        ('def x(*): pass', '3.5'),
         ('async def foo():\n def nofoo():[x async for x in []]', '3.6'),
     ]
 )
