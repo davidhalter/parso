@@ -248,7 +248,9 @@ class ErrorFinder(Normalizer):
                 spacing = list(leaf._split_prefix())[-1]
                 self._add_indentation_error('expected an indented block', spacing)
             else:
-                self._add_syntax_error("invalid syntax", leaf)
+                if leaf.type != 'error_leaf':
+                    # Error leafs will be added later as an error.
+                    self._add_syntax_error("invalid syntax", leaf)
         elif node.type in _BLOCK_STMTS:
             if node.type == 'try_stmt':
                 default_except = None
@@ -527,11 +529,10 @@ class ErrorFinder(Normalizer):
                         message = 'invalid syntax'
                     else:
                         if len(match.group(1)) == 1:
-                            print(match.group(1))
                             message = 'EOL while scanning string literal'
                         else:
                             message = 'EOF while scanning triple-quoted string literal'
-                self._add_syntax_error(message, leaf, overwrite=True)
+                self._add_syntax_error(message, leaf)
         elif leaf.type == 'name':
             if leaf.value == '__debug__' and leaf.is_definition():
                 if self._version < (3, 0):
@@ -691,17 +692,14 @@ class ErrorFinder(Normalizer):
     def _add_indentation_error(self, message, spacing):
         self._add_error(903, "IndentationError: " + message, spacing)
 
-    def _add_syntax_error(self, message, node, overwrite=False):
-        self._add_error(901, "SyntaxError: " + message, node, overwrite)
+    def _add_syntax_error(self, message, node):
+        self._add_error(901, "SyntaxError: " + message, node)
 
-    def _add_error(self, code, message, node, overwrite=False):
+    def _add_error(self, code, message, node):
         # Check if the issues are on the same line.
         line = node.start_pos[0]
         args = (code, message, node)
-        if overwrite:
-            self._error_dict[line] = args
-        else:
-            self._error_dict.setdefault(line, args)
+        self._error_dict.setdefault(line, args)
 
     def finalize(self):
         self._context.finalize()
