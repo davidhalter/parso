@@ -118,6 +118,7 @@ FAILING_EXAMPLES = [
     r"u'\N{foo}'",
     r'b"\x"',
     r'b"\"',
+    '*a, *b = 3, 3',
 
     # Parser/tokenize.c
     r'"""',
@@ -380,7 +381,6 @@ def test_default_except_error_postition():
         ('async def foo(): yield from []', '3.5'),
         ('async def foo():\n yield x\n return 1', '3.6'),
         ('async def foo():\n yield x\n return 1', '3.6'),
-        ('*a, *b = 3, 3', '3.3'),
         ('*a = 3', '3.5'),
         ('del *a, b', '3.5'),
         ('def x(*): pass', '3.5'),
