@@ -240,6 +240,7 @@ GLOBAL_NONLOCAL_ERROR = [
 
 if sys.version_info >= (3, 6):
     FAILING_EXAMPLES += GLOBAL_NONLOCAL_ERROR
+    FAILING_EXAMPLES.append('(%s *d) = x' % ('a,' * 256))
 if sys.version_info >= (3, 4):
     # Before that del None works like del list, it gives a NameError.
     FAILING_EXAMPLES.append('del None')
@@ -251,6 +252,7 @@ if sys.version_info >= (3,):
         '([False], a) = x',
         # A symtable error that raises only a SyntaxWarning in Python 2.
         'def x(): from math import *',
+        'b"ä"',
     ]
 if sys.version_info >= (2, 7):
     # This is something that raises a different error in 2.6 than in the other
@@ -382,8 +384,6 @@ def test_default_except_error_postition():
         ('[*[] for a in [1]]', '3.5'),
         ('{**{} for a in [1]}', '3.5'),
         ('"s" b""', '3.5'),
-        ('b"ä"', '3.5'),
-        ('(%s *d) = x' % ('a,' * 256), '3.6')
     ]
 )
 def test_python_exception_matches_version(code, version):
