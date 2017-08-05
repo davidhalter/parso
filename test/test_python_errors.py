@@ -124,6 +124,8 @@ FAILING_EXAMPLES = [
     '*a = 3',
     'del *a, b',
     'def x(*): pass',
+    '(%s *d) = x' % ('a,' * 256),
+    '{**{} for a in [1]}',
 
     # Parser/tokenize.c
     r'"""',
@@ -247,12 +249,14 @@ GLOBAL_NONLOCAL_ERROR = [
 if sys.version_info >= (3, 6):
     FAILING_EXAMPLES += GLOBAL_NONLOCAL_ERROR
     FAILING_EXAMPLES += [
-        '(%s *d) = x' % ('a,' * 256),
+        # Raises multiple errors in previous versions.
         'async def foo():\n def nofoo():[x async for x in []]',
     ]
 if sys.version_info >= (3, 5):
     FAILING_EXAMPLES += [
+        # Raises different errors so just ignore them for now.
         '[*[] for a in [1]]',
+        # Raises multiple errors in previous versions.
         'async def bla():\n def x():  await bla()',
     ]
 if sys.version_info >= (3, 4):
@@ -266,8 +270,9 @@ if sys.version_info >= (3,):
         '([False], a) = x',
         # A symtable error that raises only a SyntaxWarning in Python 2.
         'def x(): from math import *',
+        # unicode chars in bytes are allowed in python 2
         'b"ä"',
-        '{**{} for a in [1]}',
+        # combining strings and unicode is allowed in Python 2.
         '"s" b""',
     ]
 if sys.version_info >= (2, 7):
