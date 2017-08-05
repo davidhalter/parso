@@ -375,10 +375,10 @@ def _get_actual_exception(code):
         return [wanted, "SyntaxError: can't assign to keyword"], line_nr
     elif wanted == 'SyntaxError: assignment to None':
         # Python 2.6 does has a slightly different error.
-        return [wanted, 'SyntaxError: cannot assign to None'], line_nr
+        wanted = 'SyntaxError: cannot assign to None'
     elif wanted == 'SyntaxError: can not assign to __debug__':
         # Python 2.6 does has a slightly different error.
-        return [wanted, 'SyntaxError: cannot assign to __debug__'], line_nr
+        wanted = 'SyntaxError: cannot assign to __debug__'
     elif wanted == 'SyntaxError: can use starred expression only as assignment target':
         # Python 3.4/3.4 have a bit of a different warning than 3.5/3.6
         wanted = "SyntaxError: can't use starred expression here"
