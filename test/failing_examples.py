@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import sys
 from textwrap import dedent
 
@@ -282,4 +283,12 @@ else:
     FAILING_EXAMPLES += [
         'async def foo():\n yield x\n return 1',
         'async def foo():\n yield x\n return 1',
+    ]
+
+
+if sys.version_info[:2] <= (3, 4):
+    # Python > 3.4 this is valid code.
+    FAILING_EXAMPLES += [
+        'a = *[1], 2',
+        '(*[1], 2)',
     ]

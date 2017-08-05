@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Testing if parso finds syntax errors and indentation errors.
 """
@@ -19,6 +18,20 @@ def _get_error_list(code, version=None):
 def assert_comparison(code, error_code, positions):
     errors = [(error.start_pos, error.code) for error in _get_error_list(code)]
     assert [(pos, error_code) for pos in positions] == errors
+
+
+@pytest.mark.parametrize('code', FAILING_EXAMPLES)
+def test_python_exception_matches(code):
+    wanted, line_nr = _get_actual_exception(code)
+
+    errors = _get_error_list(code)
+    actual = None
+    if errors:
+        error, = errors
+        actual = error.message
+    assert actual in wanted
+    # Somehow in Python3.3 the SyntaxError().lineno is sometimes None
+    assert line_nr is None or line_nr == error.start_pos[0]
 
 
 @pytest.mark.parametrize(
@@ -56,20 +69,6 @@ def test_indentation_errors(code, positions):
     assert_comparison(code, 903, positions)
 
 
-@pytest.mark.parametrize('code', FAILING_EXAMPLES)
-def test_python_exception_matches(code):
-    wanted, line_nr = _get_actual_exception(code)
-
-    errors = _get_error_list(code)
-    actual = None
-    if errors:
-        error, = errors
-        actual = error.message
-    assert actual in wanted
-    # Somehow in Python3.3 the SyntaxError().lineno is sometimes None
-    assert line_nr is None or line_nr == error.start_pos[0]
-
-
 def _get_actual_exception(code):
     with warnings.catch_warnings():
         # We don't care about warnings where locals/globals misbehave here.
@@ -105,8 +104,9 @@ def _get_actual_exception(code):
         # Python 2.6 does has a slightly different error.
         wanted = 'SyntaxError: cannot assign to __debug__'
     elif wanted == 'SyntaxError: can use starred expression only as assignment target':
-        # Python 3.4/3.4 have a bit of a different warning than 3.5/3.6
-        wanted = "SyntaxError: can't use starred expression here"
+        # Python 3.4/3.4 have a bit of a different warning than 3.5/3.6 in
+        # certain places. But in others this error makes sense.
+        return [wanted, "SyntaxError: can't use starred expression here"], line_nr
     return [wanted], line_nr
 
 

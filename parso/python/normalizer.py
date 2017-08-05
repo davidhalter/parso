@@ -238,6 +238,16 @@ class ErrorFinder(Normalizer):
         self._context = Context(parent_scope, self._add_syntax_error)
         self._indentation_count = 0
 
+    def visit(self, node):
+        if node.type == 'error_node':
+            with self.visit_node(node):
+               # Don't need to investigate the inners of an error node. We
+               # might find errors in there that should be ignored, because
+               # the error node itself already shows that there's an issue.
+               return ''
+        return super(ErrorFinder, self).visit(node)
+
+
     @contextmanager
     def visit_node(self, node):
         if node.type == 'error_node':
@@ -344,6 +354,19 @@ class ErrorFinder(Normalizer):
                 # [*[] for a in [1]]
                 if node.parent.children[1].type == 'comp_for':
                     message = "iterable unpacking cannot be used in comprehension"
+                    self._add_syntax_error(message, node)
+            if self._version <= (3, 4):
+                from parso.python.tree import search_ancestor
+                n = search_ancestor(node, 'for_stmt', 'expr_stmt')
+                found_definition = False
+                if n is not None:
+                    for name in n.get_defined_names():
+                        if node.start_pos < name.start_pos < node.end_pos:
+                            found_definition = True
+                            break
+
+                if not found_definition:
+                    message = "can use starred expression only as assignment target"
                     self._add_syntax_error(message, node)
         elif node.type == 'comp_for':
             # Some of the nodes here are already used, so no else if
