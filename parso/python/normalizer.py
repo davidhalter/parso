@@ -430,7 +430,7 @@ class ErrorFinder(Normalizer):
                     self._add_syntax_error(message % p.name.value, p.name)
                 param_names.add(p.name.value)
 
-                if p.default is None:
+                if p.default is None and not p.star_count:
                     if default_only:
                         # def f(x=3, y): pass
                         message = "non-default argument follows default argument"
@@ -509,6 +509,9 @@ class ErrorFinder(Normalizer):
                 self._add_indentation_error("too many levels of indentation", node.children[1])
 
         yield
+
+        if node.type == 'suite':
+            self._indentation_count -= 1
 
     def visit_leaf(self, leaf):
         if leaf.type == 'error_leaf':
@@ -597,7 +600,7 @@ class ErrorFinder(Normalizer):
         elif leaf.value == 'break':
             in_loop = False
             for block in self._context.blocks:
-                if block.type == 'for_stmt':
+                if block.type in ('for_stmt', 'while_stmt'):
                     in_loop = True
             if not in_loop:
                 self._add_syntax_error("'break' outside loop", leaf)
