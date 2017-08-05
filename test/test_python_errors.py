@@ -111,6 +111,7 @@ FAILING_EXAMPLES = [
     r'"',
     r"'''",
     r"'",
+    r"\blub",
 
     # SyntaxErrors from Python/symtable.c
     'def f(x, x): pass',

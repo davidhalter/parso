@@ -513,15 +513,18 @@ class ErrorFinder(Normalizer):
                     message = 'unindent does not match any outer indentation level'
                 self._add_indentation_error(message, spacing)
             else:
-                match = re.match('\\w{,2}("{1,3}|\'{1,3})', leaf.value)
-                if match is None:
-                    message = 'invalid syntax'
+                if leaf.value.startswith('\\'):
+                    message = 'unexpected character after line continuation character'
                 else:
-                    if len(match.group(1)) == 1:
-                        print(match.group(1))
-                        message = 'EOL while scanning string literal'
+                    match = re.match('\\w{,2}("{1,3}|\'{1,3})', leaf.value)
+                    if match is None:
+                        message = 'invalid syntax'
                     else:
-                        message = 'EOF while scanning triple-quoted string literal'
+                        if len(match.group(1)) == 1:
+                            print(match.group(1))
+                            message = 'EOL while scanning string literal'
+                        else:
+                            message = 'EOF while scanning triple-quoted string literal'
                 self._add_syntax_error(message, leaf, overwrite=True)
         elif leaf.type == 'name':
             if leaf.value == '__debug__' and leaf.is_definition():
