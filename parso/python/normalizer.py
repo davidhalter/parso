@@ -633,8 +633,8 @@ class ErrorFinder(Normalizer):
                 if comp_for is not None and comp_for.type == 'comp_for':
                     # {**{} for a in [1]}
                     message = "dict unpacking cannot be used in dict comprehension"
-                    # TODO probably this should get a better end_pos including
-                    # the next sibling of leaf.
+                    # TODO this should probably get a better end_pos including
+                    #      the next sibling of leaf.
                     self._add_syntax_error(message, leaf)
 
         return ''
