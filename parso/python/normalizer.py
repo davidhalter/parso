@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import codecs
+import warnings
 import re
 from contextlib import contextmanager
 
@@ -570,7 +571,10 @@ class ErrorFinder(Normalizer):
                     func = codecs.unicode_escape_decode
 
                 try:
-                    func(payload)
+                    with warnings.catch_warnings():
+                        # The warnings from parsing strings are not relevant.
+                        warnings.filterwarnings('ignore')
+                        func(payload)
                 except UnicodeDecodeError as e:
                     self._add_syntax_error('(unicode error) ' + str(e), leaf)
                 except ValueError as e:
