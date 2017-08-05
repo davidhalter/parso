@@ -14,8 +14,6 @@ _MAX_INDENT_COUNT = 100
 ALLOWED_FUTURES = (
     'all_feature_names', 'nested_scopes', 'generators', 'division',
     'absolute_import', 'with_statement', 'print_function', 'unicode_literals',
-    # TODO make this one optional in lower python versions.
-    'generator_stop'
 )
 
 
@@ -288,6 +286,10 @@ class ErrorFinder(Normalizer):
 
             for from_name, future_name in node.get_paths():
                 name = future_name.value
+                allowed_futures = list(ALLOWED_FUTURES)
+                if self._version >= (3, 5):
+                    allowed_futures.append('generator_stop')
+
                 if name== 'braces':
                     message = "not a chance"
                     self._add_syntax_error(message, node)
