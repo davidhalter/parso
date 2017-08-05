@@ -10,7 +10,7 @@ def get_python_files(path):
                 yield os.path.join(dir_path, file_name)
 
 
-def test_parso_files(each_version):
+def test_on_itself(each_version):
     """
     There are obviously no syntax erros in the Python code of parso. However
     parso should output the same for all versions.
