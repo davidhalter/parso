@@ -127,7 +127,7 @@ def _get_for_stmt_definition_exprs(for_stmt):
     return list(_iter_definition_exprs_from_lists(exprlist))
 
 
-class Context(object):
+class _Context(object):
     def __init__(self, node, add_syntax_error, parent_context=None):
         self.node = node
         self.blocks = []
@@ -245,7 +245,7 @@ class Context(object):
         self.blocks.pop()
 
     def add_context(self, node):
-        return Context(node, self._add_syntax_error, parent_context=self)
+        return _Context(node, self._add_syntax_error, parent_context=self)
 
     def close_child_context(self, child_context):
         self._nonlocal_names_in_subscopes += child_context.finalize()
@@ -266,7 +266,7 @@ class ErrorFinder(Normalizer):
             parent_scope = node
         else:
             parent_scope = search_ancestor(node, allowed)
-        self._context = Context(parent_scope, self._add_syntax_error)
+        self._context = _Context(parent_scope, self._add_syntax_error)
         self._indentation_count = 0
 
     def visit(self, node):

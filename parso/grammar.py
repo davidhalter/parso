@@ -21,7 +21,7 @@ class Grammar(object):
 
     :param text: A BNF representation of your grammar.
     """
-    _error_finder_config = None
+    _error_normalizer_config = None
     _default_normalizer_config = pep8.PEP8NormalizerConfig()
 
     def __init__(self, text, tokenizer, parser=BaseParser, diff_parser=None):
@@ -161,7 +161,6 @@ class Grammar(object):
 
 class PythonGrammar(Grammar):
     _error_normalizer_config = ErrorFinderConfig()
-    _parser_cls = PythonParser
 
     def __init__(self, version_info, bnf_text):
         super(PythonGrammar, self).__init__(
