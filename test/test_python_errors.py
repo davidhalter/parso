@@ -7,7 +7,13 @@ import warnings
 import pytest
 
 import parso
+from parso._compatibility import is_pypy
 from .failing_examples import FAILING_EXAMPLES, indent, build_nested
+
+
+if is_pypy:
+    # The errors in PyPy might be different. Just skip the module for now.
+    pytestmark = pytest.mark.skip()
 
 
 def _get_error_list(code, version=None):

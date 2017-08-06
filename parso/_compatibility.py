@@ -3,6 +3,7 @@ To ensure compatibility from Python ``2.6`` - ``3.3``, a module has been
 created. Clearly there is huge need to use conforming syntax.
 """
 import sys
+import platform
 
 # Cannot use sys.version.major and minor names, because in Python 2.6 it's not
 # a namedtuple.
@@ -13,6 +14,8 @@ try:
     unicode = unicode
 except NameError:
     unicode = str
+
+is_pypy = platform.python_implementation() == 'PyPy'
 
 
 def use_metaclass(meta, *bases):
