@@ -10,7 +10,6 @@ python:
   - pypy
 matrix:
   allow_failures:
-    - python: pypy
     - env: TOXENV=cov
   include:
     - python: 3.5
