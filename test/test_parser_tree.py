@@ -43,9 +43,9 @@ class TestsFunctionAndLambdaParsing(object):
             assert node.name.value == expected['name']
 
     def test_params(self, node, expected):
-        assert isinstance(node.params, list)
-        assert all(isinstance(x, tree.Param) for x in node.params)
-        assert [str(x.name.value) for x in node.params] == [x for x in expected['params']]
+        assert isinstance(node.get_params(), list)
+        assert all(isinstance(x, tree.Param) for x in node.get_params())
+        assert [str(x.name.value) for x in node.get_params()] == [x for x in expected['params']]
 
     def test_is_generator(self, node, expected):
         assert node.is_generator() is expected.get('is_generator', False)
@@ -73,7 +73,7 @@ def test_end_pos_line(each_version):
 
 def test_default_param(each_version):
     func = parse('def x(foo=42): pass', version=each_version).children[0]
-    param, = func.params
+    param, = func.get_params()
     assert param.default.value == '42'
     assert param.annotation is None
     assert not param.star_count
@@ -81,7 +81,7 @@ def test_default_param(each_version):
 
 def test_annotation_param(each_py3_version):
     func = parse('def x(foo: 3): pass', version=each_py3_version).children[0]
-    param, = func.params
+    param, = func.get_params()
     assert param.default is None
     assert param.annotation.value == '3'
     assert not param.star_count
@@ -89,7 +89,7 @@ def test_annotation_param(each_py3_version):
 
 def test_annotation_params(each_py3_version):
     func = parse('def x(foo: 3, bar: 4): pass', version=each_py3_version).children[0]
-    param1, param2 = func.params
+    param1, param2 = func.get_params()
 
     assert param1.default is None
     assert param1.annotation.value == '3'
@@ -102,7 +102,7 @@ def test_annotation_params(each_py3_version):
 
 def test_default_and_annotation_param(each_py3_version):
     func = parse('def x(foo:3=42): pass', version=each_py3_version).children[0]
-    param, = func.params
+    param, = func.get_params()
     assert param.default.value == '42'
     assert param.annotation.value == '3'
     assert not param.star_count

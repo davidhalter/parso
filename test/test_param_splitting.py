@@ -17,7 +17,7 @@ def assert_params(param_string, version=None, **wanted_dct):
     module = parse(source, version=version)
     funcdef = next(module.iter_funcdefs())
     dct = dict((p.name.value, p.default and p.default.get_code())
-               for p in funcdef.params)
+               for p in funcdef.get_params())
     assert dct == wanted_dct
     assert module.get_code() == source
 

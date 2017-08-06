@@ -199,7 +199,7 @@ class _Context(object):
 
         params = []
         if self.node.type == 'funcdef':
-            params = self.node.params
+            params = self.node.get_params()
 
         for base_name in globals_or_nonlocals:
             found_global_or_nonlocal = False
@@ -534,7 +534,7 @@ class ErrorFinder(Normalizer):
                 self._add_syntax_error(message, node)
             elif self._context.is_function():
                 for nonlocal_name in node.children[1::2]:
-                    param_names = [p.name.value for p in self._context.node.params]
+                    param_names = [p.name.value for p in self._context.node.get_params()]
                     if nonlocal_name.value == node:
                         pass
         elif node.type == 'expr_stmt':

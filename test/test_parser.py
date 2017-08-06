@@ -117,7 +117,7 @@ def test_param_splitting(each_version):
             # ignore them, because it's not what we want to support in the
             # future.
             func = next(m.iter_funcdefs())
-            assert [param.name.value for param in func.params] == result
+            assert [param.name.value for param in func.get_params()] == result
         else:
             assert not list(m.iter_funcdefs())
 

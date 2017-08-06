@@ -504,8 +504,7 @@ class Function(ClassOrFunc):
     def _get_param_nodes(self):
         return self.children[2].children
 
-    @property
-    def params(self):
+    def get_params(self):
         """
         Returns a list of `Param()`.
         """
