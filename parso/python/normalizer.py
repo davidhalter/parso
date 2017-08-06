@@ -95,6 +95,37 @@ def _is_future_import_first(import_from):
         return False
 
 
+def _iter_definition_exprs_from_lists(exprlist):
+    for child in exprlist.children[::2]:
+        if child.type == 'atom' and child.children[0] in ('(', '['):
+            testlist_comp = child.children[0]
+            if testlist_comp.type == 'testlist_comp':
+                for expr in _iter_definition_exprs_from_lists(testlist_comp):
+                    yield expr
+                continue
+            elif child.children[0] == '[':
+                yield testlist_comp
+                continue
+
+        yield child
+
+def _get_expr_stmt_definition_exprs(expr_stmt):
+    exprs = []
+    for list_ in expr_stmt.children[:-2:2]:
+        if list_.type in ('testlist_star_expr', 'testlist'):
+            exprs += _iter_definition_exprs_from_lists(list_)
+        else:
+            exprs.append(list_)
+    return exprs
+
+
+def _get_for_stmt_definition_exprs(for_stmt):
+    exprlist = for_stmt.children[1]
+    if exprlist.type != 'exprlist':
+        return [exprlist]
+    return list(_iter_definition_exprs_from_lists(exprlist))
+
+
 class Context(object):
     def __init__(self, node, add_syntax_error, parent_context=None):
         self.node = node
@@ -360,10 +391,12 @@ class ErrorFinder(Normalizer):
                 n = search_ancestor(node, 'for_stmt', 'expr_stmt')
                 found_definition = False
                 if n is not None:
-                    for name in n.get_defined_names():
-                        if node.start_pos < name.start_pos < node.end_pos:
-                            found_definition = True
-                            break
+                    if n.type == 'expr_stmt':
+                        exprs = _get_expr_stmt_definition_exprs(n)
+                    else:
+                        exprs = _get_for_stmt_definition_exprs(n)
+                    if node in exprs:
+                        found_definition = True
 
                 if not found_definition:
                     message = "can use starred expression only as assignment target"
