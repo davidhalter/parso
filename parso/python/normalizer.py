@@ -261,12 +261,16 @@ class ErrorFinder(Normalizer):
         self._version = self._grammar.version_info
 
     def initialize(self, node):
-        allowed = 'classdef', 'funcdef', 'file_input'
-        if node.type in allowed:
-            parent_scope = node
-        else:
-            parent_scope = search_ancestor(node, allowed)
-        self._context = _Context(parent_scope, self._add_syntax_error)
+        def create_context(node):
+            if node is None:
+                return None
+
+            parent_context = create_context(node.parent)
+            if node.type in ('classdef', 'funcdef', 'file_input'):
+                return _Context(node, self._add_syntax_error, parent_context)
+            return parent_context
+
+        self._context = create_context(node) or _Context(node, self._add_syntax_error)
         self._indentation_count = 0
 
     def visit(self, node):
