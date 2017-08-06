@@ -9,7 +9,7 @@ from parso.python.tokenize import tokenize_lines, tokenize
 from parso.cache import parser_cache, load_module, save_module
 from parso.parser import BaseParser
 from parso.python.parser import Parser as PythonParser
-from parso.python.normalizer import ErrorFinderConfig
+from parso.python.errors import ErrorFinderConfig
 from parso.python import pep8
 
 _loaded_grammars = {}

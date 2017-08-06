@@ -1,7 +1,7 @@
 import re
 from contextlib import contextmanager
 
-from parso.python.normalizer import ErrorFinder, ErrorFinderConfig
+from parso.python.errors import ErrorFinder, ErrorFinderConfig
 from parso.normalizer import Rule
 from parso.python.tree import search_ancestor, Flow, Scope
 
