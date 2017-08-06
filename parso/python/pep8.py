@@ -3,6 +3,7 @@ from contextlib import contextmanager
 
 from parso.python.normalizer import ErrorFinder, ErrorFinderConfig
 from parso.normalizer import Rule
+from parso.python.tree import search_ancestor, Flow, Scope
 
 
 _IMPORT_TYPES = ('import_name', 'import_from')
@@ -122,7 +123,6 @@ class BackslashNode(IndentationNode):
     type = IndentationTypes.BACKSLASH
 
     def __init__(self, config, parent_indentation, containing_leaf, spacing, parent=None):
-        from parso.python.tree import search_ancestor
         expr_stmt = search_ancestor(containing_leaf, 'expr_stmt')
         if expr_stmt is not None:
             equals = expr_stmt.children[-2]
@@ -224,7 +224,6 @@ class PEP8Normalizer(ErrorFinder):
             #if module.type == 'simple_stmt':
             if module.type == 'file_input':
                 index = module.children.index(simple_stmt)
-                from parso.python.tree import Flow
                 for child in module.children[:index]:
                     children = [child]
                     if child.type == 'simple_stmt':
@@ -641,7 +640,6 @@ class PEP8Normalizer(ErrorFinder):
                 else:
                     self.add_issuadd_issue(741, message % 'variables', leaf)
         elif leaf.value == ':':
-            from parso.python.tree import Flow, Scope
             if isinstance(leaf.parent, (Flow, Scope)) and leaf.parent.type != 'lambdef':
                 next_leaf = leaf.get_next_leaf()
                 if next_leaf.type != 'newline':
@@ -687,7 +685,6 @@ class PEP8Normalizer(ErrorFinder):
                 self.add_issue(391, 'Blank line at end of file', leaf)
 
     def add_issue(self, code, message, node):
-        from parso.python.tree import search_ancestor
         if self._previous_leaf is not None:
             if search_ancestor(self._previous_leaf, 'error_node') is not None:
                 return

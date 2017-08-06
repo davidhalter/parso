@@ -5,6 +5,7 @@ import re
 from contextlib import contextmanager
 
 from parso.normalizer import Normalizer, NormalizerConfig, Issue
+from parso.python.tree import search_ancestor
 
 _BLOCK_STMTS = ('if_stmt', 'while_stmt', 'for_stmt', 'try_stmt', 'with_stmt')
 _STAR_EXPR_PARENTS = ('testlist_star_expr', 'testlist_comp', 'exprlist')
@@ -260,7 +261,6 @@ class ErrorFinder(Normalizer):
         self._version = self._grammar.version_info
 
     def initialize(self, node):
-        from parso.python.tree import search_ancestor
         allowed = 'classdef', 'funcdef', 'file_input'
         if node.type in allowed:
             parent_scope = node
@@ -380,7 +380,6 @@ class ErrorFinder(Normalizer):
                     message = "iterable unpacking cannot be used in comprehension"
                     self._add_syntax_error(message, node)
             if self._version <= (3, 4):
-                from parso.python.tree import search_ancestor
                 n = search_ancestor(node, 'for_stmt', 'expr_stmt')
                 found_definition = False
                 if n is not None:
