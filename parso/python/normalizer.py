@@ -243,11 +243,11 @@ class Context(object):
         yield
         self.blocks.pop()
 
-    @contextmanager
     def add_context(self, node):
-        new_context = Context(node, self._add_syntax_error, parent_context=self)
-        yield new_context
-        self._nonlocal_names_in_subscopes += new_context.finalize()
+        return Context(node, self._add_syntax_error, parent_context=self)
+
+    def close_child_context(self, child_context):
+        self._nonlocal_names_in_subscopes += child_context.finalize()
 
 
 class ErrorFinder(Normalizer):
@@ -312,13 +312,6 @@ class ErrorFinder(Normalizer):
                 if len(self._context.blocks) == _MAX_BLOCK_SIZE:
                     self._add_syntax_error("too many statically nested blocks", node)
                 yield
-            return
-        elif node.type in ('classdef', 'funcdef'):
-            context = self._context
-            with self._context.add_context(node) as new_context:
-                self._context = new_context
-                yield
-                self._context = context
             return
         elif node.type == 'import_from' and _is_future_import(node):
             if not _is_future_import_first(node):
@@ -568,6 +561,10 @@ class ErrorFinder(Normalizer):
 
         if node.type == 'suite':
             self._indentation_count -= 1
+        elif node.type in ('classdef', 'funcdef'):
+            context = self._context
+            self._context = context.parent_context
+            self._context.close_child_context(context)
 
     def visit_leaf(self, leaf):
         if leaf.type == 'error_leaf':
@@ -695,6 +692,11 @@ class ErrorFinder(Normalizer):
                     # TODO this should probably get a better end_pos including
                     #      the next sibling of leaf.
                     self._add_syntax_error(message, leaf)
+        elif leaf.value == ':':
+            parent = leaf.parent
+            if parent.type in ('classdef', 'funcdef'):
+                self._context = self._context.add_context(parent)
+
 
         return ''
 

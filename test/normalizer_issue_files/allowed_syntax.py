@@ -44,3 +44,10 @@ except ZeroDivisionError:
 r'\n'
 r'\x'
 b'\n'
+
+
+a = 3
+
+
+def x(b=a):
+    global a
