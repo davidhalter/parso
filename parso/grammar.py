@@ -1,7 +1,7 @@
 import hashlib
 import os
 
-from parso._compatibility import FileNotFoundError
+from parso._compatibility import FileNotFoundError, is_pypy
 from parso.pgen2.pgen import generate_grammar
 from parso.utils import splitlines, source_to_unicode, parse_version_string
 from parso.python.diff import DiffParser
@@ -107,7 +107,9 @@ class Grammar(object):
                     old_lines=old_lines,
                     new_lines=lines
                 )
-                save_module(self._hashed, path, new_node, lines, pickling=cache,
+                save_module(self._hashed, path, new_node, lines,
+                            # Never pickle in pypy, it's slow as hell.
+                            pickling=cache and not is_pypy,
                             cache_path=cache_path)
                 return new_node
 
@@ -121,7 +123,9 @@ class Grammar(object):
         root_node = p.parse(tokens=tokens)
 
         if cache or diff_cache:
-            save_module(self._hashed, path, root_node, lines, pickling=cache,
+            save_module(self._hashed, path, root_node, lines,
+                        # Never pickle in pypy, it's slow as hell.
+                        pickling=cache and not is_pypy,
                         cache_path=cache_path)
         return root_node
 
