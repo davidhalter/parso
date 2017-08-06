@@ -60,7 +60,7 @@ def test_normalizer_issue(normalizer_issue_case):
 
     grammar = parso.load_grammar(version=normalizer_issue_case.python_version)
     module = grammar.parse(code)
-    issues = module._get_normalizer_issues(grammar)
+    issues = grammar._get_normalizer_issues(module)
     actual = sort(issues)
 
     diff = '\n'.join(difflib.ndiff(desired, actual))

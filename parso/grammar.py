@@ -9,6 +9,8 @@ from parso.python.tokenize import tokenize_lines, tokenize
 from parso.cache import parser_cache, load_module, save_module
 from parso.parser import BaseParser
 from parso.python.parser import Parser as PythonParser
+from parso.python.normalizer import ErrorFinderConfig
+from parso.python import pep8
 
 _loaded_grammars = {}
 
@@ -19,6 +21,9 @@ class Grammar(object):
 
     :param text: A BNF representation of your grammar.
     """
+    _error_finder_config = None
+    _default_normalizer_config = pep8.PEP8NormalizerConfig()
+
     def __init__(self, text, tokenizer, parser=BaseParser, diff_parser=None):
         self._pgen_grammar = generate_grammar(text)
         self._parser = parser
@@ -120,6 +125,34 @@ class Grammar(object):
                         cache_path=cache_path)
         return root_node
 
+    def iter_errors(self, node):
+        if self._error_normalizer_config is None:
+            raise ValueError("No error normalizer specified for this grammar.")
+
+        return self._get_normalizer_issues(node, self._error_normalizer_config)
+
+    def _get_normalizer(self, normalizer_config):
+        if normalizer_config is None:
+            normalizer_config = self._default_normalizer_config
+            if normalizer_config is None:
+                raise ValueError("You need to specify a normalizer, because "
+                                 "there's no default normalizer for this tree.")
+        return normalizer_config.create_normalizer(self)
+
+    def _normalize(self, node, normalizer_config=None):
+        """
+        TODO this is not public, yet.
+        The returned code will be normalized, e.g. PEP8 for Python.
+        """
+        normalizer = self._get_normalizer(normalizer_config)
+        return normalizer.walk(node)
+
+    def _get_normalizer_issues(self, node, normalizer_config=None):
+        normalizer = self._get_normalizer(normalizer_config)
+        normalizer.walk(node)
+        return normalizer.issues
+
+
     def __repr__(self):
         labels = self._pgen_grammar.symbol2number.values()
         txt = ' '.join(list(labels)[:3]) + ' ...'
@@ -127,6 +160,9 @@ class Grammar(object):
 
 
 class PythonGrammar(Grammar):
+    _error_normalizer_config = ErrorFinderConfig()
+    _parser_cls = PythonParser
+
     def __init__(self, version_info, bnf_text):
         super(PythonGrammar, self).__init__(
             bnf_text,
@@ -134,14 +170,14 @@ class PythonGrammar(Grammar):
             parser=PythonParser,
             diff_parser=DiffParser
         )
-        self._version_int = version_info
+        self.version_info = version_info
 
     def _tokenize_lines(self, lines):
-        return tokenize_lines(lines, self._version_int)
+        return tokenize_lines(lines, self.version_info)
 
     def _tokenize(self, code):
         # Used by Jedi.
-        return tokenize(code, self._version_int)
+        return tokenize(code, self.version_info)
 
 
 def load_grammar(**kwargs):

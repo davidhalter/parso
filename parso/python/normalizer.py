@@ -257,7 +257,7 @@ class ErrorFinder(Normalizer):
     def __init__(self, *args, **kwargs):
         super(ErrorFinder, self).__init__(*args, **kwargs)
         self._error_dict = {}
-        self._version = self._grammar._version_int
+        self._version = self._grammar.version_info
 
     def initialize(self, node):
         from parso.python.tree import search_ancestor

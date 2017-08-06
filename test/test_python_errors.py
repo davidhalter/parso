@@ -13,7 +13,7 @@ from .failing_examples import FAILING_EXAMPLES, indent, build_nested
 def _get_error_list(code, version=None):
     grammar = parso.load_grammar(version=version)
     tree = grammar.parse(code)
-    return list(tree._iter_errors(grammar))
+    return list(grammar.iter_errors(tree))
 
 def assert_comparison(code, error_code, positions):
     errors = [(error.start_pos, error.code) for error in _get_error_list(code)]

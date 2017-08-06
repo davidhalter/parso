@@ -19,5 +19,5 @@ def test_on_itself(each_version):
     path = os.path.dirname(os.path.dirname(__file__)) + '/parso'
     for file in get_python_files(path):
         tree = grammar.parse(path=file)
-        errors = list(tree._iter_errors(grammar))
+        errors = list(grammar.iter_errors(tree))
         assert not errors

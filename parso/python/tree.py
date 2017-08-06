@@ -30,8 +30,6 @@ import re
 from parso._compatibility import utf8_repr, unicode
 from parso.tree import Node, BaseNode, Leaf, ErrorNode, ErrorLeaf, \
     search_ancestor
-from parso.python import normalizer
-from parso.python import pep8
 from parso.python.prefix import split_prefix
 
 
@@ -68,7 +66,6 @@ class PythonMixin(object):
     Some Python specific utitilies.
     """
     __slots__ = ()
-    default_normalizer_config = pep8.PEP8NormalizerConfig()
 
     def get_definition(self):
         if self.type in ('newline', 'endmarker'):
@@ -98,10 +95,6 @@ class PythonMixin(object):
                 if result is not None:
                     return result
         return None
-
-    def _iter_errors(self, grammar):
-        config = normalizer.ErrorFinderConfig()
-        return self._get_normalizer_issues(grammar, config)
 
 
 class PythonLeaf(PythonMixin, Leaf):

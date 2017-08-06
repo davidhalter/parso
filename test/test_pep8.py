@@ -4,7 +4,7 @@ import parso
 def issues(code):
     grammar = parso.load_grammar()
     module = parso.parse(code)
-    return module._get_normalizer_issues(grammar)
+    return grammar._get_normalizer_issues(module)
 
 
 def test_eof_newline():

@@ -126,7 +126,7 @@ class Checker():
             print(module.children)
 
     def get_error(self, code):
-        errors = list(self.grammar.parse(code)._iter_errors(self.grammar))
+        errors = list(self.grammar.iter_errors(self.grammar.parse(code)))
         assert bool(errors) != self._is_passing
         if errors:
             return errors[0]
@@ -139,7 +139,8 @@ class Checker():
 
     def assert_no_error_in_passing(self, code):
         if self._is_passing:
-            assert not list(self.grammar.parse(code)._iter_errors(self.grammar))
+            module = self.grammar.parse(code)
+            assert not list(self.grammar.iter_errors(module))
 
 
 @pytest.fixture

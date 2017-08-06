@@ -22,7 +22,6 @@ class NodeOrLeaf(object):
     The base class for nodes and leaves.
     """
     __slots__ = ()
-    default_normalizer_config = None
 
     def get_root_node(self):
         """
@@ -153,28 +152,6 @@ class NodeOrLeaf(object):
         :param include_prefix: Removes the prefix (whitespace and comments) of
             e.g. a statement.
         """
-
-    def _get_normalizer(self, normalizer_config, grammar):
-        if normalizer_config is None:
-            normalizer_config = self.default_normalizer_config
-            if normalizer_config is None:
-                raise ValueError("You need to specify a normalizer, because "
-                                 "there's no default normalizer for this tree.")
-        return normalizer_config.create_normalizer(grammar)
-
-    def _normalize(self, grammar, normalizer_config=None):
-        """
-        TODO this is not public, yet.
-        The returned code will be normalized, e.g. PEP8 for Python.
-        """
-        normalizer = self._get_normalizer(normalizer_config, grammar)
-        return normalizer.walk(self)
-
-    def _get_normalizer_issues(self, grammar, normalizer_config=None):
-        normalizer = self._get_normalizer(normalizer_config, grammar)
-        normalizer.walk(self)
-        return normalizer.issues
-
 
 
 class Leaf(NodeOrLeaf):
