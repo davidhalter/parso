@@ -69,17 +69,16 @@ A list of syntax/indentation errors I've encountered in CPython.
     "cannot mix bytes and nonbytes literals" # 's' b''
     "assignment to yield expression not possible"  # x = yield 1 = 3
 
-    "f-string: empty expression not allowed"
-    "f-string: single '}' is not allowed"
-    "f-string: expressions nested too deeply"
-    "f-string expression part cannot include a backslash"
-    "f-string expression part cannot include '#'"
-    "f-string: unterminated string"
+    "f-string: empty expression not allowed"  # f'{}'
+    "f-string: single '}' is not allowed"  # f'}'
+    "f-string: expressions nested too deeply"  # f'{1:{5:{3}}}'
+    "f-string expression part cannot include a backslash"  # f'{"\"}' or f'{"\\"}'
+    "f-string expression part cannot include '#'"  # f'{#}'
+    "f-string: unterminated string"  # f'{"}'
     "f-string: mismatched '(', '{', or '['"
-    "f-string: invalid conversion character: expected 's', 'r', or 'a'"
-    "f-string: expecting '}'"
-    "f-string: unexpected end of string"
-    "f-string: expecting '}'"
+    "f-string: invalid conversion character: expected 's', 'r', or 'a'" # f'{1!b}'
+    "f-string: unexpected end of string"  # Doesn't really happen?!
+    "f-string: expecting '}'"  # f'{'
     "(unicode error) unknown error
     "(value error) unknown error
     "(unicode error) MESSAGE
