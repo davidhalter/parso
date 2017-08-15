@@ -8,8 +8,8 @@ versions, file caching, round-trips and other stuff:
 >>> expr = module.children[0]
 >>> expr
 PythonNode(arith_expr, [<Name: hello@1,0>, <Operator: +>, <Number: 1>])
->>> expr.get_code()
-'hello + 1'
+>>> print(expr.get_code())
+hello + 1
 >>> name = expr.children[0]
 >>> name
 <Name: hello@1,0>
