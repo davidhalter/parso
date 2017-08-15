@@ -48,7 +48,10 @@ def splitlines(string, keepends=False):
         return re.split('\n|\r\n', string)
 
 
-def source_to_unicode(source, encoding=None):
+def source_to_unicode(source, default_encoding='utf-8', errors='strict'):
+    """
+    `errors` can be 'strict', 'replace' or 'ignore'.
+    """
     def detect_encoding():
         """
         For the implementation of encoding definitions in Python, look at:
@@ -67,7 +70,7 @@ def source_to_unicode(source, encoding=None):
             return possible_encoding.group(1)
         else:
             # the default if nothing else has been set -> PEP 263
-            return encoding if encoding is not None else 'utf-8'
+            return default_encoding
 
     if isinstance(source, unicode):
         # only cast str/bytes
@@ -76,8 +79,9 @@ def source_to_unicode(source, encoding=None):
     encoding = detect_encoding()
     if not isinstance(encoding, unicode):
         encoding = unicode(encoding, 'utf-8', 'replace')
-    # cast to unicode by default
-    return unicode(source, encoding, 'replace')
+
+    # Cast to unicode
+    return unicode(source, encoding, errors)
 
 
 def version_info():

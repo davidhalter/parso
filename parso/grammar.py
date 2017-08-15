@@ -84,7 +84,9 @@ class Grammar(object):
 
         if code is None:
             with open(path, 'rb') as f:
-                code = source_to_unicode(f.read())
+                code = f.read()
+
+        code = source_to_unicode(code)
 
         lines = splitlines(code, keepends=True)
         if diff_cache:
