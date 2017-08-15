@@ -5,7 +5,7 @@ from textwrap import dedent
 import pytest
 
 from parso._compatibility import py_version
-from parso.utils import splitlines, parse_version_string
+from parso.utils import split_lines, parse_version_string
 from parso.python.token import (
     NAME, NEWLINE, STRING, INDENT, DEDENT, ERRORTOKEN, ENDMARKER, ERROR_DEDENT)
 from parso.python import tokenize
@@ -201,7 +201,7 @@ def test_error_literal():
 def test_endmarker_end_pos():
     def check(code):
         tokens = _get_token_list(code)
-        lines = splitlines(code)
+        lines = split_lines(code)
         assert tokens[-1].end_pos == (len(lines), len(lines[-1]))
 
     check('#c')

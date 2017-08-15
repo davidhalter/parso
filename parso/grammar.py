@@ -3,7 +3,7 @@ import os
 
 from parso._compatibility import FileNotFoundError, is_pypy
 from parso.pgen2.pgen import generate_grammar
-from parso.utils import splitlines, source_to_unicode, parse_version_string
+from parso.utils import split_lines, source_to_unicode, parse_version_string
 from parso.python.diff import DiffParser
 from parso.python.tokenize import tokenize_lines, tokenize
 from parso.cache import parser_cache, load_module, save_module
@@ -88,7 +88,7 @@ class Grammar(object):
 
         code = source_to_unicode(code)
 
-        lines = splitlines(code, keepends=True)
+        lines = split_lines(code, keepends=True)
         if diff_cache:
             if self._diff_parser is None:
                 raise TypeError("You have to define a diff parser to be able "

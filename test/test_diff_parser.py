@@ -3,7 +3,7 @@ import logging
 
 import pytest
 
-from parso.utils import splitlines
+from parso.utils import split_lines
 from parso import cache
 from parso import load_grammar
 from parso.python.diff import DiffParser
@@ -58,13 +58,13 @@ class Differ(object):
         except KeyError:
             pass
 
-        self.lines = splitlines(code, keepends=True)
+        self.lines = split_lines(code, keepends=True)
         self.module = parse(code, diff_cache=True, cache=True)
         return self.module
 
     def parse(self, code, copies=0, parsers=0, expect_error_leaves=False):
         logging.debug('differ: parse copies=%s parsers=%s', copies, parsers)
-        lines = splitlines(code, keepends=True)
+        lines = split_lines(code, keepends=True)
         diff_parser = DiffParser(
             self.grammar._pgen_grammar,
             self.grammar._tokenizer,

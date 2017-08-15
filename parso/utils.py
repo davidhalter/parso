@@ -9,9 +9,9 @@ from parso._compatibility import unicode, total_ordering
 Version = namedtuple('Version', 'major, minor, micro')
 
 
-def splitlines(string, keepends=False):
+def split_lines(string, keepends=False):
     r"""
-    A splitlines for Python code. In contrast to Python's ``str.splitlines``,
+    A str.splitlines for Python code. In contrast to Python's ``str.splitlines``,
     looks at form feeds and other special characters as normal text. Just
     splits ``\n`` and ``\r\n``.
     Also different: Returns ``['']`` for an empty string input.

@@ -6,7 +6,7 @@ import pytest
 from parso._compatibility import u
 from parso import parse
 from parso.python import tree
-from parso.utils import splitlines
+from parso.utils import split_lines
 
 
 def test_basic_parsing(each_version):
@@ -153,7 +153,7 @@ def test_open_string_literal(each_version, code):
     """
     Testing mostly if removing the last newline works.
     """
-    lines = splitlines(code, keepends=True)
+    lines = split_lines(code, keepends=True)
     end_pos = (len(lines), len(lines[-1]))
     module = parse(code, version=each_version)
     assert module.get_code() == code

@@ -1,23 +1,23 @@
 from codecs import BOM_UTF8
 
-from parso.utils import splitlines, source_to_unicode
+from parso.utils import split_lines, source_to_unicode
 import parso
 
 
-def test_splitlines_no_keepends():
-    assert splitlines('asd\r\n') == ['asd', '']
-    assert splitlines('asd\r\n\f') == ['asd', '\f']
-    assert splitlines('\fasd\r\n') == ['\fasd', '']
-    assert splitlines('') == ['']
-    assert splitlines('\n') == ['', '']
+def test_split_lines_no_keepends():
+    assert split_lines('asd\r\n') == ['asd', '']
+    assert split_lines('asd\r\n\f') == ['asd', '\f']
+    assert split_lines('\fasd\r\n') == ['\fasd', '']
+    assert split_lines('') == ['']
+    assert split_lines('\n') == ['', '']
 
 
-def test_splitlines_keepends():
-    assert splitlines('asd\r\n', keepends=True) == ['asd\r\n', '']
-    assert splitlines('asd\r\n\f', keepends=True) == ['asd\r\n', '\f']
-    assert splitlines('\fasd\r\n', keepends=True) == ['\fasd\r\n', '']
-    assert splitlines('', keepends=True) == ['']
-    assert splitlines('\n', keepends=True) == ['\n', '']
+def test_split_lines_keepends():
+    assert split_lines('asd\r\n', keepends=True) == ['asd\r\n', '']
+    assert split_lines('asd\r\n\f', keepends=True) == ['asd\r\n', '\f']
+    assert split_lines('\fasd\r\n', keepends=True) == ['\fasd\r\n', '']
+    assert split_lines('', keepends=True) == ['']
+    assert split_lines('\n', keepends=True) == ['\n', '']
 
 
 def test_source_to_unicode_unicode_text():

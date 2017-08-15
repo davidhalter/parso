@@ -10,7 +10,7 @@ import difflib
 from collections import namedtuple
 import logging
 
-from parso.utils import splitlines
+from parso.utils import split_lines
 from parso.python.parser import Parser
 from parso.python.tree import EndMarker
 from parso.python.tokenize import (NEWLINE, TokenInfo, ERROR_DEDENT,
@@ -154,7 +154,7 @@ class DiffParser(object):
 
         last_pos = self._module.end_pos[0]
         if last_pos != line_length:
-            current_lines = splitlines(self._module.get_code(), keepends=True)
+            current_lines = split_lines(self._module.get_code(), keepends=True)
             diff = difflib.unified_diff(current_lines, new_lines)
             raise Exception(
                 "There's an issue (%s != %s) with the diff parser. Please report:\n%s"
@@ -572,7 +572,7 @@ class _NodesStack(object):
             end_pos = list(last_leaf.end_pos)
         except IndexError:
             end_pos = [1, 0]
-        lines = splitlines(self.prefix)
+        lines = split_lines(self.prefix)
         assert len(lines) > 0
         if len(lines) == 1:
             end_pos[1] += len(lines[0])

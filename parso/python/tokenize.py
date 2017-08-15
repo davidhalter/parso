@@ -22,7 +22,7 @@ from parso.python.token import (tok_name, N_TOKENS, ENDMARKER, STRING, NUMBER, o
                                 NAME, OP, ERRORTOKEN, NEWLINE, INDENT, DEDENT,
                                 ERROR_DEDENT)
 from parso._compatibility import py_version
-from parso.utils import splitlines
+from parso.utils import split_lines
 
 
 TokenCollection = namedtuple(
@@ -224,7 +224,7 @@ class TokenInfo(namedtuple('Token', ['type', 'string', 'start_pos', 'prefix'])):
 
     @property
     def end_pos(self):
-        lines = splitlines(self.string)
+        lines = split_lines(self.string)
         if len(lines) > 1:
             return self.start_pos[0] + len(lines) - 1, 0
         else:
@@ -233,7 +233,7 @@ class TokenInfo(namedtuple('Token', ['type', 'string', 'start_pos', 'prefix'])):
 
 def tokenize(code, version_info):
     """Generate tokens from a the source code (string)."""
-    lines = splitlines(code, keepends=True)
+    lines = split_lines(code, keepends=True)
     return tokenize_lines(lines, version_info)
 
 
