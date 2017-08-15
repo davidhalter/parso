@@ -8,7 +8,7 @@ import re
 
 import parso
 from parso._compatibility import total_ordering
-from parso.utils import source_to_unicode
+from parso.utils import python_bytes_to_unicode
 
 
 @total_ordering
@@ -54,7 +54,7 @@ def test_normalizer_issue(normalizer_issue_case):
                 for i in issues]
 
     with open(normalizer_issue_case.path, 'rb') as f:
-        code = source_to_unicode(f.read())
+        code = python_bytes_to_unicode(f.read())
 
     desired = sort(collect_errors(code))
 

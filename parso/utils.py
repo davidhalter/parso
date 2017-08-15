@@ -48,7 +48,7 @@ def split_lines(string, keepends=False):
         return re.split('\n|\r\n', string)
 
 
-def source_to_unicode(source, default_encoding='utf-8', errors='strict'):
+def python_bytes_to_unicode(source, default_encoding='utf-8', errors='strict'):
     """
     `errors` can be 'strict', 'replace' or 'ignore'.
     """

@@ -1,6 +1,6 @@
 from codecs import BOM_UTF8
 
-from parso.utils import split_lines, source_to_unicode
+from parso.utils import split_lines, python_bytes_to_unicode
 import parso
 
 
@@ -20,12 +20,12 @@ def test_split_lines_keepends():
     assert split_lines('\n', keepends=True) == ['\n', '']
 
 
-def test_source_to_unicode_unicode_text():
+def test_python_bytes_to_unicode_unicode_text():
     source = (
         b"# vim: fileencoding=utf-8\n"
         b"# \xe3\x81\x82\xe3\x81\x84\xe3\x81\x86\xe3\x81\x88\xe3\x81\x8a\n"
     )
-    actual = source_to_unicode(source)
+    actual = python_bytes_to_unicode(source)
     expected = source.decode('utf-8')
     assert actual == expected
 

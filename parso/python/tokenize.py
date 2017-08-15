@@ -406,10 +406,10 @@ if __name__ == "__main__":
     else:
         code = sys.stdin.read()
 
-    from parso.utils import source_to_unicode, parse_version_string
+    from parso.utils import python_bytes_to_unicode, parse_version_string
 
     if isinstance(code, bytes):
-        code = source_to_unicode(code)
+        code = python_bytes_to_unicode(code)
 
     for token in tokenize(code, parse_version_string()):
         print(token)
