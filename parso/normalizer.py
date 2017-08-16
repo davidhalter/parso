@@ -35,7 +35,7 @@ class Normalizer(object):
     def finalize(self):
         pass
 
-    def add_issue(self, code, message, node):
+    def add_issue(self, node, code, message):
         issue = Issue(node, code, message)
         if issue not in self.issues:
             self.issues.append(issue)
@@ -125,7 +125,7 @@ class Rule(object):
             if message is None:
                 raise ValueError("The message on the class is not set.")
 
-        self._normalizer.add_issue(code, message, node)
+        self._normalizer.add_issue(node, code, message)
 
     def feed_node(self, node):
         if self.check(node):

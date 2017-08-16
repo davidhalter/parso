@@ -671,6 +671,9 @@ class ErrorFinder(Normalizer):
                         and leaf.get_next_leaf() != 'from' \
                         and self._version == (3, 5):
                     self._add_syntax_error("'yield' inside async function", leaf.parent)
+        elif leaf.value == 'await':
+            if not self._context.is_async_funcdef():
+                self._add_syntax_error("'await' outside async function", leaf.parent)
         elif leaf.value == 'from' and leaf.parent.type == 'yield_arg' \
                 and self._context.is_async_funcdef():
             yield_ = leaf.parent.parent

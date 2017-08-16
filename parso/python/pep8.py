@@ -185,19 +185,19 @@ class PEP8Normalizer(ErrorFinder):
             names = node.get_defined_names()
             if len(names) > 1:
                 for name in names[:1]:
-                    self.add_issue(401, 'Multiple imports on one line', name)
+                    self.add_issue(name, 401, 'Multiple imports on one line')
         elif typ == 'lambdef':
             expr_stmt = node.parent
             # Check if it's simply defining a single name, not something like
             # foo.bar or x[1], where using a lambda could make more sense.
             if expr_stmt.type == 'expr_stmt' and any(n.type == 'name' for n in expr_stmt.children[:-2:2]):
-                self.add_issue(731, 'Do not assign a lambda expression, use a def', node)
+                self.add_issue(node, 731, 'Do not assign a lambda expression, use a def')
         elif typ == 'try_stmt':
             for child in node.children:
                 # Here we can simply check if it's an except, because otherwise
                 # it would be an except_clause.
                 if child.type == 'keyword' and child.value == 'except':
-                    self.add_issue(722, 'Do not use bare except, specify exception instead', child)
+                    self.add_issue(child, 722, 'Do not use bare except, specify exception instead')
         elif typ == 'comparison':
             for child in node.children:
                 if child.type not in ('atom_expr', 'power'):
@@ -208,7 +208,7 @@ class PEP8Normalizer(ErrorFinder):
                 atom = child.children[0]
                 if trailer.type == 'trailer' and atom.type == 'name' \
                         and atom.value == 'type':
-                    self.add_issue(721, "Do not compare types, use 'isinstance()", node)
+                    self.add_issue(node, 721, "Do not compare types, use 'isinstance()")
                     break
         elif typ == 'file_input':
             endmarker = node.children[-1]
@@ -216,7 +216,7 @@ class PEP8Normalizer(ErrorFinder):
             prefix = endmarker.prefix
             if (not prefix.endswith('\n') and (
                     prefix or prev is None or prev.value != '\n')):
-                self.add_issue(292, "No newline at end of file", endmarker)
+                self.add_issue(endmarker, 292, "No newline at end of file")
 
         if typ in _IMPORT_TYPES:
             simple_stmt = node.parent
@@ -243,7 +243,7 @@ class PEP8Normalizer(ErrorFinder):
                         if c.type in _IMPORT_TYPES or isinstance(c, Flow):
                             continue
 
-                        self.add_issue(402, 'Module level import not at top of file', node)
+                        self.add_issue(node, 402, 'Module level import not at top of file')
                         break
                     else:
                         continue
@@ -281,7 +281,7 @@ class PEP8Normalizer(ErrorFinder):
 
     def _check_tabs_spaces(self, spacing):
         if self._wrong_indentation_char in spacing.value:
-            self.add_issue(101, 'Indentation contains ' + self._indentation_type, spacing)
+            self.add_issue(spacing, 101, 'Indentation contains ' + self._indentation_type)
             return True
         return False
 
@@ -304,7 +304,7 @@ class PEP8Normalizer(ErrorFinder):
                     code = 302 if wanted == 2 else 301
                     message = "expected %s blank line, found %s" \
                         % (wanted, blank_lines)
-                    self.add_issue(code, message, spacing)
+                    self.add_issue(spacing, code, message)
                     self._wanted_newline_count = None
             else:
                 self._wanted_newline_count = None
@@ -334,7 +334,7 @@ class PEP8Normalizer(ErrorFinder):
                     code = 302 if wanted == 2 else 301
                     message = "expected %s blank line, found %s" \
                         % (wanted, actual)
-                    self.add_issue(code, message, spacing)
+                    self.add_issue(spacing, code, message)
 
             self._max_new_lines_in_prefix = 0
 
@@ -389,22 +389,22 @@ class PEP8Normalizer(ErrorFinder):
             if value.startswith('##'):
                 # Whole blocks of # should not raise an error.
                 if value.lstrip('#'):
-                    self.add_issue(266, "Too many leading '#' for block comment.", part)
+                    self.add_issue(part, 266, "Too many leading '#' for block comment.")
             elif self._on_newline:
                 if not re.match('#:? ', value) and not value == '#' \
                         and not (value.startswith('#!') and part.start_pos == (1, 0)):
-                    self.add_issue(265, "Block comment should start with '# '", part)
+                    self.add_issue(part, 265, "Block comment should start with '# '")
             else:
                 if not re.match('#:? [^ ]', value):
-                    self.add_issue(262, "Inline comment should start with '# '", part)
+                    self.add_issue(part, 262, "Inline comment should start with '# '")
 
             self._reset_newlines(spacing, leaf, is_comment=True)
         elif type_ == 'newline':
             if self._newline_count > self._get_wanted_blank_lines_count():
-                self.add_issue(303, "Too many blank lines (%s)" % self._newline_count, part)
+                self.add_issue(part, 303, "Too many blank lines (%s)" % self._newline_count)
             elif leaf in ('def', 'class') \
                     and leaf.parent.parent.type == 'decorated':
-                self.add_issue(304, "Blank lines found after function decorator", part)
+                self.add_issue(part, 304, "Blank lines found after function decorator")
 
 
             self._newline_count += 1
@@ -413,7 +413,7 @@ class PEP8Normalizer(ErrorFinder):
             # TODO is this enough checking? What about ==?
             if node.type != IndentationTypes.BACKSLASH:
                 if node.type != IndentationTypes.SUITE:
-                    self.add_issue(502, 'The backslash is redundant between brackets', part)
+                    self.add_issue(part, 502, 'The backslash is redundant between brackets')
                 else:
                     indentation = node.indentation
                     if self._in_suite_introducer and node.type == IndentationTypes.SUITE:
@@ -451,10 +451,10 @@ class PEP8Normalizer(ErrorFinder):
                 if self._new_statement:
                     if type_ == 'newline':
                         if indentation:
-                            self.add_issue(291, 'Trailing whitespace', spacing)
+                            self.add_issue(spacing, 291, 'Trailing whitespace')
                     elif indentation != should_be_indentation:
                         s = '%s %s' % (len(self._config.indentation), self._indentation_type)
-                        self.add_issue(111, 'Indentation is not a multiple of ' + s, part)
+                        self.add_issue(part, 111, 'Indentation is not a multiple of ' + s)
                 else:
                     if value in '])}':
                         should_be_indentation = node.bracket_indentation
@@ -463,31 +463,31 @@ class PEP8Normalizer(ErrorFinder):
                     if self._in_suite_introducer and indentation == \
                                 node.get_latest_suite_node().indentation \
                                 + self._config.indentation:
-                            self.add_issue(129, "Line with same indent as next logical block", part)
+                            self.add_issue(part, 129, "Line with same indent as next logical block")
                     elif indentation != should_be_indentation:
                         if not self._check_tabs_spaces(spacing) and part.value != '\n':
                             if value in '])}':
                                 if node.type == IndentationTypes.VERTICAL_BRACKET:
-                                    self.add_issue(124, "Closing bracket does not match visual indentation", part)
+                                    self.add_issue(part, 124, "Closing bracket does not match visual indentation")
                                 else:
-                                    self.add_issue(123, "Losing bracket does not match indentation of opening bracket's line", part)
+                                    self.add_issue(part, 123, "Losing bracket does not match indentation of opening bracket's line")
                             else:
                                 if len(indentation) < len(should_be_indentation):
                                     if node.type == IndentationTypes.VERTICAL_BRACKET:
-                                        self.add_issue(128, 'Continuation line under-indented for visual indent', part)
+                                        self.add_issue(part, 128, 'Continuation line under-indented for visual indent')
                                     elif node.type == IndentationTypes.BACKSLASH:
-                                        self.add_issue(122, 'Continuation line missing indentation or outdented', part)
+                                        self.add_issue(part, 122, 'Continuation line missing indentation or outdented')
                                     elif node.type == IndentationTypes.IMPLICIT:
-                                        self.add_issue(135, 'xxx', part)
+                                        self.add_issue(part, 135, 'xxx')
                                     else:
-                                        self.add_issue(121, 'Continuation line under-indented for hanging indent', part)
+                                        self.add_issue(part, 121, 'Continuation line under-indented for hanging indent')
                                 else:
                                     if node.type == IndentationTypes.VERTICAL_BRACKET:
-                                        self.add_issue(127, 'Continuation line over-indented for visual indent', part)
+                                        self.add_issue(part, 127, 'Continuation line over-indented for visual indent')
                                     elif node.type == IndentationTypes.IMPLICIT:
-                                        self.add_issue(136, 'xxx', part)
+                                        self.add_issue(part, 136, 'xxx')
                                     else:
-                                        self.add_issue(126, 'Continuation line over-indented for hanging indent', part)
+                                        self.add_issue(part, 126, 'Continuation line over-indented for hanging indent')
         else:
             self._check_spacing(part, spacing)
 
@@ -535,10 +535,10 @@ class PEP8Normalizer(ErrorFinder):
                     report = False
             if report:
                 self.add_issue(
+                    part,
                     501,
                     'Line too long (%s > %s characters)' %
                         (last_column, self._config.max_characters),
-                    part
                 )
 
     def _check_spacing(self, part, spacing):
@@ -557,29 +557,29 @@ class PEP8Normalizer(ErrorFinder):
 
         type_ = part.type
         if '\t' in spaces:
-            self.add_issue(223, 'Used tab to separate tokens', spacing)
+            self.add_issue(spacing, 223, 'Used tab to separate tokens')
         elif type_ == 'comment':
             if len(spaces) < self._config.spaces_before_comment:
-                self.add_issue(261, 'At least two spaces before inline comment', spacing)
+                self.add_issue(spacing, 261, 'At least two spaces before inline comment')
         elif type_ == 'newline':
-            add_if_spaces(291, 'Trailing whitespace', spacing)
+            add_if_spaces(spacing, 291, 'Trailing whitespace')
         elif len(spaces) > 1:
-            self.add_issue(221, 'Multiple spaces used', spacing)
+            self.add_issue(spacing, 221, 'Multiple spaces used')
         else:
             if prev in _OPENING_BRACKETS:
                 message = "Whitespace after '%s'" % part.value
-                add_if_spaces(201, message, spacing)
+                add_if_spaces(spacing, 201, message)
             elif part in _CLOSING_BRACKETS:
                 message = "Whitespace before '%s'" % part.value
-                add_if_spaces(202, message, spacing)
+                add_if_spaces(spacing, 202, message)
             elif part in (',', ';') or part == ':' \
                     and part.parent.type not in  _POSSIBLE_SLICE_PARENTS:
                 message = "Whitespace before '%s'" % part.value
-                add_if_spaces(203, message, spacing)
+                add_if_spaces(spacing, 203, message)
             elif prev == ':' and prev.parent.type in _POSSIBLE_SLICE_PARENTS:
                 pass # TODO
             elif prev in (',', ';', ':'):
-                add_not_spaces(231, "missing whitespace after '%s'", spacing)
+                add_not_spaces(spacing, 231, "missing whitespace after '%s'")
             elif part == ':':  # Is a subscript
                 # TODO
                 pass
@@ -600,33 +600,33 @@ class PEP8Normalizer(ErrorFinder):
                     else:
                         param = prev.parent
                     if param.type == 'param' and param.annotation:
-                        add_not_spaces(252, 'Expected spaces around annotation equals', spacing)
+                        add_not_spaces(spacing, 252, 'Expected spaces around annotation equals')
                     else:
-                        add_if_spaces(251, 'Unexpected spaces around keyword / parameter equals', spacing)
+                        add_if_spaces(spacing, 251, 'Unexpected spaces around keyword / parameter equals')
                 elif part in _BITWISE_OPERATOR or prev in _BITWISE_OPERATOR:
-                    add_not_spaces(227, 'Missing whitespace around bitwise or shift operator', spacing)
+                    add_not_spaces(spacing, 227, 'Missing whitespace around bitwise or shift operator')
                 elif part == '%' or prev == '%':
-                    add_not_spaces(228, 'Missing whitespace around modulo operator', spacing)
+                    add_not_spaces(spacing, 228, 'Missing whitespace around modulo operator')
                 else:
                     message_225 = 'Missing whitespace between tokens'
-                    add_not_spaces(225, message_225, spacing)
+                    add_not_spaces(spacing, 225, message_225)
             elif type_ == 'keyword' or prev.type == 'keyword':
-                add_not_spaces(275, 'Missing whitespace around keyword', spacing)
+                add_not_spaces(spacing, 275, 'Missing whitespace around keyword')
             else:
                 prev_spacing = self._previous_spacing
                 if prev in _ALLOW_SPACE and spaces != prev_spacing.value \
                         and '\n' not in self._previous_leaf.prefix:
                     message = "Whitespace before operator doesn't match with whitespace after"
-                    self.add_issue(229, message, spacing)
+                    self.add_issue(spacing, 229, message)
 
                 if spaces and part not in _ALLOW_SPACE and prev not in _ALLOW_SPACE:
                     message_225 = 'Missing whitespace between tokens'
                     #print('xy', spacing)
-                    #self.add_issue(225, message_225, spacing)
+                    #self.add_issue(spacing, 225, message_225)
                     # TODO why only brackets?
                     if part in _OPENING_BRACKETS:
                         message = "Whitespace before '%s'" % part.value
-                        add_if_spaces(211, message, spacing)
+                        add_if_spaces(spacing, 211, message)
 
     def _analyse_non_prefix(self, leaf):
         typ = leaf.type
@@ -634,9 +634,9 @@ class PEP8Normalizer(ErrorFinder):
             if leaf.is_definition():
                 message = "Do not define %s named 'l', 'O', or 'I' one line"
                 if leaf.parent.type == 'class' and leaf.parent.name == leaf:
-                    self.add_issue(742, message % 'classes', leaf)
+                    self.add_issue(leaf, 742, message % 'classes')
                 elif leaf.parent.type == 'function' and leaf.parent.name == leaf:
-                    self.add_issue(743, message % 'function', leaf)
+                    self.add_issue(leaf, 743, message % 'function')
                 else:
                     self.add_issuadd_issue(741, message % 'variables', leaf)
         elif leaf.value == ':':
@@ -644,14 +644,14 @@ class PEP8Normalizer(ErrorFinder):
                 next_leaf = leaf.get_next_leaf()
                 if next_leaf.type != 'newline':
                     if leaf.parent.type == 'funcdef':
-                        self.add_issue(704, 'Multiple statements on one line (def)', next_leaf)
+                        self.add_issue(next_leaf, 704, 'Multiple statements on one line (def)')
                     else:
-                        self.add_issue(701, 'Multiple statements on one line (colon)', next_leaf)
+                        self.add_issue(next_leaf, 701, 'Multiple statements on one line (colon)')
         elif leaf.value == ';':
             if leaf.get_next_leaf().type in ('newline', 'endmarker'):
-                self.add_issue(703, 'Statement ends with a semicolon', leaf)
+                self.add_issue(leaf, 703, 'Statement ends with a semicolon')
             else:
-                self.add_issue(702, 'Multiple statements on one line (semicolon)', leaf)
+                self.add_issue(leaf, 702, 'Multiple statements on one line (semicolon)')
         elif leaf.value in ('==', '!='):
             comparison = leaf.parent
             index = comparison.children.index(leaf)
@@ -661,19 +661,19 @@ class PEP8Normalizer(ErrorFinder):
                 if node.type == 'keyword' or node.type == 'name':
                     if node.value == 'None':
                         message = "comparison to None should be 'if cond is None:'"
-                        self.add_issue(711, message, leaf)
+                        self.add_issue(leaf, 711, message)
                         break
                     elif node.value in ('True', 'False'):
                         message = "comparison to False/True should be 'if cond is True:' or 'if cond:'"
-                        self.add_issue(712, message, leaf)
+                        self.add_issue(leaf, 712, message)
                         break
         elif leaf.value in ('in', 'is'):
             comparison = leaf.parent
             if comparison.type == 'comparison' and comparison.parent.type == 'not_test':
                 if leaf.value == 'in':
-                    self.add_issue(713, "test for membership should be 'not in'", leaf)
+                    self.add_issue(leaf, 713, "test for membership should be 'not in'")
                 else:
-                    self.add_issue(714, "test for object identity should be 'is not'", leaf)
+                    self.add_issue(leaf, 714, "test for object identity should be 'is not'")
         elif typ == 'string':
             # Checking multiline strings
             for i, line in enumerate(leaf.value.splitlines()[1:]):
@@ -682,9 +682,9 @@ class PEP8Normalizer(ErrorFinder):
                 # TODO check multiline indentation.
         elif typ == 'endmarker':
             if self._newline_count >= 2:
-                self.add_issue(391, 'Blank line at end of file', leaf)
+                self.add_issue(leaf, 391, 'Blank line at end of file')
 
-    def add_issue(self, code, message, node):
+    def add_issue(self, node, code, message):
         if self._previous_leaf is not None:
             if search_ancestor(self._previous_leaf, 'error_node') is not None:
                 return
@@ -692,7 +692,7 @@ class PEP8Normalizer(ErrorFinder):
                 return
         if search_ancestor(node, 'error_node') is not None:
             return
-        super(PEP8Normalizer, self).add_issue(code, message, node)
+        super(PEP8Normalizer, self).add_issue(node, code, message)
 
 
 class PEP8NormalizerConfig(ErrorFinderConfig):
