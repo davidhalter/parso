@@ -44,6 +44,8 @@ class Normalizer(object):
 
 class NormalizerConfig(object):
     normalizer_class = Normalizer
+    rule_value_map = {}
+    rule_type_map = {}
 
     def create_normalizer(self, grammar):
         if self.normalizer_class is None:
@@ -52,21 +54,30 @@ class NormalizerConfig(object):
         return self.normalizer_class(grammar, self)
 
     @classmethod
-    def register_rule(cls, rule):
+    def register_rule(cls, **kwargs):
         """
         Use it as a class decorator:
 
         >>> normalizer = NormalizerConfig()
-        >>> @normalizer.register_rule
+        >>> @normalizer.register_rule(value='foo')
         ... class MyRule(Rule):
         ...     error_code = 42
         """
-        try:
-            rules = cls.rules
-        except AttributeError:
-            rules = cls.rules = []
-        rules.append(rule)
-        return rule
+        return cls._register_rule(**kwargs)
+
+    @classmethod
+    def _register_rule(cls, value=None, type=None):
+        if value is None and type is None:
+            raise ValueError("You must register at least something.")
+
+        def decorator(func):
+            if value is not None:
+                cls.rule_value_map[value] = func
+            if type is not None:
+                cls.rule_type_map[type] = func
+            return func
+
+        return decorator
 
 
 class Issue(object):
@@ -93,4 +104,24 @@ class Issue(object):
 class Rule(object):
     error_code = None
     message = None
-    type = None
+
+    def check(self, node):
+        raise NotImplementedError()
+
+    def get_error_node(self, node):
+        return node
+
+    def add_error(self, error_code=None, message=None):
+        if error_code is None:
+            error_code = self.error_code
+            if error_code is None:
+                raise ValueError("The error code on the class is not set.")
+
+        if message is None:
+            message = self.message
+            if message is None:
+                raise ValueError("The message on the class is not set.")
+
+    def feed_node(self, node):
+        if self.check(node):
+            error_node = self.get_error_node(node)

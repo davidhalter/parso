@@ -4,7 +4,7 @@ import warnings
 import re
 from contextlib import contextmanager
 
-from parso.normalizer import Normalizer, NormalizerConfig, Issue
+from parso.normalizer import Normalizer, NormalizerConfig, Issue, Rule
 from parso.python.tree import search_ancestor
 
 _BLOCK_STMTS = ('if_stmt', 'while_stmt', 'for_stmt', 'try_stmt', 'with_stmt')
@@ -671,9 +671,6 @@ class ErrorFinder(Normalizer):
                         and leaf.get_next_leaf() != 'from' \
                         and self._version == (3, 5):
                     self._add_syntax_error("'yield' inside async function", leaf.parent)
-        elif leaf.value == 'await':
-            if not self._context.is_async_funcdef():
-                self._add_syntax_error("'await' outside async function", leaf.parent)
         elif leaf.value == 'from' and leaf.parent.type == 'yield_arg' \
                 and self._context.is_async_funcdef():
             yield_ = leaf.parent.parent
@@ -783,3 +780,22 @@ class ErrorFinder(Normalizer):
 
 class ErrorFinderConfig(NormalizerConfig):
     normalizer_class = ErrorFinder
+
+
+class SyntaxRule(Rule):
+    code = 901
+
+
+class IndentationRule(Rule):
+    code = 903
+
+
+@ErrorFinderConfig.register_rule(value='await')
+class AwaitOutsideAsync(SyntaxRule):
+    message = "'await' outside async function"
+
+    def check_leaf_value(self, leaf):
+        return not self._context.is_async_funcdef()
+
+    def get_error_node(self, node):
+        return node.parent  # Return the whole await statement.
