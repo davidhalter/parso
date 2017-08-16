@@ -798,4 +798,5 @@ class AwaitOutsideAsync(SyntaxRule):
         return not self._context.is_async_funcdef()
 
     def get_error_node(self, node):
-        return node.parent  # Return the whole await statement.
+        # Return the whole await statement.
+        return node.parent

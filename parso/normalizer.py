@@ -102,19 +102,22 @@ class Issue(object):
 
 
 class Rule(object):
-    error_code = None
+    code = None
     message = None
 
-    def check(self, node):
+    def __init__(self, normalizer):
+        self._normalizer = normalizer
+
+    def is_issue(self, node):
         raise NotImplementedError()
 
-    def get_error_node(self, node):
+    def get_node(self, node):
         return node
 
-    def add_error(self, error_code=None, message=None):
-        if error_code is None:
-            error_code = self.error_code
-            if error_code is None:
+    def add_issue(self, node, code=None, message=None):
+        if code is None:
+            code = self.code
+            if code is None:
                 raise ValueError("The error code on the class is not set.")
 
         if message is None:
@@ -122,6 +125,9 @@ class Rule(object):
             if message is None:
                 raise ValueError("The message on the class is not set.")
 
+        self._normalizer.add_issue(code, message, node)
+
     def feed_node(self, node):
         if self.check(node):
-            error_node = self.get_error_node(node)
+            issue_node = self.get_node(node)
+            self.add_issue(issue_node)
