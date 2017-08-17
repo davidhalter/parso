@@ -596,40 +596,13 @@ class ErrorFinder(Normalizer):
                         else:
                             message = 'EOF while scanning triple-quoted string literal'
                 self._add_syntax_error(message, leaf)
-        elif leaf.value in ('yield', 'return'):
-            if self.context.node.type != 'funcdef':
-                self._add_syntax_error("'%s' outside function" % leaf.value, leaf.parent)
-            elif self.context.is_async_funcdef() \
-                    and any(self.context.node.iter_yield_exprs()):
-                if leaf.value == 'return' and leaf.parent.type == 'return_stmt':
-                    self._add_syntax_error("'return' with value in async generator", leaf.parent)
-                elif leaf.value == 'yield' \
-                        and leaf.get_next_leaf() != 'from' \
-                        and self.version == (3, 5):
-                    self._add_syntax_error("'yield' inside async function", leaf.parent)
-        elif leaf.value == '*':
-            params = leaf.parent
-            if params.type == 'parameters' and params:
-                after = params.children[params.children.index(leaf) + 1:]
-                after = [child for child in after
-                         if child not in (',', ')') and not child.star_count]
-                if len(after) == 0:
-                    self._add_syntax_error("named arguments must follow bare *", leaf)
-        elif leaf.value == '**':
-            if leaf.parent.type == 'dictorsetmaker':
-                comp_for = leaf.get_next_sibling().get_next_sibling()
-                if comp_for is not None and comp_for.type == 'comp_for':
-                    # {**{} for a in [1]}
-                    message = "dict unpacking cannot be used in dict comprehension"
-                    # TODO this should probably get a better end_pos including
-                    #      the next sibling of leaf.
-                    self._add_syntax_error(message, leaf)
+            return ''
         elif leaf.value == ':':
             parent = leaf.parent
             if parent.type in ('classdef', 'funcdef'):
                 self.context = self.context.add_context(parent)
 
-
+        # The rest is rule based.
         return super(ErrorFinder, self).visit_leaf(leaf)
 
     def _check_assignment(self, node, is_deletion=False):
@@ -838,3 +811,50 @@ class StringChecks(SyntaxRule):
                 except ValueError as e:
                     self.add_issue(leaf, message='(value error) ' + str(e))
 
+
+@ErrorFinder.register_rule(value='*')
+class StarCheck(SyntaxRule):
+    message = "named arguments must follow bare *"
+
+    def is_issue(self, leaf):
+        params = leaf.parent
+        if params.type == 'parameters' and params:
+            after = params.children[params.children.index(leaf) + 1:]
+            after = [child for child in after
+                     if child not in (',', ')') and not child.star_count]
+            return len(after) == 0
+
+
+@ErrorFinder.register_rule(value='**')
+class StarStarCheck(SyntaxRule):
+    # e.g. {**{} for a in [1]}
+    # TODO this should probably get a better end_pos including
+    #      the next sibling of leaf.
+    message = "dict unpacking cannot be used in dict comprehension"
+
+    def is_issue(self, leaf):
+        if leaf.parent.type == 'dictorsetmaker':
+            comp_for = leaf.get_next_sibling().get_next_sibling()
+            return comp_for is not None and comp_for.type == 'comp_for'
+
+
+@ErrorFinder.register_rule(value='yield')
+@ErrorFinder.register_rule(value='return')
+class ReturnAndYieldChecks(SyntaxRule):
+    message = "'return' with value in async generator"
+    message_async_yield = "'yield' inside async function"
+
+    def get_node(self, leaf):
+        return leaf.parent
+
+    def is_issue(self, leaf):
+        if self._normalizer.context.node.type != 'funcdef':
+            self.add_issue(self.get_node(leaf), message="'%s' outside function" % leaf.value)
+        elif self._normalizer.context.is_async_funcdef() \
+                and any(self._normalizer.context.node.iter_yield_exprs()):
+            if leaf.value == 'return' and leaf.parent.type == 'return_stmt':
+                return True
+            elif leaf.value == 'yield' \
+                    and leaf.get_next_leaf() != 'from' \
+                    and self._normalizer.version == (3, 5):
+                self.add_issue(self.get_node(leaf), message=self.message_async_yield)
