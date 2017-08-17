@@ -642,19 +642,6 @@ class ErrorFinder(Normalizer):
                 except ValueError as e:
                     self._add_syntax_error('(value error) ' + str(e), leaf)
 
-        elif leaf.value == 'continue':
-            in_loop = False
-            for block in self.context.blocks:
-                if block.type == 'for_stmt':
-                    in_loop = True
-                if block.type == 'try_stmt':
-                    last_block = block.children[-3]
-                    if last_block == 'finally' and leaf.start_pos > last_block.start_pos:
-                        message = "'continue' not supported inside 'finally' clause"
-                        self._add_syntax_error(message, leaf)
-            if not in_loop:
-                message = "'continue' not properly in loop"
-                self._add_syntax_error(message, leaf)
         elif leaf.value in ('yield', 'return'):
             if self.context.node.type != 'funcdef':
                 self._add_syntax_error("'%s' outside function" % leaf.value, leaf.parent)
@@ -811,3 +798,22 @@ class _BreakOutsideLoop(SyntaxRule):
             if block.type in ('for_stmt', 'while_stmt'):
                 in_loop = True
         return not in_loop
+
+
+@ErrorFinder.register_rule(value='continue')
+class _ContinueChecks(SyntaxRule):
+    message = "'continue' not properly in loop"
+    message_in_finally = "'continue' not supported inside 'finally' clause"
+
+    def is_issue(self, leaf):
+        in_loop = False
+        for block in self._normalizer.context.blocks:
+            if block.type == 'for_stmt':
+                in_loop = True
+            if block.type == 'try_stmt':
+                last_block = block.children[-3]
+                if last_block == 'finally' and leaf.start_pos > last_block.start_pos:
+                    self.add_issue(leaf, message=self.message_in_finally)
+                    return False  # Error already added
+        if not in_loop:
+            return True
