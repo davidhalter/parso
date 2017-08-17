@@ -1,22 +1,32 @@
 from contextlib import contextmanager
 
+from parso._compatibility import use_metaclass
 
-class Normalizer(object):
-    _rule_value_classes = {}
-    _rule_type_classes = {}
 
+class _NormalizerMeta(type):
+    def __new__(cls, name, bases, dct):
+        new_cls = type.__new__(cls, name, bases, dct)
+        new_cls.rule_value_classes = {}
+        new_cls.rule_type_classes = {}
+        return new_cls
+
+
+class Normalizer(use_metaclass(_NormalizerMeta)):
     def __init__(self, grammar, config):
         self._grammar = grammar
         self._config = config
         self.issues = []
 
-        self._rule_type_instances = self._instantiate_rules(self._rule_type_classes)
-        self._rule_value_instances = self._instantiate_rules(self._rule_value_classes)
+        self._rule_type_instances = self._instantiate_rules('rule_type_classes')
+        self._rule_value_instances = self._instantiate_rules('rule_value_classes')
 
-    def _instantiate_rules(self, rules_map):
+    def _instantiate_rules(self, attr):
         dct = {}
-        for type_, rule_classes in rules_map.items():
-            dct[type_] = [rule_cls(self) for rule_cls in rule_classes]
+        for base in type(self).mro():
+            rules_map = getattr(base, attr, {})
+            for type_, rule_classes in rules_map.items():
+                new = [rule_cls(self) for rule_cls in rule_classes]
+                dct.setdefault(type_, []).extend(new)
         return dct
 
     def walk(self, node):
@@ -36,14 +46,15 @@ class Normalizer(object):
 
     @contextmanager
     def visit_node(self, node):
+        self._check_type_rules(node)
+        yield
+
+    def _check_type_rules(self, node):
         for rule in self._rule_type_instances.get(node.type, []):
             rule.feed_node(node)
 
-        yield
-
     def visit_leaf(self, leaf):
-        for rule in self._rule_type_instances.get(leaf.type, []):
-            rule.feed_node(leaf)
+        self._check_type_rules(leaf)
 
         for rule in self._rule_value_instances.get(leaf.value, []):
             rule.feed_node(leaf)
@@ -81,9 +92,9 @@ class Normalizer(object):
 
         def decorator(rule_cls):
             if value is not None:
-                cls._rule_value_classes.setdefault(value, []).append(rule_cls)
+                cls.rule_value_classes.setdefault(value, []).append(rule_cls)
             if type is not None:
-                cls._rule_type_classes.setdefault(type, []).append(rule_cls)
+                cls.rule_type_classes.setdefault(type, []).append(rule_cls)
             return rule_cls
 
         return decorator
@@ -133,20 +144,24 @@ class Rule(object):
     def get_node(self, node):
         return node
 
+    def _get_message(self, message):
+        if message is None:
+            message = self.message
+            if message is None:
+                raise ValueError("The message on the class is not set.")
+        return message
+
     def add_issue(self, node, code=None, message=None):
         if code is None:
             code = self.code
             if code is None:
                 raise ValueError("The error code on the class is not set.")
 
-        if message is None:
-            message = self.message
-            if message is None:
-                raise ValueError("The message on the class is not set.")
+        message = self._get_message(message)
 
         self._normalizer.add_issue(node, code, message)
 
     def feed_node(self, node):
-        if self.check(node):
+        if self.is_issue(node):
             issue_node = self.get_node(node)
             self.add_issue(issue_node)

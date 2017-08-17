@@ -270,7 +270,7 @@ class ErrorFinder(Normalizer):
                 return _Context(node, self._add_syntax_error, parent_context)
             return parent_context
 
-        self._context = create_context(node) or _Context(node, self._add_syntax_error)
+        self.context = create_context(node) or _Context(node, self._add_syntax_error)
         self._indentation_count = 0
 
     def visit(self, node):
@@ -285,6 +285,8 @@ class ErrorFinder(Normalizer):
 
     @contextmanager
     def visit_node(self, node):
+        self._check_type_rules(node)
+
         if node.type == 'error_node':
             leaf = node.get_next_leaf()
             if node.children[-1].type == 'newline':
@@ -312,8 +314,8 @@ class ErrorFinder(Normalizer):
                 if expr_list.type != 'expr_list':  # Already handled.
                     self._check_assignment(expr_list)
 
-            with self._context.add_block(node):
-                if len(self._context.blocks) == _MAX_BLOCK_SIZE:
+            with self.context.add_block(node):
+                if len(self.context.blocks) == _MAX_BLOCK_SIZE:
                     self._add_syntax_error("too many statically nested blocks", node)
                 yield
             return
@@ -338,7 +340,7 @@ class ErrorFinder(Normalizer):
                     message = "future feature %s is not defined" % name
                     self._add_syntax_error(message, node)
         elif node.type == 'import_from':
-            if node.is_star_import() and self._context.parent_context is not None:
+            if node.is_star_import() and self.context.parent_context is not None:
                 message = "import * only allowed at module level"
                 self._add_syntax_error(message, node)
         elif node.type == 'import_as_names':
@@ -404,7 +406,7 @@ class ErrorFinder(Normalizer):
                 self._check_assignment(expr_list)
 
             if node.children[0] == 'async' \
-                    and not self._context.is_async_funcdef():
+                    and not self.context.is_async_funcdef():
                 message = "asynchronous comprehension outside of an asynchronous function"
                 self._add_syntax_error(message, node)
         elif node.type == 'arglist':
@@ -529,12 +531,12 @@ class ErrorFinder(Normalizer):
                     message = "keyword can't be an expression"
                 self._add_syntax_error(message, first)
         elif node.type == 'nonlocal_stmt':
-            if self._context.parent_context is None:
+            if self.context.parent_context is None:
                 message = "nonlocal declaration not allowed at module level"
                 self._add_syntax_error(message, node)
-            elif self._context.is_function():
+            elif self.context.is_function():
                 for nonlocal_name in node.children[1::2]:
-                    param_names = [p.name.value for p in self._context.node.get_params()]
+                    param_names = [p.name.value for p in self.context.node.get_params()]
                     if nonlocal_name.value == node:
                         pass
         elif node.type == 'expr_stmt':
@@ -565,9 +567,9 @@ class ErrorFinder(Normalizer):
         if node.type == 'suite':
             self._indentation_count -= 1
         elif node.type in ('classdef', 'funcdef'):
-            context = self._context
-            self._context = context.parent_context
-            self._context.close_child_context(context)
+            context = self.context
+            self.context = context.parent_context
+            self.context.close_child_context(context)
 
     def visit_leaf(self, leaf):
         if leaf.type == 'error_leaf':
@@ -604,7 +606,7 @@ class ErrorFinder(Normalizer):
             if leaf.value == 'None' and self._version < (3, 0) and leaf.is_definition():
                 self._add_syntax_error('cannot assign to None', leaf)
 
-            self._context.add_name(leaf)
+            self.context.add_name(leaf)
         elif leaf.type == 'string':
             string_prefix = leaf.string_prefix.lower()
             if 'b' in string_prefix \
@@ -642,7 +644,7 @@ class ErrorFinder(Normalizer):
 
         elif leaf.value == 'continue':
             in_loop = False
-            for block in self._context.blocks:
+            for block in self.context.blocks:
                 if block.type == 'for_stmt':
                     in_loop = True
                 if block.type == 'try_stmt':
@@ -655,27 +657,24 @@ class ErrorFinder(Normalizer):
                 self._add_syntax_error(message, leaf)
         elif leaf.value == 'break':
             in_loop = False
-            for block in self._context.blocks:
+            for block in self.context.blocks:
                 if block.type in ('for_stmt', 'while_stmt'):
                     in_loop = True
             if not in_loop:
                 self._add_syntax_error("'break' outside loop", leaf)
         elif leaf.value in ('yield', 'return'):
-            if self._context.node.type != 'funcdef':
+            if self.context.node.type != 'funcdef':
                 self._add_syntax_error("'%s' outside function" % leaf.value, leaf.parent)
-            elif self._context.is_async_funcdef() \
-                    and any(self._context.node.iter_yield_exprs()):
+            elif self.context.is_async_funcdef() \
+                    and any(self.context.node.iter_yield_exprs()):
                 if leaf.value == 'return' and leaf.parent.type == 'return_stmt':
                     self._add_syntax_error("'return' with value in async generator", leaf.parent)
                 elif leaf.value == 'yield' \
                         and leaf.get_next_leaf() != 'from' \
                         and self._version == (3, 5):
                     self._add_syntax_error("'yield' inside async function", leaf.parent)
-        elif leaf.value == 'await':
-            if not self._context.is_async_funcdef():
-                self._add_syntax_error("'await' outside async function", leaf.parent)
         elif leaf.value == 'from' and leaf.parent.type == 'yield_arg' \
-                and self._context.is_async_funcdef():
+                and self.context.is_async_funcdef():
             yield_ = leaf.parent.parent
             self._add_syntax_error("'yield from' inside async function", yield_)
         elif leaf.value == '*':
@@ -698,10 +697,10 @@ class ErrorFinder(Normalizer):
         elif leaf.value == ':':
             parent = leaf.parent
             if parent.type in ('classdef', 'funcdef'):
-                self._context = self._context.add_context(parent)
+                self.context = self.context.add_context(parent)
 
 
-        return ''
+        return super(ErrorFinder, self).visit_leaf(leaf)
 
     def _check_assignment(self, node, is_deletion=False):
         error = None
@@ -775,7 +774,7 @@ class ErrorFinder(Normalizer):
         self._error_dict.setdefault(line, args)
 
     def finalize(self):
-        self._context.finalize()
+        self.context.finalize()
 
         for code, message, node in self._error_dict.values():
             self.issues.append(Issue(node, code, message))
@@ -788,6 +787,10 @@ class ErrorFinderConfig(NormalizerConfig):
 class SyntaxRule(Rule):
     code = 901
 
+    def _get_message(self, message):
+        message = super(SyntaxRule, self)._get_message(message)
+        return "SyntaxError: " + message
+
 
 class IndentationRule(Rule):
     code = 903
@@ -797,8 +800,8 @@ class IndentationRule(Rule):
 class AwaitOutsideAsync(SyntaxRule):
     message = "'await' outside async function"
 
-    def check_leaf_value(self, leaf):
-        return not self._context.is_async_funcdef()
+    def is_issue(self, leaf):
+        return not self._normalizer.context.is_async_funcdef()
 
     def get_error_node(self, node):
         # Return the whole await statement.
