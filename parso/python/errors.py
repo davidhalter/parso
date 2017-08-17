@@ -18,10 +18,6 @@ ALLOWED_FUTURES = (
 )
 
 
-def _is_bytes_literal(string):
-    return 'b' in string.string_prefix.lower()
-
-
 def _iter_stmts(scope):
     """
     Iterates over all statements and splits up  simple_stmt.
@@ -465,16 +461,6 @@ class ErrorFinder(Normalizer):
                             # f(x=2, y)
                             message = "positional argument follows keyword argument"
                             self._add_syntax_error(message, argument)
-        elif node.type == 'atom':
-            first = node.children[0]
-            # e.g. 's' b''
-            message = "cannot mix bytes and nonbytes literals"
-            if first.type == 'string' and self.version >= (3, 0):
-                first_is_bytes = _is_bytes_literal(first)
-                for string in node.children[1:]:
-                    if first_is_bytes != _is_bytes_literal(string):
-                        self._add_syntax_error(message, node)
-                        break
         elif node.type in ('parameters', 'lambdef'):
             param_names = set()
             default_only = False
@@ -858,3 +844,19 @@ class ReturnAndYieldChecks(SyntaxRule):
                     and leaf.get_next_leaf() != 'from' \
                     and self._normalizer.version == (3, 5):
                 self.add_issue(self.get_node(leaf), message=self.message_async_yield)
+
+@ErrorFinder.register_rule(type='atom')
+class BytesAndStringMix(SyntaxRule):
+    # e.g. 's' b''
+    message = "cannot mix bytes and nonbytes literals"
+
+    def _is_bytes_literal(self, string):
+        return 'b' in string.string_prefix.lower()
+
+    def is_issue(self, node):
+        first = node.children[0]
+        if first.type == 'string' and self._normalizer.version >= (3, 0):
+            first_is_bytes = self._is_bytes_literal(first)
+            for string in node.children[1:]:
+                if first_is_bytes != self._is_bytes_literal(string):
+                    return True
