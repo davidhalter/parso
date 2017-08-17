@@ -793,7 +793,7 @@ class IndentationRule(Rule):
     code = 903
 
 
-@ErrorFinderConfig.register_rule(value='await')
+@ErrorFinder.register_rule(value='await')
 class AwaitOutsideAsync(SyntaxRule):
     message = "'await' outside async function"
 

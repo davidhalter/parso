@@ -712,7 +712,7 @@ class PEP8NormalizerConfig(ErrorFinderConfig):
         self.spaces_before_comment = spaces_before_comment
 
 
-@PEP8NormalizerConfig.register_rule(type='endmarker')
+@PEP8Normalizer.register_rule(type='endmarker')
 class BlankLineAtEnd(Rule):
     code = 392
     message = 'Blank line at end of file'

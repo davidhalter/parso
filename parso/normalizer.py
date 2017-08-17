@@ -2,10 +2,22 @@ from contextlib import contextmanager
 
 
 class Normalizer(object):
+    _rule_value_classes = {}
+    _rule_type_classes = {}
+
     def __init__(self, grammar, config):
         self._grammar = grammar
         self._config = config
         self.issues = []
+
+        self._rule_type_instances = self._instantiate_rules(self._rule_type_classes)
+        self._rule_value_instances = self._instantiate_rules(self._rule_value_classes)
+
+    def _instantiate_rules(self, rules_map):
+        dct = {}
+        for type_, rule_classes in rules_map.items():
+            dct[type_] = [rule_cls(self) for rule_cls in rule_classes]
+        return dct
 
     def walk(self, node):
         self.initialize(node)
@@ -24,9 +36,18 @@ class Normalizer(object):
 
     @contextmanager
     def visit_node(self, node):
+        for rule in self._rule_type_instances.get(node.type, []):
+            rule.feed_node(node)
+
         yield
 
     def visit_leaf(self, leaf):
+        for rule in self._rule_type_instances.get(leaf.type, []):
+            rule.feed_node(leaf)
+
+        for rule in self._rule_value_instances.get(leaf.value, []):
+            rule.feed_node(leaf)
+
         return leaf.prefix + leaf.value
 
     def initialize(self, node):
@@ -41,24 +62,12 @@ class Normalizer(object):
             self.issues.append(issue)
         return True
 
-
-class NormalizerConfig(object):
-    normalizer_class = Normalizer
-    rule_value_map = {}
-    rule_type_map = {}
-
-    def create_normalizer(self, grammar):
-        if self.normalizer_class is None:
-            return None
-
-        return self.normalizer_class(grammar, self)
-
     @classmethod
     def register_rule(cls, **kwargs):
         """
         Use it as a class decorator:
 
-        >>> normalizer = NormalizerConfig()
+        >>> normalizer = Normalizer('grammar', 'config')
         >>> @normalizer.register_rule(value='foo')
         ... class MyRule(Rule):
         ...     error_code = 42
@@ -70,14 +79,24 @@ class NormalizerConfig(object):
         if value is None and type is None:
             raise ValueError("You must register at least something.")
 
-        def decorator(func):
+        def decorator(rule_cls):
             if value is not None:
-                cls.rule_value_map[value] = func
+                cls._rule_value_classes.setdefault(value, []).append(rule_cls)
             if type is not None:
-                cls.rule_type_map[type] = func
-            return func
+                cls._rule_type_classes.setdefault(type, []).append(rule_cls)
+            return rule_cls
 
         return decorator
+
+
+class NormalizerConfig(object):
+    normalizer_class = Normalizer
+
+    def create_normalizer(self, grammar):
+        if self.normalizer_class is None:
+            return None
+
+        return self.normalizer_class(grammar, self)
 
 
 class Issue(object):
