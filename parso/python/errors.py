@@ -258,7 +258,7 @@ class ErrorFinder(Normalizer):
     def __init__(self, *args, **kwargs):
         super(ErrorFinder, self).__init__(*args, **kwargs)
         self._error_dict = {}
-        self._version = self._grammar.version_info
+        self.version = self._grammar.version_info
 
     def initialize(self, node):
         def create_context(node):
@@ -327,7 +327,7 @@ class ErrorFinder(Normalizer):
             for from_name, future_name in node.get_paths():
                 name = future_name.value
                 allowed_futures = list(ALLOWED_FUTURES)
-                if self._version >= (3, 5):
+                if self.version >= (3, 5):
                     allowed_futures.append('generator_stop')
 
                 if name== 'braces':
@@ -385,7 +385,7 @@ class ErrorFinder(Normalizer):
                 if node.parent.children[1].type == 'comp_for':
                     message = "iterable unpacking cannot be used in comprehension"
                     self._add_syntax_error(message, node)
-            if self._version <= (3, 4):
+            if self.version <= (3, 4):
                 n = search_ancestor(node, 'for_stmt', 'expr_stmt')
                 found_definition = False
                 if n is not None:
@@ -469,7 +469,7 @@ class ErrorFinder(Normalizer):
             first = node.children[0]
             # e.g. 's' b''
             message = "cannot mix bytes and nonbytes literals"
-            if first.type == 'string' and self._version >= (3, 0):
+            if first.type == 'string' and self.version >= (3, 0):
                 first_is_bytes = _is_bytes_literal(first)
                 for string in node.children[1:]:
                     if first_is_bytes != _is_bytes_literal(string):
@@ -596,21 +596,10 @@ class ErrorFinder(Normalizer):
                         else:
                             message = 'EOF while scanning triple-quoted string literal'
                 self._add_syntax_error(message, leaf)
-        elif leaf.type == 'name':
-            if leaf.value == '__debug__' and leaf.is_definition():
-                if self._version < (3, 0):
-                    message = 'cannot assign to __debug__'
-                else:
-                    message = 'assignment to keyword'
-                self._add_syntax_error(message, leaf)
-            if leaf.value == 'None' and self._version < (3, 0) and leaf.is_definition():
-                self._add_syntax_error('cannot assign to None', leaf)
-
-            self.context.add_name(leaf)
         elif leaf.type == 'string':
             string_prefix = leaf.string_prefix.lower()
             if 'b' in string_prefix \
-                    and self._version >= (3, 0) \
+                    and self.version >= (3, 0) \
                     and any(c for c in leaf.value if ord(c) > 127):
                 # b'ä'
                 message = "bytes can only contain ASCII literal characters."
@@ -619,7 +608,7 @@ class ErrorFinder(Normalizer):
             if 'r' not in string_prefix:
                 # Raw strings don't need to be checked if they have proper
                 # escaping.
-                is_bytes = self._version < (3, 0)
+                is_bytes = self.version < (3, 0)
                 if 'b' in string_prefix:
                     is_bytes = True
                 if 'u' in string_prefix:
@@ -651,12 +640,8 @@ class ErrorFinder(Normalizer):
                     self._add_syntax_error("'return' with value in async generator", leaf.parent)
                 elif leaf.value == 'yield' \
                         and leaf.get_next_leaf() != 'from' \
-                        and self._version == (3, 5):
+                        and self.version == (3, 5):
                     self._add_syntax_error("'yield' inside async function", leaf.parent)
-        elif leaf.value == 'from' and leaf.parent.type == 'yield_arg' \
-                and self.context.is_async_funcdef():
-            yield_ = leaf.parent.parent
-            self._add_syntax_error("'yield from' inside async function", yield_)
         elif leaf.value == '*':
             params = leaf.parent
             if params.type == 'parameters' and params:
@@ -817,3 +802,34 @@ class _ContinueChecks(SyntaxRule):
                     return False  # Error already added
         if not in_loop:
             return True
+
+
+@ErrorFinder.register_rule(value='from')
+class _YieldFromCheck(SyntaxRule):
+    message = "'yield from' inside async function"
+
+    def get_node(self, leaf):
+        return leaf.parent.parent  # This is the actual yield statement.
+
+    def is_issue(self, leaf):
+        return leaf.parent.type == 'yield_arg' \
+                and self._normalizer.context.is_async_funcdef()
+
+
+@ErrorFinder.register_rule(type='name')
+class NameChecks(SyntaxRule):
+    message = 'cannot assign to __debug__'
+    message_keyword = 'assignment to keyword'
+    message_none = 'cannot assign to None'
+
+    def is_issue(self, leaf):
+        self._normalizer.context.add_name(leaf)
+
+        if leaf.value == '__debug__' and leaf.is_definition():
+            if self._normalizer.version < (3, 0):
+                return True
+            else:
+                self.add_issue(leaf, message=self.message_keyword)
+        if leaf.value == 'None' and self._normalizer.version < (3, 0) \
+                and leaf.is_definition():
+            self.add_issue(leaf, message=self.message_none)
