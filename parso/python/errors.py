@@ -596,41 +596,6 @@ class ErrorFinder(Normalizer):
                         else:
                             message = 'EOF while scanning triple-quoted string literal'
                 self._add_syntax_error(message, leaf)
-        elif leaf.type == 'string':
-            string_prefix = leaf.string_prefix.lower()
-            if 'b' in string_prefix \
-                    and self.version >= (3, 0) \
-                    and any(c for c in leaf.value if ord(c) > 127):
-                # b'ä'
-                message = "bytes can only contain ASCII literal characters."
-                self._add_syntax_error(message, leaf)
-
-            if 'r' not in string_prefix:
-                # Raw strings don't need to be checked if they have proper
-                # escaping.
-                is_bytes = self.version < (3, 0)
-                if 'b' in string_prefix:
-                    is_bytes = True
-                if 'u' in string_prefix:
-                    is_bytes = False
-
-                payload = leaf._get_payload()
-                if is_bytes:
-                    payload = payload.encode('utf-8')
-                    func = codecs.escape_decode
-                else:
-                    func = codecs.unicode_escape_decode
-
-                try:
-                    with warnings.catch_warnings():
-                        # The warnings from parsing strings are not relevant.
-                        warnings.filterwarnings('ignore')
-                        func(payload)
-                except UnicodeDecodeError as e:
-                    self._add_syntax_error('(unicode error) ' + str(e), leaf)
-                except ValueError as e:
-                    self._add_syntax_error('(value error) ' + str(e), leaf)
-
         elif leaf.value in ('yield', 'return'):
             if self.context.node.type != 'funcdef':
                 self._add_syntax_error("'%s' outside function" % leaf.value, leaf.parent)
@@ -833,3 +798,43 @@ class NameChecks(SyntaxRule):
         if leaf.value == 'None' and self._normalizer.version < (3, 0) \
                 and leaf.is_definition():
             self.add_issue(leaf, message=self.message_none)
+
+
+@ErrorFinder.register_rule(type='string')
+class StringChecks(SyntaxRule):
+    message = "bytes can only contain ASCII literal characters."
+
+    def is_issue(self, leaf):
+            string_prefix = leaf.string_prefix.lower()
+            if 'b' in string_prefix \
+                    and self._normalizer.version >= (3, 0) \
+                    and any(c for c in leaf.value if ord(c) > 127):
+                # b'ä'
+                return True
+
+            if 'r' not in string_prefix:
+                # Raw strings don't need to be checked if they have proper
+                # escaping.
+                is_bytes = self._normalizer.version < (3, 0)
+                if 'b' in string_prefix:
+                    is_bytes = True
+                if 'u' in string_prefix:
+                    is_bytes = False
+
+                payload = leaf._get_payload()
+                if is_bytes:
+                    payload = payload.encode('utf-8')
+                    func = codecs.escape_decode
+                else:
+                    func = codecs.unicode_escape_decode
+
+                try:
+                    with warnings.catch_warnings():
+                        # The warnings from parsing strings are not relevant.
+                        warnings.filterwarnings('ignore')
+                        func(payload)
+                except UnicodeDecodeError as e:
+                    self.add_issue(leaf, message='(unicode error) ' + str(e))
+                except ValueError as e:
+                    self.add_issue(leaf, message='(value error) ' + str(e))
+
