@@ -315,35 +315,6 @@ class ErrorFinder(Normalizer):
                     self._add_syntax_error("too many statically nested blocks", node)
                 yield
             return
-        elif node.type == 'import_from' and _is_future_import(node):
-            if not _is_future_import_first(node):
-                message = "from __future__ imports must occur at the beginning of the file"
-                self._add_syntax_error(message, node)
-
-            for from_name, future_name in node.get_paths():
-                name = future_name.value
-                allowed_futures = list(ALLOWED_FUTURES)
-                if self.version >= (3, 5):
-                    allowed_futures.append('generator_stop')
-
-                if name== 'braces':
-                    message = "not a chance"
-                    self._add_syntax_error(message, node)
-                elif name == 'barry_as_FLUFL':
-                    message = "Seriously I'm not implementing this :) ~ Dave"
-                    self._add_syntax_error(message, node)
-                elif name not in ALLOWED_FUTURES:
-                    message = "future feature %s is not defined" % name
-                    self._add_syntax_error(message, node)
-        elif node.type == 'import_from':
-            if node.is_star_import() and self.context.parent_context is not None:
-                message = "import * only allowed at module level"
-                self._add_syntax_error(message, node)
-        elif node.type == 'import_as_names':
-            if node.children[-1] == ',':
-                # from foo import a,
-                message = "trailing comma not allowed without surrounding parentheses"
-                self._add_syntax_error(message, node)
         elif node.type in _STAR_EXPR_PARENTS:
             if node.parent.type == 'del_stmt':
                 self._add_syntax_error("can't use starred expression here", node.parent)
@@ -860,3 +831,46 @@ class BytesAndStringMix(SyntaxRule):
             for string in node.children[1:]:
                 if first_is_bytes != self._is_bytes_literal(string):
                     return True
+
+
+@ErrorFinder.register_rule(type='import_as_names')
+class TrailingImportComma(SyntaxRule):
+    # e.g. from foo import a,
+    message = "trailing comma not allowed without surrounding parentheses"
+
+    def is_issue(self, node):
+        if node.children[-1] == ',':
+            return True
+
+
+@ErrorFinder.register_rule(type='import_from')
+class ImportStarInFunction(SyntaxRule):
+    message = "import * only allowed at module level"
+
+    def is_issue(self, node):
+        return node.is_star_import() and self._normalizer.context.parent_context is not None
+
+
+@ErrorFinder.register_rule(type='import_from')
+class FutureImportRule(SyntaxRule):
+    message = "from __future__ imports must occur at the beginning of the file"
+
+    def is_issue(self, node):
+        if _is_future_import(node):
+            if not _is_future_import_first(node):
+                return True
+
+            for from_name, future_name in node.get_paths():
+                name = future_name.value
+                allowed_futures = list(ALLOWED_FUTURES)
+                if self._normalizer.version >= (3, 5):
+                    allowed_futures.append('generator_stop')
+
+                if name== 'braces':
+                    self.add_issue(node, message = "not a chance")
+                elif name == 'barry_as_FLUFL':
+                    m = "Seriously I'm not implementing this :) ~ Dave"
+                    self.add_issue(node, message=m)
+                elif name not in ALLOWED_FUTURES:
+                    message = "future feature %s is not defined" % name
+                    self.add_issue(node, message=message)
