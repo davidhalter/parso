@@ -655,13 +655,6 @@ class ErrorFinder(Normalizer):
             if not in_loop:
                 message = "'continue' not properly in loop"
                 self._add_syntax_error(message, leaf)
-        elif leaf.value == 'break':
-            in_loop = False
-            for block in self.context.blocks:
-                if block.type in ('for_stmt', 'while_stmt'):
-                    in_loop = True
-            if not in_loop:
-                self._add_syntax_error("'break' outside loop", leaf)
         elif leaf.value in ('yield', 'return'):
             if self.context.node.type != 'funcdef':
                 self._add_syntax_error("'%s' outside function" % leaf.value, leaf.parent)
@@ -797,7 +790,7 @@ class IndentationRule(Rule):
 
 
 @ErrorFinder.register_rule(value='await')
-class AwaitOutsideAsync(SyntaxRule):
+class _AwaitOutsideAsync(SyntaxRule):
     message = "'await' outside async function"
 
     def is_issue(self, leaf):
@@ -806,3 +799,15 @@ class AwaitOutsideAsync(SyntaxRule):
     def get_error_node(self, node):
         # Return the whole await statement.
         return node.parent
+
+
+@ErrorFinder.register_rule(value='break')
+class _BreakOutsideLoop(SyntaxRule):
+    message = "'break' outside loop"
+
+    def is_issue(self, leaf):
+        in_loop = False
+        for block in self._normalizer.context.blocks:
+            if block.type in ('for_stmt', 'while_stmt'):
+                in_loop = True
+        return not in_loop

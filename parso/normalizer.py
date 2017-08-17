@@ -76,12 +76,12 @@ class Normalizer(use_metaclass(_NormalizerMeta)):
     @classmethod
     def register_rule(cls, **kwargs):
         """
-        Use it as a class decorator:
+        Use it as a class decorator::
 
-        >>> normalizer = Normalizer('grammar', 'config')
-        >>> @normalizer.register_rule(value='foo')
-        ... class MyRule(Rule):
-        ...     error_code = 42
+            normalizer = Normalizer('grammar', 'config')
+            @normalizer.register_rule(value='foo')
+            class MyRule(Rule):
+                error_code = 42
         """
         return cls._register_rule(**kwargs)
 
