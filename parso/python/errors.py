@@ -425,25 +425,6 @@ class ErrorFinder(Normalizer):
                         self._add_syntax_error(message, node)
                 else:
                     default_only = True
-        elif node.type == 'argument':
-            first = node.children[0]
-            if node.children[1] == '=' and first.type != 'name':
-                if first.type == 'lambdef':
-                    # f(lambda: 1=1)
-                    message = "lambda cannot contain assignment"
-                else:
-                    # f(+x=1)
-                    message = "keyword can't be an expression"
-                self._add_syntax_error(message, first)
-        elif node.type == 'nonlocal_stmt':
-            if self.context.parent_context is None:
-                message = "nonlocal declaration not allowed at module level"
-                self._add_syntax_error(message, node)
-            elif self.context.is_function():
-                for nonlocal_name in node.children[1::2]:
-                    param_names = [p.name.value for p in self.context.node.get_params()]
-                    if nonlocal_name.value == node:
-                        pass
         elif node.type == 'expr_stmt':
             for before_equal in node.children[:-2:2]:
                 self._check_assignment(before_equal)
@@ -854,7 +835,7 @@ class StarExprRule(SyntaxRule):
 
 
 @ErrorFinder.register_rule(type='annassign')
-class AnnassignRule(SyntaxRule):
+class AnnotatorRule(SyntaxRule):
     # True: int
     # {}: float
     message = "illegal target for annotation"
@@ -888,3 +869,25 @@ class AnnassignRule(SyntaxRule):
             # x, y: str
             message = "only single target (not %s) can be annotated"
             self.add_issue(lhs.parent, message=message % type_)
+
+
+@ErrorFinder.register_rule(type='argument')
+class ArgumentRule(SyntaxRule):
+    def is_issue(self, node):
+        first = node.children[0]
+        if node.children[1] == '=' and first.type != 'name':
+            if first.type == 'lambdef':
+                # f(lambda: 1=1)
+                message = "lambda cannot contain assignment"
+            else:
+                # f(+x=1)
+                message = "keyword can't be an expression"
+            self.add_issue(first, message=message)
+
+
+@ErrorFinder.register_rule(type='nonlocal_stmt')
+class _NonlocalModuleLevelRule(SyntaxRule):
+    message = "nonlocal declaration not allowed at module level"
+
+    def is_issue(self, node):
+        return self._normalizer.context.parent_context is None
