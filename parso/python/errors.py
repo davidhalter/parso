@@ -294,16 +294,6 @@ class ErrorFinder(Normalizer):
                     # Error leafs will be added later as an error.
                     self._add_syntax_error("invalid syntax", leaf)
         elif node.type in _BLOCK_STMTS:
-            if node.type == 'try_stmt':
-                default_except = None
-                for except_clause in node.children[3::3]:
-                    if except_clause in ('else', 'finally'):
-                        break
-                    if except_clause == 'except':
-                        default_except = except_clause
-                    elif default_except is not None:
-                        self._add_syntax_error("default 'except:' must be last", default_except)
-
             with self.context.add_block(node):
                 if len(self.context.blocks) == _MAX_BLOCK_SIZE:
                     self._add_syntax_error("too many statically nested blocks", node)
@@ -806,6 +796,21 @@ class _ParameterRule(SyntaxRule):
                     return True
             else:
                 default_only = True
+
+
+@ErrorFinder.register_rule(type='try_stmt')
+class _TryStmtRule(SyntaxRule):
+    message = "default 'except:' must be last"
+
+    def is_issue(self, try_stmt):
+        default_except = None
+        for except_clause in try_stmt.children[3::3]:
+            if except_clause in ('else', 'finally'):
+                break
+            if except_clause == 'except':
+                default_except = except_clause
+            elif default_except is not None:
+                self.add_issue(default_except, message=self.message)
 
 
 class _CheckAssignmentRule(SyntaxRule):
