@@ -343,29 +343,6 @@ class ErrorFinder(Normalizer):
                         if count >= 256:
                             message = "too many expressions in star-unpacking assignment"
                             self._add_syntax_error(message, starred[0])
-        elif node.type == 'star_expr':
-            if node.parent.type not in _STAR_EXPR_PARENTS:
-                message = "starred assignment target must be in a list or tuple"
-                self._add_syntax_error(message, node)
-            if node.parent.type == 'testlist_comp':
-                # [*[] for a in [1]]
-                if node.parent.children[1].type == 'comp_for':
-                    message = "iterable unpacking cannot be used in comprehension"
-                    self._add_syntax_error(message, node)
-            if self.version <= (3, 4):
-                n = search_ancestor(node, 'for_stmt', 'expr_stmt')
-                found_definition = False
-                if n is not None:
-                    if n.type == 'expr_stmt':
-                        exprs = _get_expr_stmt_definition_exprs(n)
-                    else:
-                        exprs = _get_for_stmt_definition_exprs(n)
-                    if node in exprs:
-                        found_definition = True
-
-                if not found_definition:
-                    message = "can use starred expression only as assignment target"
-                    self._add_syntax_error(message, node)
         elif node.type == 'comp_for':
             # Some of the nodes here are already used, so no else if
             expr_list = node.children[1 + int(node.children[0] == 'async')]
@@ -448,35 +425,6 @@ class ErrorFinder(Normalizer):
                         self._add_syntax_error(message, node)
                 else:
                     default_only = True
-        elif node.type == 'annassign':
-            # x, y: str
-            type_ = None
-            message = "only single target (not %s) can be annotated"
-            lhs = node.parent.children[0]
-            lhs = _remove_parens(lhs)
-            try:
-                children = lhs.children
-            except AttributeError:
-                pass
-            else:
-                if ',' in children or lhs.type == 'atom' and children[0] == '(':
-                    type_ = 'tuple'
-                elif lhs.type == 'atom' and children[0] == '[':
-                    type_ = 'list'
-                trailer = children[-1]
-
-            if type_ is None:
-                if not (lhs.type == 'name'
-                        # subscript/attributes are allowed
-                        or lhs.type in ('atom_expr', 'power')
-                            and trailer.type == 'trailer'
-                            and trailer.children[0] != '('):
-                    # True: int
-                    # {}: float
-                    message = "illegal target for annotation"
-                    self._add_syntax_error(message, lhs.parent)
-            else:
-                self._add_syntax_error(message % type_, lhs.parent)
         elif node.type == 'argument':
             first = node.children[0]
             if node.children[1] == '=' and first.type != 'name':
@@ -622,12 +570,13 @@ class ErrorFinder(Normalizer):
             self._add_syntax_error(message, node)
 
     def _add_indentation_error(self, message, spacing):
-        self._add_error(903, "IndentationError: " + message, spacing)
+        self.add_issue(spacing, 903, "IndentationError: " + message)
 
     def _add_syntax_error(self, message, node):
-        self._add_error(901, "SyntaxError: " + message, node)
+        self.add_issue(node, 901, "SyntaxError: " + message)
 
-    def _add_error(self, code, message, node):
+    def add_issue(self, node, code, message):
+        # Overwrite the default behavior.
         # Check if the issues are on the same line.
         line = node.start_pos[0]
         args = (code, message, node)
@@ -874,3 +823,68 @@ class FutureImportRule(SyntaxRule):
                 elif name not in ALLOWED_FUTURES:
                     message = "future feature %s is not defined" % name
                     self.add_issue(node, message=message)
+
+
+@ErrorFinder.register_rule(type='star_expr')
+class StarExprRule(SyntaxRule):
+    message = "starred assignment target must be in a list or tuple"
+    message_iterable_unpacking = "iterable unpacking cannot be used in comprehension"
+    message_assignment = "can use starred expression only as assignment target"
+
+    def is_issue(self, node):
+            if node.parent.type not in _STAR_EXPR_PARENTS:
+                return True
+            if node.parent.type == 'testlist_comp':
+                # [*[] for a in [1]]
+                if node.parent.children[1].type == 'comp_for':
+                    self.add_issue(node, message=self.message_iterable_unpacking)
+            if self._normalizer.version <= (3, 4):
+                n = search_ancestor(node, 'for_stmt', 'expr_stmt')
+                found_definition = False
+                if n is not None:
+                    if n.type == 'expr_stmt':
+                        exprs = _get_expr_stmt_definition_exprs(n)
+                    else:
+                        exprs = _get_for_stmt_definition_exprs(n)
+                    if node in exprs:
+                        found_definition = True
+
+                if not found_definition:
+                    self.add_issue(node, message=self.message_assignment)
+
+
+@ErrorFinder.register_rule(type='annassign')
+class AnnassignRule(SyntaxRule):
+    # True: int
+    # {}: float
+    message = "illegal target for annotation"
+
+    def get_node(self, node):
+        return node.parent
+
+    def is_issue(self, node):
+        type_ = None
+        lhs = node.parent.children[0]
+        lhs = _remove_parens(lhs)
+        try:
+            children = lhs.children
+        except AttributeError:
+            pass
+        else:
+            if ',' in children or lhs.type == 'atom' and children[0] == '(':
+                type_ = 'tuple'
+            elif lhs.type == 'atom' and children[0] == '[':
+                type_ = 'list'
+            trailer = children[-1]
+
+        if type_ is None:
+            if not (lhs.type == 'name'
+                    # subscript/attributes are allowed
+                    or lhs.type in ('atom_expr', 'power')
+                        and trailer.type == 'trailer'
+                        and trailer.children[0] != '('):
+                return True
+        else:
+            # x, y: str
+            message = "only single target (not %s) can be annotated"
+            self.add_issue(lhs.parent, message=message % type_)
