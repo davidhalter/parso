@@ -343,72 +343,6 @@ class ErrorFinder(Normalizer):
                         if count >= 256:
                             message = "too many expressions in star-unpacking assignment"
                             self._add_syntax_error(message, starred[0])
-        elif node.type == 'comp_for':
-            # Some of the nodes here are already used, so no else if
-            expr_list = node.children[1 + int(node.children[0] == 'async')]
-            if expr_list.type != 'expr_list':  # Already handled.
-                self._check_assignment(expr_list)
-
-            if node.children[0] == 'async' \
-                    and not self.context.is_async_funcdef():
-                message = "asynchronous comprehension outside of an asynchronous function"
-                self._add_syntax_error(message, node)
-        elif node.type == 'arglist':
-            first_arg = node.children[0]
-            if first_arg.type == 'argument' \
-                    and first_arg.children[1].type == 'comp_for':
-                if len(node.children) >= 2:
-                    # foo(x for x in [], b)
-                    message = "Generator expression must be parenthesized if not sole argument"
-                    self._add_syntax_error(message, node)
-            else:
-                arg_set = set()
-                kw_only = False
-                kw_unpacking_only = False
-                is_old_starred = False
-                # In python 3 this would be a bit easier (stars are part of
-                # argument), but we have to understand both.
-                for argument in node.children:
-                    if argument == ',':
-                        continue
-
-                    if argument in ('*', '**'):
-                        # Python < 3.5 has the order engraved in the grammar
-                        # file.  No need to do anything here.
-                        is_old_starred = True
-                        continue
-                    if is_old_starred:
-                        is_old_starred = False
-                        continue
-
-                    if argument.type == 'argument':
-                        first = argument.children[0]
-                        if first in ('*', '**'):
-                            if first == '*':
-                                if kw_unpacking_only:
-                                    # foo(**kwargs, *args)
-                                    message = "iterable argument unpacking follows keyword argument unpacking"
-                                    self._add_syntax_error(message, argument)
-                            else:
-                                kw_unpacking_only = True
-                        else:  # Is a keyword argument.
-                            kw_only = True
-                            if first.type == 'name':
-                                if first.value in arg_set:
-                                    # f(x=1, x=2)
-                                    message = "keyword argument repeated"
-                                    self._add_syntax_error(message, first)
-                                else:
-                                    arg_set.add(first.value)
-                    else:
-                        if kw_unpacking_only:
-                            # f(**x, y)
-                            message = "positional argument follows keyword argument unpacking"
-                            self._add_syntax_error(message, argument)
-                        elif kw_only:
-                            # f(x=2, y)
-                            message = "positional argument follows keyword argument"
-                            self._add_syntax_error(message, argument)
         elif node.type in ('parameters', 'lambdef'):
             param_names = set()
             default_only = False
@@ -891,3 +825,76 @@ class _NonlocalModuleLevelRule(SyntaxRule):
 
     def is_issue(self, node):
         return self._normalizer.context.parent_context is None
+
+
+@ErrorFinder.register_rule(type='comp_for')
+class _CompForRule(SyntaxRule):
+    message = "asynchronous comprehension outside of an asynchronous function"
+
+    def is_issue(self, node):
+        # Some of the nodes here are already used, so no else if
+        expr_list = node.children[1 + int(node.children[0] == 'async')]
+        if expr_list.type != 'expr_list':  # Already handled.
+            self._normalizer._check_assignment(expr_list)
+
+        return node.children[0] == 'async' \
+            and not self._normalizer.context.is_async_funcdef()
+
+
+@ErrorFinder.register_rule(type='arglist')
+class ArglistRule(SyntaxRule):
+    message = "Generator expression must be parenthesized if not sole argument"
+
+    def is_issue(self, node):
+        first_arg = node.children[0]
+        if first_arg.type == 'argument' \
+                and first_arg.children[1].type == 'comp_for':
+            # e.g. foo(x for x in [], b)
+            return len(node.children) >= 2
+        else:
+            arg_set = set()
+            kw_only = False
+            kw_unpacking_only = False
+            is_old_starred = False
+            # In python 3 this would be a bit easier (stars are part of
+            # argument), but we have to understand both.
+            for argument in node.children:
+                if argument == ',':
+                    continue
+
+                if argument in ('*', '**'):
+                    # Python < 3.5 has the order engraved in the grammar
+                    # file.  No need to do anything here.
+                    is_old_starred = True
+                    continue
+                if is_old_starred:
+                    is_old_starred = False
+                    continue
+
+                if argument.type == 'argument':
+                    first = argument.children[0]
+                    if first in ('*', '**'):
+                        if first == '*':
+                            if kw_unpacking_only:
+                                # foo(**kwargs, *args)
+                                message = "iterable argument unpacking follows keyword argument unpacking"
+                                self.add_issue(argument, message=message)
+                        else:
+                            kw_unpacking_only = True
+                    else:  # Is a keyword argument.
+                        kw_only = True
+                        if first.type == 'name':
+                            if first.value in arg_set:
+                                # f(x=1, x=2)
+                                self.add_issue(first, message="keyword argument repeated")
+                            else:
+                                arg_set.add(first.value)
+                else:
+                    if kw_unpacking_only:
+                        # f(**x, y)
+                        message = "positional argument follows keyword argument unpacking"
+                        self.add_issue(argument, message=message)
+                    elif kw_only:
+                        # f(x=2, y)
+                        message = "positional argument follows keyword argument"
+                        self.add_issue(argument, message=message)
