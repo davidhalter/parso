@@ -642,7 +642,7 @@ class _YieldFromCheck(SyntaxRule):
 
 
 @ErrorFinder.register_rule(type='name')
-class NameChecks(SyntaxRule):
+class _NameChecks(SyntaxRule):
     message = 'cannot assign to __debug__'
     message_keyword = 'assignment to keyword'
     message_none = 'cannot assign to None'
@@ -661,7 +661,7 @@ class NameChecks(SyntaxRule):
 
 
 @ErrorFinder.register_rule(type='string')
-class StringChecks(SyntaxRule):
+class _StringChecks(SyntaxRule):
     message = "bytes can only contain ASCII literal characters."
 
     def is_issue(self, leaf):
@@ -700,7 +700,7 @@ class StringChecks(SyntaxRule):
 
 
 @ErrorFinder.register_rule(value='*')
-class StarCheck(SyntaxRule):
+class _StarCheck(SyntaxRule):
     message = "named arguments must follow bare *"
 
     def is_issue(self, leaf):
@@ -713,7 +713,7 @@ class StarCheck(SyntaxRule):
 
 
 @ErrorFinder.register_rule(value='**')
-class StarStarCheck(SyntaxRule):
+class _StarStarCheck(SyntaxRule):
     # e.g. {**{} for a in [1]}
     # TODO this should probably get a better end_pos including
     #      the next sibling of leaf.
@@ -727,7 +727,7 @@ class StarStarCheck(SyntaxRule):
 
 @ErrorFinder.register_rule(value='yield')
 @ErrorFinder.register_rule(value='return')
-class ReturnAndYieldChecks(SyntaxRule):
+class _ReturnAndYieldChecks(SyntaxRule):
     message = "'return' with value in async generator"
     message_async_yield = "'yield' inside async function"
 
@@ -747,7 +747,7 @@ class ReturnAndYieldChecks(SyntaxRule):
                 self.add_issue(self.get_node(leaf), message=self.message_async_yield)
 
 @ErrorFinder.register_rule(type='atom')
-class BytesAndStringMix(SyntaxRule):
+class _BytesAndStringMix(SyntaxRule):
     # e.g. 's' b''
     message = "cannot mix bytes and nonbytes literals"
 
@@ -764,7 +764,7 @@ class BytesAndStringMix(SyntaxRule):
 
 
 @ErrorFinder.register_rule(type='import_as_names')
-class TrailingImportComma(SyntaxRule):
+class _TrailingImportComma(SyntaxRule):
     # e.g. from foo import a,
     message = "trailing comma not allowed without surrounding parentheses"
 
@@ -774,7 +774,7 @@ class TrailingImportComma(SyntaxRule):
 
 
 @ErrorFinder.register_rule(type='import_from')
-class ImportStarInFunction(SyntaxRule):
+class _ImportStarInFunction(SyntaxRule):
     message = "import * only allowed at module level"
 
     def is_issue(self, node):
@@ -782,7 +782,7 @@ class ImportStarInFunction(SyntaxRule):
 
 
 @ErrorFinder.register_rule(type='import_from')
-class FutureImportRule(SyntaxRule):
+class _FutureImportRule(SyntaxRule):
     message = "from __future__ imports must occur at the beginning of the file"
 
     def is_issue(self, node):
@@ -807,7 +807,7 @@ class FutureImportRule(SyntaxRule):
 
 
 @ErrorFinder.register_rule(type='star_expr')
-class StarExprRule(SyntaxRule):
+class _StarExprRule(SyntaxRule):
     message = "starred assignment target must be in a list or tuple"
     message_iterable_unpacking = "iterable unpacking cannot be used in comprehension"
     message_assignment = "can use starred expression only as assignment target"
@@ -835,7 +835,7 @@ class StarExprRule(SyntaxRule):
 
 
 @ErrorFinder.register_rule(type='annassign')
-class AnnotatorRule(SyntaxRule):
+class _AnnotatorRule(SyntaxRule):
     # True: int
     # {}: float
     message = "illegal target for annotation"
@@ -872,7 +872,7 @@ class AnnotatorRule(SyntaxRule):
 
 
 @ErrorFinder.register_rule(type='argument')
-class ArgumentRule(SyntaxRule):
+class _ArgumentRule(SyntaxRule):
     def is_issue(self, node):
         first = node.children[0]
         if node.children[1] == '=' and first.type != 'name':
