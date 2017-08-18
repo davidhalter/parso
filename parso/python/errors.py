@@ -343,22 +343,6 @@ class ErrorFinder(Normalizer):
                         if count >= 256:
                             message = "too many expressions in star-unpacking assignment"
                             self._add_syntax_error(message, starred[0])
-        elif node.type in ('parameters', 'lambdef'):
-            param_names = set()
-            default_only = False
-            for p in _iter_params(node):
-                if p.name.value in param_names:
-                    message = "duplicate argument '%s' in function definition"
-                    self._add_syntax_error(message % p.name.value, p.name)
-                param_names.add(p.name.value)
-
-                if p.default is None and not p.star_count:
-                    if default_only:
-                        # def f(x=3, y): pass
-                        message = "non-default argument follows default argument"
-                        self._add_syntax_error(message, node)
-                else:
-                    default_only = True
         elif node.type == 'expr_stmt':
             for before_equal in node.children[:-2:2]:
                 self._check_assignment(before_equal)
@@ -747,25 +731,25 @@ class _StarExprRule(SyntaxRule):
     message_assignment = "can use starred expression only as assignment target"
 
     def is_issue(self, node):
-            if node.parent.type not in _STAR_EXPR_PARENTS:
-                return True
-            if node.parent.type == 'testlist_comp':
-                # [*[] for a in [1]]
-                if node.parent.children[1].type == 'comp_for':
-                    self.add_issue(node, message=self.message_iterable_unpacking)
-            if self._normalizer.version <= (3, 4):
-                n = search_ancestor(node, 'for_stmt', 'expr_stmt')
-                found_definition = False
-                if n is not None:
-                    if n.type == 'expr_stmt':
-                        exprs = _get_expr_stmt_definition_exprs(n)
-                    else:
-                        exprs = _get_for_stmt_definition_exprs(n)
-                    if node in exprs:
-                        found_definition = True
+        if node.parent.type not in _STAR_EXPR_PARENTS:
+            return True
+        if node.parent.type == 'testlist_comp':
+            # [*[] for a in [1]]
+            if node.parent.children[1].type == 'comp_for':
+                self.add_issue(node, message=self.message_iterable_unpacking)
+        if self._normalizer.version <= (3, 4):
+            n = search_ancestor(node, 'for_stmt', 'expr_stmt')
+            found_definition = False
+            if n is not None:
+                if n.type == 'expr_stmt':
+                    exprs = _get_expr_stmt_definition_exprs(n)
+                else:
+                    exprs = _get_for_stmt_definition_exprs(n)
+                if node in exprs:
+                    found_definition = True
 
-                if not found_definition:
-                    self.add_issue(node, message=self.message_assignment)
+            if not found_definition:
+                self.add_issue(node, message=self.message_assignment)
 
 
 @ErrorFinder.register_rule(type='annassign')
@@ -842,7 +826,7 @@ class _CompForRule(SyntaxRule):
 
 
 @ErrorFinder.register_rule(type='arglist')
-class ArglistRule(SyntaxRule):
+class _ArglistRule(SyntaxRule):
     message = "Generator expression must be parenthesized if not sole argument"
 
     def is_issue(self, node):
@@ -898,3 +882,24 @@ class ArglistRule(SyntaxRule):
                         # f(x=2, y)
                         message = "positional argument follows keyword argument"
                         self.add_issue(argument, message=message)
+
+@ErrorFinder.register_rule(type='parameters')
+@ErrorFinder.register_rule(type='lambdef')
+class _ParameterRule(SyntaxRule):
+    # def f(x=3, y): pass
+    message = "non-default argument follows default argument"
+
+    def is_issue(self, node):
+        param_names = set()
+        default_only = False
+        for p in _iter_params(node):
+            if p.name.value in param_names:
+                message = "duplicate argument '%s' in function definition"
+                self.add_issue(p.name, message=message % p.name.value)
+            param_names.add(p.name.value)
+
+            if p.default is None and not p.star_count:
+                if default_only:
+                    return True
+            else:
+                default_only = True
