@@ -304,12 +304,6 @@ class ErrorFinder(Normalizer):
                     elif default_except is not None:
                         self._add_syntax_error("default 'except:' must be last", default_except)
 
-            if node.type == 'for_stmt':
-                # Some of the nodes here are already used, so no else if
-                expr_list = node.children[1]
-                if expr_list.type != 'expr_list':  # Already handled.
-                    self._check_assignment(expr_list)
-
             with self.context.add_block(node):
                 if len(self.context.blocks) == _MAX_BLOCK_SIZE:
                     self._add_syntax_error("too many statically nested blocks", node)
@@ -343,24 +337,6 @@ class ErrorFinder(Normalizer):
                         if count >= 256:
                             message = "too many expressions in star-unpacking assignment"
                             self._add_syntax_error(message, starred[0])
-        elif node.type == 'expr_stmt':
-            for before_equal in node.children[:-2:2]:
-                self._check_assignment(before_equal)
-
-            augassign = node.children[1]
-            if augassign != '=' and augassign.type != 'annassign':  # Is augassign.
-                if node.children[0].type in ('testlist_star_expr', 'atom', 'testlist'):
-                    message = "illegal expression for augmented assignment"
-                    self._add_syntax_error(message, node)
-        elif node.type == 'with_item':
-            self._check_assignment(node.children[2])
-        elif node.type == 'del_stmt':
-            child = node.children[1]
-            if child.type != 'expr_list':  # Already handled.
-                self._check_assignment(child, is_deletion=True)
-        elif node.type == 'expr_list':
-            for expr in node.children[::2]:
-                self._check_assignment(expr)
         elif node.type == 'suite':
             self._indentation_count += 1
             if self._indentation_count == _MAX_INDENT_COUNT:
@@ -408,65 +384,6 @@ class ErrorFinder(Normalizer):
 
         # The rest is rule based.
         return super(ErrorFinder, self).visit_leaf(leaf)
-
-    def _check_assignment(self, node, is_deletion=False):
-        error = None
-        type_ = node.type
-        if type_ == 'lambdef':
-            error = 'lambda'
-        elif type_ == 'atom':
-            first, second = node.children[:2]
-            error = _get_comprehension_type(node)
-            if error is None:
-                if second.type in ('dictorsetmaker', 'string'):
-                    error = 'literal'
-                elif first in ('(', '['):
-                    if second.type == 'yield_expr':
-                        error = 'yield expression'
-                    elif second.type == 'testlist_comp':
-                        # This is not a comprehension, they were handled
-                        # further above.
-                        for child in second.children[::2]:
-                            self._check_assignment(child, is_deletion)
-                    else:  # Everything handled, must be useless brackets.
-                        self._check_assignment(second, is_deletion)
-        elif type_ == 'keyword':
-            error = 'keyword'
-        elif type_ == 'operator':
-            if node.value == '...':
-                error = 'Ellipsis'
-        elif type_ == 'comparison':
-            error = 'comparison'
-        elif type_ in ('string', 'number'):
-            error = 'literal'
-        elif type_ == 'yield_expr':
-            # This one seems to be a slightly different warning in Python.
-            message = 'assignment to yield expression not possible'
-            self._add_syntax_error(message, node)
-        elif type_ == 'test':
-            error = 'conditional expression'
-        elif type_ in ('atom_expr', 'power'):
-            if node.children[0] == 'await':
-                error = 'await expression'
-            elif node.children[-2] == '**':
-                error = 'operator'
-            else:
-                # Has a trailer
-                trailer = node.children[-1]
-                assert trailer.type == 'trailer'
-                if trailer.children[0] == '(':
-                    error = 'function call'
-        elif type_ in ('testlist_star_expr', 'exprlist', 'testlist'):
-            for child in node.children[::2]:
-                self._check_assignment(child, is_deletion)
-        elif ('expr' in type_ and type_ != 'star_expr' # is a substring
-              or '_test' in type_
-              or type_ in ('term', 'factor')):
-            error = 'operator'
-
-        if error is not None:
-            message = "can't %s %s" % ("delete" if is_deletion else "assign to", error)
-            self._add_syntax_error(message, node)
 
     def _add_indentation_error(self, message, spacing):
         self.add_issue(spacing, 903, "IndentationError: " + message)
@@ -811,20 +728,6 @@ class _NonlocalModuleLevelRule(SyntaxRule):
         return self._normalizer.context.parent_context is None
 
 
-@ErrorFinder.register_rule(type='comp_for')
-class _CompForRule(SyntaxRule):
-    message = "asynchronous comprehension outside of an asynchronous function"
-
-    def is_issue(self, node):
-        # Some of the nodes here are already used, so no else if
-        expr_list = node.children[1 + int(node.children[0] == 'async')]
-        if expr_list.type != 'expr_list':  # Already handled.
-            self._normalizer._check_assignment(expr_list)
-
-        return node.children[0] == 'async' \
-            and not self._normalizer.context.is_async_funcdef()
-
-
 @ErrorFinder.register_rule(type='arglist')
 class _ArglistRule(SyntaxRule):
     message = "Generator expression must be parenthesized if not sole argument"
@@ -903,3 +806,122 @@ class _ParameterRule(SyntaxRule):
                     return True
             else:
                 default_only = True
+
+
+class _CheckAssignmentRule(SyntaxRule):
+    def _check_assignment(self, node, is_deletion=False):
+        error = None
+        type_ = node.type
+        if type_ == 'lambdef':
+            error = 'lambda'
+        elif type_ == 'atom':
+            first, second = node.children[:2]
+            error = _get_comprehension_type(node)
+            if error is None:
+                if second.type in ('dictorsetmaker', 'string'):
+                    error = 'literal'
+                elif first in ('(', '['):
+                    if second.type == 'yield_expr':
+                        error = 'yield expression'
+                    elif second.type == 'testlist_comp':
+                        # This is not a comprehension, they were handled
+                        # further above.
+                        for child in second.children[::2]:
+                            self._check_assignment(child, is_deletion)
+                    else:  # Everything handled, must be useless brackets.
+                        self._check_assignment(second, is_deletion)
+        elif type_ == 'keyword':
+            error = 'keyword'
+        elif type_ == 'operator':
+            if node.value == '...':
+                error = 'Ellipsis'
+        elif type_ == 'comparison':
+            error = 'comparison'
+        elif type_ in ('string', 'number'):
+            error = 'literal'
+        elif type_ == 'yield_expr':
+            # This one seems to be a slightly different warning in Python.
+            message = 'assignment to yield expression not possible'
+            self.add_issue(node, message=message)
+        elif type_ == 'test':
+            error = 'conditional expression'
+        elif type_ in ('atom_expr', 'power'):
+            if node.children[0] == 'await':
+                error = 'await expression'
+            elif node.children[-2] == '**':
+                error = 'operator'
+            else:
+                # Has a trailer
+                trailer = node.children[-1]
+                assert trailer.type == 'trailer'
+                if trailer.children[0] == '(':
+                    error = 'function call'
+        elif type_ in ('testlist_star_expr', 'exprlist', 'testlist'):
+            for child in node.children[::2]:
+                self._check_assignment(child, is_deletion)
+        elif ('expr' in type_ and type_ != 'star_expr' # is a substring
+              or '_test' in type_
+              or type_ in ('term', 'factor')):
+            error = 'operator'
+
+        if error is not None:
+            message = "can't %s %s" % ("delete" if is_deletion else "assign to", error)
+            self.add_issue(node, message=message)
+
+
+@ErrorFinder.register_rule(type='comp_for')
+class _CompForRule(_CheckAssignmentRule):
+    message = "asynchronous comprehension outside of an asynchronous function"
+
+    def is_issue(self, node):
+        # Some of the nodes here are already used, so no else if
+        expr_list = node.children[1 + int(node.children[0] == 'async')]
+        if expr_list.type != 'expr_list':  # Already handled.
+            self._check_assignment(expr_list)
+
+        return node.children[0] == 'async' \
+            and not self._normalizer.context.is_async_funcdef()
+
+
+@ErrorFinder.register_rule(type='expr_stmt')
+class _ExprStmtRule(_CheckAssignmentRule):
+    message = "illegal expression for augmented assignment"
+
+    def is_issue(self, node):
+        for before_equal in node.children[:-2:2]:
+            self._check_assignment(before_equal)
+
+        augassign = node.children[1]
+        if augassign != '=' and augassign.type != 'annassign':  # Is augassign.
+            return node.children[0].type in ('testlist_star_expr', 'atom', 'testlist')
+
+
+@ErrorFinder.register_rule(type='with_item')
+class _WithItemRule(_CheckAssignmentRule):
+    def is_issue(self, with_item):
+        self._check_assignment(with_item.children[2])
+
+
+@ErrorFinder.register_rule(type='del_stmt')
+class _DelStmtRule(_CheckAssignmentRule):
+    def is_issue(self, del_stmt):
+        child = del_stmt.children[1]
+
+        if child.type != 'expr_list':  # Already handled.
+            self._check_assignment(child, is_deletion=True)
+
+
+@ErrorFinder.register_rule(type='expr_list')
+class _ExprListRule(_CheckAssignmentRule):
+    def is_issue(self, expr_list):
+        for expr in expr_list.children[::2]:
+            self._check_assignment(expr)
+
+
+@ErrorFinder.register_rule(type='for_stmt')
+class _ForStmtRule(_CheckAssignmentRule):
+    def is_issue(self, for_stmt):
+        # Some of the nodes here are already used, so no else if
+        expr_list = for_stmt.children[1]
+        if expr_list.type != 'expr_list':  # Already handled.
+            self._check_assignment(expr_list)
