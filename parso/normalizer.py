@@ -86,15 +86,22 @@ class Normalizer(use_metaclass(_NormalizerMeta)):
         return cls._register_rule(**kwargs)
 
     @classmethod
-    def _register_rule(cls, value=None, type=None):
+    def _register_rule(cls, value=None, values=(), type=None, types=()):
         if value is None and type is None:
             raise ValueError("You must register at least something.")
 
         def decorator(rule_cls):
+            copied_values = list(values)
+            copied_types = list(types)
             if value is not None:
-                cls.rule_value_classes.setdefault(value, []).append(rule_cls)
+                copied_values.append(value)
             if type is not None:
-                cls.rule_type_classes.setdefault(type, []).append(rule_cls)
+                copied_types.append(type)
+
+            for v in copied_values:
+                cls.rule_value_classes.setdefault(v, []).append(rule_cls)
+            for t in copied_types:
+                cls.rule_type_classes.setdefault(t, []).append(rule_cls)
             return rule_cls
 
         return decorator
