@@ -176,14 +176,14 @@ class _Context(object):
                 error_name = global_name
             else:
                 error_name = nonlocal_name
-            self._add_syntax_error(message, error_name)
+            self._add_syntax_error(error_name, message)
 
         nonlocals_not_handled = []
         for nonlocal_name in self._nonlocal_names_in_subscopes:
             search = nonlocal_name.value
             if search in global_name_strs or self.parent_context is None:
                 message = "no binding for nonlocal '%s' found" % nonlocal_name.value
-                self._add_syntax_error(message, nonlocal_name)
+                self._add_syntax_error(nonlocal_name, message)
             elif not self.is_function() or \
                     nonlocal_name.value not in self._used_name_dict:
                 nonlocals_not_handled.append(nonlocal_name)
@@ -191,7 +191,7 @@ class _Context(object):
 
     def _analyze_names(self, globals_or_nonlocals, type_):
         def raise_(message):
-            self._add_syntax_error(message % (base_name.value, type_), base_name)
+            self._add_syntax_error(base_name, message % (base_name.value, type_))
 
         params = []
         if self.node.type == 'funcdef':
@@ -288,20 +288,20 @@ class ErrorFinder(Normalizer):
             if node.children[-1].type == 'newline':
                 # This is the beginning of a suite that is not indented.
                 spacing = list(leaf._split_prefix())[-1]
-                self._add_indentation_error('expected an indented block', spacing)
+                self._add_indentation_error(spacing, 'expected an indented block')
             else:
                 if leaf.type != 'error_leaf':
                     # Error leafs will be added later as an error.
-                    self._add_syntax_error("invalid syntax", leaf)
+                    self._add_syntax_error(leaf, "invalid syntax")
         elif node.type in _BLOCK_STMTS:
             with self.context.add_block(node):
                 if len(self.context.blocks) == _MAX_BLOCK_SIZE:
-                    self._add_syntax_error("too many statically nested blocks", node)
+                    self._add_syntax_error(node, "too many statically nested blocks")
                 yield
             return
         elif node.type in _STAR_EXPR_PARENTS:
             if node.parent.type == 'del_stmt':
-                self._add_syntax_error("can't use starred expression here", node.parent)
+                self._add_syntax_error(node.parent, "can't use starred expression here")
             else:
                 def is_definition(node, ancestor):
                     if ancestor is None:
@@ -321,16 +321,16 @@ class ErrorFinder(Normalizer):
                     starred = [c for c in args if c.type == 'star_expr']
                     if len(starred) > 1:
                         message = "two starred expressions in assignment"
-                        self._add_syntax_error(message, starred[1])
+                        self._add_syntax_error(starred[1], message)
                     elif starred:
                         count = args.index(starred[0])
                         if count >= 256:
                             message = "too many expressions in star-unpacking assignment"
-                            self._add_syntax_error(message, starred[0])
+                            self._add_syntax_error(starred[0], message)
         elif node.type == 'suite':
             self._indentation_count += 1
             if self._indentation_count == _MAX_INDENT_COUNT:
-                self._add_indentation_error("too many levels of indentation", node.children[1])
+                self._add_indentation_error(node.children[1], "too many levels of indentation")
 
         yield
 
@@ -352,7 +352,7 @@ class ErrorFinder(Normalizer):
                     message = 'unexpected indent'
                 else:
                     message = 'unindent does not match any outer indentation level'
-                self._add_indentation_error(message, spacing)
+                self._add_indentation_error(spacing, message)
             else:
                 if leaf.value.startswith('\\'):
                     message = 'unexpected character after line continuation character'
@@ -365,7 +365,7 @@ class ErrorFinder(Normalizer):
                             message = 'EOL while scanning string literal'
                         else:
                             message = 'EOF while scanning triple-quoted string literal'
-                self._add_syntax_error(message, leaf)
+                self._add_syntax_error(leaf, message)
             return ''
         elif leaf.value == ':':
             parent = leaf.parent
@@ -375,10 +375,10 @@ class ErrorFinder(Normalizer):
         # The rest is rule based.
         return super(ErrorFinder, self).visit_leaf(leaf)
 
-    def _add_indentation_error(self, message, spacing):
+    def _add_indentation_error(self, spacing, message):
         self.add_issue(spacing, 903, "IndentationError: " + message)
 
-    def _add_syntax_error(self, message, node):
+    def _add_syntax_error(self, node, message):
         self.add_issue(node, 901, "SyntaxError: " + message)
 
     def add_issue(self, node, code, message):
