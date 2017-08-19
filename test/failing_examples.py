@@ -137,6 +137,7 @@ FAILING_EXAMPLES = [
     'def x():\n    1\n 2',
     'def x():\n 1\n  2',
     'if 1:\nfoo',
+    'if 1: blubb\nif 1:\npass\nTrue and False',
 ]
 
 GLOBAL_NONLOCAL_ERROR = [

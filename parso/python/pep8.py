@@ -692,8 +692,12 @@ class PEP8Normalizer(ErrorFinder):
                 return
         if search_ancestor(node, 'error_node') is not None:
             return
-        # Skip ErrorFinder here, because it has custom behavior.
-        super(ErrorFinder, self).add_issue(node, code, message)
+        if code in (901, 903):
+            # 901 and 903 are raised by the ErrorFinder.
+            super(PEP8Normalizer, self).add_issue(node, code, message)
+        else:
+            # Skip ErrorFinder here, because it has custom behavior.
+            super(ErrorFinder, self).add_issue(node, code, message)
 
 
 class PEP8NormalizerConfig(ErrorFinderConfig):

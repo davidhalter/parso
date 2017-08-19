@@ -283,17 +283,7 @@ class ErrorFinder(Normalizer):
     def visit_node(self, node):
         self._check_type_rules(node)
 
-        if node.type == 'error_node':
-            leaf = node.get_next_leaf()
-            if node.children[-1].type == 'newline':
-                # This is the beginning of a suite that is not indented.
-                spacing = list(leaf._split_prefix())[-1]
-                self._add_indentation_error(spacing, 'expected an indented block')
-            else:
-                if leaf.type != 'error_leaf':
-                    # Error leafs will be added later as an error.
-                    self._add_syntax_error(leaf, "invalid syntax")
-        elif node.type in _BLOCK_STMTS:
+        if node.type in _BLOCK_STMTS:
             with self.context.add_block(node):
                 if len(self.context.blocks) == _MAX_BLOCK_SIZE:
                     self._add_syntax_error(node, "too many statically nested blocks")
@@ -395,6 +385,27 @@ class ErrorFinder(Normalizer):
             self.issues.append(Issue(node, code, message))
 
 
+class IndentationRule(Rule):
+    code = 903
+
+    def _get_message(self, message):
+        message = super(IndentationRule, self)._get_message(message)
+        return "IndentationError: " + message
+
+
+@ErrorFinder.register_rule(type='error_node')
+class _ExpectIndentedBlock(IndentationRule):
+    message = 'expected an indented block'
+
+    def get_node(self, node):
+        leaf = node.get_next_leaf()
+        return list(leaf._split_prefix())[-1]
+
+    def is_issue(self, node):
+        # This is the beginning of a suite that is not indented.
+        return node.children[-1].type == 'newline'
+
+
 class ErrorFinderConfig(NormalizerConfig):
     normalizer_class = ErrorFinder
 
@@ -407,8 +418,16 @@ class SyntaxRule(Rule):
         return "SyntaxError: " + message
 
 
-class IndentationRule(Rule):
-    code = 903
+@ErrorFinder.register_rule(type='error_node')
+class _InvalidSyntaxRule(SyntaxRule):
+    message = "invalid syntax"
+
+    def get_node(self, node):
+        return node.get_next_leaf()
+
+    def is_issue(self, node):
+        # Error leafs will be added later as an error.
+        return node.get_next_leaf().type != 'error_leaf'
 
 
 @ErrorFinder.register_rule(value='await')

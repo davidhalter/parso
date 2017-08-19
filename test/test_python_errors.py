@@ -21,6 +21,7 @@ def _get_error_list(code, version=None):
     tree = grammar.parse(code)
     return list(grammar.iter_errors(tree))
 
+
 def assert_comparison(code, error_code, positions):
     errors = [(error.start_pos, error.code) for error in _get_error_list(code)]
     assert [(pos, error_code) for pos in positions] == errors
