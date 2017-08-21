@@ -214,12 +214,12 @@ class Token(namedtuple('Token', ['type', 'string', 'start_pos', 'prefix'])):
 
 
 class PythonToken(Token):
-    def get_type_name(self, exact=True):
+    def _get_type_name(self, exact=True):
         return tok_name[self.type]
 
     def __repr__(self):
         return ('TokenInfo(type=%s, string=%r, start=%r, prefix=%r)' %
-                self._replace(type=self.get_type_name()))
+                self._replace(type=self._get_type_name()))
 
 
 def tokenize(code, version_info):
