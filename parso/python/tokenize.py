@@ -212,25 +212,14 @@ class Token(namedtuple('Token', ['type', 'string', 'start_pos', 'prefix'])):
         else:
             return self.start_pos[0], self.start_pos[1] + len(self.string)
 
-    def __repr__(self):
-        return ('TokenInfo(type=%s, string=%r, start=%r, prefix=%r)' %
-                self._replace(type=self.get_type_name()))
-
 
 class PythonToken(Token):
     def get_type_name(self, exact=True):
-        if exact:
-            typ = self.exact_type
-        else:
-            typ = self.type
-        return tok_name[typ]
+        return tok_name[self.type]
 
-    @property
-    def exact_type(self):
-        if self.type == OP and self.string in opmap:
-            return opmap[self.string]
-        else:
-            return self.type
+    def __repr__(self):
+        return ('TokenInfo(type=%s, string=%r, start=%r, prefix=%r)' %
+                self._replace(type=self.get_type_name()))
 
 
 def tokenize(code, version_info):
