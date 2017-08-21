@@ -13,7 +13,7 @@ import logging
 from parso.utils import split_lines
 from parso.python.parser import Parser
 from parso.python.tree import EndMarker
-from parso.python.tokenize import (NEWLINE, TokenInfo, ERROR_DEDENT,
+from parso.python.tokenize import (NEWLINE, PythonToken, ERROR_DEDENT,
                                    ENDMARKER, INDENT, DEDENT)
 
 
@@ -315,23 +315,23 @@ class DiffParser(object):
                         prefix = re.sub(r'(<=\n)[^\n]+$', '', prefix)
                     else:
                         prefix = ''
-                    yield TokenInfo(ENDMARKER, '', (start_pos[0] + line_offset, 0), prefix)
+                    yield PythonToken(ENDMARKER, '', (start_pos[0] + line_offset, 0), prefix)
                     break
             elif typ == NEWLINE and start_pos[0] >= until_line:
-                yield TokenInfo(typ, string, start_pos, prefix)
+                yield PythonToken(typ, string, start_pos, prefix)
                 # Check if the parser is actually in a valid suite state.
                 if suite_or_file_input_is_valid(self._pgen_grammar, stack):
                     start_pos = start_pos[0] + 1, 0
                     while len(indents) > int(omitted_first_indent):
                         indents.pop()
-                        yield TokenInfo(DEDENT, '', start_pos, '')
+                        yield PythonToken(DEDENT, '', start_pos, '')
 
-                    yield TokenInfo(ENDMARKER, '', start_pos, '')
+                    yield PythonToken(ENDMARKER, '', start_pos, '')
                     break
                 else:
                     continue
 
-            yield TokenInfo(typ, string, start_pos, prefix)
+            yield PythonToken(typ, string, start_pos, prefix)
 
 
 class _NodesStackNode(object):

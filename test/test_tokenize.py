@@ -10,7 +10,7 @@ from parso.python.token import (
     NAME, NEWLINE, STRING, INDENT, DEDENT, ERRORTOKEN, ENDMARKER, ERROR_DEDENT)
 from parso.python import tokenize
 from parso import parse
-from parso.python.tokenize import TokenInfo
+from parso.python.tokenize import PythonToken
 
 
 def _get_token_list(string):
@@ -92,8 +92,8 @@ def test_tokenize_multiline_I():
     # next line
     fundef = '''""""\n'''
     token_list = _get_token_list(fundef)
-    assert token_list == [TokenInfo(ERRORTOKEN, '""""\n', (1, 0), ''),
-                          TokenInfo(ENDMARKER ,       '', (2, 0), '')]
+    assert token_list == [PythonToken(ERRORTOKEN, '""""\n', (1, 0), ''),
+                          PythonToken(ENDMARKER ,       '', (2, 0), '')]
 
 
 def test_tokenize_multiline_II():
@@ -101,8 +101,8 @@ def test_tokenize_multiline_II():
     # same line
     fundef = '''""""'''
     token_list = _get_token_list(fundef)
-    assert token_list == [TokenInfo(ERRORTOKEN, '""""', (1, 0), ''),
-                          TokenInfo(ENDMARKER,      '', (1, 4), '')]
+    assert token_list == [PythonToken(ERRORTOKEN, '""""', (1, 0), ''),
+                          PythonToken(ENDMARKER,      '', (1, 4), '')]
 
 
 def test_tokenize_multiline_III():
@@ -110,8 +110,8 @@ def test_tokenize_multiline_III():
     # next line even if several newline
     fundef = '''""""\n\n'''
     token_list = _get_token_list(fundef)
-    assert token_list == [TokenInfo(ERRORTOKEN, '""""\n\n', (1, 0), ''),
-                          TokenInfo(ENDMARKER,          '', (3, 0), '')]
+    assert token_list == [PythonToken(ERRORTOKEN, '""""\n\n', (1, 0), ''),
+                          PythonToken(ENDMARKER,          '', (3, 0), '')]
 
 
 def test_identifier_contains_unicode():

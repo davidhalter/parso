@@ -203,11 +203,21 @@ def _create_token_collection(version_info):
     )
 
 
-class TokenInfo(namedtuple('Token', ['type', 'string', 'start_pos', 'prefix'])):
+class Token(namedtuple('Token', ['type', 'string', 'start_pos', 'prefix'])):
+    @property
+    def end_pos(self):
+        lines = split_lines(self.string)
+        if len(lines) > 1:
+            return self.start_pos[0] + len(lines) - 1, 0
+        else:
+            return self.start_pos[0], self.start_pos[1] + len(self.string)
+
     def __repr__(self):
         return ('TokenInfo(type=%s, string=%r, start=%r, prefix=%r)' %
                 self._replace(type=self.get_type_name()))
 
+
+class PythonToken(Token):
     def get_type_name(self, exact=True):
         if exact:
             typ = self.exact_type
@@ -221,14 +231,6 @@ class TokenInfo(namedtuple('Token', ['type', 'string', 'start_pos', 'prefix'])):
             return opmap[self.string]
         else:
             return self.type
-
-    @property
-    def end_pos(self):
-        lines = split_lines(self.string)
-        if len(lines) > 1:
-            return self.start_pos[0] + len(lines) - 1, 0
-        else:
-            return self.start_pos[0], self.start_pos[1] + len(self.string)
 
 
 def tokenize(code, version_info):
@@ -273,7 +275,7 @@ def tokenize_lines(lines, version_info):
             endmatch = endprog.match(line)
             if endmatch:
                 pos = endmatch.end(0)
-                yield TokenInfo(STRING, contstr + line[:pos], contstr_start, prefix)
+                yield PythonToken(STRING, contstr + line[:pos], contstr_start, prefix)
                 contstr = ''
                 contline = None
             else:
@@ -287,7 +289,7 @@ def tokenize_lines(lines, version_info):
                 txt = line[pos:]
                 if txt.endswith('\n'):
                     new_line = True
-                yield TokenInfo(ERRORTOKEN, txt, (lnum, pos), additional_prefix)
+                yield PythonToken(ERRORTOKEN, txt, (lnum, pos), additional_prefix)
                 additional_prefix = ''
                 break
 
@@ -312,21 +314,21 @@ def tokenize_lines(lines, version_info):
                         i += 1
                         start -= 1
                     if start > indents[-1]:
-                        yield TokenInfo(INDENT, '', spos, '')
+                        yield PythonToken(INDENT, '', spos, '')
                         indents.append(start)
                     while start < indents[-1]:
                         if start > indents[-2]:
-                            yield TokenInfo(ERROR_DEDENT, '', (lnum, 0), '')
+                            yield PythonToken(ERROR_DEDENT, '', (lnum, 0), '')
                             break
-                        yield TokenInfo(DEDENT, '', spos, '')
+                        yield PythonToken(DEDENT, '', spos, '')
                         indents.pop()
 
             if (initial in numchars or                      # ordinary number
                     (initial == '.' and token != '.' and token != '...')):
-                yield TokenInfo(NUMBER, token, spos, prefix)
+                yield PythonToken(NUMBER, token, spos, prefix)
             elif initial in '\r\n':
                 if not new_line and paren_level == 0:
-                    yield TokenInfo(NEWLINE, token, spos, prefix)
+                    yield PythonToken(NEWLINE, token, spos, prefix)
                 else:
                     additional_prefix = prefix + token
                 new_line = True
@@ -339,7 +341,7 @@ def tokenize_lines(lines, version_info):
                 if endmatch:                                # all on one line
                     pos = endmatch.end(0)
                     token = line[start:pos]
-                    yield TokenInfo(STRING, token, spos, prefix)
+                    yield PythonToken(STRING, token, spos, prefix)
                 else:
                     contstr_start = (lnum, start)           # multiple lines
                     contstr = line[start:]
@@ -356,18 +358,18 @@ def tokenize_lines(lines, version_info):
                     contline = line
                     break
                 else:                                       # ordinary string
-                    yield TokenInfo(STRING, token, spos, prefix)
+                    yield PythonToken(STRING, token, spos, prefix)
             elif is_identifier(initial):                      # ordinary name
                 if token in always_break_tokens:
                     paren_level = 0
                     while True:
                         indent = indents.pop()
                         if indent > start:
-                            yield TokenInfo(DEDENT, '', spos, '')
+                            yield PythonToken(DEDENT, '', spos, '')
                         else:
                             indents.append(indent)
                             break
-                yield TokenInfo(NAME, token, spos, prefix)
+                yield PythonToken(NAME, token, spos, prefix)
             elif initial == '\\' and line[start:] in ('\\\n', '\\\r\n'):  # continued stmt
                 additional_prefix += prefix + line[start:]
                 break
@@ -383,10 +385,10 @@ def tokenize_lines(lines, version_info):
                     typ = opmap[token]
                 except KeyError:
                     typ = ERRORTOKEN
-                yield TokenInfo(typ, token, spos, prefix)
+                yield PythonToken(typ, token, spos, prefix)
 
     if contstr:
-        yield TokenInfo(ERRORTOKEN, contstr, contstr_start, prefix)
+        yield PythonToken(ERRORTOKEN, contstr, contstr_start, prefix)
         if contstr.endswith('\n'):
             new_line = True
 
@@ -394,8 +396,8 @@ def tokenize_lines(lines, version_info):
     # As the last position we just take the maximally possible position. We
     # remove -1 for the last new line.
     for indent in indents[1:]:
-        yield TokenInfo(DEDENT, '', end_pos, '')
-    yield TokenInfo(ENDMARKER, '', end_pos, additional_prefix)
+        yield PythonToken(DEDENT, '', end_pos, '')
+    yield PythonToken(ENDMARKER, '', end_pos, additional_prefix)
 
 
 if __name__ == "__main__":
