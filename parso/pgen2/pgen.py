@@ -75,7 +75,6 @@ class ParserGenerator(object):
                 # A named token (NAME, NUMBER, STRING)
                 itoken = getattr(token, label, None)
                 assert isinstance(itoken, int), label
-                assert itoken in token.tok_name, label
                 if itoken in c.tokens:
                     return c.tokens[itoken]
                 else:
@@ -326,7 +325,6 @@ class ParserGenerator(object):
         while tup[0] in (token.COMMENT, token.NL):
             tup = next(self.generator)
         self.type, self.value, self.begin, prefix = tup
-        #print tokenize.tok_name[self.type], repr(self.value)
 
     def _raise_error(self, msg, *args):
         if args:
