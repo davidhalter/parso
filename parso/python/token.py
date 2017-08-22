@@ -93,3 +93,15 @@ opmap = {}
 for line in opmap_raw.splitlines():
     op, name = line.split()
     opmap[op] = globals()[name]
+
+
+def generate_token_id(string):
+    """
+    Uses a token in the grammar (e.g. `'+'` or `'and'`returns the corresponding
+    ID for it. The strings are part of the grammar file.
+    """
+    try:
+        return opmap[string]
+    except KeyError:
+        pass
+    return globals()[string]

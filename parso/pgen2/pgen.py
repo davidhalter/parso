@@ -12,7 +12,7 @@ from parso.utils import parse_version_string
 
 
 class ParserGenerator(object):
-    def __init__(self, bnf_text):
+    def __init__(self, bnf_text, token_namespace):
         self._bnf_text = bnf_text
         self.generator = tokenize.tokenize(
             bnf_text,
@@ -22,6 +22,7 @@ class ParserGenerator(object):
         self.dfas, self.startsymbol = self._parse()
         self.first = {}  # map from symbol name to set of tokens
         self._addfirstsets()
+        self._token_namespace = token_namespace
 
     def make_grammar(self):
         c = grammar.Grammar(self._bnf_text)
@@ -73,7 +74,7 @@ class ParserGenerator(object):
                     return ilabel
             else:
                 # A named token (NAME, NUMBER, STRING)
-                itoken = getattr(token, label, None)
+                itoken = getattr(self._token_namespace, label, None)
                 assert isinstance(itoken, int), label
                 if itoken in c.tokens:
                     return c.tokens[itoken]
@@ -90,12 +91,13 @@ class ParserGenerator(object):
                 if value in c.keywords:
                     return c.keywords[value]
                 else:
+                    # TODO this might be an issue?! Using token.NAME here?
                     c.labels.append((token.NAME, value))
                     c.keywords[value] = ilabel
                     return ilabel
             else:
                 # An operator (any non-numeric token)
-                itoken = token.opmap[value]  # Fails if unknown token
+                itoken = self._token_namespace.generate_token_id(value)
                 if itoken in c.tokens:
                     return c.tokens[itoken]
                 else:
@@ -384,7 +386,7 @@ class DFAState(object):
     __hash__ = None  # For Py3 compatibility.
 
 
-def generate_grammar(bnf_text):
+def generate_grammar(bnf_text, token_namespace):
     """
     ``bnf_text`` is a grammar in extended BNF (using * for repetition, + for
     at-least-once repetition, [] for optional parts, | for alternatives and ()
@@ -393,5 +395,5 @@ def generate_grammar(bnf_text):
     It's not EBNF according to ISO/IEC 14977. It's a dialect Python uses in its
     own parser.
     """
-    p = ParserGenerator(bnf_text)
+    p = ParserGenerator(bnf_text, token_namespace)
     return p.make_grammar()

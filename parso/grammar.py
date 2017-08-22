@@ -6,6 +6,7 @@ from parso.pgen2.pgen import generate_grammar
 from parso.utils import split_lines, python_bytes_to_unicode, parse_version_string
 from parso.python.diff import DiffParser
 from parso.python.tokenize import tokenize_lines, tokenize
+from parso.python import token
 from parso.cache import parser_cache, load_module, save_module
 from parso.parser import BaseParser
 from parso.python.parser import Parser as PythonParser
@@ -22,10 +23,14 @@ class Grammar(object):
     :param text: A BNF representation of your grammar.
     """
     _error_normalizer_config = None
+    _token_namespace = None
     _default_normalizer_config = pep8.PEP8NormalizerConfig()
 
     def __init__(self, text, tokenizer, parser=BaseParser, diff_parser=None):
-        self._pgen_grammar = generate_grammar(text)
+        self._pgen_grammar = generate_grammar(
+            text,
+            token_namespace=self._get_token_namespace()
+        )
         self._parser = parser
         self._tokenizer = tokenizer
         self._diff_parser = diff_parser
@@ -131,6 +136,12 @@ class Grammar(object):
                         cache_path=cache_path)
         return root_node
 
+    def _get_token_namespace(self):
+        ns = self._token_namespace
+        if ns is None:
+            raise ValueError("The token namespace should be set.")
+        return ns
+
     def iter_errors(self, node):
         if self._error_normalizer_config is None:
             raise ValueError("No error normalizer specified for this grammar.")
@@ -167,6 +178,7 @@ class Grammar(object):
 
 class PythonGrammar(Grammar):
     _error_normalizer_config = ErrorFinderConfig()
+    _token_namespace = token
 
     def __init__(self, version_info, bnf_text):
         super(PythonGrammar, self).__init__(
