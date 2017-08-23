@@ -12,6 +12,7 @@ from parso.parser import BaseParser
 from parso.python.parser import Parser as PythonParser
 from parso.python.errors import ErrorFinderConfig
 from parso.python import pep8
+from parso.python import fstring
 
 _loaded_grammars = {}
 
@@ -197,6 +198,30 @@ class PythonGrammar(Grammar):
         return tokenize(code, self.version_info)
 
 
+class PythonFStringGrammar(Grammar):
+    def __init__(self):
+        super(PythonFStringGrammar, self).__init__(
+            text=fstring.GRAMMAR,
+            tokenizer=fstring.tokenize
+        )
+
+    def parse(self, code, **kwargs):
+        return self._parse(code, **kwargs)
+
+    def _parse(self, code, error_recovery=True, start_pos=(1, 0)):
+        tokens = self._tokenizer(lines)
+        p = self._parser(
+            self._pgen_grammar,
+            error_recovery=error_recovery,
+            start_symbol=start_symbol
+        )
+        return p.parse(tokens=tokens)
+
+    def parse_leaf(leaf, error_recovery=True):
+        code = leaf._get_payload()
+        return self.parse(code, error_recovery=True, start_pos=leaf.start_pos)
+
+
 def load_grammar(**kwargs):
     """
     Loads a Python grammar. The default version is the current Python version.
@@ -204,23 +229,31 @@ def load_grammar(**kwargs):
     If you need support for a specific version, please use e.g.
     `version='3.3'`.
     """
-    def load_grammar(version=None):
-        version_info = parse_version_string(version)
+    def load_grammar(language='python', version=None):
+        if language == 'python':
+            version_info = parse_version_string(version)
 
-        file = 'python/grammar%s%s.txt' % (version_info.major, version_info.minor)
+            file = 'python/grammar%s%s.txt' % (version_info.major, version_info.minor)
 
-        global _loaded_grammars
-        path = os.path.join(os.path.dirname(__file__), file)
-        try:
-            return _loaded_grammars[path]
-        except KeyError:
+            global _loaded_grammars
+            path = os.path.join(os.path.dirname(__file__), file)
             try:
-                with open(path) as f:
-                    bnf_text = f.read()
+                return _loaded_grammars[path]
+            except KeyError:
+                try:
+                    with open(path) as f:
+                        bnf_text = f.read()
 
-                grammar = PythonGrammar(version_info, bnf_text)
-                return _loaded_grammars.setdefault(path, grammar)
-            except FileNotFoundError:
-                message = "Python version %s is currently not supported." % version
-                raise NotImplementedError(message)
+                    grammar = PythonGrammar(version_info, bnf_text)
+                    return _loaded_grammars.setdefault(path, grammar)
+                except FileNotFoundError:
+                    message = "Python version %s is currently not supported." % version
+                    raise NotImplementedError(message)
+        elif language == 'python-f-string':
+            if version is not None:
+                raise NotImplementedError("Currently different versions are not supported.")
+            return PythonFStringGrammar()
+        else:
+            raise NotImplementedError("No support for language %s." % language)
+
     return load_grammar(**kwargs)
