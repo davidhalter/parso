@@ -3,12 +3,13 @@ import re
 from parso.utils import PythonVersionInfo
 from parso.python.tokenize import Token
 from parso.python import token
+from parso import parser
 
 version36 = PythonVersionInfo(3, 6)
 
 
 class TokenNamespace:
-    LBRACE = token.LBRACE,
+    LBRACE = token.LBRACE
     RBRACE = token.RBRACE
     ENDMARKER = token.ENDMARKER
     ERRORTOKEN = token.ERRORTOKEN
@@ -25,18 +26,20 @@ class TokenNamespace:
             return cls.RBRACE
         elif string == '!':
             return cls.EXCLAMATION_MARK
+        elif string == ':':
+            return cls.COLON
         return getattr(cls, string)
 
 
+START_SYMBOL = 'fstring'
 GRAMMAR = """
-fstring: expressions ENDMARKER
-expressions: expression*
-expression: '{' PYTHON_EXPR [ '!' CONVERSION ] [ ':' expressions ] '}'
+fstring: expression* ENDMARKER
+expression: '{' PYTHON_EXPR [ '!' CONVERSION ] [ ':' expression* ] '}'
 """
 
 _prefix = r'((?:[^{}]+|\}\}|\{\{)*)'
 _expr = _prefix + r'(\{|\}|$)'
-_in_expr = r'[^{}\[\]:"\'!]*(.?)'
+_in_expr = r'([^{}\[\]:"\'!]*)(.?)'
 # There's only one conversion character allowed. But the rules have to be
 # checked later anyway, so allow more here. This makes error recovery nicer.
 _conversion = r'([^={}:]+)(.?)'
@@ -46,13 +49,17 @@ _compiled_in_expr = re.compile(_in_expr)
 _compiled_conversion = re.compile(_conversion)
 
 
-def tokenize(code, start_pos=(1, 0)):
+def tokenize(*args, **kwargs):
+    for t in _tokenize(*args, **kwargs):
+        print(t)
+        yield t
+def _tokenize(code, start_pos=(1, 0)):
     def tok(value, type=None, prefix=''):
         if type is None:
-            type = TokenNamespace.generate_token_id(found)
+            type = TokenNamespace.generate_token_id(value)
+        line = column=1
         return Token(type, value, (line, column), prefix)
 
-    code = ''
     start = 0
     while True:
         match = _compiled_expr.match(code, start)
@@ -74,7 +81,8 @@ def tokenize(code, start_pos=(1, 0)):
             curly_count = 0
             while True:
                 expr_match = _compiled_in_expr.match(code, start)
-                expression += expr_match.group(0)
+                print(start, expr_match.group(1), expr_match.groups())
+                expression += expr_match.group(1)
                 found = expr_match.group(2)
                 start = expr_match.end()
 
@@ -120,7 +128,7 @@ def tokenize(code, start_pos=(1, 0)):
                 conversion_match = _compiled_conversion.match(code, start)
                 found = conversion_match.group(2)
                 start = conversion_match.end()
-                yield tok(conversion_match.group(1))
+                yield tok(conversion_match.group(1), type=TokenNamespace.CONVERSION)
                 if found:
                     yield tok(found)
 
@@ -128,3 +136,14 @@ def tokenize(code, start_pos=(1, 0)):
             # basically new tokens.
 
     yield tok('', type=TokenNamespace.ENDMARKER, prefix=prefix)
+
+
+class Parser(parser.BaseParser):
+    def parse(self, tokens):
+        node = super(Parser, self).parse(tokens)
+        if isinstance(node, self.default_leaf):  # Is an endmarker.
+            # If there's no curly braces we get back a non-module. We always
+            # want an fstring.
+            node = self.default_node('fstring', [node])
+
+        return node

@@ -199,21 +199,24 @@ class PythonGrammar(Grammar):
 
 
 class PythonFStringGrammar(Grammar):
+    _token_namespace = fstring.TokenNamespace
+
     def __init__(self):
         super(PythonFStringGrammar, self).__init__(
             text=fstring.GRAMMAR,
-            tokenizer=fstring.tokenize
+            tokenizer=fstring.tokenize,
+            parser=fstring.Parser
         )
 
     def parse(self, code, **kwargs):
         return self._parse(code, **kwargs)
 
     def _parse(self, code, error_recovery=True, start_pos=(1, 0)):
-        tokens = self._tokenizer(lines)
+        tokens = self._tokenizer(code, start_pos=start_pos)
         p = self._parser(
             self._pgen_grammar,
             error_recovery=error_recovery,
-            start_symbol=start_symbol
+            start_symbol=fstring.START_SYMBOL,
         )
         return p.parse(tokens=tokens)
 
