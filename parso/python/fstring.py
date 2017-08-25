@@ -1,6 +1,7 @@
 import re
 
 from parso.utils import PythonVersionInfo
+from parso.utils import split_lines
 from parso.python.tokenize import Token
 from parso.python import token
 from parso import parser
@@ -54,15 +55,28 @@ def tokenize(*args, **kwargs):
         print(t)
         yield t
 def _tokenize(code, start_pos=(1, 0)):
+    def add_to_pos(string):
+        lines = split_lines(string)
+        l = len(lines[-1])
+        if len(lines) > 1:
+            start_pos[0] += len(lines) - 1
+            start_pos[1] = l
+        else:
+            start_pos[1] += l
+
     def tok(value, type=None, prefix=''):
         if type is None:
             type = TokenNamespace.generate_token_id(value)
-        line = column=1
-        return Token(type, value, (line, column), prefix)
+
+        add_to_pos(prefix)
+        token = Token(type, value, tuple(start_pos), prefix)
+        add_to_pos(value)
+        return token
 
     start = 0
     recursion_level = 0
     added_prefix = ''
+    start_pos = list(start_pos)
     while True:
         match = _compiled_expr.match(code, start)
         prefix = added_prefix + match.group(1)

@@ -1,6 +1,7 @@
 import pytest
 
 from parso import load_grammar, ParserSyntaxError
+from parso.python.fstring import tokenize
 
 
 @pytest.fixture
@@ -59,3 +60,16 @@ def test_invalid(code, grammar):
 
     # It should work with error recovery.
     #grammar.parse(code, error_recovery=True)
+
+
+@pytest.mark.parametrize(
+    ('code', 'start_pos', 'positions'), [
+        # 2 times 2, 5 because python expr and endmarker.
+        ('}{', (2, 3), [(2, 3), (2, 4), (2, 5), (2, 5)]),
+        (' :{ 1 : } ', (1, 0), [(1, 2), (1, 3), (1, 6), (1, 8), (1, 10)]),
+        ('\n{\nfoo\n }', (2, 1), [(3, 0), (3, 1), (5, 1), (5, 2)]),
+    ]
+)
+def test_tokenize_start_pos(code, start_pos, positions):
+    tokens = tokenize(code, start_pos)
+    assert positions == [p.start_pos for p in tokens]
