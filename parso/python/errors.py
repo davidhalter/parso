@@ -434,7 +434,7 @@ class _ContinueChecks(SyntaxRule):
     def is_issue(self, leaf):
         in_loop = False
         for block in self._normalizer.context.blocks:
-            if block.type == 'for_stmt':
+            if block.type in ('for_stmt', 'while_stmt'):
                 in_loop = True
             if block.type == 'try_stmt':
                 last_block = block.children[-3]
