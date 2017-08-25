@@ -206,6 +206,13 @@ class Leaf(NodeOrLeaf):
         return "<%s: %s>" % (type(self).__name__, self.value)
 
 
+class TypedLeaf(Leaf):
+    __slots__ = ('type',)
+    def __init__(self, type, value, start_pos, prefix=''):
+        super(TypedLeaf, self).__init__(value, start_pos, prefix)
+        self.type = type
+
+
 class BaseNode(NodeOrLeaf):
     """
     The super class for all nodes.
@@ -310,7 +317,7 @@ class ErrorLeaf(Leaf):
     A leaf that is either completely invalid in a language (like `$` in Python)
     or is invalid at that position. Like the star in `1 +* 1`.
     """
-    __slots__ = ('original_type')
+    __slots__ = ('original_type',)
     type = 'error_leaf'
 
     def __init__(self, original_type, value, start_pos, prefix=''):

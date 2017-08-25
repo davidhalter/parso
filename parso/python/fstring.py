@@ -5,6 +5,7 @@ from parso.utils import split_lines
 from parso.python.tokenize import Token
 from parso.python import token
 from parso import parser
+from parso.tree import TypedLeaf
 
 version36 = PythonVersionInfo(3, 6)
 
@@ -18,6 +19,8 @@ class TokenNamespace:
     CONVERSION = 100
     PYTHON_EXPR = 101
     EXCLAMATION_MARK = 102
+
+    token_map = dict((v, k) for k, v in locals().items())
 
     @classmethod
     def generate_token_id(cls, string):
@@ -180,3 +183,8 @@ class Parser(parser.BaseParser):
             node = self.default_node('fstring', [node])
 
         return node
+
+    def convert_leaf(self, pgen_grammar, type, value, prefix, start_pos):
+        # TODO this is so ugly.
+        leaf_type = TokenNamespace.token_map[type]
+        return TypedLeaf(leaf_type, value, start_pos, prefix)
