@@ -220,7 +220,7 @@ class PythonFStringGrammar(Grammar):
         )
         return p.parse(tokens=tokens)
 
-    def parse_leaf(leaf, error_recovery=True):
+    def parse_leaf(self, leaf, error_recovery=True):
         code = leaf._get_payload()
         return self.parse(code, error_recovery=True, start_pos=leaf.start_pos)
 

@@ -203,7 +203,10 @@ class Leaf(NodeOrLeaf):
 
     @utf8_repr
     def __repr__(self):
-        return "<%s: %s>" % (type(self).__name__, self.value)
+        value = self.value
+        if not value:
+            value = self.type
+        return "<%s: %s>" % (type(self).__name__, value)
 
 
 class TypedLeaf(Leaf):

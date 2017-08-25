@@ -186,5 +186,5 @@ class Parser(parser.BaseParser):
 
     def convert_leaf(self, pgen_grammar, type, value, prefix, start_pos):
         # TODO this is so ugly.
-        leaf_type = TokenNamespace.token_map[type]
+        leaf_type = TokenNamespace.token_map[type].lower()
         return TypedLeaf(leaf_type, value, start_pos, prefix)

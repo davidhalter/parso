@@ -254,7 +254,7 @@ class ErrorFinder(Normalizer):
     def __init__(self, *args, **kwargs):
         super(ErrorFinder, self).__init__(*args, **kwargs)
         self._error_dict = {}
-        self.version = self._grammar.version_info
+        self.version = self.grammar.version_info
 
     def initialize(self, node):
         def create_context(node):
@@ -834,6 +834,54 @@ class _TryStmtRule(SyntaxRule):
                 default_except = except_clause
             elif default_except is not None:
                 self.add_issue(default_except, message=self.message)
+
+
+@ErrorFinder.register_rule(type='string')
+class _FStringRule(SyntaxRule):
+    _fstring_grammar = None
+    message_empty = "f-string: empty expression not allowed"  # f'{}'
+    "f-string: single '}' is not allowed"  # f'}'
+    "f-string: expressions nested too deeply"  # f'{1:{5:{3}}}'
+    message_backslash = "f-string expression part cannot include a backslash"  # f'{"\"}' or f'{"\\"}'
+    message_comment = "f-string expression part cannot include '#'"  # f'{#}'
+    "f-string: unterminated string"  # f'{"}'
+    "f-string: mismatched '(', '{', or '['"
+    "f-string: invalid conversion character: expected 's', 'r', or 'a'" # f'{1!b}'
+    "f-string: unexpected end of string"  # Doesn't really happen?!
+    "f-string: expecting '}'"  # f'{'
+
+    @classmethod
+    def _load_grammar(cls):
+        import parso
+
+        if cls._fstring_grammar is None:
+            cls._fstring_grammar = parso.load_grammar(language='python-f-string')
+        return cls._fstring_grammar
+
+    def is_issue(self, fstring):
+        if 'f' not in fstring.string_prefix.lower():
+            return
+
+        parsed = self._load_grammar().parse_leaf(fstring)
+        for child in parsed.children:
+            type = child.type
+            if type == 'expression':
+                self._check_expression(child.children[1])
+
+    def _check_expression(self, python_expr):
+        value = python_expr.value
+        if '\\' in value:
+            self.add_issue(python_expr, message=self.message_backslash)
+            return
+        if '#' in value:
+            self.add_issue(python_expr, message=self.message_comment)
+            return
+        # This is now nested parsing. We parsed the fstring and now
+        # we're parsing Python again.
+        module = self._normalizer.grammar.parse(value)
+        parsed_expr = module.children[0]
+        if parsed_expr.type == 'endmarker':
+            self.add_issue(python_expr, message=self.message_empty)
 
 
 class _CheckAssignmentRule(SyntaxRule):

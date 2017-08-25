@@ -13,7 +13,7 @@ class _NormalizerMeta(type):
 
 class Normalizer(use_metaclass(_NormalizerMeta)):
     def __init__(self, grammar, config):
-        self._grammar = grammar
+        self.grammar = grammar
         self._config = config
         self.issues = []
 
