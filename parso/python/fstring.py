@@ -37,12 +37,12 @@ fstring: expression* ENDMARKER
 expression: '{' PYTHON_EXPR [ '!' CONVERSION ] [ ':' expression* ] '}'
 """
 
-_prefix = r'((?:[^{}]+|\}\}|\{\{)*)'
+_prefix = r'((?:[^{}]+)*)'
 _expr = _prefix + r'(\{|\}|$)'
 _in_expr = r'([^{}\[\]:"\'!]*)(.?)'
 # There's only one conversion character allowed. But the rules have to be
 # checked later anyway, so allow more here. This makes error recovery nicer.
-_conversion = r'([^={}:]+)(.?)'
+_conversion = r'([^={}:]*)(.?)'
 
 _compiled_expr = re.compile(_expr)
 _compiled_in_expr = re.compile(_in_expr)
@@ -61,9 +61,11 @@ def _tokenize(code, start_pos=(1, 0)):
         return Token(type, value, (line, column), prefix)
 
     start = 0
+    recursion_level = 0
+    added_prefix = ''
     while True:
         match = _compiled_expr.match(code, start)
-        prefix = match.group(1)
+        prefix = added_prefix + match.group(1)
         found = match.group(2)
         start = match.end()
         if not found:
@@ -71,17 +73,32 @@ def _tokenize(code, start_pos=(1, 0)):
             break
 
         if found == '}':
+            if recursion_level == 0 and len(code) > start  and code[start] == '}':
+                # This is a }} escape.
+                added_prefix = prefix + '}}'
+                start += 1
+                continue
+
+            recursion_level = max(0, recursion_level - 1)
             yield tok(found, prefix=prefix)
+            added_prefix = ''
         else:
             assert found == '{'
+            if recursion_level == 0 and len(code) > start and code[start] == '{':
+                # This is a {{ escape.
+                added_prefix = prefix + '{{'
+                start += 1
+                continue
+
+            recursion_level += 1
             yield tok(found, prefix=prefix)
+            added_prefix = ''
 
             expression = ''
             squared_count = 0
             curly_count = 0
             while True:
                 expr_match = _compiled_in_expr.match(code, start)
-                print(start, expr_match.group(1), expr_match.groups())
                 expression += expr_match.group(1)
                 found = expr_match.group(2)
                 start = expr_match.end()
@@ -131,6 +148,8 @@ def _tokenize(code, start_pos=(1, 0)):
                 yield tok(conversion_match.group(1), type=TokenNamespace.CONVERSION)
                 if found:
                     yield tok(found)
+            if found == '}':
+                recursion_level -= 1
 
             # We don't need to handle everything after ':', because that is
             # basically new tokens.

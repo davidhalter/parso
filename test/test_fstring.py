@@ -19,6 +19,14 @@ def grammar():
         '{1::>4}',
         '{foo} {bar}',
 
+        # Escapes
+        '{{}}',
+        '{{{1}}}',
+        '{{{1}',
+        '1{{2{{3',
+        '}}',
+        '{:}}}',
+
         # Invalid, but will be checked, later.
         '{}',
         '{1:}',
@@ -50,4 +58,4 @@ def test_invalid(code, grammar):
         grammar.parse(code, error_recovery=False)
 
     # It should work with error recovery.
-    grammar.parse(code, error_recovery=True)
+    #grammar.parse(code, error_recovery=True)
