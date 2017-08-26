@@ -38,7 +38,8 @@ class TokenNamespace:
 START_SYMBOL = 'fstring'
 GRAMMAR = """
 fstring: expression* ENDMARKER
-expression: '{' PYTHON_EXPR [ '!' CONVERSION ] [ ':' expression* ] '}'
+format_spec: ':' expression*
+expression: '{' PYTHON_EXPR [ '!' CONVERSION ] [ format_spec ] '}'
 """
 
 _prefix = r'((?:[^{}]+)*)'

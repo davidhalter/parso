@@ -841,13 +841,12 @@ class _FStringRule(SyntaxRule):
     _fstring_grammar = None
     message_empty = "f-string: empty expression not allowed"  # f'{}'
     "f-string: single '}' is not allowed"  # f'}'
-    "f-string: expressions nested too deeply"  # f'{1:{5:{3}}}'
+    message_nested = "f-string: expressions nested too deeply"
     message_backslash = "f-string expression part cannot include a backslash"  # f'{"\"}' or f'{"\\"}'
     message_comment = "f-string expression part cannot include '#'"  # f'{#}'
     "f-string: unterminated string"  # f'{"}'
     "f-string: mismatched '(', '{', or '['"
     message_conversion = "f-string: invalid conversion character: expected 's', 'r', or 'a'"
-    "f-string: unexpected end of string"  # Doesn't really happen?!
     "f-string: expecting '}'"  # f'{'
 
     @classmethod
@@ -865,15 +864,9 @@ class _FStringRule(SyntaxRule):
         parsed = self._load_grammar().parse_leaf(fstring)
         for child in parsed.children:
             if child.type == 'expression':
-                for c in child.children:
-                    if c.type == 'python_expr':
-                        self._check_expression(c)
-                    elif c.type == 'conversion':
-                        if c.value not in ('s', 'r', 'a'):
-                            self.add_issue(c, message=self.message_conversion)
-                self._check_expression(child.children[1])
+                self._check_expression(child)
 
-    def _check_expression(self, python_expr):
+    def _check_python_expr(self, python_expr):
         value = python_expr.value
         if '\\' in value:
             self.add_issue(python_expr, message=self.message_backslash)
@@ -887,6 +880,28 @@ class _FStringRule(SyntaxRule):
         parsed_expr = module.children[0]
         if parsed_expr.type == 'endmarker':
             self.add_issue(python_expr, message=self.message_empty)
+
+    def _check_format_spec(self, format_spec):
+        for expression in format_spec.children[1:]:
+            nested_format_spec = expression.children[-2]
+            if nested_format_spec.type == 'format_spec':
+                if len(nested_format_spec.children) > 1:
+                    self.add_issue(
+                        nested_format_spec.children[1],
+                        message=self.message_nested
+                    )
+
+            self._check_expression(expression)
+
+    def _check_expression(self, expression):
+        for c in expression.children:
+            if c.type == 'python_expr':
+                self._check_python_expr(c)
+            elif c.type == 'conversion':
+                if c.value not in ('s', 'r', 'a'):
+                    self.add_issue(c, message=self.message_conversion)
+            elif c.type == 'format_spec':
+                self._check_format_spec(c)
 
 
 class _CheckAssignmentRule(SyntaxRule):
