@@ -144,11 +144,11 @@ def _tokenize(code, start_pos=(1, 0)):
                         search *= 3
                         start += 2
 
-                    index = code.find(search)
+                    index = code.find(search, start)
                     if index == -1:
                         index = len(code)
                     expression += code[start:index]
-                    start = index
+                    start = index + 1
                 elif found == '!' and len(code) > start and code[start] == '=':
                     # This is a python `!=` and not a conversion.
                     expression += found
