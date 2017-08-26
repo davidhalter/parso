@@ -198,9 +198,17 @@ class Parser(parser.BaseParser):
                 add_token_callback
             )
 
-        dfa, state, (type_, nodes) = stack[1]
-        stack[0][2][1].append(ErrorNode(nodes))
-        stack[1:] = []
-        #error_leaf = tree.PythonErrorLeaf(tok_name[typ].lower(), value, start_pos, prefix)
+        if len(stack) == 1:
+            error_leaf = ErrorLeaf(
+                TokenNamespace.token_map[typ].lower(),
+                value,
+                start_pos,
+                prefix
+            )
+            stack[0][2][1].append(error_leaf)
+        else:
+            dfa, state, (type_, nodes) = stack[1]
+            stack[0][2][1].append(ErrorNode(nodes))
+            stack[1:] = []
 
-        add_token_callback(typ, value, start_pos, prefix)
+            add_token_callback(typ, value, start_pos, prefix)

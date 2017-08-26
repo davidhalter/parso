@@ -840,11 +840,11 @@ class _TryStmtRule(SyntaxRule):
 class _FStringRule(SyntaxRule):
     _fstring_grammar = None
     message_empty = "f-string: empty expression not allowed"  # f'{}'
-    "f-string: single '}' is not allowed"  # f'}'
+    message_single_closing = "f-string: single '}' is not allowed"  # f'}'
     message_nested = "f-string: expressions nested too deeply"
     message_backslash = "f-string expression part cannot include a backslash"  # f'{"\"}' or f'{"\\"}'
     message_comment = "f-string expression part cannot include '#'"  # f'{#}'
-    "f-string: unterminated string"  # f'{"}'
+    message_string = "f-string: unterminated string"  # f'{"}'
     message_conversion = "f-string: invalid conversion character: expected 's', 'r', or 'a'"
     message_incomplete = "f-string: expecting '}'"  # f'{'
 
@@ -866,6 +866,8 @@ class _FStringRule(SyntaxRule):
                 self._check_expression(child)
             elif child.type == 'error_node':
                 self.add_issue(child, message=self.message_incomplete)
+            elif child.type == 'error_leaf':
+                self.add_issue(child, message=self.message_single_closing)
 
     def _check_python_expr(self, python_expr):
         value = python_expr.value
