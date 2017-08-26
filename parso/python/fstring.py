@@ -1,9 +1,9 @@
 import re
 
+from itertools import count
 from parso.utils import PythonVersionInfo
 from parso.utils import split_lines
 from parso.python.tokenize import Token
-from parso.python import token
 from parso import parser
 from parso.tree import TypedLeaf, ErrorNode, ErrorLeaf
 
@@ -11,14 +11,15 @@ version36 = PythonVersionInfo(3, 6)
 
 
 class TokenNamespace:
-    LBRACE = token.LBRACE
-    RBRACE = token.RBRACE
-    ENDMARKER = token.ENDMARKER
-    ERRORTOKEN = token.ERRORTOKEN
-    COLON = token.COLON
-    CONVERSION = 100
-    PYTHON_EXPR = 101
-    EXCLAMATION_MARK = 102
+    _c = count()
+    LBRACE = next(_c)
+    RBRACE = next(_c)
+    ENDMARKER = next(_c)
+    COLON = next(_c)
+    CONVERSION = next(_c)
+    PYTHON_EXPR = next(_c)
+    EXCLAMATION_MARK = next(_c)
+    UNTERMINATED_STRING = next(_c)
 
     token_map = dict((v, k) for k, v in locals().items())
 
@@ -138,7 +139,6 @@ def _tokenize(code, start_pos=(1, 0)):
                 elif found == ':' and (squared_count or curly_count):
                     expression += found
                 elif found in ('"', "'"):
-                    expression += found
                     search = found
                     if len(code) > start + 1 and  \
                             code[start] == found == code[start+1]:
@@ -147,8 +147,14 @@ def _tokenize(code, start_pos=(1, 0)):
 
                     index = code.find(search, start)
                     if index == -1:
-                        index = len(code)
-                    expression += code[start:index]
+                        yield tok(expression, type=TokenNamespace.PYTHON_EXPR)
+                        yield tok(
+                            found + code[start:],
+                            type=TokenNamespace.UNTERMINATED_STRING,
+                        )
+                        start = len(code)
+                        break
+                    expression += found + code[start:index]
                     start = index + 1
                 elif found == '!' and len(code) > start and code[start] == '=':
                     # This is a python `!=` and not a conversion.
@@ -198,13 +204,9 @@ class Parser(parser.BaseParser):
                 add_token_callback
             )
 
+        token_type = TokenNamespace.token_map[typ].lower()
         if len(stack) == 1:
-            error_leaf = ErrorLeaf(
-                TokenNamespace.token_map[typ].lower(),
-                value,
-                start_pos,
-                prefix
-            )
+            error_leaf = ErrorLeaf(token_type, value, start_pos, prefix)
             stack[0][2][1].append(error_leaf)
         else:
             dfa, state, (type_, nodes) = stack[1]

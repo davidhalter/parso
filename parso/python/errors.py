@@ -844,7 +844,7 @@ class _FStringRule(SyntaxRule):
     message_nested = "f-string: expressions nested too deeply"
     message_backslash = "f-string expression part cannot include a backslash"  # f'{"\"}' or f'{"\\"}'
     message_comment = "f-string expression part cannot include '#'"  # f'{#}'
-    message_string = "f-string: unterminated string"  # f'{"}'
+    message_unterminated_string = "f-string: unterminated string"  # f'{"}'
     message_conversion = "f-string: invalid conversion character: expected 's', 'r', or 'a'"
     message_incomplete = "f-string: expecting '}'"  # f'{'
 
@@ -865,6 +865,12 @@ class _FStringRule(SyntaxRule):
             if child.type == 'expression':
                 self._check_expression(child)
             elif child.type == 'error_node':
+                next_ = child.get_next_leaf()
+                if next_.type == 'error_leaf' and next_.original_type == 'unterminated_string':
+                    self.add_issue(next_, message=self.message_unterminated_string)
+                    # At this point nothing more is comming except the error
+                    # leaf that we've already checked here.
+                    break
                 self.add_issue(child, message=self.message_incomplete)
             elif child.type == 'error_leaf':
                 self.add_issue(child, message=self.message_single_closing)

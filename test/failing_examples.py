@@ -149,6 +149,7 @@ FAILING_EXAMPLES = [
     "f'{'",
     "f'{'",
     "f'}'",
+    "f'{\"}'",
 ]
 
 GLOBAL_NONLOCAL_ERROR = [
