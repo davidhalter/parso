@@ -237,3 +237,12 @@ def test_too_many_levels_of_indentation():
     base = 'def x():\n if x:\n'
     assert not _get_error_list(build_nested('pass', 49, base=base))
     assert _get_error_list(build_nested('pass', 50, base=base))
+
+
+@pytest.mark.parametrize(
+    'code', [
+        "f'{*args,}'",
+    ]
+)
+def test_valid_fstrings(code):
+    assert not _get_error_list(code, version='3.6')

@@ -25,9 +25,9 @@ class ParserSyntaxError(Exception):
 
     May be raised as an exception.
     """
-    def __init__(self, message, position):
+    def __init__(self, message, error_leaf):
         self.message = message
-        self.position = position
+        self.error_leaf = error_leaf
 
 
 class BaseParser(object):
@@ -60,7 +60,8 @@ class BaseParser(object):
         if self._error_recovery:
             raise NotImplementedError("Error Recovery is not implemented")
         else:
-            raise ParserSyntaxError('SyntaxError: invalid syntax', start_pos)
+            error_leaf = tree.ErrorLeaf('TODO %s' % typ, value, start_pos, prefix)
+            raise ParserSyntaxError('SyntaxError: invalid syntax', error_leaf)
 
     def convert_node(self, pgen_grammar, type_, children):
         # TODO REMOVE symbol, we don't want type here.

@@ -154,7 +154,7 @@ def _tokenize(code, start_pos=(1, 0)):
                         )
                         start = len(code)
                         break
-                    expression += found + code[start:index]
+                    expression += found + code[start:index+1]
                     start = index + 1
                 elif found == '!' and len(code) > start and code[start] == '=':
                     # This is a python `!=` and not a conversion.

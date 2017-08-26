@@ -6,6 +6,7 @@ from contextlib import contextmanager
 
 from parso.normalizer import Normalizer, NormalizerConfig, Issue, Rule
 from parso.python.tree import search_ancestor
+from parso.parser import ParserSyntaxError
 
 _BLOCK_STMTS = ('if_stmt', 'while_stmt', 'for_stmt', 'try_stmt', 'with_stmt')
 _STAR_EXPR_PARENTS = ('testlist_star_expr', 'testlist_comp', 'exprlist')
@@ -847,6 +848,7 @@ class _FStringRule(SyntaxRule):
     message_unterminated_string = "f-string: unterminated string"  # f'{"}'
     message_conversion = "f-string: invalid conversion character: expected 's', 'r', or 'a'"
     message_incomplete = "f-string: expecting '}'"  # f'{'
+    message_syntax = "invalid syntax"
 
     @classmethod
     def _load_grammar(cls):
@@ -883,12 +885,31 @@ class _FStringRule(SyntaxRule):
         if '#' in value:
             self.add_issue(python_expr, message=self.message_comment)
             return
+        if re.match('\s*$', value) is not None:
+            self.add_issue(python_expr, message=self.message_empty)
+            return
+
         # This is now nested parsing. We parsed the fstring and now
         # we're parsing Python again.
-        module = self._normalizer.grammar.parse(value)
-        parsed_expr = module.children[0]
-        if parsed_expr.type == 'endmarker':
-            self.add_issue(python_expr, message=self.message_empty)
+        try:
+            # CPython has a bit of a special ways to parse Python code within
+            # f-strings. It wraps the code in brackets to make sure that
+            # whitespace doesn't make problems (indentation/newlines).
+            # Just use that algorithm as well here and adapt start positions.
+            start_pos = python_expr.start_pos
+            start_pos = start_pos[0], start_pos[1] - 1
+            eval_input = self._normalizer.grammar._parse(
+                '(%s)' % value,
+                start_symbol='eval_input',
+                start_pos=start_pos,
+                error_recovery=False
+            )
+        except ParserSyntaxError as e:
+            self.add_issue(e.error_leaf, message=self.message_syntax)
+            return
+
+        issues = self._normalizer.grammar.iter_errors(eval_input)
+        self._normalizer.issues += issues
 
     def _check_format_spec(self, format_spec):
         for expression in format_spec.children[1:]:

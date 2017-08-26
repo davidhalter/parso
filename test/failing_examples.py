@@ -150,6 +150,13 @@ FAILING_EXAMPLES = [
     "f'{'",
     "f'}'",
     "f'{\"}'",
+    "f'{\"}'",
+    # Now nested parsing
+    "f'{1+}'",
+    "f'{continue}'",
+    "f'{1;1}'",
+    "f'{a=3}'",
+    "f'{b\"\" \"\"}'",
 ]
 
 GLOBAL_NONLOCAL_ERROR = [

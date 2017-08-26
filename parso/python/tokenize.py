@@ -222,13 +222,13 @@ class PythonToken(Token):
                 self._replace(type=self._get_type_name()))
 
 
-def tokenize(code, version_info):
+def tokenize(code, version_info, start_pos=(1, 0)):
     """Generate tokens from a the source code (string)."""
     lines = split_lines(code, keepends=True)
-    return tokenize_lines(lines, version_info)
+    return tokenize_lines(lines, version_info, start_pos=start_pos)
 
 
-def tokenize_lines(lines, version_info):
+def tokenize_lines(lines, version_info, start_pos=(1, 0)):
     """
     A heavily modified Python standard library tokenizer.
 
@@ -252,14 +252,22 @@ def tokenize_lines(lines, version_info):
     prefix = ''  # Should never be required, but here for safety
     additional_prefix = ''
     first = True
-    for lnum, line in enumerate(lines, 1):  # loop over lines in stream
+    lnum = start_pos[0] - 1
+    for line in lines:  # loop over lines in stream
+        lnum += 1
+        pos, max = 0, len(line)
         if first:
             if line.startswith(BOM_UTF8_STRING):
                 additional_prefix = BOM_UTF8_STRING
                 line = line[1:]
+
+            # Fake that the part before was already parsed.
+            line = '^' * start_pos[1] + line
+            pos = start_pos[1]
+            max += start_pos[1]
+
             first = False
 
-        pos, max = 0, len(line)
         if contstr:                                         # continued string
             endmatch = endprog.match(line)
             if endmatch:

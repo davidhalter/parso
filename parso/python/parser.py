@@ -1,7 +1,6 @@
 from parso.python import tree
-from parso.python import tokenize
 from parso.python.token import (DEDENT, INDENT, ENDMARKER, NEWLINE, NUMBER,
-                                STRING, tok_name)
+                                STRING, tok_name, NAME)
 from parso.parser import BaseParser
 from parso.pgen2.parse import token_to_ilabel
 
@@ -117,7 +116,7 @@ class Parser(BaseParser):
 
     def convert_leaf(self, pgen_grammar, type, value, prefix, start_pos):
         # print('leaf', repr(value), token.tok_name[type])
-        if type == tokenize.NAME:
+        if type == NAME:
             if value in pgen_grammar.keywords:
                 return tree.Keyword(value, start_pos, prefix)
             else:
@@ -247,7 +246,7 @@ class Parser(BaseParser):
 
     def _recovery_tokenize(self, tokens):
         for typ, value, start_pos, prefix in tokens:
-            # print(tokenize.tok_name[typ], repr(value), start_pos, repr(prefix))
+            # print(tok_name[typ], repr(value), start_pos, repr(prefix))
             if typ == DEDENT:
                 # We need to count indents, because if we just omit any DEDENT,
                 # we might omit them in the wrong place.

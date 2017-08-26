@@ -66,14 +66,18 @@ class Grammar(object):
 
         :return: A syntax tree node. Typically the module.
         """
+        if 'start_pos' in kwargs:
+            raise TypeError("parse() got an unexpected keyworda argument.")
         return self._parse(code=code, **kwargs)
 
     def _parse(self, code=None, path=None, error_recovery=True,
                start_symbol='file_input', cache=False, diff_cache=False,
-               cache_path=None):
+               cache_path=None, start_pos=(1, 0)):
         """
         Wanted python3.5 * operator and keyword only arguments. Therefore just
         wrap it all.
+        start_pos here is just a parameter internally used. Might be public
+        sometime in the future.
         """
         if code is None and path is None:
             raise TypeError("Please provide either code or a path.")
@@ -121,7 +125,7 @@ class Grammar(object):
                             cache_path=cache_path)
                 return new_node
 
-        tokens = self._tokenizer(lines)
+        tokens = self._tokenizer(lines, start_pos)
 
         p = self._parser(
             self._pgen_grammar,
@@ -190,8 +194,8 @@ class PythonGrammar(Grammar):
         )
         self.version_info = version_info
 
-    def _tokenize_lines(self, lines):
-        return tokenize_lines(lines, self.version_info)
+    def _tokenize_lines(self, lines, start_pos):
+        return tokenize_lines(lines, self.version_info, start_pos=start_pos)
 
     def _tokenize(self, code):
         # Used by Jedi.
