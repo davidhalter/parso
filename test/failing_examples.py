@@ -146,6 +146,7 @@ FAILING_EXAMPLES = [
     'f"{#}"',
     "f'{1!b}'",
     "f'{1:{5:{3}}}'",
+    "f'{'",
 ]
 
 GLOBAL_NONLOCAL_ERROR = [

@@ -5,7 +5,7 @@ from parso.utils import split_lines
 from parso.python.tokenize import Token
 from parso.python import token
 from parso import parser
-from parso.tree import TypedLeaf
+from parso.tree import TypedLeaf, ErrorNode, ErrorLeaf
 
 version36 = PythonVersionInfo(3, 6)
 
@@ -189,3 +189,18 @@ class Parser(parser.BaseParser):
         # TODO this is so ugly.
         leaf_type = TokenNamespace.token_map[type].lower()
         return TypedLeaf(leaf_type, value, start_pos, prefix)
+
+    def error_recovery(self, pgen_grammar, stack, arcs, typ, value, start_pos, prefix,
+                       add_token_callback):
+        if not self._error_recovery:
+            return super(Parser, self).error_recovery(
+                pgen_grammar, stack, arcs, typ, value, start_pos, prefix,
+                add_token_callback
+            )
+
+        dfa, state, (type_, nodes) = stack[1]
+        stack[0][2][1].append(ErrorNode(nodes))
+        stack[1:] = []
+        #error_leaf = tree.PythonErrorLeaf(tok_name[typ].lower(), value, start_pos, prefix)
+
+        add_token_callback(typ, value, start_pos, prefix)

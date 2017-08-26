@@ -135,11 +135,6 @@ class Parser(BaseParser):
 
     def error_recovery(self, pgen_grammar, stack, arcs, typ, value, start_pos, prefix,
                        add_token_callback):
-        """
-        This parser is written in a dynamic way, meaning that this parser
-        allows using different grammars (even non-Python). However, error
-        recovery is purely written for Python.
-        """
         def get_symbol_and_nodes(stack):
             for dfa, state, (type_, nodes) in stack:
                 symbol = pgen_grammar.number2symbol[type_]

@@ -845,9 +845,8 @@ class _FStringRule(SyntaxRule):
     message_backslash = "f-string expression part cannot include a backslash"  # f'{"\"}' or f'{"\\"}'
     message_comment = "f-string expression part cannot include '#'"  # f'{#}'
     "f-string: unterminated string"  # f'{"}'
-    "f-string: mismatched '(', '{', or '['"
     message_conversion = "f-string: invalid conversion character: expected 's', 'r', or 'a'"
-    "f-string: expecting '}'"  # f'{'
+    message_incomplete = "f-string: expecting '}'"  # f'{'
 
     @classmethod
     def _load_grammar(cls):
@@ -865,6 +864,8 @@ class _FStringRule(SyntaxRule):
         for child in parsed.children:
             if child.type == 'expression':
                 self._check_expression(child)
+            elif child.type == 'error_node':
+                self.add_issue(child, message=self.message_incomplete)
 
     def _check_python_expr(self, python_expr):
         value = python_expr.value
