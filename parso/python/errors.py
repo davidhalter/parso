@@ -846,7 +846,7 @@ class _FStringRule(SyntaxRule):
     message_comment = "f-string expression part cannot include '#'"  # f'{#}'
     "f-string: unterminated string"  # f'{"}'
     "f-string: mismatched '(', '{', or '['"
-    "f-string: invalid conversion character: expected 's', 'r', or 'a'" # f'{1!b}'
+    message_conversion = "f-string: invalid conversion character: expected 's', 'r', or 'a'"
     "f-string: unexpected end of string"  # Doesn't really happen?!
     "f-string: expecting '}'"  # f'{'
 
@@ -864,8 +864,13 @@ class _FStringRule(SyntaxRule):
 
         parsed = self._load_grammar().parse_leaf(fstring)
         for child in parsed.children:
-            type = child.type
-            if type == 'expression':
+            if child.type == 'expression':
+                for c in child.children:
+                    if c.type == 'python_expr':
+                        self._check_expression(c)
+                    elif c.type == 'conversion':
+                        if c.value not in ('s', 'r', 'a'):
+                            self.add_issue(c, message=self.message_conversion)
                 self._check_expression(child.children[1])
 
     def _check_expression(self, python_expr):
