@@ -246,3 +246,17 @@ def test_too_many_levels_of_indentation():
 )
 def test_valid_fstrings(code):
     assert not _get_error_list(code, version='3.6')
+
+
+@pytest.mark.parametrize(
+    ('code', 'message'), [
+        ("f'{1+}'", ('invalid syntax')),
+    ]
+)
+def test_invalid_fstrings(code, message):
+    """
+    Some fstring errors are handled differntly in 3.6 and other versions.
+    Therefore check specifically for these errors here.
+    """
+    error, = _get_error_list(code, version='3.6')
+    assert message in error.message
