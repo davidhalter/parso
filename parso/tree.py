@@ -155,7 +155,7 @@ class NodeOrLeaf(object):
 
 
 class Leaf(NodeOrLeaf):
-    __slots__ = ('value', 'parent', 'line', 'indent', 'prefix')
+    __slots__ = ('value', 'parent', 'line', 'column', 'prefix')
 
     def __init__(self, value, start_pos, prefix=''):
         self.value = value
@@ -165,12 +165,12 @@ class Leaf(NodeOrLeaf):
 
     @property
     def start_pos(self):
-        return self.line, self.indent
+        return self.line, self.column
 
     @start_pos.setter
     def start_pos(self, value):
         self.line = value[0]
-        self.indent = value[1]
+        self.column = value[1]
 
     def get_start_pos_of_prefix(self):
         previous_leaf = self.get_previous_leaf()
@@ -196,10 +196,10 @@ class Leaf(NodeOrLeaf):
         end_pos_line = self.line + len(lines) - 1
         # Check for multiline token
         if self.line == end_pos_line:
-            end_pos_indent = self.indent + len(lines[-1])
+            end_pos_column = self.column + len(lines[-1])
         else:
-            end_pos_indent = len(lines[-1])
-        return end_pos_line, end_pos_indent
+            end_pos_column = len(lines[-1])
+        return end_pos_line, end_pos_column
 
     @utf8_repr
     def __repr__(self):

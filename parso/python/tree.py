@@ -125,7 +125,7 @@ class _LeafWithoutNewlines(PythonLeaf):
 
     @property
     def end_pos(self):
-        return self.line, self.indent + len(self.value)
+        return self.line, self.column + len(self.value)
 
 
 # Python base classes
@@ -170,7 +170,7 @@ class Name(_LeafWithoutNewlines):
 
     def __repr__(self):
         return "<%s: %s@%s,%s>" % (type(self).__name__, self.value,
-                                   self.line, self.indent)
+                                   self.line, self.column)
 
     def is_definition(self):
         if self.parent.type in ('power', 'atom_expr'):
