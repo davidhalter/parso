@@ -287,7 +287,7 @@ class DiffParser(object):
         is_first_token = True
         omitted_first_indent = False
         indents = []
-        tokens = self._tokenizer(lines)
+        tokens = self._tokenizer(lines, (1, 0))
         stack = self._active_parser.pgen_parser.stack
         for typ, string, start_pos, prefix in tokens:
             start_pos = start_pos[0] + line_offset, start_pos[1]

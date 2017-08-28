@@ -255,11 +255,13 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
     lnum = start_pos[0] - 1
     for line in lines:  # loop over lines in stream
         lnum += 1
-        pos, max = 0, len(line)
+        pos = 0
+        max = len(line)
         if first:
             if line.startswith(BOM_UTF8_STRING):
                 additional_prefix = BOM_UTF8_STRING
                 line = line[1:]
+                max = len(line)
 
             # Fake that the part before was already parsed.
             line = '^' * start_pos[1] + line

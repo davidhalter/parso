@@ -176,7 +176,7 @@ class Grammar(object):
 
 
     def __repr__(self):
-        labels = self._pgen_grammar.symbol2number.values()
+        labels = self._pgen_grammar.number2symbol.values()
         txt = ' '.join(list(labels)[:3]) + ' ...'
         return '<%s:%s>' % (self.__class__.__name__, txt)
 
