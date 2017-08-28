@@ -21,7 +21,7 @@ class TokenNamespace:
     EXCLAMATION_MARK = next(_c)
     UNTERMINATED_STRING = next(_c)
 
-    token_map = dict((v, k) for k, v in locals().items())
+    token_map = dict((v, k) for k, v in locals().items() if not k.startswith('_'))
 
     @classmethod
     def generate_token_id(cls, string):
@@ -55,11 +55,7 @@ _compiled_in_expr = re.compile(_in_expr)
 _compiled_conversion = re.compile(_conversion)
 
 
-def tokenize(*args, **kwargs):
-    for t in _tokenize(*args, **kwargs):
-        print(t)
-        yield t
-def _tokenize(code, start_pos=(1, 0)):
+def tokenize(code, start_pos=(1, 0)):
     def add_to_pos(string):
         lines = split_lines(string)
         l = len(lines[-1])
