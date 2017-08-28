@@ -250,3 +250,7 @@ def test_multiline_str_literals(each_version):
                 "6f630fad67cda0ee1fb1f562db3aa53e")
         """
     _parse(s, each_version)
+
+
+def test_py2_backticks(works_in_py2):
+    works_in_py2.parse("`1`")

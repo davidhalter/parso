@@ -1,39 +1,36 @@
 from __future__ import absolute_import
-
-from parso._compatibility import py_version
+from itertools import count
 from token import *
 
+from parso._compatibility import py_version
 
-COMMENT = N_TOKENS
+
+_counter = count(N_TOKENS)
+# Never want to see this thing again.
+del N_TOKENS
+
+COMMENT = next(_counter)
 tok_name[COMMENT] = 'COMMENT'
-N_TOKENS += 1
 
-NL = N_TOKENS
+NL = next(_counter)
 tok_name[NL] = 'NL'
-N_TOKENS += 1
 
+# Sets the attributes that don't exist in these tok_name versions.
 if py_version >= 30:
-    BACKQUOTE = N_TOKENS
+    BACKQUOTE = next(_counter)
     tok_name[BACKQUOTE] = 'BACKQUOTE'
-    N_TOKENS += 1
 else:
-    RARROW = N_TOKENS
+    RARROW = next(_counter)
     tok_name[RARROW] = 'RARROW'
-    N_TOKENS += 1
-    ELLIPSIS = N_TOKENS
+    ELLIPSIS = next(_counter)
     tok_name[ELLIPSIS] = 'ELLIPSIS'
-    N_TOKENS += 1
 
-if not py_version >= 35:
-    ATEQUAL = N_TOKENS
+if py_version < 35:
+    ATEQUAL = next(_counter)
     tok_name[ATEQUAL] = 'ATEQUAL'
-    N_TOKENS += 1
 
-ERROR_DEDENT = N_TOKENS
+ERROR_DEDENT = next(_counter)
 tok_name[ERROR_DEDENT] = 'ERROR_DEDENT'
-N_TOKENS += 1
-
-
 
 
 # Map from operator to number (since tokenize doesn't do this)

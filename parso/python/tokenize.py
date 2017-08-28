@@ -18,8 +18,8 @@ from collections import namedtuple
 import itertools as _itertools
 from codecs import BOM_UTF8
 
-from parso.python.token import (tok_name, N_TOKENS, ENDMARKER, STRING, NUMBER, opmap,
-                                NAME, OP, ERRORTOKEN, NEWLINE, INDENT, DEDENT,
+from parso.python.token import (tok_name, ENDMARKER, STRING, NUMBER, opmap,
+                                NAME, ERRORTOKEN, NEWLINE, INDENT, DEDENT,
                                 ERROR_DEDENT)
 from parso._compatibility import py_version
 from parso.utils import split_lines
@@ -153,7 +153,7 @@ def _create_token_collection(version_info):
     # recognized as two instances of =).
     Operator = group(r"\*\*=?", r">>=?", r"<<=?", r"!=",
                      r"//=?", r"->",
-                     r"[+\-*/%&@|^=<>]=?",
+                     r"[+\-*/%&@`|^=<>]=?",
                      r"~")
 
     Bracket = '[][(){}]'
