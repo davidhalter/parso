@@ -613,7 +613,7 @@ class _FutureImportRule(SyntaxRule):
                 if self._normalizer.version >= (3, 5):
                     allowed_futures.append('generator_stop')
 
-                if name== 'braces':
+                if name == 'braces':
                     self.add_issue(node, message = "not a chance")
                 elif name == 'barry_as_FLUFL':
                     m = "Seriously I'm not implementing this :) ~ Dave"
