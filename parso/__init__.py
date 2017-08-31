@@ -23,7 +23,7 @@ from parso.parser import ParserSyntaxError
 from parso.grammar import Grammar, load_grammar
 
 
-__version__ = '0.0.3'
+__version__ = '0.0.4'
 
 
 def parse(code=None, **kwargs):
