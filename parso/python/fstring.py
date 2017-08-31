@@ -36,7 +36,6 @@ class TokenNamespace:
         return getattr(cls, string)
 
 
-START_SYMBOL = 'fstring'
 GRAMMAR = """
 fstring: expression* ENDMARKER
 format_spec: ':' expression*

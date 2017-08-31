@@ -71,7 +71,7 @@ class Grammar(object):
         return self._parse(code=code, **kwargs)
 
     def _parse(self, code=None, path=None, error_recovery=True,
-               start_symbol='file_input', cache=False, diff_cache=False,
+               start_symbol=None, cache=False, diff_cache=False,
                cache_path=None, start_pos=(1, 0)):
         """
         Wanted python3.5 * operator and keyword only arguments. Therefore just
@@ -81,6 +81,10 @@ class Grammar(object):
         """
         if code is None and path is None:
             raise TypeError("Please provide either code or a path.")
+
+        if start_symbol is None:
+            start_symbol = self._start_symbol
+
         if error_recovery and start_symbol != 'file_input':
             raise NotImplementedError("This is currently not implemented.")
 
@@ -184,6 +188,7 @@ class Grammar(object):
 class PythonGrammar(Grammar):
     _error_normalizer_config = ErrorFinderConfig()
     _token_namespace = token
+    _start_symbol = 'file_input'
 
     def __init__(self, version_info, bnf_text):
         super(PythonGrammar, self).__init__(
@@ -204,6 +209,7 @@ class PythonGrammar(Grammar):
 
 class PythonFStringGrammar(Grammar):
     _token_namespace = fstring.TokenNamespace
+    _start_symbol = 'fstring'
 
     def __init__(self):
         super(PythonFStringGrammar, self).__init__(
@@ -220,7 +226,7 @@ class PythonFStringGrammar(Grammar):
         p = self._parser(
             self._pgen_grammar,
             error_recovery=error_recovery,
-            start_symbol=fstring.START_SYMBOL,
+            start_symbol=self._start_symbol,
         )
         return p.parse(tokens=tokens)
 
