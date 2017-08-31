@@ -62,17 +62,18 @@ def maybe(*choices):
 
 # Return the empty string, plus all of the valid string prefixes.
 def _all_string_prefixes(version_info):
+    def different_case_versions(prefix):
+        for s in _itertools.product(*[(c, c.upper()) for c in prefix]):
+            yield ''.join(s)
     # The valid string prefixes. Only contain the lower case versions,
     #  and don't contain any permuations (include 'fr', but not
     #  'rf'). The various permutations will be generated.
-    _valid_string_prefixes = ['b', 'r', 'u', 'br']
+    _valid_string_prefixes = ['b', 'r', 'u']
+    if version_info >= (3, 0):
+        _valid_string_prefixes.append('br')
+
     if version_info >= (3, 6):
         _valid_string_prefixes += ['f', 'fr']
-    if version_info <= (2, 7):
-        # TODO this is actually not 100% valid. ur is valid in Python 2.7,
-        # while ru is not.
-        # TODO rb is also not valid.
-        _valid_string_prefixes.append('ur')
 
     # if we add binary f-strings, add: ['fb', 'fbr']
     result = set([''])
@@ -80,8 +81,11 @@ def _all_string_prefixes(version_info):
         for t in _itertools.permutations(prefix):
             # create a list with upper and lower versions of each
             #  character
-            for s in _itertools.product(*[(c, c.upper()) for c in t]):
-                result.add(''.join(s))
+            result.update(different_case_versions(t))
+    if version_info <= (2, 7):
+        # In Python 2 the order cannot just be random.
+        result.update(different_case_versions('ur'))
+        result.update(different_case_versions('br'))
     return result
 
 

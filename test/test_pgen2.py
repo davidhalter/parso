@@ -254,3 +254,19 @@ def test_multiline_str_literals(each_version):
 
 def test_py2_backticks(works_in_py2):
     works_in_py2.parse("`1`")
+
+
+def test_py2_string_prefixes(works_in_py2):
+    works_in_py2.parse("ur'1'")
+    works_in_py2.parse("Ur'1'")
+    works_in_py2.parse("UR'1'")
+    _invalid_syntax("ru'1'", works_in_py2.version)
+
+
+def py_br(each_version):
+    _parse('br""', each_version)
+
+
+def test_py3_rb(works_ge_py3):
+    works_ge_py3.parse("rb'1'")
+    works_ge_py3.parse("RB'1'")
