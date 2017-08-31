@@ -108,7 +108,7 @@ class PythonLeaf(PythonMixin, Leaf):
         #   indent error leafs somehow? No idea how, though.
         previous_leaf = self.get_previous_leaf()
         if previous_leaf is not None and previous_leaf.type == 'error_leaf' \
-                and previous_leaf.original_type in ('indent', 'error_dedent'):
+                and previous_leaf.original_type == 'error_dedent':
             previous_leaf = previous_leaf.get_previous_leaf()
 
         if previous_leaf is None:
@@ -663,7 +663,6 @@ class TryStmt(Flow):
         Returns ``[None]`` for except clauses without an exception given.
         """
         for node in self.children:
-            # TODO this is not correct. We're not returning an except clause.
             if node.type == 'except_clause':
                 yield node.children[1]
             elif node == 'except':
@@ -686,8 +685,7 @@ class WithStmt(Flow):
                 names += _defined_names(with_item.children[2])
         return names
 
-    def get_context_manager_from_name(self, name):
-        # TODO Replace context_manager with test?
+    def get_test_node_from_name(self, name):
         node = name.parent
         if node.type != 'with_item':
             raise ValueError('The name is not actually part of a with statement.')
