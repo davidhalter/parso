@@ -115,3 +115,20 @@ def test_ellipsis_py2(each_py2_version):
     subscript = trailer.children[1]
     assert subscript.type == 'subscript'
     assert [leaf.value for leaf in subscript.children] == ['.', '.', '.']
+
+
+def get_yield_exprs(code, version):
+    return list(parse(code, version=version).children[0].iter_yield_exprs())
+
+
+def test_yields(each_version):
+    y, = get_yield_exprs('def x(): yield', each_version)
+    assert y.value == 'yield'
+
+    y, = get_yield_exprs('def x(): (yield 1)', each_version)
+    assert y.type == 'yield_expr'
+
+
+def test_yield_from():
+    y, = get_yield_exprs('def x(): (yield from 1)', '3.3')
+    assert y.type == 'yield_expr'

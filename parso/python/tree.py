@@ -519,8 +519,21 @@ class Function(ClassOrFunc):
         """
         Returns a generator of `yield_expr`.
         """
-        # TODO This is incorrect, yields are also possible in a statement.
-        return self._search_in_scope('yield_expr')
+        def scan(children):
+            for element in children:
+                try:
+                    nested_children = element.children
+                except AttributeError:
+                    if element.value == 'yield':
+                        if element.parent.type == 'yield_expr':
+                            yield element.parent
+                        else:
+                            yield element
+                else:
+                    for result in scan(nested_children):
+                        yield result
+
+        return scan(self.children)
 
     def iter_return_stmts(self):
         """
