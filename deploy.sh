@@ -4,14 +4,23 @@
 
 set -eu -o pipefail
 
-cd CORRECT_FOLDER
+BASE_DIR=$(dirname $(readlink -f "$0"))
+cd $(BASE_DIR)
 
 PROJECT_NAME=parso
-PROJECT=git-clone
 BRANCH=master
-FOLDER=build/$PROJECT
+BUILD_FOLDER=build
+FOLDER=$BUILD_FOLDER/$PROJECT_NAME
 
-cd $FOLDER
+# Test first.
+#tox
+
+[ -d $BUILD_FOLDER ] || mkdir $BUILD_FOLDER
+# Remove the previous deployment first.
+rm -rf $FOLDER
+# Checkout the right branch
+cd $BUILD_FOLDER
+git clone .. $PROJECT_NAME
 git checkout $BRANCH
 
 # Create tag
@@ -34,3 +43,7 @@ rm -rf dist/
 python setup.py sdist bdist_wheel
 # Maybe do a pip install twine before.
 twine upload dist/*
+
+cd $(BASE_DIR)
+# Back in the development directory fetch tags.
+git fetch --tags
