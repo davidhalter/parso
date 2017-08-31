@@ -315,14 +315,14 @@ class Module(Scope):
         super(Module, self).__init__(children)
         self._used_names = None
 
-    def iter_future_import_names(self):
+    def _iter_future_import_names(self):
         """
         :return list of str: A list of future import names.
         """
-        # TODO this is a strange scan and not fully correct. I think Python's
-        # parser does it in a different way and scans for the first
-        # statement/import with a tokenizer (to check for syntax changes like
-        # the future print statement).
+        # In Python it's not allowed to use future imports after the first
+        # actual (non-future) statement. However this is not a linter here,
+        # just return all future imports. If people want to scan for issues
+        # they should use the API.
         for imp in self.iter_imports():
             if imp.type == 'import_from' and imp.level == 0:
                 for path in imp.get_paths():
@@ -330,13 +330,14 @@ class Module(Scope):
                     if len(names) == 2 and names[0] == '__future__':
                         yield names[1]
 
-    def has_explicit_absolute_import(self):
+    def _has_explicit_absolute_import(self):
         """
         Checks if imports in this module are explicitly absolute, i.e. there
         is a ``__future__`` import.
+        Currently not public, might be in the future.
         :return bool:
         """
-        for name in self.iter_future_import_names():
+        for name in self._iter_future_import_names():
             if name == 'absolute_import':
                 return True
         return False
