@@ -521,6 +521,9 @@ class Function(ClassOrFunc):
         """
         def scan(children):
             for element in children:
+                if element.type in ('classdef', 'funcdef', 'lambdef'):
+                    continue
+
                 try:
                     nested_children = element.children
                 except AttributeError:
