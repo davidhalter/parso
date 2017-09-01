@@ -121,12 +121,20 @@ def get_yield_exprs(code, version):
     return list(parse(code, version=version).children[0].iter_yield_exprs())
 
 
+def get_return_stmts(code):
+    return list(parse(code).children[0].iter_return_stmts())
+
+
 def test_yields(each_version):
     y, = get_yield_exprs('def x(): yield', each_version)
     assert y.value == 'yield'
+    assert y.type == 'keyword'
 
     y, = get_yield_exprs('def x(): (yield 1)', each_version)
     assert y.type == 'yield_expr'
+
+    y, = get_yield_exprs('def x(): [1, (yield)]', each_version)
+    assert y.type == 'keyword'
 
 
 def test_yield_from():
