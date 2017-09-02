@@ -78,25 +78,6 @@ class PythonMixin(object):
     """
     __slots__ = ()
 
-    def get_definition(self):
-        if self.type in ('newline', 'endmarker'):
-            raise ValueError('Cannot get the indentation of whitespace or indentation.')
-
-        scope = self
-        while scope.parent is not None:
-            parent = scope.parent
-            if isinstance(scope, (PythonNode, PythonLeaf)) and parent.type not in ('simple_stmt', 'file_input'):
-                if scope.type == 'testlist_comp':
-                    try:
-                        if scope.children[1].type == 'comp_for':
-                            return scope.children[1]
-                    except IndexError:
-                        pass
-                scope = parent
-            else:
-                break
-        return scope
-
     def get_name_of_position(self, position):
         for c in self.children:
             if isinstance(c, Leaf):
