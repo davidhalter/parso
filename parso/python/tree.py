@@ -169,9 +169,9 @@ class Name(_LeafWithoutNewlines):
         """
         Returns True if the name is being defined.
         """
-        return self._get_definition() is not None
+        return self.get_definition() is not None
 
-    def _get_definition(self, import_name_always=False):
+    def get_definition(self, import_name_always=False):
         """
         Returns None if there's on definition for a name.
 
