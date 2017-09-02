@@ -184,6 +184,9 @@ class Name(_LeafWithoutNewlines):
                                    self.line, self.column)
 
     def is_definition(self):
+        """
+        Returns True if the name is being defined.
+        """
         return self._get_definition() is not None
 
     def _get_definition(self):
