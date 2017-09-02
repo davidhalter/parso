@@ -172,9 +172,9 @@ def test_ur_literals():
     check('Ur""', is_literal=not py_version >= 30)
     check('UR""', is_literal=not py_version >= 30)
     check('bR""')
-    # Starting with Python 3.3 this ordering is also possible, but we just
-    # enable it for all versions. It doesn't hurt.
-    check('Rb""')
+    # Starting with Python 3.3 this ordering is also possible.
+    if py_version >= 33:
+        check('Rb""')
     # Starting with Python 3.6 format strings where introduced.
     check('fr""', is_literal=py_version >= 36)
     check('rF""', is_literal=py_version >= 36)
