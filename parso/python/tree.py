@@ -36,6 +36,10 @@ _FLOW_CONTAINERS = set(['if_stmt', 'while_stmt', 'for_stmt', 'try_stmt',
                         'with_stmt', 'async_stmt', 'suite'])
 _RETURN_STMT_CONTAINERS = set(['suite', 'simple_stmt']) | _FLOW_CONTAINERS
 _FUNC_CONTAINERS = set(['suite', 'simple_stmt', 'decorated']) | _FLOW_CONTAINERS
+_GET_DEFINITION_TYPES = set([
+    'expr_stmt', 'comp_for', 'with_stmt', 'for_stmt', 'import_name',
+    'import_from', 'param'
+])
 
 
 
@@ -76,6 +80,7 @@ class PythonMixin(object):
     def get_definition(self):
         if self.type in ('newline', 'endmarker'):
             raise ValueError('Cannot get the indentation of whitespace or indentation.')
+
         scope = self
         while scope.parent is not None:
             parent = scope.parent
@@ -179,21 +184,46 @@ class Name(_LeafWithoutNewlines):
                                    self.line, self.column)
 
     def is_definition(self):
-        if self.parent.type in ('power', 'atom_expr'):
-            # In `self.x = 3` self is not a definition, but x is.
-            return False
+        return self._get_definition() is not None
 
-        stmt = self.get_definition()
-        if stmt.type in ('funcdef', 'classdef', 'param'):
-            return self == stmt.name
-        elif stmt.type == 'for_stmt':
-            return self.start_pos < stmt.children[2].start_pos
-        elif stmt.type == 'try_stmt':
-            return self.get_previous_sibling() == 'as'
-        else:
-            return stmt.type in ('expr_stmt', 'import_name', 'import_from',
-                                 'comp_for', 'with_stmt') \
-                and self in stmt.get_defined_names()
+    def _get_definition(self):
+        """
+        Returns None if there's on definition for a name.
+        """
+        node = self.parent
+        type_ = node.type
+        if type_ in ('power', 'atom_expr'):
+            # In `self.x = 3` self is not a definition, but x is.
+            return None
+
+        if type_ in ('funcdef', 'classdef'):
+            if self == node.name:
+                return node
+            return None
+
+        if type_ in ():
+            if self in node.get_defined_names():
+                return node
+            return None
+
+        if type_ == 'except_clause':
+            # TODO in Python 2 this doesn't work correctly. See grammar file.
+            #      I think we'll just let it be. Python 2 will be gone in a few
+            #      years.
+            if self.get_previous_sibling() == 'as':
+                return node.parent  # The try_stmt.
+            return None
+
+        while node is not None:
+            if node.type == 'suite':
+                return None
+            if node.type in _GET_DEFINITION_TYPES:
+                if self in node.get_defined_names():
+                    return node
+                return None
+            node = node.parent
+        return None
+
 
 
 class Literal(PythonLeaf):
@@ -682,6 +712,9 @@ class ForStmt(Flow):
         """
         return self.children[3]
 
+    def get_defined_names(self):
+        return _defined_names(self.children[1])
+
 
 class TryStmt(Flow):
     type = 'try_stmt'
@@ -1053,6 +1086,9 @@ class Param(PythonBaseNode):
             return self._tfpdef().children[0]
         else:
             return self._tfpdef()
+
+    def get_defined_names(self):
+        return [self.name]
 
     @property
     def position_index(self):
