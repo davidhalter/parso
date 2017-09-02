@@ -41,7 +41,6 @@ Future
 Known Issues
 ============
 
-- Python3.6's f-strings are not parsed, yet. This means no errors are found in them.
 - `async`/`await` are already used as keywords in Python3.6.
 - `from __future__ import print_function` is not supported,
 
