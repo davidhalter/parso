@@ -140,3 +140,12 @@ def test_yields(each_version):
 def test_yield_from():
     y, = get_yield_exprs('def x(): (yield from 1)', '3.3')
     assert y.type == 'yield_expr'
+
+
+def test_returns():
+    r, = get_return_stmts('def x(): return')
+    assert r.value == 'return'
+    assert r.type == 'keyword'
+
+    r, = get_return_stmts('def x(): return 1')
+    assert r.type == 'return_stmt'

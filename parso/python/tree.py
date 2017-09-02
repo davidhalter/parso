@@ -32,6 +32,10 @@ from parso.tree import Node, BaseNode, Leaf, ErrorNode, ErrorLeaf, \
     search_ancestor
 from parso.python.prefix import split_prefix
 
+_FLOW_CONTAINERS = set(['if_stmt', 'while_stmt', 'for_stmt', 'try_stmt',
+                        'with_stmt', 'async_stmt', 'suite'])
+_RETURN_STMT_CONTAINERS = set(['suite', 'simple_stmt']) | _FLOW_CONTAINERS
+
 
 class DocstringMixin(object):
     __slots__ = ()
@@ -42,7 +46,7 @@ class DocstringMixin(object):
         """
         if self.type == 'file_input':
             node = self.children[0]
-        elif isinstance(self, ClassOrFunc):
+        elif self.type in ('funcdef', 'classdef'):
             node = self.children[self.children.index(':') + 1]
             if node.type == 'suite':  # Normally a suite
                 node = node.children[1]  # -> NEWLINE stmt
@@ -542,7 +546,16 @@ class Function(ClassOrFunc):
         """
         Returns a generator of `return_stmt`.
         """
-        return self._search_in_scope('return_stmt')
+        def scan(children):
+            for element in children:
+                if element.type == 'return_stmt' \
+                        or element.type == 'keyword' and element.value == 'return':
+                    yield element
+                if element.type in _RETURN_STMT_CONTAINERS:
+                    for e in scan(element.children):
+                        yield e
+
+        return scan(self.children)
 
     def is_generator(self):
         """
