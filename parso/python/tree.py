@@ -40,6 +40,7 @@ _GET_DEFINITION_TYPES = set([
     'expr_stmt', 'comp_for', 'with_stmt', 'for_stmt', 'import_name',
     'import_from', 'param'
 ])
+_IMPORTS = set(['import_name', 'import_from'])
 
 
 
@@ -189,9 +190,13 @@ class Name(_LeafWithoutNewlines):
         """
         return self._get_definition() is not None
 
-    def _get_definition(self):
+    def _get_definition(self, import_name_always=False):
         """
         Returns None if there's on definition for a name.
+
+        :param import_name_alway: Specifies if an import name is always a
+            definition. Normally foo in `from foo import bar` is not a
+            definition.
         """
         node = self.parent
         type_ = node.type
@@ -222,6 +227,8 @@ class Name(_LeafWithoutNewlines):
                 return None
             if node.type in _GET_DEFINITION_TYPES:
                 if self in node.get_defined_names():
+                    return node
+                if import_name_always and node.type in _IMPORTS:
                     return node
                 return None
             node = node.parent
