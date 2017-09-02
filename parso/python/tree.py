@@ -35,6 +35,8 @@ from parso.python.prefix import split_prefix
 _FLOW_CONTAINERS = set(['if_stmt', 'while_stmt', 'for_stmt', 'try_stmt',
                         'with_stmt', 'async_stmt', 'suite'])
 _RETURN_STMT_CONTAINERS = set(['suite', 'simple_stmt']) | _FLOW_CONTAINERS
+_FUNC_CONTAINERS = set(['suite', 'simple_stmt', 'decorated']) | _FLOW_CONTAINERS
+
 
 
 class DocstringMixin(object):
@@ -283,8 +285,7 @@ class Scope(PythonBaseNode, DocstringMixin):
             for element in children:
                 if element.type in names:
                     yield element
-                if element.type in ('suite', 'simple_stmt', 'decorated') \
-                        or isinstance(element, Flow):
+                if element.type in _FUNC_CONTAINERS:
                     for e in scan(element.children):
                         yield e
 
