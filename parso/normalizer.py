@@ -121,8 +121,18 @@ class Issue(object):
     def __init__(self, node, code, message):
         self._node = node
         self.code = code
+        """
+        An integer code that stands for the type of error.
+        """
         self.message = message
+        """
+        A message (string) for the issue.
+        """
         self.start_pos = node.start_pos
+        """
+        The start position position of the error as a tuple (line, column). As
+        always in |parso| the first line is 1 and the first column 0.
+        """
 
     def __eq__(self, other):
         return self.start_pos == other.start_pos and self.code == other.code

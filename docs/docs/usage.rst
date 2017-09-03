@@ -25,7 +25,6 @@ Typically if you want to work with one specific Python version, use:
 
 .. autofunction:: parso.load_grammar
 
-
 Grammar methods
 ---------------
 
@@ -33,6 +32,17 @@ You will get back a grammar object that you can use to parse code and find
 issues in it:
 
 .. autoclass:: parso.Grammar
+    :members:
+    :undoc-members:
+
+
+Error Retrieval
+---------------
+
+|parso| is able to find multiple errors in your source code. Iterating through
+those errors yields the following instances:
+
+.. autoclass:: parso.normalizer.Issue
     :members:
     :undoc-members:
 
