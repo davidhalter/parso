@@ -3,8 +3,8 @@
 Installation and Configuration
 ==============================
 
-The preferred way
------------------
+The preferred way (pip)
+-----------------------
 
 On any system you can install |parso| directly from the Python package index
 using pip::

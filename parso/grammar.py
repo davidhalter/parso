@@ -19,10 +19,11 @@ _loaded_grammars = {}
 
 class Grammar(object):
     """
-    Create custom grammars by calling this. It's not really supported, yet.
+    :py:func:`parso.load_grammar` returns instances of this class.
 
-    :param text: A BNF representation of your grammar.
+    Creating custom grammars by calling this is not supported, yet.
     """
+    #:param text: A BNF representation of your grammar.
     _error_normalizer_config = None
     _token_namespace = None
     _default_normalizer_config = pep8.PEP8NormalizerConfig()
@@ -237,10 +238,10 @@ class PythonFStringGrammar(Grammar):
 
 def load_grammar(**kwargs):
     """
-    Loads a Python grammar. The default version is the current Python version.
+    Loads a :py:class:`parso.Grammar`. The default version is the current Python
+    version.
 
-    If you need support for a specific version, please use e.g.
-    `version='3.3'`.
+    :param str version: A python version string, e.g. ``version='3.3'``.
     """
     def load_grammar(language='python', version=None):
         if language == 'python':

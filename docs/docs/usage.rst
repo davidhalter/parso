@@ -9,7 +9,8 @@ can also be created by directly instantiating ``Grammar``. More information
 about the resulting objects can be found in the :ref:`parser tree documentation
 <parser-tree>`.
 
-The simplest way of using parso is without even loading a grammar:
+The simplest way of using parso is without even loading a grammar
+(:py:func:`parso.parse`):
 
 .. sourcecode:: python
 
@@ -17,7 +18,14 @@ The simplest way of using parso is without even loading a grammar:
    >>> parso.parse('foo + bar')
    <Module: @1-1>
 
-.. automodule:: parso.grammar
+Typically if you want to work with one specific Python version, use:
+
+.. autofunction:: parso.load_grammar
+
+You will get back a grammar object that you can use to parse code and find
+issues in it:
+
+.. autoclass:: parso.grammar.Grammar
     :members:
     :undoc-members:
 
@@ -25,17 +33,18 @@ The simplest way of using parso is without even loading a grammar:
 Utility
 -------
 
+There are some utility functions that 
+
 .. autofunction:: parso.parse
 
-.. automodule:: parso.utils
-    :members:
-    :undoc-members:
+.. autofunction:: parso.split_lines
+.. autofunction:: parso.python_bytes_to_unicode
 
 
 Used By
 -------
 
-- jedi_ (which is used by IPython and a lot of plugins).
+- jedi_ (which is used by IPython and a lot of editor plugins).
 
 
 .. _jedi: https://github.com/davidhalter/jedi
