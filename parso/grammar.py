@@ -47,7 +47,7 @@ class Grammar(object):
 
         :param str code: A unicode or bytes string. When it's not possible to
             decode bytes to a string, returns a
-            :py:class:`exceptions.UnicodeDecodeError`.
+            :py:class:`UnicodeDecodeError`.
         :param bool error_recovery: If enabled, any code will be returned. If
             it is invalid, it will be returned as an error node. If disabled,
             you will get a ParseError when encountering syntax errors in your

@@ -14,7 +14,7 @@ def split_lines(string, keepends=False):
     Intended for Python code. In contrast to Python's :py:meth:`str.splitlines`,
     looks at form feeds and other special characters as normal text. Just
     splits ``\n`` and ``\r\n``.
-    Also different: Returns ``['']`` for an empty string input.
+    Also different: Returns ``[""]`` for an empty string input.
 
     In Python 2.7 form feeds are used as normal characters when using
     str.splitlines. However in Python 3 somewhere there was a decision to split
@@ -51,10 +51,10 @@ def split_lines(string, keepends=False):
 def python_bytes_to_unicode(source, encoding='utf-8', errors='strict'):
     """
     Checks for unicode BOMs and PEP 263 encoding declarations. Then returns a
-    unicode object like in :py:meth:`str.decode`.
+    unicode object like in :py:meth:`bytes.decode`.
 
-    :param encoding: See :py:meth:`str.decode` documentation.
-    :param errors: See :py:meth:`str.decode` documentation. ``errors`` can be
+    :param encoding: See :py:meth:`bytes.decode` documentation.
+    :param errors: See :py:meth:`bytes.decode` documentation. ``errors`` can be
         ``'strict'``, ``'replace'`` or ``'ignore'``.
     """
     def detect_encoding():

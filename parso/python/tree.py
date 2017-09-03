@@ -1,16 +1,18 @@
 """
-If you know what an syntax tree is, you'll see that this module is pretty much
-that. The classes represent syntax elements like functions and imports.
+This is the syntax tree for Python syntaxes (2 & 3).  The classes represent
+syntax elements like functions and imports.
 
-This is the "business logic" part of the parser. There's a lot of logic here
-that makes it easier for Jedi (and other libraries) to deal with a Python syntax
-tree.
+All of the nodes can be traced back to the `Python grammar file
+<https://docs.python.org/3/reference/grammar.html>`_. If you want to know how
+a tree is structured, just analyse that file (for each Python version it's a
+bit different).
 
-By using `get_code` on a module, you can get back the 1-to-1 representation of
-the input given to the parser. This is important if you are using refactoring.
+There's a lot of logic here that makes it easier for Jedi (and other libraries)
+to deal with a Python syntax tree.
 
-The easiest way to play with this module is to use :class:`parsing.Parser`.
-:attr:`parsing.Parser.module` holds an instance of :class:`Module`:
+By using :py:meth:`parso.tree.NodeOrLeaf.get_code` on a module, you can get
+back the 1-to-1 representation of the input given to the parser. This is
+important if you are using refactoring.
 
 >>> from parso import parse
 >>> parser = parse('import os')

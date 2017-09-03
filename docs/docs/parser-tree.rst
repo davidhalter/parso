@@ -3,13 +3,7 @@
 Parser Tree
 ===========
 
-Usage
------
-
-.. automodule:: parso.python
-    :members:
-    :undoc-members:
-
+The parser tree is returned by calling :py:meth:`parso.Grammar.parse`.
 
 Parser Tree Base Class
 ----------------------
