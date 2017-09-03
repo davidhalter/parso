@@ -29,8 +29,10 @@ __version__ = '0.0.5'
 
 def parse(code=None, **kwargs):
     """
-    A utility function to parse Python with the current Python version. Params
-    are documented in ``Grammar.parse``.
+    A utility function to avoid loading grammars.
+    Params are documented in :py:meth:`parso.Grammar.parse`
+
+    :param string version: The version used by :py:func:`parso.Grammar.load_grammar`.
     """
     version = kwargs.pop('version', None)
     grammar = load_grammar(version=version)

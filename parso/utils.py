@@ -11,7 +11,7 @@ Version = namedtuple('Version', 'major, minor, micro')
 
 def split_lines(string, keepends=False):
     r"""
-    A str.splitlines for Python code. In contrast to Python's ``str.splitlines``,
+    Intended for Python code. In contrast to Python's :py:meth:`str.splitlines`,
     looks at form feeds and other special characters as normal text. Just
     splits ``\n`` and ``\r\n``.
     Also different: Returns ``['']`` for an empty string input.
@@ -48,9 +48,14 @@ def split_lines(string, keepends=False):
         return re.split('\n|\r\n', string)
 
 
-def python_bytes_to_unicode(source, default_encoding='utf-8', errors='strict'):
+def python_bytes_to_unicode(source, encoding='utf-8', errors='strict'):
     """
-    `errors` can be 'strict', 'replace' or 'ignore'.
+    Checks for unicode BOMs and PEP 263 encoding declarations. Then returns a
+    unicode object like in :py:meth:`str.decode`.
+
+    :param encoding: See :py:meth:`str.decode` documentation.
+    :param errors: See :py:meth:`str.decode` documentation. ``errors`` can be
+        ``'strict'``, ``'replace'`` or ``'ignore'``.
     """
     def detect_encoding():
         """
@@ -70,7 +75,7 @@ def python_bytes_to_unicode(source, default_encoding='utf-8', errors='strict'):
             return possible_encoding.group(1)
         else:
             # the default if nothing else has been set -> PEP 263
-            return default_encoding
+            return encoding
 
     if isinstance(source, unicode):
         # only cast str/bytes

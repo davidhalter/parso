@@ -4,8 +4,8 @@ Usage
 =====
 
 |parso| works around grammars. You can simply create Python grammars by calling
-``load_grammar``. Grammars (with a custom tokenizer and custom parser trees)
-can also be created by directly instantiating ``Grammar``. More information
+:py:func:`parso.load_grammar`. Grammars (with a custom tokenizer and custom parser trees)
+can also be created by directly instantiating :py:func:`parso.Grammar`. More information
 about the resulting objects can be found in the :ref:`parser tree documentation
 <parser-tree>`.
 
@@ -18,14 +18,21 @@ The simplest way of using parso is without even loading a grammar
    >>> parso.parse('foo + bar')
    <Module: @1-1>
 
+Loading a Grammar
+-----------------
+
 Typically if you want to work with one specific Python version, use:
 
 .. autofunction:: parso.load_grammar
 
+
+Grammar methods
+---------------
+
 You will get back a grammar object that you can use to parse code and find
 issues in it:
 
-.. autoclass:: parso.grammar.Grammar
+.. autoclass:: parso.Grammar
     :members:
     :undoc-members:
 
