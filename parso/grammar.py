@@ -67,7 +67,8 @@ class Grammar(object):
             directory. If not given, defaults to the default cache places on
             each platform.
 
-        :return: A subclass of :py:class:`parso.tree.Node`. Typically a module.
+        :return: A subclass of :py:class:`parso.tree.NodeOrLeaf`. Typically a
+            :py:class:`parso.python.tree.Module`.
         """
         if 'start_pos' in kwargs:
             raise TypeError("parse() got an unexpected keyworda argument.")
@@ -155,6 +156,11 @@ class Grammar(object):
         return ns
 
     def iter_errors(self, node):
+        """
+        Given a :py:class:`parso.tree.NodeOrLeaf` returns a generator of
+        :py:class:`parso.normalizer.Issue` objects. For Python this is
+        a list of syntax/indentation errors.
+        """
         if self._error_normalizer_config is None:
             raise ValueError("No error normalizer specified for this grammar.")
 

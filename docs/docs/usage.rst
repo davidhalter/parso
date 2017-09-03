@@ -40,10 +40,9 @@ issues in it:
 Utility
 -------
 
-There are some utility functions that 
+|parso| also offers some utility functions that can be really useful:
 
 .. autofunction:: parso.parse
-
 .. autofunction:: parso.split_lines
 .. autofunction:: parso.python_bytes_to_unicode
 
