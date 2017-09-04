@@ -12,7 +12,7 @@ to deal with a Python syntax tree.
 
 By using :py:meth:`parso.tree.NodeOrLeaf.get_code` on a module, you can get
 back the 1-to-1 representation of the input given to the parser. This is
-important if you are using refactoring.
+important if you want to refactor a parser tree.
 
 >>> from parso import parse
 >>> parser = parse('import os')
@@ -25,6 +25,21 @@ Any subclasses of :class:`Scope`, including :class:`Module` has an attribute
 
 >>> list(module.iter_imports())
 [<ImportName: import os@1,0>]
+
+Changes to the Python Grammar
+-----------------------------
+
+A few things have changed when looking at Python grammar files:
+
+- :class:`Param` does not exist in Python grammar files. It is essentially a
+  part of a ``parameters`` node.  |parso| splits it up to make it easier to
+  analyse parameters. However this just makes it easier to deal with the syntax
+  tree, it doesn't actually change the valid syntax.
+- A few nodes like `lambdef` and `lambdef_nocond` have been merged in the
+  syntax tree to make it easier to do deal with them.
+
+Parser Tree Classes
+-------------------
 """
 
 import re

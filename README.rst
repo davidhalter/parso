@@ -42,7 +42,7 @@ Known Issues
 ============
 
 - `async`/`await` are already used as keywords in Python3.6.
-- `from __future__ import print_function` is not supported,
+- `from __future__ import print_function` is not ignored.
 
 Testing
 =======

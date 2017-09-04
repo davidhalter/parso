@@ -169,12 +169,12 @@ class Leaf(NodeOrLeaf):
     def __init__(self, value, start_pos, prefix=''):
         self.value = value
         '''
-        (:py:func:`str`) The value of the current token.
+        :py:func:`str` The value of the current token.
         '''
         self.start_pos = start_pos
         self.prefix = prefix
         '''
-        (:py:func:`str`) Typically a mixture of whitespace and comments. Stuff
+        :py:func:`str` Typically a mixture of whitespace and comments. Stuff
         that is syntactically irrelevant for the syntax tree.
         '''
         self.parent = None

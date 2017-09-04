@@ -13,7 +13,8 @@ The parser tree is returned by calling :py:meth:`parso.Grammar.parse`.
 Parser Tree Base Classes
 ------------------------
 
-All nodes and leaves have these methods/properties:
+Generally there are two types of classes you will deal with:
+:py:class:`parso.tree.Leaf` and :py:class:`parso.tree.BaseNode`.
 
 .. autoclass:: parso.tree.BaseNode
     :show-inheritance:
@@ -22,6 +23,8 @@ All nodes and leaves have these methods/properties:
 .. autoclass:: parso.tree.Leaf
     :show-inheritance:
     :members:
+
+All nodes and leaves have these methods/properties:
 
 .. autoclass:: parso.tree.NodeOrLeaf
     :members:
