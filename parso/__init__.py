@@ -1,10 +1,17 @@
 """
-parso is a Python parser. It's really easy to use and supports multiple Python
-versions, file caching, round-trips and other stuff:
+Parso is a Python parser that supports error recovery and round-trip parsing
+for different Python versions (in multiple Python versions). Parso is also able
+to list multiple syntax errors in your python file.
 
->>> from parso import load_grammar
->>> grammar = load_grammar(version='2.7')
->>> module = grammar.parse('hello + 1')
+Parso has been battle-tested by jedi_. It was pulled out of jedi to be useful
+for other projects as well.
+
+Parso consists of a small API to parse Python and analyse the syntax tree.
+
+A simple example:
+
+>>> import parso
+>>> module = parso.parse('hello + 1', version="3.6")
 >>> expr = module.children[0]
 >>> expr
 PythonNode(arith_expr, [<Name: hello@1,0>, <Operator: +>, <Number: 1>])
@@ -17,6 +24,16 @@ hello + 1
 (1, 5)
 >>> expr.end_pos
 (1, 9)
+
+To list multiple issues:
+
+>>> grammar = parso.load_grammar()
+>>> module = grammar.parse('foo +\nbar\ncontinue')
+>>> error1, error2 = grammar.iter_errors(module)
+>>> error1.message
+'SyntaxError: invalid syntax'
+>>> error2.message
+"SyntaxError: 'continue' not properly in loop"
 """
 
 from parso.parser import ParserSyntaxError

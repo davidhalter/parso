@@ -31,6 +31,13 @@ A simple example:
     PythonNode(arith_expr, [<Name: hello@1,0>, <Operator: +>, <Number: 1>])
     >>> print(expr.get_code())
     hello + 1
+    >>> name = expr.children[0]
+    >>> name
+    <Name: hello@1,0>
+    >>> name.end_pos
+    (1, 5)
+    >>> expr.end_pos
+    (1, 9)
 
 To list multiple issues:
 
