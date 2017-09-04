@@ -22,6 +22,10 @@ class NodeOrLeaf(object):
     The base class for nodes and leaves.
     """
     __slots__ = ()
+    type = None
+    '''
+    The type is a string that typically matches the types of the grammar file.
+    '''
 
     def get_root_node(self):
         """
@@ -156,13 +160,27 @@ class NodeOrLeaf(object):
 
 
 class Leaf(NodeOrLeaf):
+    '''
+    Leafs are basically tokens with a better API. Leafs exactly know where they
+    were defined and what text preceeds them.
+    '''
     __slots__ = ('value', 'parent', 'line', 'column', 'prefix')
 
     def __init__(self, value, start_pos, prefix=''):
         self.value = value
+        '''
+        (:py:func:`str`) The value of the current token.
+        '''
         self.start_pos = start_pos
         self.prefix = prefix
+        '''
+        (:py:func:`str`) Typically a mixture of whitespace and comments. Stuff
+        that is syntactically irrelevant for the syntax tree.
+        '''
         self.parent = None
+        '''
+        The parent :class:`BaseNode` of this leaf.
+        '''
 
     @property
     def start_pos(self):
@@ -220,9 +238,7 @@ class TypedLeaf(Leaf):
 class BaseNode(NodeOrLeaf):
     """
     The super class for all nodes.
-
-    If you create custom nodes, you will probably want to inherit from this
-    ``BaseNode``.
+    A node has children, a type and possibly a parent node.
     """
     __slots__ = ('children', 'parent')
     type = None
@@ -231,7 +247,14 @@ class BaseNode(NodeOrLeaf):
         for c in children:
             c.parent = self
         self.children = children
+        """
+        A list of :class:`NodeOrLeaf` child nodes.
+        """
         self.parent = None
+        '''
+        The parent :class:`BaseNode` of this leaf.
+        None if this is the root node.
+        '''
 
     @property
     def start_pos(self):
