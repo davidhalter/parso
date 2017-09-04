@@ -96,6 +96,10 @@ class PythonMixin(object):
     __slots__ = ()
 
     def get_name_of_position(self, position):
+        """
+        Given a (line, column) tuple, returns a :class`Name` or ``None`` if
+        there is no name at that position.
+        """
         for c in self.children:
             if isinstance(c, Leaf):
                 if c.type == 'name' and c.start_pos <= position <= c.end_pos:
@@ -114,6 +118,9 @@ class PythonLeaf(PythonMixin, Leaf):
         return split_prefix(self, self.get_start_pos_of_prefix())
 
     def get_start_pos_of_prefix(self):
+        """
+        Basically calls :py:meth:`parso.tree.NodeOrLeaf.get_start_pos_of_prefix`.
+        """
         # TODO it is really ugly that we have to override it. Maybe change
         #   indent error leafs somehow? No idea how, though.
         previous_leaf = self.get_previous_leaf()
@@ -360,7 +367,8 @@ class Module(Scope):
 
     def _iter_future_import_names(self):
         """
-        :return list of str: A list of future import names.
+        :return: A list of future import names.
+        :rtype: list of str
         """
         # In Python it's not allowed to use future imports after the first
         # actual (non-future) statement. However this is not a linter here,
@@ -387,8 +395,8 @@ class Module(Scope):
 
     def get_used_names(self):
         """
-        Returns all the `Name` leafs that exist in this module. Tihs includes
-        both definitions and references of names.
+        Returns all the :class:`Name` leafs that exist in this module. This
+        includes both definitions and references of names.
         """
         if self._used_names is None:
             # Don't directly use self._used_names to eliminate a lookup.
@@ -427,7 +435,7 @@ class ClassOrFunc(Scope):
 
     def get_decorators(self):
         """
-        :return list of Decorator:
+        :rtype: list of :class:`Decorator`
         """
         decorated = self.parent
         if decorated.type == 'decorated':
@@ -442,13 +450,6 @@ class ClassOrFunc(Scope):
 class Class(ClassOrFunc):
     """
     Used to store the parsed contents of a python class.
-
-    :param name: The Class name.
-    :type name: str
-    :param supers: The super classes of a Class.
-    :type supers: list
-    :param start_pos: The start position (line, column) of the class.
-    :type start_pos: tuple(int, int)
     """
     type = 'classdef'
     __slots__ = ()
