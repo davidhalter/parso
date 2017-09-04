@@ -61,8 +61,10 @@ class Grammar(object):
         :param bool diff_cache: Diffs the cached python module against the new
             code and tries to parse only the parts that have changed. Returns
             the same (changed) module that is found in cache. Using this option
-            requires you to not do anything anymore with the old cached module,
-            because the contents of it might have changed.
+            requires you to not do anything anymore with the cached modules
+            under that path, because the contents of it might change. This
+            option is still somewhat experimental. If you want stability,
+            please don't use it.
         :param bool cache_path: If given saves the parso cache in this
             directory. If not given, defaults to the default cache places on
             each platform.
