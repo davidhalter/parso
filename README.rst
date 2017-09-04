@@ -10,6 +10,8 @@ parso - A Python Parser
     :target: https://coveralls.io/r/davidhalter/parso
     :alt: Coverage Status
 
+.. image:: https://raw.githubusercontent.com/davidhalter/parso/master/docs/_static/logo_characters.png
+   :width: 500 px
 
 Parso is a Python parser that supports error recovery and round-trip parsing
 for different Python versions (in multiple Python versions). Parso is also able
