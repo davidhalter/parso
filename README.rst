@@ -52,8 +52,8 @@ To list multiple issues:
     >>> error2.message
     "SyntaxError: 'continue' not properly in loop"
 
-Ressources
-==========
+Resources
+=========
 
 - `Testing <http://parso.readthedocs.io/en/latest/docs/development.html#testing>`_
 - `PyPI <https://pypi.python.org/pypi/parso>`_
