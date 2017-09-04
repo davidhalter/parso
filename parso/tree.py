@@ -4,12 +4,12 @@ from parso._compatibility import utf8_repr, encoding, py_version
 
 def search_ancestor(node, *node_types):
     """
-    Recursively looks at the parents of a node and checks if the type names
-    match.
+    Recursively looks at the parents of a node and returns the first found node
+    that matches node_types. Returns ``None`` if no matching node is found.
 
-    :param node: The node that is looked at.
-    :param node_types: A tuple or a string of type names that are
-        searched for.
+    :param node: The ancestors of this node will be checked.
+    :param node_types: type names that are searched for.
+    :type node_types: tuple of str
     """
     while True:
         node = node.parent
@@ -35,8 +35,8 @@ class NodeOrLeaf(object):
 
     def get_next_sibling(self):
         """
-        The node immediately following the invocant in their parent's children
-        list. If the invocant does not have a next sibling, it is None
+        Returns the node immediately following this node in this parent's
+        children list. If this node does not have a next sibling, it is None
         """
         # Can't use index(); we need to test by identity
         for i, child in enumerate(self.parent.children):
@@ -48,8 +48,9 @@ class NodeOrLeaf(object):
 
     def get_previous_sibling(self):
         """
-        The node/leaf immediately preceding the invocant in their parent's
-        children list. If the invocant does not have a previous sibling, it is
+        Returns the node immediately preceding this node in this parent's
+        children list. If this node does not have a previous sibling, it is
+        None.
         None.
         """
         # Can't use index(); we need to test by identity
@@ -62,7 +63,7 @@ class NodeOrLeaf(object):
     def get_previous_leaf(self):
         """
         Returns the previous leaf in the parser tree.
-        Raises an IndexError if it's the first element in the parser tree.
+        Returns `None` if this is the first element in the parser tree.
         """
         node = self
         while True:
@@ -85,7 +86,7 @@ class NodeOrLeaf(object):
     def get_next_leaf(self):
         """
         Returns the next leaf in the parser tree.
-        Returns `None` if it's the last element in the parser tree.
+        Returns None if this is the last element in the parser tree.
         """
         node = self
         while True:
@@ -135,19 +136,19 @@ class NodeOrLeaf(object):
     @abstractmethod
     def get_first_leaf(self):
         """
-        Returns the first leaf of a node or itself it's a leaf.
+        Returns the first leaf of a node or itself if this is a leaf.
         """
 
     @abstractmethod
     def get_last_leaf(self):
         """
-        Returns the last leaf of a node or itself it's a leaf.
+        Returns the last leaf of a node or itself if this is a leaf.
         """
 
     @abstractmethod
     def get_code(self, include_prefix=True):
         """
-        Returns the code that was the input of the parser.
+        Returns the code that was input the input for the parser for this node.
 
         :param include_prefix: Removes the prefix (whitespace and comments) of
             e.g. a statement.
