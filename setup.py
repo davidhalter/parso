@@ -14,7 +14,7 @@ readme = open('README.rst').read() + '\n\n' + open('CHANGELOG.rst').read()
 
 setup(name='parso',
       version=parso.__version__,
-      description='A Python parser written in Python.',
+      description='A Python Parser',
       author=__AUTHOR__,
       author_email=__AUTHOR_EMAIL__,
       include_package_data=True,

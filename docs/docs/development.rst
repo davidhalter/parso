@@ -4,7 +4,8 @@ Development
 ===========
 
 If you want to contribute anything to |parso|, just open an issue or pull
-request to discuss it. We welcome changes!
+request to discuss it. We welcome changes! Please check the ``CONTRIBUTING.md``
+file in the repository, first.
 
 
 Deprecations Process

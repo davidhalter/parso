@@ -1,5 +1,5 @@
 ###################################################################
-parso - A Python Parser Written in Python
+parso - A Python Parser
 ###################################################################
 
 .. image:: https://secure.travis-ci.org/davidhalter/parso.png?branch=master
@@ -11,18 +11,43 @@ parso - A Python Parser Written in Python
     :alt: Coverage Status
 
 
-Parso is a Python parser that supports error recovery and round-trip parsing.
+Parso is a Python parser that supports error recovery and round-trip parsing
+for different Python versions (in multiple Python versions). Parso is also able
+to list multiple syntax errors in your python file.
 
 Parso has been battle-tested by jedi_. It was pulled out of jedi to be useful
 for other projects as well.
 
-Parso is very simplistic. It consists of a small API to parse Python and
-analyse the parsing tree.
+Parso consists of a small API to parse Python and analyse the syntax tree.
 
+A simple example:
+
+.. code-block:: python
+
+    >>> import parso
+    >>> module = parso.parse('hello + 1', version="3.6")
+    >>> expr = module.children[0]
+    >>> expr
+    PythonNode(arith_expr, [<Name: hello@1,0>, <Operator: +>, <Number: 1>])
+    >>> print(expr.get_code())
+    hello + 1
+
+To list multiple issues:
+
+.. code-block:: python
+
+    >>> grammar = parso.load_grammar()
+    >>> module = grammar.parse('foo +\nbar\ncontinue')
+    >>> error1, error2 = grammar.iter_errors(module)
+    >>> error1.message
+    'SyntaxError: invalid syntax'
+    >>> error2.message
+    "SyntaxError: 'continue' not properly in loop"
 
 Ressources
 ==========
 
+- `Testing <http://parso.readthedocs.io/en/latest/docs/development.html#testing>`_
 - `PyPI <https://pypi.python.org/pypi/parso>`_
 - `Docs <https://parso.readthedocs.org/en/latest/>`_
 - Uses `semantic versioning <http://semver.org/>`_
@@ -44,24 +69,6 @@ Known Issues
 - `async`/`await` are already used as keywords in Python3.6.
 - `from __future__ import print_function` is not ignored.
 
-Testing
-=======
-
-The test suite depends on ``tox`` and ``pytest``::
-
-    pip install tox pytest
-
-To run the tests for all supported Python versions::
-
-    tox
-
-If you want to test only a specific Python version (e.g. Python 2.7), it's as
-easy as ::
-
-    tox -e py27
-
-Tests are also run automatically on `Travis CI
-<https://travis-ci.org/davidhalter/parso/>`_.
 
 Acknowledgements
 ================
