@@ -1,7 +1,7 @@
 .. include global.rst
 
-parso - A Python Parser Written in Python
-=========================================
+parso - A Python Parser
+=======================
 
 Release v\ |release|. (:doc:`Installation <docs/installation>`)
 

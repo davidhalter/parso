@@ -8,6 +8,8 @@ for other projects as well.
 
 Parso consists of a small API to parse Python and analyse the syntax tree.
 
+.. _jedi: https://github.com/davidhalter/jedi
+
 A simple example:
 
 >>> import parso
