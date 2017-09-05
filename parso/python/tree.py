@@ -214,11 +214,6 @@ class Name(_LeafWithoutNewlines):
                 return node
             return None
 
-        if type_ in ():
-            if self in node.get_defined_names():
-                return node
-            return None
-
         if type_ == 'except_clause':
             # TODO in Python 2 this doesn't work correctly. See grammar file.
             #      I think we'll just let it be. Python 2 will be gone in a few
