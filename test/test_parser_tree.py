@@ -149,3 +149,19 @@ def test_returns():
 
     r, = get_return_stmts('def x(): return 1')
     assert r.type == 'return_stmt'
+
+
+def test_get_definition_finds_definition_in_same_function(each_version):
+    code = dedent('''
+        def fun():
+            name = 1
+            bar = name + 1''')
+    module = parse(code, version=each_version)
+
+    # the first occurrence of name is also where it is defined
+    definition = module.get_name_of_position((3, 8)).get_definition()
+
+    # `name` occurs twice, both occurrences should have the same definition
+    # (which is the first occurrence.
+    assert [definition, definition] == [
+        o.get_definition() for o in module.get_used_names()['name']]
