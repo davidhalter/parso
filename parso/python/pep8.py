@@ -145,7 +145,7 @@ class BackslashNode(IndentationNode):
 
 
 def _is_magic_name(name):
-    return name.value.startswith('__') and name.value.startswith('__')
+    return name.value.startswith('__') and name.value.endswith('__')
 
 
 class PEP8Normalizer(ErrorFinder):
