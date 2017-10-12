@@ -16,6 +16,8 @@ from parso.python.tree import EndMarker
 from parso.python.tokenize import (NEWLINE, PythonToken, ERROR_DEDENT,
                                    ENDMARKER, INDENT, DEDENT)
 
+LOG = logging.getLogger(__name__)
+
 
 def _get_last_line(node_or_leaf):
     last_leaf = node_or_leaf.get_last_leaf()
@@ -116,7 +118,7 @@ class DiffParser(object):
 
         Returns the new module node.
         '''
-        logging.debug('diff parser start')
+        LOG.debug('diff parser start')
         # Reset the used names cache so they get regenerated.
         self._module._used_names = None
 
@@ -127,11 +129,11 @@ class DiffParser(object):
         line_length = len(new_lines)
         sm = difflib.SequenceMatcher(None, old_lines, self._parser_lines_new)
         opcodes = sm.get_opcodes()
-        logging.debug('diff parser calculated')
-        logging.debug('diff: line_lengths old: %s, new: %s' % (len(old_lines), line_length))
+        LOG.debug('diff parser calculated')
+        LOG.debug('diff: line_lengths old: %s, new: %s' % (len(old_lines), line_length))
 
         for operation, i1, i2, j1, j2 in opcodes:
-            logging.debug('diff %s old[%s:%s] new[%s:%s]',
+            LOG.debug('diff %s old[%s:%s] new[%s:%s]',
                       operation, i1 + 1, i2, j1 + 1, j2)
 
             if j2 == line_length and new_lines[-1] == '':
@@ -161,12 +163,12 @@ class DiffParser(object):
                 % (last_pos, line_length, ''.join(diff))
             )
 
-        logging.debug('diff parser end')
+        LOG.debug('diff parser end')
         return self._module
 
     def _enabled_debugging(self, old_lines, lines_new):
         if self._module.get_code() != ''.join(lines_new):
-            logging.warning('parser issue:\n%s\n%s', ''.join(old_lines),
+            LOG.warning('parser issue:\n%s\n%s', ''.join(old_lines),
                             ''.join(lines_new))
 
     def _copy_from_old_parser(self, line_offset, until_line_old, until_line_new):
@@ -203,7 +205,7 @@ class DiffParser(object):
                     from_ = copied_nodes[0].get_start_pos_of_prefix()[0] + line_offset
                     to = self._nodes_stack.parsed_until_line
 
-                    logging.debug('diff actually copy %s to %s', from_, to)
+                    LOG.debug('diff actually copy %s to %s', from_, to)
             # Since there are potential bugs that might loop here endlessly, we
             # just stop here.
             assert last_until_line != self._nodes_stack.parsed_until_line \
@@ -248,7 +250,7 @@ class DiffParser(object):
             nodes = node.children
 
             self._nodes_stack.add_parsed_nodes(nodes)
-            logging.debug(
+            LOG.debug(
                 'parse_part from %s to %s (to %s in part parser)',
                 nodes[0].get_start_pos_of_prefix()[0],
                 self._nodes_stack.parsed_until_line,

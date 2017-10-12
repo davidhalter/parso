@@ -11,6 +11,8 @@ import logging
 
 from parso._compatibility import FileNotFoundError
 
+LOG = logging.getLogger(__name__)
+
 
 _PICKLE_VERSION = 30
 """
@@ -111,7 +113,7 @@ def _load_from_file_system(hashed_grammar, path, p_time, cache_path=None):
         return None
     else:
         parser_cache.setdefault(hashed_grammar, {})[path] = module_cache_item
-        logging.debug('pickle loaded: %s', path)
+        LOG.debug('pickle loaded: %s', path)
         return module_cache_item.node
 
 
