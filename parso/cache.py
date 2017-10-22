@@ -4,10 +4,14 @@ import sys
 import hashlib
 import gc
 import shutil
-import pickle
 import platform
 import errno
 import logging
+
+try:
+    import cPickle as pickle
+except:
+    import pickle
 
 from parso._compatibility import FileNotFoundError
 
