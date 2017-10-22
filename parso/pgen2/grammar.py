@@ -16,7 +16,10 @@ fallback token code OP, but the parser needs the actual token code.
 
 """
 
-import pickle
+try:
+    import cPickle as pickle
+except:
+    import pickle
 
 
 class Grammar(object):
