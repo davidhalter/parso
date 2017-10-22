@@ -127,7 +127,7 @@ def save_module(hashed_grammar, path, module, lines, pickling=True, cache_path=N
     item = _NodeCacheItem(module, lines, p_time)
     parser_cache.setdefault(hashed_grammar, {})[path] = item
     if pickling and path is not None:
-        _save_to_file_system(hashed_grammar, path, item)
+        _save_to_file_system(hashed_grammar, path, item, cache_path=cache_path)
 
 
 def _save_to_file_system(hashed_grammar, path, item, cache_path=None):
