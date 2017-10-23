@@ -94,10 +94,7 @@ class Grammar(object):
         if error_recovery and start_symbol != 'file_input':
             raise NotImplementedError("This is currently not implemented.")
 
-        if cache and code is None and path is not None:
-            # With the current architecture we cannot load from cache if the
-            # code is given, because we just load from cache if it's not older than
-            # the latest change (file last modified).
+        if cache and path is not None:
             module_node = load_module(self._hashed, path, cache_path=cache_path)
             if module_node is not None:
                 return module_node
