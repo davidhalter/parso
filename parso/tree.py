@@ -278,6 +278,14 @@ class BaseNode(NodeOrLeaf):
         return self._get_code_for_children(self.children, include_prefix)
 
     def get_leaf_for_position(self, position, include_prefixes=False):
+        """
+        Get the :py:class:`parso.tree.Leaf` at ``position``
+
+        :param tuple position: A position tuple, row, column. Rows start from 1
+        :param bool include_prefixes: If ``False``, ``None`` will be returned if ``position`` falls
+            on whitespace before a leaf
+        :return: :py:class:`parso.tree.Leaf` at ``position``, or ``None``
+        """
         def binary_search(lower, upper):
             if lower == upper:
                 element = self.children[lower]
