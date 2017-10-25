@@ -1062,7 +1062,7 @@ class Param(PythonBaseNode):
     @property
     def annotation(self):
         """
-        The default is the test node that appears after `->`. Is `None` in case
+        The default is the test node that appears after `:`. Is `None` in case
         no annotation is present.
         """
         tfpdef = self._tfpdef()
