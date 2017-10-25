@@ -97,7 +97,7 @@ class PythonMixin(object):
 
     def get_name_of_position(self, position):
         """
-        Given a (line, column) tuple, returns a :class`Name` or ``None`` if
+        Given a (line, column) tuple, returns a :py:class:`Name` or ``None`` if
         there is no name at that position.
         """
         for c in self.children:
