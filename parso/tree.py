@@ -283,7 +283,7 @@ class BaseNode(NodeOrLeaf):
 
         :param tuple position: A position tuple, row, column. Rows start from 1
         :param bool include_prefixes: If ``False``, ``None`` will be returned if ``position`` falls
-            on whitespace before a leaf
+            on whitespace or comments before a leaf
         :return: :py:class:`parso.tree.Leaf` at ``position``, or ``None``
         """
         def binary_search(lower, upper):
