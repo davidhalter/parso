@@ -5,6 +5,7 @@ David Halter (@davidhalter) <davidhalter88@gmail.com>
 
 Code Contributors
 =================
+Alisdair Robertson (@robodair)
 
 
 Code Contributors (to Jedi and therefore possibly to this library)
