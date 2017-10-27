@@ -110,6 +110,20 @@ class PythonMixin(object):
                     return result
         return None
 
+    def get_scope(self):
+        """
+        Get the first :py:class:`parso.python.tree.Scope` in the parents of this
+        :py:class:`parso.python.tree.PythonMixin`.
+
+        :return: the first :py:class:`parso.python.tree.Scope` above this in the tree
+        """
+        def get_enclosing_scope(node):
+            if isinstance(node.parent, Scope) or node.parent is None:
+                return node.parent
+            else:
+                return get_enclosing_scope(node.parent)
+        return get_enclosing_scope(self)
+
 
 class PythonLeaf(PythonMixin, Leaf):
     __slots__ = ()
@@ -295,7 +309,7 @@ class Scope(PythonBaseNode, DocstringMixin):
     """
     Super class for the parser tree, which represents the state of a python
     text file.
-    A Scope is either a function, class or lambda.
+    A Scope is either a function, class, lambda, or module.
     """
     __slots__ = ()
 
