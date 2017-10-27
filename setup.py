@@ -46,4 +46,9 @@ setup(name='parso',
           'Topic :: Text Editors :: Integrated Development Environments (IDE)',
           'Topic :: Utilities',
       ],
+      extras_require={
+          'testing': [
+              'pytest>=3.0.7',
+          ],
+      },
       )
