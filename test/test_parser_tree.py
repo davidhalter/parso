@@ -164,10 +164,6 @@ def top_function():
         raise NotImplementedError()
     inner_function()
     raise Exception
-def top_function_two():
-    def inner_function():
-        raise NotImplementedError()
-    raise Exception
 def top_function_three():
     try:
         raise NotImplementedError()
@@ -176,14 +172,11 @@ def top_function_three():
     raise Exception
     """
 
-    r = get_raise_stmts(code, 0)
+    r = get_raise_stmts(code, 0) #  Lists in a simple Function
     assert len(list(r)) == 1
 
-    r = get_raise_stmts(code, 1)
+    r = get_raise_stmts(code, 1) #  Doesn't Exceptions list in closures
     assert len(list(r)) == 1
 
-    r = get_raise_stmts(code, 2)
-    assert len(list(r)) == 1
-
-    r = get_raise_stmts(code, 3)
-    assert len(list(r)) == 1
+    r = get_raise_stmts(code, 2) #  Lists inside try-catch
+    assert len(list(r)) == 2
