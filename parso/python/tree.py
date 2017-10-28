@@ -592,6 +592,21 @@ class Function(ClassOrFunc):
 
         return scan(self.children)
 
+    def iter_raise_stmts(self):
+        """
+        Returns a generator of `raise_stmt`. Includes raise statements inside try-except blocks
+        """
+        def scan(children):
+            for element in children:
+                if element.type == 'raise_stmt' \
+                        or element.type == 'keyword' and element.value == 'raise':
+                    yield element
+                if element.type in _RETURN_STMT_CONTAINERS:
+                    for e in scan(element.children):
+                        yield e
+
+        return scan(self.children)
+
     def is_generator(self):
         """
         :return bool: Checks if a function is a generator or not.

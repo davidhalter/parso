@@ -125,6 +125,10 @@ def get_return_stmts(code):
     return list(parse(code).children[0].iter_return_stmts())
 
 
+def get_raise_stmts(code, child):
+    return list(parse(code).children[child].iter_raise_stmts())
+
+
 def test_yields(each_version):
     y, = get_yield_exprs('def x(): yield', each_version)
     assert y.value == 'yield'
@@ -149,3 +153,30 @@ def test_returns():
 
     r, = get_return_stmts('def x(): return 1')
     assert r.type == 'return_stmt'
+
+
+def test_raises():
+    code = """
+def single_function():
+    raise Exception
+def top_function():
+    def inner_function():
+        raise NotImplementedError()
+    inner_function()
+    raise Exception
+def top_function_three():
+    try:
+        raise NotImplementedError()
+    except NotImplementedError:
+        pass
+    raise Exception
+    """
+
+    r = get_raise_stmts(code, 0) #  Lists in a simple Function
+    assert len(list(r)) == 1
+
+    r = get_raise_stmts(code, 1) #  Doesn't Exceptions list in closures
+    assert len(list(r)) == 1
+
+    r = get_raise_stmts(code, 2) #  Lists inside try-catch
+    assert len(list(r)) == 2
