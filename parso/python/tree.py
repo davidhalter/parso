@@ -1161,4 +1161,5 @@ class CompFor(PythonBaseNode):
         """
         Returns the a list of `Name` that the comprehension defines.
         """
-        return _defined_names(self.children[1])
+        # allow async for
+        return _defined_names(self.children[self.children.index('for') + 1])
