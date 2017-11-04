@@ -254,7 +254,10 @@ def load_grammar(**kwargs):
         if language == 'python':
             version_info = parse_version_string(version)
 
-            file = 'python/grammar%s%s.txt' % (version_info.major, version_info.minor)
+            file = os.path.join(
+                'python',
+                'grammar%s%s.txt' % (version_info.major, version_info.minor)
+            )
 
             global _loaded_grammars
             path = os.path.join(os.path.dirname(__file__), file)
