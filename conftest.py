@@ -11,8 +11,11 @@ import parso
 from parso import cache
 from parso.utils import parse_version_string
 
-
 collect_ignore = ["setup.py"]
+
+VERSIONS_2 = '2.6', '2.7'
+VERSIONS_3 = '3.3', '3.4', '3.5', '3.6', '3.7'
+
 
 @pytest.fixture(scope='session')
 def clean_parso_cache():
@@ -49,20 +52,11 @@ def pytest_generate_tests(metafunc):
             ids=[c.name for c in cases]
         )
     elif 'each_version' in metafunc.fixturenames:
-        metafunc.parametrize(
-            'each_version',
-            ['2.6', '2.7', '3.3', '3.4', '3.5', '3.6'],
-        )
+        metafunc.parametrize('each_version', VERSIONS_2 + VERSIONS_3)
     elif 'each_py2_version' in metafunc.fixturenames:
-        metafunc.parametrize(
-            'each_py2_version',
-            ['2.6', '2.7'],
-        )
+        metafunc.parametrize('each_py2_version', VERSIONS_2)
     elif 'each_py3_version' in metafunc.fixturenames:
-        metafunc.parametrize(
-            'each_py3_version',
-            ['3.3', '3.4', '3.5', '3.6'],
-        )
+        metafunc.parametrize('each_py3_version', VERSIONS_3)
 
 
 class NormalizerIssueCase(object):
@@ -95,16 +89,6 @@ def pytest_configure(config):
         #ch.setFormatter(formatter)
 
         root.addHandler(ch)
-
-
-@pytest.fixture
-def each_py3_version():
-    return '3.3', '3.4', '3.5', '3.6'
-
-
-@pytest.fixture
-def each_py2_version():
-    return '2.6', '2.7'
 
 
 class Checker():
