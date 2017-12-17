@@ -13,7 +13,6 @@
 
 import sys
 import os
-import datetime
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -45,7 +44,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'parso'
-copyright = u'2012 - {today.year}, parso contributors'.format(today=datetime.date.today())
+copyright = u'parso contributors'
 
 import parso
 from parso.utils import version_info
