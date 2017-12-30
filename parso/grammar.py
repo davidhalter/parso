@@ -73,7 +73,7 @@ class Grammar(object):
             :py:class:`parso.python.tree.Module`.
         """
         if 'start_pos' in kwargs:
-            raise TypeError("parse() got an unexpected keyworda argument.")
+            raise TypeError("parse() got an unexpected keyword argument.")
         return self._parse(code=code, **kwargs)
 
     def _parse(self, code=None, error_recovery=True, path=None,
