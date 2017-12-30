@@ -55,7 +55,6 @@ class NodeOrLeaf(object):
         Returns the node immediately preceding this node in this parent's
         children list. If this node does not have a previous sibling, it is
         None.
-        None.
         """
         # Can't use index(); we need to test by identity
         for i, child in enumerate(self.parent.children):
