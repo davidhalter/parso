@@ -338,7 +338,7 @@ class Node(BaseNode):
 
 class ErrorNode(BaseNode):
     """
-    A node that containes valid nodes/leaves that we're follow by a token that
+    A node that contains valid nodes/leaves that we're follow by a token that
     was invalid. This basically means that the leaf after this node is where
     Python would mark a syntax error.
     """
