@@ -222,7 +222,7 @@ class PythonToken(Token):
         return tok_name[self.type]
 
     def __repr__(self):
-        return ('TokenInfo(type=%s, string=%r, start=%r, prefix=%r)' %
+        return ('TokenInfo(type=%s, string=%r, start_pos=%r, prefix=%r)' %
                 self._replace(type=self._get_type_name()))
 
 
