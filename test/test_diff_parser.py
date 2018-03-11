@@ -484,3 +484,21 @@ def test_indentation_issue(differ):
 
     differ.initialize(code1)
     differ.parse(code2, parsers=2)
+
+
+def test_endmarker_newline(differ):
+    code1 = dedent('''\
+        docu = None
+        # some comment
+        result = codet
+        incomplete_dctassign = {
+            "module"
+
+        if "a":
+            x = 3 # asdf
+    ''')
+
+    code2 = code1.replace('codet', 'coded')
+
+    differ.initialize(code1)
+    differ.parse(code2, parsers=2, copies=2, expect_error_leaves=True)
