@@ -744,7 +744,12 @@ class _NonlocalModuleLevelRule(SyntaxRule):
 
 @ErrorFinder.register_rule(type='arglist')
 class _ArglistRule(SyntaxRule):
-    message = "Generator expression must be parenthesized if not sole argument"
+    @property
+    def message(self):
+        if self._normalizer.version < (3, 6):
+            return "Generator expression must be parenthesized if not sole argument"
+        else:
+            return "Generator expression must be parenthesized"
 
     def is_issue(self, node):
         first_arg = node.children[0]
