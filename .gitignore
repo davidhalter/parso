@@ -9,3 +9,4 @@
 /dist/
 parso.egg-info/
 /.cache/
+/.pytest_cache
