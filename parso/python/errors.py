@@ -746,7 +746,7 @@ class _NonlocalModuleLevelRule(SyntaxRule):
 class _ArglistRule(SyntaxRule):
     @property
     def message(self):
-        if self._normalizer.version < (3, 6):
+        if self._normalizer.version < (3, 7):
             return "Generator expression must be parenthesized if not sole argument"
         else:
             return "Generator expression must be parenthesized"
