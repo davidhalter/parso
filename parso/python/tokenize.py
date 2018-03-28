@@ -59,10 +59,6 @@ def group(*choices, **kwargs):
     return start + '|'.join(choices) + ')'
 
 
-def any(*choices):
-    return group(*choices) + '*'
-
-
 def maybe(*choices):
     return group(*choices) + '?'
 
@@ -357,9 +353,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                     contstr = line[start:]
                     contline = line
                     break
-            elif initial in single_quoted or \
-                    token[:2] in single_quoted or \
-                    token[:3] in single_quoted:
+            elif any(token.startswith(s) for s in single_quoted):
                 if token[-1] == '\n':                       # continued string
                     contstr_start = lnum, start
                     endprog = (endpats.get(initial) or endpats.get(token[1])
