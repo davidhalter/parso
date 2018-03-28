@@ -25,6 +25,13 @@ from parso._compatibility import py_version
 from parso.utils import split_lines
 
 
+#fstring_start = /[f|fr|rf]["|"""|'|''']/
+#fstring_end = <same as the second part of the fstring start>
+fstring_expr_start = ''
+fstring_string = r'([^{}\n]+|\{\{|\}\})*'
+fstring_conversion = r'![sra]'
+
+
 TokenCollection = namedtuple(
     'TokenCollection',
     'pseudo_token single_quoted triple_quoted endpats always_break_tokens',

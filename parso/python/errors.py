@@ -563,7 +563,8 @@ class _ReturnAndYieldChecks(SyntaxRule):
                     and self._normalizer.version == (3, 5):
                 self.add_issue(self.get_node(leaf), message=self.message_async_yield)
 
-@ErrorFinder.register_rule(type='atom')
+
+@ErrorFinder.register_rule(type='strings')
 class _BytesAndStringMix(SyntaxRule):
     # e.g. 's' b''
     message = "cannot mix bytes and nonbytes literals"
@@ -949,7 +950,7 @@ class _CheckAssignmentRule(SyntaxRule):
             first, second = node.children[:2]
             error = _get_comprehension_type(node)
             if error is None:
-                if second.type in ('dictorsetmaker', 'string'):
+                if second.type == 'dictorsetmaker':
                     error = 'literal'
                 elif first in ('(', '['):
                     if second.type == 'yield_expr':
@@ -968,7 +969,7 @@ class _CheckAssignmentRule(SyntaxRule):
                 error = 'Ellipsis'
         elif type_ == 'comparison':
             error = 'comparison'
-        elif type_ in ('string', 'number'):
+        elif type_ in ('string', 'number', 'strings'):
             error = 'literal'
         elif type_ == 'yield_expr':
             # This one seems to be a slightly different warning in Python.
