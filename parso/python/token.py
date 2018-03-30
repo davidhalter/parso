@@ -38,8 +38,6 @@ FSTRING_END = next(_counter)
 tok_name[FSTRING_END] = 'FSTRING_END'
 FSTRING_STRING = next(_counter)
 tok_name[FSTRING_STRING] = 'FSTRING_STRING'
-FSTRING_CONVERSION = next(_counter)
-tok_name[FSTRING_CONVERSION] = 'FSTRING_CONVERSION'
 
 # Map from operator to number (since tokenize doesn't do this)
 
