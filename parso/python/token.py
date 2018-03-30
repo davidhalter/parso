@@ -38,6 +38,8 @@ FSTRING_END = next(_counter)
 tok_name[FSTRING_END] = 'FSTRING_END'
 FSTRING_STRING = next(_counter)
 tok_name[FSTRING_STRING] = 'FSTRING_STRING'
+EXCLAMATION = next(_counter)
+tok_name[EXCLAMATION] = 'EXCLAMATION'
 
 # Map from operator to number (since tokenize doesn't do this)
 
@@ -90,6 +92,7 @@ opmap_raw = """\
 //= DOUBLESLASHEQUAL
 -> RARROW
 ... ELLIPSIS
+! EXCLAMATION
 """
 
 opmap = {}

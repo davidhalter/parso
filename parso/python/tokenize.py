@@ -28,7 +28,7 @@ from parso.utils import split_lines
 
 TokenCollection = namedtuple(
     'TokenCollection',
-    'pseudo_token single_quoted triple_quoted endpats fstring_endpats always_break_tokens',
+    'pseudo_token single_quoted triple_quoted endpats fstring_pattern_map always_break_tokens',
 )
 
 BOM_UTF8_STRING = BOM_UTF8.decode('utf-8')
@@ -53,32 +53,35 @@ def group(*choices, **kwargs):
     return start + '|'.join(choices) + ')'
 
 
-def any(*choices):
-    return group(*choices) + '*'
-
-
 def maybe(*choices):
     return group(*choices) + '?'
 
 
 # Return the empty string, plus all of the valid string prefixes.
-def _all_string_prefixes(version_info, include_fstring=False):
+def _all_string_prefixes(version_info, include_fstring=False, only_fstring=False):
     def different_case_versions(prefix):
         for s in _itertools.product(*[(c, c.upper()) for c in prefix]):
             yield ''.join(s)
     # The valid string prefixes. Only contain the lower case versions,
     #  and don't contain any permuations (include 'fr', but not
     #  'rf'). The various permutations will be generated.
-    _valid_string_prefixes = ['b', 'r', 'u']
+    valid_string_prefixes = ['b', 'r', 'u']
     if version_info >= (3, 0):
-        _valid_string_prefixes.append('br')
+        valid_string_prefixes.append('br')
 
+    result = {''}
     if version_info >= (3, 6) and include_fstring:
-        _valid_string_prefixes += ['f', 'fr']
+        f = ['f', 'fr']
+        if only_fstring:
+            valid_string_prefixes = f
+            result = set()
+        else:
+            valid_string_prefixes += f
+    elif only_fstring:
+        return set()
 
     # if we add binary f-strings, add: ['fb', 'fbr']
-    result = set([''])
-    for prefix in _valid_string_prefixes:
+    for prefix in valid_string_prefixes:
         for t in _itertools.permutations(prefix):
             # create a list with upper and lower versions of each
             #  character
@@ -183,10 +186,11 @@ def _create_token_collection(version_info):
                     StringPrefix + r'"[^\n"\\]*(?:\\.[^\n"\\]*)*' +
                     group('"', r'\\\r?\n'))
     pseudo_extra_pool = [Comment, Triple]
+    all_quotes = '"', "'", '"""', "'''"
     if fstring_prefixes:
-        pseudo_extra_pool.append(FStringStart)
+        pseudo_extra_pool.append(FStringStart + group(*all_quotes))
 
-    PseudoExtras = group(r'\\\r?\n|\Z', pseudo_extra_pool)
+    PseudoExtras = group(r'\\\r?\n|\Z', *pseudo_extra_pool)
     PseudoToken = group(Whitespace, capture=True) + \
         group(PseudoExtras, Number, Funny, ContStr, Name, capture=True)
 
@@ -204,7 +208,7 @@ def _create_token_collection(version_info):
     #  including the opening quotes.
     single_quoted = set()
     triple_quoted = set()
-    fstring_endpats = {}
+    fstring_pattern_map = {}
     for t in possible_prefixes:
         for quote in '"', "'":
             single_quoted.add(t + quote)
@@ -213,15 +217,15 @@ def _create_token_collection(version_info):
             triple_quoted.add(t + quote)
 
     for t in fstring_prefixes:
-        for quote in '"', "'", '"""', "'''":
-            fstring_endpats[t + quote] = quote
+        for quote in all_quotes:
+            fstring_pattern_map[t + quote] = quote
 
     ALWAYS_BREAK_TOKENS = (';', 'import', 'class', 'def', 'try', 'except',
                            'finally', 'while', 'with', 'return')
     pseudo_token_compiled = _compile(PseudoToken)
     return TokenCollection(
         pseudo_token_compiled, single_quoted, triple_quoted, endpats,
-        fstring_endpats, ALWAYS_BREAK_TOKENS
+        fstring_pattern_map, ALWAYS_BREAK_TOKENS
     )
 
 
@@ -324,7 +328,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
     token. This idea comes from lib2to3. The prefix contains all information
     that is irrelevant for the parser like newlines in parentheses or comments.
     """
-    pseudo_token, single_quoted, triple_quoted, endpats, fstring_endpats, always_break_tokens, = \
+    pseudo_token, single_quoted, triple_quoted, endpats, fstring_pattern_map, always_break_tokens, = \
         _get_token_collection(version_info)
     paren_level = 0  # count parentheses
     indents = [0]
@@ -372,6 +376,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                 continue
 
         while pos < max:
+            assert not fstring_stack
             if fstring_stack:
                 string, pos = _find_fstring_string(fstring_stack, line, pos)
                 if string:
@@ -474,8 +479,8 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                     break
                 else:                                       # ordinary string
                     yield PythonToken(STRING, token, spos, prefix)
-            elif token in fstring_endpats:
-                fstring_stack.append(FStringNode(fstring_endpats[token]))
+            elif token in fstring_pattern_map:  # The start of an fstring.
+                fstring_stack.append(FStringNode(fstring_pattern_map[token]))
                 yield PythonToken(FSTRING_START, token, spos, prefix)
             elif is_identifier(initial):                      # ordinary name
                 if token in always_break_tokens:
