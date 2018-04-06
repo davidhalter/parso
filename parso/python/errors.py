@@ -864,7 +864,7 @@ class _FStringRule(SyntaxRule):
             cls._fstring_grammar = parso.load_grammar(language='python-f-string')
         return cls._fstring_grammar
 
-    def _check_type(self, fstring_string):
+    def _check_string_part(self, fstring_string):
         index = -1
         value = fstring_string.value
         while True:
@@ -877,10 +877,20 @@ class _FStringRule(SyntaxRule):
             else:
                 self.add_issue(fstring_string, message=self.message_single_closing)
 
+    def _check_fstring_expr(self, fstring_expr):
+        conversion = fstring_expr.children[2]
+        if conversion.type == 'fstring_conversion':
+            name = conversion.children[1]
+            if name.value not in ('s', 'r', 'a'):
+                self.add_issue(name, message=self.message_conversion)
+
     def is_issue(self, fstring):
         for fstring_content in fstring.children[1:-1]:
             if fstring_content.type == 'fstring_string':
-                self._check_type(fstring_content)
+                self._check_string_part(fstring_content)
+            else:
+                assert fstring_content.type == 'fstring_expr'
+                self._check_fstring_expr(fstring_content)
         return
         print(fstring)
         if 'f' not in fstring.string_prefix.lower():

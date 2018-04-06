@@ -168,7 +168,7 @@ def _create_token_collection(version_info):
     # recognized as two instances of =).
     Operator = group(r"\*\*=?", r">>=?", r"<<=?",
                      r"//=?", r"->",
-                     r"[+\-*/%&@`|^=<>]=?",
+                     r"[+\-*/%&@`|^!=<>]=?",
                      r"~")
 
     Bracket = '[][(){}]'
