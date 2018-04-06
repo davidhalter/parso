@@ -265,7 +265,7 @@ class FStringNode(object):
         return len(self.quote) == 3
 
     def is_in_expr(self):
-        return self.parentheses_count and not self.in_format_spec
+        return self.parentheses_count
 
 
 def _check_fstring_ending(fstring_stack, token, from_start=False):
