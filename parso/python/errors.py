@@ -843,7 +843,7 @@ class _TryStmtRule(SyntaxRule):
                 self.add_issue(default_except, message=self.message)
 
 
-@ErrorFinder.register_rule(type='string')
+@ErrorFinder.register_rule(type='fstring')
 class _FStringRule(SyntaxRule):
     _fstring_grammar = None
     message_empty = "f-string: empty expression not allowed"  # f'{}'
@@ -864,7 +864,25 @@ class _FStringRule(SyntaxRule):
             cls._fstring_grammar = parso.load_grammar(language='python-f-string')
         return cls._fstring_grammar
 
+    def _check_type(self, fstring_string):
+        index = -1
+        value = fstring_string.value
+        while True:
+            index = value.find('}', index + 1)
+            if index == -1:
+                break  # No further } found, we're finished.
+            elif index + 1 != len(value) and value[index + 1]:
+                # It's }}, which is totally ok.
+                index += 1
+            else:
+                self.add_issue(fstring_string, message=self.message_single_closing)
+
     def is_issue(self, fstring):
+        for fstring_content in fstring.children[1:-1]:
+            if fstring_content.type == 'fstring_string':
+                self._check_type(fstring_content)
+        return
+        print(fstring)
         if 'f' not in fstring.string_prefix.lower():
             return
 
