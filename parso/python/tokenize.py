@@ -307,7 +307,6 @@ def _find_fstring_string(fstring_stack, line, lnum, pos):
         if match is None:
             string = tos.previous_lines
         else:
-            print(match, lnum, pos, repr(tos.previous_lines))
             if not tos.previous_lines:
                 tos.last_string_start_pos = (lnum, pos)
 
