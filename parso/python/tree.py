@@ -271,6 +271,24 @@ class FStringString(Leaf):
     __slots__ = ()
 
 
+class FStringStart(Leaf):
+    """
+    f-strings contain f-string expressions and normal python strings. These are
+    the string parts of f-strings.
+    """
+    type = 'fstring_start'
+    __slots__ = ()
+
+
+class FStringEnd(Leaf):
+    """
+    f-strings contain f-string expressions and normal python strings. These are
+    the string parts of f-strings.
+    """
+    type = 'fstring_end'
+    __slots__ = ()
+
+
 class _StringComparisonMixin(object):
     def __eq__(self, other):
         """
