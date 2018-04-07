@@ -333,6 +333,19 @@ def tokenize(code, version_info, start_pos=(1, 0)):
     return tokenize_lines(lines, version_info, start_pos=start_pos)
 
 
+def _print_tokens(func):
+    """
+    A small helper function to help debug the tokenize_lines function.
+    """
+    def wrapper(*args, **kwargs):
+        for token in func(*args, **kwargs):
+            print(token)
+            yield token
+
+    return wrapper
+
+
+# @_print_tokens
 def tokenize_lines(lines, version_info, start_pos=(1, 0)):
     """
     A heavily modified Python standard library tokenizer.
@@ -394,7 +407,10 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                 if string:
                     yield PythonToken(
                         FSTRING_STRING, string,
-                        fstring_stack[-1].last_string_start_pos, ''
+                        fstring_stack[-1].last_string_start_pos,
+                        # Never has a prefix because it can start anywhere and
+                        # include whitespace.
+                        prefix=''
                     )
                     fstring_stack[-1].previous_lines = ''
                     continue
@@ -410,8 +426,9 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                         FSTRING_END,
                         fstring_stack[fstring_index].quote,
                         (lnum, pos),
-                        prefix=''
+                        prefix=additional_prefix,
                     )
+                    additional_prefix = ''
                     del fstring_stack[fstring_index:]
                     pos += end
                     continue
@@ -461,12 +478,13 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                 if fstring_index is not None:
                     if end != 0:
                         yield PythonToken(ERRORTOKEN, token[:end], spos, prefix)
+                        prefix = ''
 
                     yield PythonToken(
                         FSTRING_END,
                         fstring_stack[fstring_index].quote,
                         (lnum, spos[1] + 1),
-                        prefix=''
+                        prefix=prefix
                     )
                     del fstring_stack[fstring_index:]
                     pos -= len(token) - end

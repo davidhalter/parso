@@ -1,4 +1,5 @@
 import pytest
+from textwrap import dedent
 
 from parso import load_grammar, ParserSyntaxError
 from parso.python.tokenize import tokenize
@@ -75,5 +76,14 @@ def test_invalid(code, grammar):
 )
 def test_tokenize_start_pos(code, positions):
     tokens = list(tokenize(code, version_info=(3, 6)))
-    print(tokens)
     assert positions == [p.start_pos for p in tokens]
+
+
+def test_roundtrip(grammar):
+    code = dedent("""\
+        f'''s{
+           str.uppe
+        '''
+        """)
+    tree = grammar.parse(code)
+    assert tree.get_code() == code
