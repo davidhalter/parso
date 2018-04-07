@@ -3,6 +3,11 @@
 Changelog
 ---------
 
+0.2.0 ()
++++++++++++++++++++
+
+- f-strings are now parsed as a part of the normal Python grammar. This makes
+  it way easier to deal with them.
 
 0.1.1 (2017-11-05)
 +++++++++++++++++++
