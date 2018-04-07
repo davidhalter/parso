@@ -1,6 +1,6 @@
 from parso.python import tree
 from parso.python.token import (DEDENT, INDENT, ENDMARKER, NEWLINE, NUMBER,
-                                STRING, tok_name, NAME)
+                                STRING, tok_name, NAME, FSTRING_STRING)
 from parso.parser import BaseParser
 from parso.pgen2.parse import token_to_ilabel
 
@@ -129,6 +129,8 @@ class Parser(BaseParser):
             return tree.Newline(value, start_pos, prefix)
         elif type == ENDMARKER:
             return tree.EndMarker(value, start_pos, prefix)
+        elif type == FSTRING_STRING:
+            return tree.FStringString(value, start_pos, prefix)
         else:
             return tree.Operator(value, start_pos, prefix)
 

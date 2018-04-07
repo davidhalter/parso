@@ -114,6 +114,22 @@ def _get_actual_exception(code):
         # Python 3.4/3.4 have a bit of a different warning than 3.5/3.6 in
         # certain places. But in others this error makes sense.
         return [wanted, "SyntaxError: can't use starred expression here"], line_nr
+    elif wanted == 'SyntaxError: f-string: unterminated string':
+        wanted = 'SyntaxError: EOL while scanning string literal'
+    elif wanted == 'SyntaxError: f-string expression part cannot include a backslash':
+        return [
+            wanted,
+            "SyntaxError: EOL while scanning string literal",
+            "SyntaxError: unexpected character after line continuation character",
+        ], line_nr
+    elif wanted == "SyntaxError: f-string: expecting '}'":
+        wanted = 'SyntaxError: EOL while scanning string literal'
+    elif wanted == 'SyntaxError: f-string: empty expression not allowed':
+        wanted = 'SyntaxError: invalid syntax'
+    elif wanted == "SyntaxError: f-string expression part cannot include '#'":
+        wanted = 'SyntaxError: invalid syntax'
+    elif wanted == "SyntaxError: f-string: single '}' is not allowed":
+        wanted = 'SyntaxError: invalid syntax'
     return [wanted], line_nr
 
 

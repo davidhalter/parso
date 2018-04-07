@@ -1,17 +1,18 @@
 import pytest
 
 from parso import load_grammar, ParserSyntaxError
-from parso.python.fstring import tokenize
+from parso.python.tokenize import tokenize
 
 
 @pytest.fixture
 def grammar():
-    return load_grammar(language="python-f-string")
+    return load_grammar(version='3.6')
 
 
 @pytest.mark.parametrize(
     'code', [
         '{1}',
+        '{1:}',
         '',
         '{1!a}',
         '{1!a:1}',
@@ -26,22 +27,12 @@ def grammar():
         '{{{1}',
         '1{{2{{3',
         '}}',
-        '{:}}}',
-
-        # Invalid, but will be checked, later.
-        '{}',
-        '{1:}',
-        '{:}',
-        '{:1}',
-        '{!:}',
-        '{!}',
-        '{!a}',
-        '{1:{}}',
-        '{1:{:}}',
     ]
 )
 def test_valid(code, grammar):
-    fstring = grammar.parse(code, error_recovery=False)
+    code = 'f"""%s"""' % code
+    module = grammar.parse(code, error_recovery=False)
+    fstring = module.children[0]
     assert fstring.type == 'fstring'
     assert fstring.get_code() == code
 
@@ -52,24 +43,37 @@ def test_valid(code, grammar):
         '{',
         '{1!{a}}',
         '{!{a}}',
+        '{}',
+        '{:}',
+        '{:}}}',
+        '{:1}',
+        '{!:}',
+        '{!}',
+        '{!a}',
+        '{1:{}}',
+        '{1:{:}}',
     ]
 )
 def test_invalid(code, grammar):
+    code = 'f"""%s"""' % code
     with pytest.raises(ParserSyntaxError):
         grammar.parse(code, error_recovery=False)
 
     # It should work with error recovery.
-    #grammar.parse(code, error_recovery=True)
+    grammar.parse(code, error_recovery=True)
 
 
 @pytest.mark.parametrize(
-    ('code', 'start_pos', 'positions'), [
+    ('code', 'positions'), [
         # 2 times 2, 5 because python expr and endmarker.
-        ('}{', (2, 3), [(2, 3), (2, 4), (2, 5), (2, 5)]),
-        (' :{ 1 : } ', (1, 0), [(1, 2), (1, 3), (1, 6), (1, 8), (1, 10)]),
-        ('\n{\nfoo\n }', (2, 1), [(3, 0), (3, 1), (5, 1), (5, 2)]),
+        ('f"}{"', [(1, 0), (1, 2), (1, 3), (1, 4), (1, 5)]),
+        ('f" :{ 1 : } "', [(1, 0), (1, 2), (1, 4), (1, 6), (1, 8), (1, 9),
+                           (1, 10), (1, 11), (1, 12), (1, 13)]),
+        ('f"""\n {\nfoo\n }"""', [(1, 0), (1, 4), (2, 1), (3, 0), (4, 1),
+                                  (4, 2), (4, 5)]),
     ]
 )
-def test_tokenize_start_pos(code, start_pos, positions):
-    tokens = tokenize(code, start_pos)
+def test_tokenize_start_pos(code, positions):
+    tokens = list(tokenize(code, version_info=(3, 6)))
+    print(tokens)
     assert positions == [p.start_pos for p in tokens]

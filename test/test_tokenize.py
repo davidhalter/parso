@@ -7,7 +7,8 @@ import pytest
 from parso._compatibility import py_version
 from parso.utils import split_lines, parse_version_string
 from parso.python.token import (
-    NAME, NEWLINE, STRING, INDENT, DEDENT, ERRORTOKEN, ENDMARKER, ERROR_DEDENT)
+    NAME, NEWLINE, STRING, INDENT, DEDENT, ERRORTOKEN, ENDMARKER, ERROR_DEDENT,
+    FSTRING_START)
 from parso.python import tokenize
 from parso import parse
 from parso.python.tokenize import PythonToken
@@ -162,8 +163,9 @@ def test_ur_literals():
         token_list = _get_token_list(literal)
         typ, result_literal, _, _ = token_list[0]
         if is_literal:
-            assert typ == STRING
-            assert result_literal == literal
+            if typ != FSTRING_START:
+                assert typ == STRING
+                assert result_literal == literal
         else:
             assert typ == NAME
 
@@ -175,6 +177,7 @@ def test_ur_literals():
     # Starting with Python 3.3 this ordering is also possible.
     if py_version >= 33:
         check('Rb""')
+
     # Starting with Python 3.6 format strings where introduced.
     check('fr""', is_literal=py_version >= 36)
     check('rF""', is_literal=py_version >= 36)
