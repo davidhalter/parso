@@ -846,25 +846,11 @@ class _TryStmtRule(SyntaxRule):
 @ErrorFinder.register_rule(type='fstring')
 class _FStringRule(SyntaxRule):
     _fstring_grammar = None
-    message_single_closing = "f-string: single '}' is not allowed"  # f'}'
     message_nested = "f-string: expressions nested too deeply"
     message_conversion = "f-string: invalid conversion character: expected 's', 'r', or 'a'"
 
     def _check_format_spec(self, format_spec, depth):
         self._check_fstring_contents(format_spec.children[1:], depth)
-
-    def _check_string_part(self, fstring_string):
-        index = -1
-        value = fstring_string.value
-        while True:
-            index = value.find('}', index + 1)
-            if index == -1:
-                break  # No further } found, we're finished.
-            elif index + 1 != len(value) and value[index + 1]:
-                # It's }}, which is totally ok.
-                index += 1
-            else:
-                self.add_issue(fstring_string, message=self.message_single_closing)
 
     def _check_fstring_expr(self, fstring_expr, depth):
         if depth >= 2:
@@ -885,10 +871,7 @@ class _FStringRule(SyntaxRule):
 
     def _check_fstring_contents(self, children, depth=0):
         for fstring_content in children:
-            if fstring_content.type == 'fstring_string':
-                self._check_string_part(fstring_content)
-            else:
-                assert fstring_content.type == 'fstring_expr'
+            if fstring_content.type == 'fstring_expr':
                 self._check_fstring_expr(fstring_content, depth)
 
 

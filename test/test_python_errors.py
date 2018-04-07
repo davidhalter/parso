@@ -122,12 +122,14 @@ def _get_actual_exception(code):
             "SyntaxError: EOL while scanning string literal",
             "SyntaxError: unexpected character after line continuation character",
         ], line_nr
+    elif wanted == "SyntaxError: f-string: expecting '}'":
+        wanted = 'SyntaxError: EOL while scanning string literal'
     elif wanted == 'SyntaxError: f-string: empty expression not allowed':
         wanted = 'SyntaxError: invalid syntax'
     elif wanted == "SyntaxError: f-string expression part cannot include '#'":
         wanted = 'SyntaxError: invalid syntax'
-    elif wanted == "SyntaxError: f-string: expecting '}'":
-        wanted = 'SyntaxError: EOL while scanning string literal'
+    elif wanted == "SyntaxError: f-string: single '}' is not allowed":
+        wanted = 'SyntaxError: invalid syntax'
     return [wanted], line_nr
 
 
