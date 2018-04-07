@@ -106,8 +106,8 @@ def _get_token_collection(version_info):
         return result
 
 
-fstring_string_single_line = _compile(r'(?:[^{\r\n]+|\{\{)+')
-fstring_string_multi_line = _compile(r'(?:[^{]+|\{\{)+')
+fstring_string_single_line = _compile(r'(?:[^{}\r\n]+|\{\{|\}\})+')
+fstring_string_multi_line = _compile(r'(?:[^{}]+|\{\{|\}\})+')
 
 
 def _create_token_collection(version_info):
@@ -253,7 +253,10 @@ class FStringNode(object):
         self.quote = quote
         self.parentheses_count = 0
         self.previous_lines = ''
-        self.in_format_spec = False
+        self.last_string_start_pos = None
+        # In the syntax there can be multiple format_spec's nested:
+        # {x:{y:3}}
+        self.format_spec_count = 0
 
     def open_parentheses(self, character):
         self.parentheses_count += 1
@@ -265,7 +268,7 @@ class FStringNode(object):
         return len(self.quote) == 3
 
     def is_in_expr(self):
-        return self.parentheses_count
+        return (self.parentheses_count - self.format_spec_count) > 0
 
 
 def _check_fstring_ending(fstring_stack, token, from_start=False):
@@ -290,7 +293,7 @@ def _check_fstring_ending(fstring_stack, token, from_start=False):
     return fstring_index, fstring_end
 
 
-def _find_fstring_string(fstring_stack, line, pos):
+def _find_fstring_string(fstring_stack, line, lnum, pos):
     tos = fstring_stack[-1]
     if tos.is_in_expr():
         return '', pos
@@ -302,8 +305,12 @@ def _find_fstring_string(fstring_stack, line, pos):
         else:
             match = fstring_string_single_line.match(line, pos)
         if match is None:
-            string = fstring_stack[-1].previous_lines
+            string = tos.previous_lines
         else:
+            print(match, lnum, pos, repr(tos.previous_lines))
+            if not tos.previous_lines:
+                tos.last_string_start_pos = (lnum, pos)
+
             string = match.group(0)
             for fstring_stack_node in fstring_stack:
                 try:
@@ -313,12 +320,11 @@ def _find_fstring_string(fstring_stack, line, pos):
 
             new_pos += len(string)
             if allow_multiline and string.endswith('\n'):
-                fstring_stack[-1].previous_lines += string
+                tos.previous_lines += string
                 string = ''
             else:
-                string = fstring_stack[-1].previous_lines + string
+                string = tos.previous_lines + string
 
-        fstring_stack[-1].previous_lines = ''
         return string, new_pos
 
 
@@ -385,25 +391,31 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
 
         while pos < max:
             if fstring_stack:
-                string, pos = _find_fstring_string(fstring_stack, line, pos)
+                string, pos = _find_fstring_string(fstring_stack, line, lnum, pos)
                 if string:
-                    yield PythonToken(FSTRING_STRING, string, (lnum, pos), '')
+                    yield PythonToken(
+                        FSTRING_STRING, string,
+                        fstring_stack[-1].last_string_start_pos, ''
+                    )
+                    fstring_stack[-1].previous_lines = ''
                     continue
 
-                if pos < max:
-                    rest = line[pos:]
-                    fstring_index, end = _check_fstring_ending(fstring_stack, rest, from_start=True)
+                if pos == max:
+                    break
 
-                    if fstring_index is not None:
-                        yield PythonToken(
-                            FSTRING_END,
-                            fstring_stack[fstring_index].quote,
-                            (lnum, pos),
-                            prefix=''
-                        )
-                        del fstring_stack[fstring_index:]
-                        pos += end
-                        continue
+                rest = line[pos:]
+                fstring_index, end = _check_fstring_ending(fstring_stack, rest, from_start=True)
+
+                if fstring_index is not None:
+                    yield PythonToken(
+                        FSTRING_END,
+                        fstring_stack[fstring_index].quote,
+                        (lnum, pos),
+                        prefix=''
+                    )
+                    del fstring_stack[fstring_index:]
+                    pos += end
+                    continue
 
             pseudomatch = pseudo_token.match(line, pos)
             if not pseudomatch:                             # scan for tokens
@@ -531,7 +543,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                         paren_level -= 1
                 elif token == ':' and fstring_stack \
                         and fstring_stack[-1].parentheses_count == 1:
-                    fstring_stack[-1].in_format_spec = True
+                    fstring_stack[-1].format_spec_count += 1
 
                 try:
                     # This check is needed in any case to check if it's a valid

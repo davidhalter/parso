@@ -124,7 +124,9 @@ class PgenParser(object):
         self.error_recovery = error_recovery
 
     def parse(self, tokens):
-        for type_, value, start_pos, prefix in tokens:
+        for tok in tokens:
+            print(tok)
+            type_, value, start_pos, prefix = tok
             if self.add_token(type_, value, start_pos, prefix):
                 break
         else:
