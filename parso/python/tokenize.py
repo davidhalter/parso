@@ -477,7 +477,9 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                 yield PythonToken(NUMBER, token, spos, prefix)
             elif initial in '\r\n':
                 if any(not f.allow_multiline() for f in fstring_stack):
-                    fstring_stack.clear()
+                    # Would use fstring_stack.clear, but that's not available
+                    # in Python 2.
+                    fstring_stack[:] = []
 
                 if not new_line and paren_level == 0 and not fstring_stack:
                     yield PythonToken(NEWLINE, token, spos, prefix)
@@ -516,7 +518,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                 yield PythonToken(FSTRING_START, token, spos, prefix)
             elif is_identifier(initial):                      # ordinary name
                 if token in always_break_tokens:
-                    fstring_stack.clear()
+                    fstring_stack[:] = []
                     paren_level = 0
                     while True:
                         indent = indents.pop()
