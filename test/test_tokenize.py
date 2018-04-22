@@ -227,3 +227,11 @@ def test_endmarker_end_pos():
 def test_indentation(code, types):
     actual_types = [t.type for t in _get_token_list(code)]
     assert actual_types == types + [ENDMARKER]
+
+
+def test_error_string():
+    t1, endmarker = _get_token_list(' "\n')
+    assert t1.type == ERRORTOKEN
+    assert t1.prefix == ' '
+    assert t1.string == '"\n'
+    assert endmarker.string == ''
