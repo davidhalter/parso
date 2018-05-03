@@ -17,6 +17,7 @@ from parso.python.tokenize import (NEWLINE, PythonToken, ERROR_DEDENT,
                                    ENDMARKER, INDENT, DEDENT)
 
 LOG = logging.getLogger(__name__)
+LOG.setLevel('INFO')
 
 
 def _get_last_line(node_or_leaf):

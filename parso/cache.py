@@ -16,6 +16,7 @@ except:
 from parso._compatibility import FileNotFoundError
 
 LOG = logging.getLogger(__name__)
+LOG.setLevel('INFO')
 
 
 _PICKLE_VERSION = 30
