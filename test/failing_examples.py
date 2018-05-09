@@ -282,10 +282,7 @@ if sys.version_info >= (3, 6):
         'f"s" b""',
         'b"s" f""',
     ]
-if sys.version_info >= (2, 7):
-    # This is something that raises a different error in 2.6 than in the other
-    # versions. Just skip it for 2.6.
-    FAILING_EXAMPLES.append('[a, 1] += 3')
+FAILING_EXAMPLES.append('[a, 1] += 3')
 
 if sys.version_info[:2] == (3, 5):
     # yields are not allowed in 3.5 async functions. Therefore test them
