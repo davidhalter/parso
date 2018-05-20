@@ -502,3 +502,8 @@ def test_endmarker_newline(differ):
 
     differ.initialize(code1)
     differ.parse(code2, parsers=2, copies=2, expect_error_leaves=True)
+
+
+def test_newlines_at_end(differ):
+    differ.initialize('a\n\n')
+    differ.parse('a\n', copies=1)
