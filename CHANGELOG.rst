@@ -3,6 +3,12 @@
 Changelog
 ---------
 
+0.2.1 (2018-05-21)
++++++++++++++++++++
+
+- A bugfix for the diff parser.
+- Grammar files can now be loaded from a specific path.
+
 0.2.0 (2018-04-15)
 +++++++++++++++++++
 
