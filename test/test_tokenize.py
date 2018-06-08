@@ -1,6 +1,7 @@
 # -*- coding: utf-8    # This file contains Unicode characters.
 
 from textwrap import dedent
+import tokenize as stdlib_tokenize
 
 import pytest
 
@@ -235,3 +236,14 @@ def test_error_string():
     assert t1.prefix == ' '
     assert t1.string == '"\n'
     assert endmarker.string == ''
+
+def test_tok_name_copied():
+    # Make sure parso doesn't mutate the standard library
+    tok_len = len(stdlib_tokenize.tok_name)
+    correct_len = stdlib_tokenize.N_TOKENS
+    if 'N_TOKENS' in stdlib_tokenize.tok_name.values(): # Python 3.7
+        correct_len += 1
+    if 'NT_OFFSET' in stdlib_tokenize.tok_name.values(): # Not there in PyPy
+        correct_len += 1
+
+    assert tok_len == correct_len
