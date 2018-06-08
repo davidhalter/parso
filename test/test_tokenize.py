@@ -1,6 +1,7 @@
 # -*- coding: utf-8    # This file contains Unicode characters.
 
 from textwrap import dedent
+import tokenize as stdlib_tokenize
 
 import pytest
 
@@ -235,3 +236,7 @@ def test_error_string():
     assert t1.prefix == ' '
     assert t1.string == '"\n'
     assert endmarker.string == ''
+
+def test_tok_name_copied():
+    # Make sure parso doesn't mutate the standard library
+    assert stdlib_tokenize.tok_name[stdlib_tokenize.ENCODING] == 'ENCODING'

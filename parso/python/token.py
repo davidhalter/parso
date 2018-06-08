@@ -4,6 +4,8 @@ from token import *
 
 from parso._compatibility import py_version
 
+# Don't mutate the standard library dict
+tok_name = tok_name.copy()
 
 _counter = count(N_TOKENS)
 # Never want to see this thing again.
