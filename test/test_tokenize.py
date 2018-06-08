@@ -239,4 +239,4 @@ def test_error_string():
 
 def test_tok_name_copied():
     # Make sure parso doesn't mutate the standard library
-    assert stdlib_tokenize.tok_name[stdlib_tokenize.ENCODING] == 'ENCODING'
+    assert len(stdlib_tokenize.tok_name) == stdlib_tokenize.N_TOKENS + 1 # N_TOKENS + NT_OFFSET
