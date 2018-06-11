@@ -38,6 +38,21 @@ class Stack(list):
         tos = self[-1]
         return tos[2][1]
 
+    def get_tos_first_tokens(self, grammar):
+        tos = self[-1]
+        inv_tokens = {v: k for k, v in grammar.tokens.items()}
+        inv_keywords = {v: k for k, v in grammar.keywords.items()}
+        dfa, state, nodes = tos
+
+        def check():
+            for first in dfa[1]:
+                try:
+                    yield inv_keywords[first]
+                except KeyError:
+                    yield tokenize.tok_name[inv_tokens[first]]
+
+        return list(check())
+
 
 def token_to_ilabel(grammar, type_, value):
     # Map from token to label
