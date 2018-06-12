@@ -160,7 +160,6 @@ class Parser(BaseParser):
                     dfa, state, (type_, nodes) = stack[-1]
                     states, first = dfa
 
-
             # In Python statements need to end with a newline. But since it's
             # possible (and valid in Python ) that there's no newline at the
             # end of a file, we have to recover even if the user doesn't want
@@ -198,12 +197,22 @@ class Parser(BaseParser):
         def current_suite(stack):
             # For now just discard everything that is not a suite or
             # file_input, if we detect an error.
+            suite_with_newline = False
             for index, (symbol, nodes) in reversed(list(enumerate(get_symbol_and_nodes(stack)))):
                 # `suite` can sometimes be only simple_stmt, not stmt.
                 if symbol == 'file_input':
                     break
-                elif symbol == 'suite' and len(nodes) > 1:
-                    # suites without an indent in them get discarded.
+                elif symbol == 'suite':
+                    if len(nodes) > 1:
+                        break
+                    elif nodes:
+                        suite_with_newline = True
+                    # `suite` without an indent are error nodes.
+                    continue
+                elif symbol in ('with_stmt', 'if_stmt', 'while_stmt',
+                                # 'funcdef', 'classdef',
+                                'try_stmt') \
+                        and nodes[-1] == ':' and not suite_with_newline:
                     break
             return index, symbol, nodes
 

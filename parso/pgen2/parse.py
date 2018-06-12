@@ -40,8 +40,8 @@ class Stack(list):
 
     def get_tos_first_tokens(self, grammar):
         tos = self[-1]
-        inv_tokens = {v: k for k, v in grammar.tokens.items()}
-        inv_keywords = {v: k for k, v in grammar.keywords.items()}
+        inv_tokens = dict((v, k) for k, v in grammar.tokens.items())
+        inv_keywords = dict((v, k) for k, v in grammar.keywords.items())
         dfa, state, nodes = tos
 
         def check():
@@ -51,7 +51,7 @@ class Stack(list):
                 except KeyError:
                     yield tokenize.tok_name[inv_tokens[first]]
 
-        return list(check())
+        return sorted(check())
 
 
 def token_to_ilabel(grammar, type_, value):
