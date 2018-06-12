@@ -12,20 +12,20 @@ from parso.utils import parse_version_string
 
 
 class ParserGenerator(object):
-    def __init__(self, bnf_grammar, token_namespace):
-        self._bnf_grammar = bnf_grammar
+    def __init__(self, dfas, start_symbol, token_namespace):
         self._token_namespace = token_namespace
-        self.dfas, self.startsymbol = _GrammarParser(bnf_grammar)._parse()
+        self.dfas = dfas
+        self.start_symbol = start_symbol
 
-    def make_grammar(self):
-        grammar = Grammar(self._bnf_grammar)
+    def make_grammar(self, grammar):
         self._first = {}  # map from symbol name to set of tokens
         self._addfirstsets()
+
         names = list(self.dfas.keys())
         names.sort()
         # TODO do we still need this?
-        names.remove(self.startsymbol)
-        names.insert(0, self.startsymbol)
+        names.remove(self.start_symbol)
+        names.insert(0, self.start_symbol)
         for name in names:
             i = 256 + len(grammar.symbol2number)
             grammar.symbol2number[name] = i
@@ -42,7 +42,7 @@ class ParserGenerator(object):
                 states.append(arcs)
             grammar.states.append(states)
             grammar.dfas[grammar.symbol2number[name]] = (states, self._make_first(grammar, name))
-        grammar.start = grammar.symbol2number[self.startsymbol]
+        grammar.start = grammar.symbol2number[self.start_symbol]
         return grammar
 
     def _make_first(self, grammar, name):
@@ -154,7 +154,7 @@ class _GrammarParser():
 
     def _parse(self):
         dfas = {}
-        startsymbol = None
+        start_symbol = None
         # MSTART: (NEWLINE | RULE)* ENDMARKER
         while self.type != token.ENDMARKER:
             while self.type == token.NEWLINE:
@@ -172,9 +172,9 @@ class _GrammarParser():
             # newlen = len(dfa)
             dfas[name] = dfa
             #print name, oldlen, newlen
-            if startsymbol is None:
-                startsymbol = name
-        return dfas, startsymbol
+            if start_symbol is None:
+                start_symbol = name
+        return dfas, start_symbol
 
     def _make_dfa(self, start, finish):
         # To turn an NFA into a DFA, we define the states of the DFA
@@ -395,7 +395,7 @@ class DFAState(object):
     __hash__ = None  # For Py3 compatibility.
 
 
-def generate_grammar(bnf_text, token_namespace):
+def generate_grammar(bnf_grammar, token_namespace):
     """
     ``bnf_text`` is a grammar in extended BNF (using * for repetition, + for
     at-least-once repetition, [] for optional parts, | for alternatives and ()
@@ -404,5 +404,6 @@ def generate_grammar(bnf_text, token_namespace):
     It's not EBNF according to ISO/IEC 14977. It's a dialect Python uses in its
     own parser.
     """
-    p = ParserGenerator(bnf_text, token_namespace)
-    return p.make_grammar()
+    dfas, start_symbol = _GrammarParser(bnf_grammar)._parse()
+    p = ParserGenerator(dfas, start_symbol, token_namespace)
+    return p.make_grammar(Grammar(bnf_grammar))
