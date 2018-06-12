@@ -27,6 +27,7 @@ setup(name='parso',
       packages=find_packages(exclude=['test']),
       package_data={'parso': ['python/grammar*.txt']},
       platforms=['any'],
+      python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*',
       classifiers=[
           'Development Status :: 4 - Beta',
           'Environment :: Plugins',
