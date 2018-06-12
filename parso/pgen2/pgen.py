@@ -5,6 +5,19 @@
 # Copyright David Halter and Contributors
 # Modifications are dual-licensed: MIT and PSF.
 
+"""
+Specifying grammars in pgen is possible with this grammar::
+
+    grammar: (NEWLINE | rule)* ENDMARKER
+    rule: NAME ':' rhs NEWLINE
+    rhs: items ('|' items)*
+    items: item+
+    item: '[' rhs ']' | atom ['+' | '*']
+    atom: '(' rhs ')' | NAME | STRING
+
+This grammar is self-referencing.
+"""
+
 from parso.pgen2.grammar import Grammar
 from parso.python import token
 from parso.python import tokenize
@@ -155,11 +168,11 @@ class _GrammarParser():
     def _parse(self):
         dfas = {}
         start_symbol = None
-        # MSTART: (NEWLINE | RULE)* ENDMARKER
+        # grammar: (NEWLINE | rule)* ENDMARKER
         while self.type != token.ENDMARKER:
             while self.type == token.NEWLINE:
                 self._gettoken()
-            # RULE: NAME ':' RHS NEWLINE
+            # rule: NAME ':' rhs NEWLINE
             name = self._expect(token.NAME)
             self._expect(token.COLON)
             a, z = self._parse_rhs()
@@ -260,7 +273,7 @@ class _GrammarParser():
                         break
 
     def _parse_rhs(self):
-        # RHS: ALT ('|' ALT)*
+        # rhs: items ('|' items)*
         a, z = self._parse_alt()
         if self.value != "|":
             return a, z
@@ -277,7 +290,7 @@ class _GrammarParser():
             return aa, zz
 
     def _parse_alt(self):
-        # ALT: ITEM+
+        # items: item+
         a, b = self._parse_item()
         while (self.value in ("(", "[") or
                self.type in (token.NAME, token.STRING)):
@@ -287,7 +300,7 @@ class _GrammarParser():
         return a, b
 
     def _parse_item(self):
-        # ITEM: '[' RHS ']' | ATOM ['+' | '*']
+        # item: '[' rhs ']' | atom ['+' | '*']
         if self.value == "[":
             self._gettoken()
             a, z = self._parse_rhs()
@@ -307,7 +320,7 @@ class _GrammarParser():
                 return a, a
 
     def _parse_atom(self):
-        # ATOM: '(' RHS ')' | NAME | STRING
+        # atom: '(' rhs ')' | NAME | STRING
         if self.value == "(":
             self._gettoken()
             a, z = self._parse_rhs()
