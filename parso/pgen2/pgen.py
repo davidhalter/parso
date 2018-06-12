@@ -25,10 +25,9 @@ from parso.utils import parse_version_string
 
 
 class ParserGenerator(object):
-    def __init__(self, dfas, start_symbol, token_namespace):
+    def __init__(self, dfas, token_namespace):
         self._token_namespace = token_namespace
         self.dfas = dfas
-        self.start_symbol = start_symbol
 
     def make_grammar(self, grammar):
         self._first = {}  # map from symbol name to set of tokens
@@ -36,9 +35,6 @@ class ParserGenerator(object):
 
         names = list(self.dfas.keys())
         names.sort()
-        # TODO do we still need this?
-        names.remove(self.start_symbol)
-        names.insert(0, self.start_symbol)
         for name in names:
             i = 256 + len(grammar.symbol2number)
             grammar.symbol2number[name] = i
@@ -55,7 +51,6 @@ class ParserGenerator(object):
                 states.append(arcs)
             grammar.states.append(states)
             grammar.dfas[grammar.symbol2number[name]] = (states, self._make_first(grammar, name))
-        grammar.start = grammar.symbol2number[self.start_symbol]
         return grammar
 
     def _make_first(self, grammar, name):
@@ -419,5 +414,5 @@ def generate_grammar(bnf_grammar, token_namespace):
     own parser.
     """
     dfas, start_symbol = _GrammarParser(bnf_grammar)._parse()
-    p = ParserGenerator(dfas, start_symbol, token_namespace)
-    return p.make_grammar(Grammar(bnf_grammar))
+    p = ParserGenerator(dfas, token_namespace)
+    return p.make_grammar(Grammar(bnf_grammar, start_symbol))

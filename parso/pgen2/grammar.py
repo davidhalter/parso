@@ -70,7 +70,7 @@ class Grammar(object):
 
     """
 
-    def __init__(self, bnf_text):
+    def __init__(self, bnf_text, start_symbol):
         self.symbol2number = {}
         self.number2symbol = {}
         self.states = []
@@ -80,7 +80,11 @@ class Grammar(object):
         self.tokens = {}
         self.symbol2label = {}
         self.label2symbol = {}
-        self.start = 256
+        self.start_symbol = start_symbol
+
+    @property
+    def start_symbol(self):
+        return self.symbol2number[self.start_symbol]
 
     def report(self):
         """Dump the grammar tables to standard output, for debugging."""
