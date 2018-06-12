@@ -175,9 +175,9 @@ class _GrammarParser():
             a, z = self._parse_rhs()
             self._expect(token.NEWLINE)
 
-            #self._dump_nfa(a, z)
-            dfa = self._make_dfa(a, z)
-            #self._dump_dfa(self._current_rule_name, dfa)
+            #_dump_nfa(a, z)
+            dfa = _make_dfa(a, z)
+            #_dump_dfa(self._current_rule_name, dfa)
             # oldlen = len(dfa)
             _simplify_dfa(dfa)
             # newlen = len(dfa)
@@ -188,68 +188,6 @@ class _GrammarParser():
                 start_symbol = self._current_rule_name
 
         return dfas, start_symbol
-
-    def _make_dfa(self, start, finish):
-        # To turn an NFA into a DFA, we define the states of the DFA
-        # to correspond to *sets* of states of the NFA.  Then do some
-        # state reduction.  Let's represent sets as dicts with 1 for
-        # values.
-        assert isinstance(start, NFAState)
-        assert isinstance(finish, NFAState)
-
-        def closure(state):
-            base = {}
-            addclosure(state, base)
-            return base
-
-        def addclosure(state, base):
-            assert isinstance(state, NFAState)
-            if state in base:
-                return
-            base[state] = 1
-            for label, next in state.arcs:
-                if label is None:
-                    addclosure(next, base)
-
-        states = [DFAState(closure(start), finish)]
-        for state in states:  # NB states grows while we're iterating
-            arcs = {}
-            for nfastate in state.nfaset:
-                for label, next in nfastate.arcs:
-                    if label is not None:
-                        addclosure(next, arcs.setdefault(label, {}))
-            for label, nfaset in arcs.items():
-                for st in states:
-                    if st.nfaset == nfaset:
-                        break
-                else:
-                    st = DFAState(nfaset, finish)
-                    states.append(st)
-                state.add_arc(st, label)
-        return states  # List of DFAState instances; first one is start
-
-    def _dump_nfa(self, start, finish):
-        print("Dump of NFA for", start.from_rule)
-        todo = [start]
-        for i, state in enumerate(todo):
-            print("  State", i, state is finish and "(final)" or "")
-            for label, next in state.arcs:
-                if next in todo:
-                    j = todo.index(next)
-                else:
-                    j = len(todo)
-                    todo.append(next)
-                if label is None:
-                    print("    -> %d" % j)
-                else:
-                    print("    %s -> %d" % (label, j))
-
-    def _dump_dfa(self, name, dfa):
-        print("Dump of DFA for", name)
-        for i, state in enumerate(dfa):
-            print("  State", i, state.isfinal and "(final)" or "")
-            for label, next in state.arcs.items():
-                print("    %s -> %d" % (label, dfa.index(next)))
 
     def _parse_rhs(self):
         # rhs: items ('|' items)*
@@ -411,6 +349,69 @@ def _simplify_dfa(dfas):
                         state.unifystate(state_j, state_i)
                     changes = True
                     break
+
+
+def _make_dfa(start, finish):
+    # To turn an NFA into a DFA, we define the states of the DFA
+    # to correspond to *sets* of states of the NFA.  Then do some
+    # state reduction.  Let's represent sets as dicts with 1 for
+    # values.
+    assert isinstance(start, NFAState)
+    assert isinstance(finish, NFAState)
+
+    def closure(state):
+        base = {}
+        addclosure(state, base)
+        return base
+
+    def addclosure(state, base):
+        assert isinstance(state, NFAState)
+        if state in base:
+            return
+        base[state] = 1
+        for label, next in state.arcs:
+            if label is None:
+                addclosure(next, base)
+
+    states = [DFAState(closure(start), finish)]
+    for state in states:  # NB states grows while we're iterating
+        arcs = {}
+        for nfastate in state.nfaset:
+            for label, next in nfastate.arcs:
+                if label is not None:
+                    addclosure(next, arcs.setdefault(label, {}))
+        for label, nfaset in arcs.items():
+            for st in states:
+                if st.nfaset == nfaset:
+                    break
+            else:
+                st = DFAState(nfaset, finish)
+                states.append(st)
+            state.add_arc(st, label)
+    return states  # List of DFAState instances; first one is start
+
+def _dump_nfa(start, finish):
+    print("Dump of NFA for", start.from_rule)
+    todo = [start]
+    for i, state in enumerate(todo):
+        print("  State", i, state is finish and "(final)" or "")
+        for label, next in state.arcs:
+            if next in todo:
+                j = todo.index(next)
+            else:
+                j = len(todo)
+                todo.append(next)
+            if label is None:
+                print("    -> %d" % j)
+            else:
+                print("    %s -> %d" % (label, j))
+
+def _dump_dfa(name, dfa):
+    print("Dump of DFA for", name)
+    for i, state in enumerate(dfa):
+        print("  State", i, state.isfinal and "(final)" or "")
+        for label, next in state.arcs.items():
+            print("    %s -> %d" % (label, dfa.index(next)))
 
 
 def generate_grammar(bnf_grammar, token_namespace):
