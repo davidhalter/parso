@@ -31,12 +31,6 @@ class Grammar(object):
     provide initialization of the tables; several subclasses exist to
     do this (see the conv and pgen modules).
 
-    The load() method reads the tables from a pickle file, which is
-    much faster than the other ways offered by subclasses.  The pickle
-    file is written by calling dump() (after loading the grammar
-    tables using a subclass).  The report() method prints a readable
-    representation of the tables to stdout, for debugging.
-
     The instance variables are as follows:
 
     symbol2number -- a dict mapping symbol names to numbers.  Symbol
@@ -87,30 +81,6 @@ class Grammar(object):
         self.symbol2label = {}
         self.label2symbol = {}
         self.start = 256
-
-    def dump(self, filename):
-        """Dump the grammar tables to a pickle file."""
-        with open(filename, "wb") as f:
-            pickle.dump(self.__dict__, f, 2)
-
-    def load(self, filename):
-        """Load the grammar tables from a pickle file."""
-        with open(filename, "rb") as f:
-            d = pickle.load(f)
-        self.__dict__.update(d)
-
-    def copy(self):
-        """
-        Copy the grammar.
-        """
-        new = self.__class__()
-        for dict_attr in ("symbol2number", "number2symbol", "dfas", "keywords",
-                          "tokens", "symbol2label"):
-            setattr(new, dict_attr, getattr(self, dict_attr).copy())
-        new.labels = self.labels[:]
-        new.states = self.states[:]
-        new.start = self.start
-        return new
 
     def report(self):
         """Dump the grammar tables to standard output, for debugging."""
