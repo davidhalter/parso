@@ -212,7 +212,7 @@ class _GrammarParser():
                 else:
                     st = DFAState(nfaset, finish)
                     states.append(st)
-                state.addarc(st, label)
+                state.add_arc(st, label)
         return states  # List of DFAState instances; first one is start
 
     def _dump_nfa(self, name, start, finish):
@@ -267,13 +267,13 @@ class _GrammarParser():
         else:
             aa = NFAState()
             zz = NFAState()
-            aa.addarc(a)
-            z.addarc(zz)
+            aa.add_arc(a)
+            z.add_arc(zz)
             while self.value == "|":
                 self._gettoken()
                 a, z = self._parse_alt()
-                aa.addarc(a)
-                z.addarc(zz)
+                aa.add_arc(a)
+                z.add_arc(zz)
             return aa, zz
 
     def _parse_alt(self):
@@ -282,7 +282,7 @@ class _GrammarParser():
         while (self.value in ("(", "[") or
                self.type in (token.NAME, token.STRING)):
             c, d = self._parse_item()
-            b.addarc(c)
+            b.add_arc(c)
             b = d
         return a, b
 
@@ -292,7 +292,7 @@ class _GrammarParser():
             self._gettoken()
             a, z = self._parse_rhs()
             self._expect(token.RSQB)
-            a.addarc(z)
+            a.add_arc(z)
             return a, z
         else:
             a, z = self._parse_atom()
@@ -300,7 +300,7 @@ class _GrammarParser():
             if value not in ("+", "*"):
                 return a, z
             self._gettoken()
-            z.addarc(a)
+            z.add_arc(a)
             if value == "+":
                 return a, z
             else:
@@ -316,7 +316,7 @@ class _GrammarParser():
         elif self.type in (token.NAME, token.STRING):
             a = NFAState()
             z = NFAState()
-            a.addarc(z, self.value)
+            a.add_arc(z, self.value)
             self._gettoken()
             return a, z
         else:
@@ -352,7 +352,7 @@ class NFAState(object):
     def __init__(self):
         self.arcs = []  # list of (label, NFAState) pairs
 
-    def addarc(self, next, label=None):
+    def add_arc(self, next, label=None):
         assert label is None or isinstance(label, str)
         assert isinstance(next, NFAState)
         self.arcs.append((label, next))
@@ -367,7 +367,7 @@ class DFAState(object):
         self.isfinal = final in nfaset
         self.arcs = {}  # map from label to DFAState
 
-    def addarc(self, next, label):
+    def add_arc(self, next, label):
         assert isinstance(label, str)
         assert label not in self.arcs
         assert isinstance(next, DFAState)
