@@ -2,7 +2,7 @@
 # Licensed to PSF under a Contributor Agreement.
 
 # Modifications:
-# Copyright 2014 David Halter. Integration into Jedi.
+# Copyright David Halter and Contributors
 # Modifications are dual-licensed: MIT and PSF.
 
 """This module defines the data structures used to represent a grammar.

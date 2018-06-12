@@ -2,7 +2,7 @@
 # Licensed to PSF under a Contributor Agreement.
 
 # Modifications:
-# Copyright 2014-2018 David Halter.
+# Copyright David Halter and Contributors
 # Modifications are dual-licensed: MIT and PSF.
 
 """
