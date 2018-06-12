@@ -2,7 +2,7 @@
 # Licensed to PSF under a Contributor Agreement.
 
 # Modifications:
-# Copyright 2014 David Halter. Integration into Jedi.
+# Copyright 2014-2018 David Halter.
 # Modifications are dual-licensed: MIT and PSF.
 
 from parso.pgen2.grammar import Grammar
