@@ -197,23 +197,19 @@ class Parser(BaseParser):
         def current_suite(stack):
             # For now just discard everything that is not a suite or
             # file_input, if we detect an error.
-            suite_with_newline = False
+            one_line_suite = False
             for index, (symbol, nodes) in reversed(list(enumerate(get_symbol_and_nodes(stack)))):
                 # `suite` can sometimes be only simple_stmt, not stmt.
-                if symbol == 'file_input':
+                if one_line_suite:
+                    break
+                elif symbol == 'file_input':
                     break
                 elif symbol == 'suite':
                     if len(nodes) > 1:
                         break
-                    elif nodes:
-                        suite_with_newline = True
+                    elif not nodes:
+                        one_line_suite = True
                     # `suite` without an indent are error nodes.
-                    continue
-                elif symbol in ('with_stmt', 'if_stmt', 'while_stmt',
-                                # 'funcdef', 'classdef',
-                                'try_stmt') \
-                        and nodes[-1] == ':' and not suite_with_newline:
-                    break
             return index, symbol, nodes
 
         index, symbol, nodes = current_suite(stack)

@@ -11,6 +11,18 @@ def test_with_stmt():
     assert module.children[2].type == 'name'
 
 
+def test_one_line_function():
+    module = parse('def x(): f.')
+    assert module.children[0].type == 'funcdef'
+    def_, name, parameters, colon, f = module.children[0].children
+    assert f.type == 'error_node'
+
+    module = parse('def x(a:')
+    func = module.children[0]
+    assert func.type == 'error_node'
+    assert func.children[-1] == ':'
+
+
 def test_if_stmt():
     module = parse('if x: f.')# \nelse: g(
     if_stmt = module.children[0]
@@ -19,3 +31,5 @@ def test_if_stmt():
     assert f.type == 'error_node'
     assert f.children[0].value == 'f'
     assert f.children[1].value == '.'
+    #assert g.children[0].value == 'g'
+    #assert g.children[1].value == '('
