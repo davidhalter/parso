@@ -14,13 +14,13 @@ from parso.utils import parse_version_string
 class ParserGenerator(object):
     def __init__(self, bnf_grammar, token_namespace):
         self._bnf_grammar = bnf_grammar
-        self.dfas, self.startsymbol = _GrammarParser(bnf_grammar)._parse()
-        self._first = {}  # map from symbol name to set of tokens
-        self._addfirstsets()
         self._token_namespace = token_namespace
+        self.dfas, self.startsymbol = _GrammarParser(bnf_grammar)._parse()
 
     def make_grammar(self):
         grammar = Grammar(self._bnf_grammar)
+        self._first = {}  # map from symbol name to set of tokens
+        self._addfirstsets()
         names = list(self.dfas.keys())
         names.sort()
         # TODO do we still need this?
