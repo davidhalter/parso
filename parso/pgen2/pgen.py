@@ -181,7 +181,7 @@ class _GrammarParser():
             dfa = self._make_dfa(a, z)
             #self._dump_dfa(name, dfa)
             # oldlen = len(dfa)
-            self._simplify_dfa(dfa)
+            _simplify_dfa(dfa)
             # newlen = len(dfa)
             dfas[name] = dfa
             #print name, oldlen, newlen
@@ -250,27 +250,6 @@ class _GrammarParser():
             print("  State", i, state.isfinal and "(final)" or "")
             for label, next in state.arcs.items():
                 print("    %s -> %d" % (label, dfa.index(next)))
-
-    def _simplify_dfa(self, dfa):
-        # This is not theoretically optimal, but works well enough.
-        # Algorithm: repeatedly look for two states that have the same
-        # set of arcs (same labels pointing to the same nodes) and
-        # unify them, until things stop changing.
-
-        # dfa is a list of DFAState instances
-        changes = True
-        while changes:
-            changes = False
-            for i, state_i in enumerate(dfa):
-                for j in range(i + 1, len(dfa)):
-                    state_j = dfa[j]
-                    if state_i == state_j:
-                        #print "  unify", i, j
-                        del dfa[j]
-                        for state in dfa:
-                            state.unifystate(state_j, state_i)
-                        changes = True
-                        break
 
     def _parse_rhs(self):
         # rhs: items ('|' items)*
@@ -406,6 +385,28 @@ class DFAState(object):
         return True
 
     __hash__ = None  # For Py3 compatibility.
+
+
+def _simplify_dfa(dfas):
+    # This is not theoretically optimal, but works well enough.
+    # Algorithm: repeatedly look for two states that have the same
+    # set of arcs (same labels pointing to the same nodes) and
+    # unify them, until things stop changing.
+
+    # dfas is a list of DFAState instances
+    changes = True
+    while changes:
+        changes = False
+        for i, state_i in enumerate(dfas):
+            for j in range(i + 1, len(dfas)):
+                state_j = dfas[j]
+                if state_i == state_j:
+                    #print "  unify", i, j
+                    del dfas[j]
+                    for state in dfas:
+                        state.unifystate(state_j, state_i)
+                    changes = True
+                    break
 
 
 def generate_grammar(bnf_grammar, token_namespace):
