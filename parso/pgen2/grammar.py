@@ -83,7 +83,7 @@ class Grammar(object):
         self.start_symbol = start_symbol
 
     @property
-    def start_symbol(self):
+    def start(self):
         return self.symbol2number[self.start_symbol]
 
     def report(self):

@@ -167,21 +167,26 @@ class _GrammarParser():
         while self.type != token.ENDMARKER:
             while self.type == token.NEWLINE:
                 self._gettoken()
+
             # rule: NAME ':' rhs NEWLINE
-            name = self._expect(token.NAME)
+            self._current_rule_name = self._expect(token.NAME)
             self._expect(token.COLON)
+
             a, z = self._parse_rhs()
             self._expect(token.NEWLINE)
-            #self._dump_nfa(name, a, z)
+
+            #self._dump_nfa(a, z)
             dfa = self._make_dfa(a, z)
-            #self._dump_dfa(name, dfa)
+            #self._dump_dfa(self._current_rule_name, dfa)
             # oldlen = len(dfa)
             _simplify_dfa(dfa)
             # newlen = len(dfa)
-            dfas[name] = dfa
-            #print name, oldlen, newlen
+            dfas[self._current_rule_name] = dfa
+            #print(self._current_rule_name, oldlen, newlen)
+
             if start_symbol is None:
-                start_symbol = name
+                start_symbol = self._current_rule_name
+
         return dfas, start_symbol
 
     def _make_dfa(self, start, finish):
@@ -223,8 +228,8 @@ class _GrammarParser():
                 state.add_arc(st, label)
         return states  # List of DFAState instances; first one is start
 
-    def _dump_nfa(self, name, start, finish):
-        print("Dump of NFA for", name)
+    def _dump_nfa(self, start, finish):
+        print("Dump of NFA for", start.from_rule)
         todo = [start]
         for i, state in enumerate(todo):
             print("  State", i, state is finish and "(final)" or "")
@@ -252,8 +257,8 @@ class _GrammarParser():
         if self.value != "|":
             return a, z
         else:
-            aa = NFAState()
-            zz = NFAState()
+            aa = NFAState(self._current_rule_name)
+            zz = NFAState(self._current_rule_name)
             aa.add_arc(a)
             z.add_arc(zz)
             while self.value == "|":
@@ -301,8 +306,8 @@ class _GrammarParser():
             self._expect(token.RPAR)
             return a, z
         elif self.type in (token.NAME, token.STRING):
-            a = NFAState()
-            z = NFAState()
+            a = NFAState(self._current_rule_name)
+            z = NFAState(self._current_rule_name)
             a.add_arc(z, self.value)
             self._gettoken()
             return a, z
@@ -336,13 +341,17 @@ class _GrammarParser():
 
 
 class NFAState(object):
-    def __init__(self):
+    def __init__(self, from_rule):
+        self.from_rule = from_rule
         self.arcs = []  # list of (label, NFAState) pairs
 
     def add_arc(self, next, label=None):
         assert label is None or isinstance(label, str)
         assert isinstance(next, NFAState)
         self.arcs.append((label, next))
+
+    def __repr__(self):
+        return '<%s: from %s>' % (self.__class__.__name__, self.from_rule)
 
 
 class DFAState(object):
