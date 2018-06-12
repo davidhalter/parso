@@ -12,20 +12,15 @@ from parso.utils import parse_version_string
 
 
 class ParserGenerator(object):
-    def __init__(self, bnf_text, token_namespace):
-        self._bnf_text = bnf_text
-        self.generator = tokenize.tokenize(
-            bnf_text,
-            version_info=parse_version_string('3.6')
-        )
-        self._gettoken()  # Initialize lookahead
-        self.dfas, self.startsymbol = self._parse()
+    def __init__(self, bnf_grammar, token_namespace):
+        self._bnf_grammar = bnf_grammar
+        self.dfas, self.startsymbol = _GrammarParser(bnf_grammar)._parse()
         self.first = {}  # map from symbol name to set of tokens
         self._addfirstsets()
         self._token_namespace = token_namespace
 
     def make_grammar(self):
-        grammar = Grammar(self._bnf_text)
+        grammar = Grammar(self._bnf_grammar)
         names = list(self.dfas.keys())
         names.sort()
         # TODO do we still need this?
@@ -143,6 +138,19 @@ class ParserGenerator(object):
                                      (name, symbol, label, inverse[symbol]))
                 inverse[symbol] = label
         self.first[name] = totalset
+
+
+class _GrammarParser():
+    """
+    The parser for Python grammar files.
+    """
+    def __init__(self, bnf_grammar):
+        self._bnf_grammar = bnf_grammar
+        self.generator = tokenize.tokenize(
+            bnf_grammar,
+            version_info=parse_version_string('3.6')
+        )
+        self._gettoken()  # Initialize lookahead
 
     def _parse(self):
         dfas = {}
@@ -335,7 +343,7 @@ class ParserGenerator(object):
                 msg = msg % args
             except:
                 msg = " ".join([msg] + list(map(str, args)))
-        line = self._bnf_text.splitlines()[self.begin[0] - 1]
+        line = self._bnf_grammar.splitlines()[self.begin[0] - 1]
         raise SyntaxError(msg, ('<grammar>', self.begin[0],
                                 self.begin[1], line))
 
