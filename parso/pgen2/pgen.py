@@ -15,7 +15,7 @@ class ParserGenerator(object):
     def __init__(self, bnf_grammar, token_namespace):
         self._bnf_grammar = bnf_grammar
         self.dfas, self.startsymbol = _GrammarParser(bnf_grammar)._parse()
-        self.first = {}  # map from symbol name to set of tokens
+        self._first = {}  # map from symbol name to set of tokens
         self._addfirstsets()
         self._token_namespace = token_namespace
 
@@ -46,7 +46,7 @@ class ParserGenerator(object):
         return grammar
 
     def _make_first(self, grammar, name):
-        rawfirst = self.first[name]
+        rawfirst = self._first[name]
         first = {}
         for label in rawfirst:
             ilabel = self._make_label(grammar, label)
@@ -105,25 +105,25 @@ class ParserGenerator(object):
         names = list(self.dfas.keys())
         names.sort()
         for name in names:
-            if name not in self.first:
+            if name not in self._first:
                 self._calcfirst(name)
-            #print name, self.first[name].keys()
+            #print name, self._first[name].keys()
 
     def _calcfirst(self, name):
         dfa = self.dfas[name]
-        self.first[name] = None  # dummy to detect left recursion
+        self._first[name] = None  # dummy to detect left recursion
         state = dfa[0]
         totalset = {}
         overlapcheck = {}
         for label, next in state.arcs.items():
             if label in self.dfas:
-                if label in self.first:
-                    fset = self.first[label]
+                if label in self._first:
+                    fset = self._first[label]
                     if fset is None:
                         raise ValueError("recursion for rule %r" % name)
                 else:
                     self._calcfirst(label)
-                    fset = self.first[label]
+                    fset = self._first[label]
                 totalset.update(fset)
                 overlapcheck[label] = fset
             else:
@@ -137,7 +137,7 @@ class ParserGenerator(object):
                                      " first sets of %s as well as %s" %
                                      (name, symbol, label, inverse[symbol]))
                 inverse[symbol] = label
-        self.first[name] = totalset
+        self._first[name] = totalset
 
 
 class _GrammarParser():
