@@ -5,7 +5,7 @@
 # Copyright 2014 David Halter. Integration into Jedi.
 # Modifications are dual-licensed: MIT and PSF.
 
-from parso.pgen2 import grammar
+from parso.pgen2.grammar import Grammar
 from parso.python import token
 from parso.python import tokenize
 from parso.utils import parse_version_string
@@ -25,63 +25,63 @@ class ParserGenerator(object):
         self._token_namespace = token_namespace
 
     def make_grammar(self):
-        c = grammar.Grammar(self._bnf_text)
+        grammar = Grammar(self._bnf_text)
         names = list(self.dfas.keys())
         names.sort()
         # TODO do we still need this?
         names.remove(self.startsymbol)
         names.insert(0, self.startsymbol)
         for name in names:
-            i = 256 + len(c.symbol2number)
-            c.symbol2number[name] = i
-            c.number2symbol[i] = name
+            i = 256 + len(grammar.symbol2number)
+            grammar.symbol2number[name] = i
+            grammar.number2symbol[i] = name
         for name in names:
             dfa = self.dfas[name]
             states = []
             for state in dfa:
                 arcs = []
                 for label, next in state.arcs.items():
-                    arcs.append((self._make_label(c, label), dfa.index(next)))
+                    arcs.append((self._make_label(grammar, label), dfa.index(next)))
                 if state.isfinal:
                     arcs.append((0, dfa.index(state)))
                 states.append(arcs)
-            c.states.append(states)
-            c.dfas[c.symbol2number[name]] = (states, self._make_first(c, name))
-        c.start = c.symbol2number[self.startsymbol]
-        return c
+            grammar.states.append(states)
+            grammar.dfas[grammar.symbol2number[name]] = (states, self._make_first(grammar, name))
+        grammar.start = grammar.symbol2number[self.startsymbol]
+        return grammar
 
-    def _make_first(self, c, name):
+    def _make_first(self, grammar, name):
         rawfirst = self.first[name]
         first = {}
         for label in rawfirst:
-            ilabel = self._make_label(c, label)
+            ilabel = self._make_label(grammar, label)
             ##assert ilabel not in first # XXX failed on <> ... !=
             first[ilabel] = 1
         return first
 
-    def _make_label(self, c, label):
+    def _make_label(self, grammar, label):
         # XXX Maybe this should be a method on a subclass of converter?
-        ilabel = len(c.labels)
+        ilabel = len(grammar.labels)
         if label[0].isalpha():
             # Either a symbol name or a named token
-            if label in c.symbol2number:
+            if label in grammar.symbol2number:
                 # A symbol name (a non-terminal)
-                if label in c.symbol2label:
-                    return c.symbol2label[label]
+                if label in grammar.symbol2label:
+                    return grammar.symbol2label[label]
                 else:
-                    c.labels.append((c.symbol2number[label], None))
-                    c.symbol2label[label] = ilabel
-                    c.label2symbol[ilabel] = label
+                    grammar.labels.append((grammar.symbol2number[label], None))
+                    grammar.symbol2label[label] = ilabel
+                    grammar.label2symbol[ilabel] = label
                     return ilabel
             else:
                 # A named token (NAME, NUMBER, STRING)
                 itoken = getattr(self._token_namespace, label, None)
                 assert isinstance(itoken, int), label
-                if itoken in c.tokens:
-                    return c.tokens[itoken]
+                if itoken in grammar.tokens:
+                    return grammar.tokens[itoken]
                 else:
-                    c.labels.append((itoken, None))
-                    c.tokens[itoken] = ilabel
+                    grammar.labels.append((itoken, None))
+                    grammar.tokens[itoken] = ilabel
                     return ilabel
         else:
             # Either a keyword or an operator
@@ -89,21 +89,21 @@ class ParserGenerator(object):
             value = eval(label)
             if value[0].isalpha():
                 # A keyword
-                if value in c.keywords:
-                    return c.keywords[value]
+                if value in grammar.keywords:
+                    return grammar.keywords[value]
                 else:
                     # TODO this might be an issue?! Using token.NAME here?
-                    c.labels.append((token.NAME, value))
-                    c.keywords[value] = ilabel
+                    grammar.labels.append((token.NAME, value))
+                    grammar.keywords[value] = ilabel
                     return ilabel
             else:
                 # An operator (any non-numeric token)
                 itoken = self._token_namespace.generate_token_id(value)
-                if itoken in c.tokens:
-                    return c.tokens[itoken]
+                if itoken in grammar.tokens:
+                    return grammar.tokens[itoken]
                 else:
-                    c.labels.append((itoken, None))
-                    c.tokens[itoken] = ilabel
+                    grammar.labels.append((itoken, None))
+                    grammar.tokens[itoken] = ilabel
                     return ilabel
 
     def _addfirstsets(self):
