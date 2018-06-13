@@ -191,7 +191,7 @@ class _GrammarParser():
 
     def _parse_rhs(self):
         # rhs: items ('|' items)*
-        a, z = self._parse_alt()
+        a, z = self._parse_items()
         if self.value != "|":
             return a, z
         else:
@@ -206,10 +206,10 @@ class _GrammarParser():
                     break
 
                 self._gettoken()
-                a, z = self._parse_alt()
+                a, z = self._parse_items()
             return aa, zz
 
-    def _parse_alt(self):
+    def _parse_items(self):
         # items: item+
         a, b = self._parse_item()
         while self.type in (token.NAME, token.STRING, token.LPAR, token.LSQB):
