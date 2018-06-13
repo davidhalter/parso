@@ -24,9 +24,9 @@ from parso.pgen2.grammar_parser import GrammarParser, NFAState
 
 
 class ParserGenerator(object):
-    def __init__(self, dfas, token_namespace):
+    def __init__(self, rule_to_dfas, token_namespace):
         self._token_namespace = token_namespace
-        self.dfas = dfas
+        self.dfas = rule_to_dfas
 
     def make_grammar(self, grammar):
         self._first = {}  # map from symbol name to set of tokens
@@ -280,7 +280,7 @@ def generate_grammar(bnf_grammar, token_namespace):
     It's not EBNF according to ISO/IEC 14977. It's a dialect Python uses in its
     own parser.
     """
-    rule_to_dfa = {}
+    rule_to_dfas = {}
     start_symbol = None
     for nfa_a, nfa_z in GrammarParser(bnf_grammar).parse():
         #_dump_nfa(a, z)
@@ -289,11 +289,11 @@ def generate_grammar(bnf_grammar, token_namespace):
         # oldlen = len(dfas)
         _simplify_dfas(dfas)
         # newlen = len(dfas)
-        rule_to_dfa[nfa_a.from_rule] = dfas
+        rule_to_dfas[nfa_a.from_rule] = dfas
         #print(self._current_rule_name, oldlen, newlen)
 
         if start_symbol is None:
             start_symbol = nfa_a.from_rule
 
-    p = ParserGenerator(rule_to_dfa, token_namespace)
+    p = ParserGenerator(rule_to_dfas, token_namespace)
     return p.make_grammar(Grammar(bnf_grammar, start_symbol))
