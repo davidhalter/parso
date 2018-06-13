@@ -175,7 +175,7 @@ class _GrammarParser():
             a, z = self._parse_rhs()
             self._expect(token.NEWLINE)
 
-            #_dump_nfa(a, z)
+            _dump_nfa(a, z)
             dfa = _make_dfa(a, z)
             #_dump_dfa(self._current_rule_name, dfa)
             # oldlen = len(dfa)
@@ -197,21 +197,24 @@ class _GrammarParser():
         else:
             aa = NFAState(self._current_rule_name)
             zz = NFAState(self._current_rule_name)
-            aa.add_arc(a)
-            z.add_arc(zz)
-            while self.value == "|":
-                self._gettoken()
-                a, z = self._parse_alt()
+            while True:
+                # Add the possibility to go into the state of a and come back
+                # to finish.
                 aa.add_arc(a)
                 z.add_arc(zz)
+                if self.value != "|":
+                    break
+
+                self._gettoken()
+                a, z = self._parse_alt()
             return aa, zz
 
     def _parse_alt(self):
         # items: item+
         a, b = self._parse_item()
-        while (self.value in ("(", "[") or
-               self.type in (token.NAME, token.STRING)):
+        while self.type in (token.NAME, token.STRING, token.LPAR, token.LSQB):
             c, d = self._parse_item()
+            # Need to end on the next item.
             b.add_arc(c)
             b = d
         return a, b
@@ -222,6 +225,8 @@ class _GrammarParser():
             self._gettoken()
             a, z = self._parse_rhs()
             self._expect(token.RSQB)
+            # Make it also possible that there is no token and change the
+            # state.
             a.add_arc(z)
             return a, z
         else:
@@ -230,10 +235,13 @@ class _GrammarParser():
             if value not in ("+", "*"):
                 return a, z
             self._gettoken()
+            # Make it clear that we can go back to the old state and repeat.
             z.add_arc(a)
             if value == "+":
                 return a, z
             else:
+                # The end state is the same as the beginning, nothing must
+                # change.
                 return a, a
 
     def _parse_atom(self):
@@ -246,6 +254,7 @@ class _GrammarParser():
         elif self.type in (token.NAME, token.STRING):
             a = NFAState(self._current_rule_name)
             z = NFAState(self._current_rule_name)
+            # Make it clear that the state transition requires that value.
             a.add_arc(z, self.value)
             self._gettoken()
             return a, z
@@ -390,6 +399,7 @@ def _make_dfa(start, finish):
             state.add_arc(st, label)
     return states  # List of DFAState instances; first one is start
 
+
 def _dump_nfa(start, finish):
     print("Dump of NFA for", start.from_rule)
     todo = [start]
@@ -405,6 +415,7 @@ def _dump_nfa(start, finish):
                 print("    -> %d" % j)
             else:
                 print("    %s -> %d" % (label, j))
+
 
 def _dump_dfa(name, dfa):
     print("Dump of DFA for", name)
