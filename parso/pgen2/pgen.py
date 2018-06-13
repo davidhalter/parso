@@ -161,8 +161,6 @@ class _GrammarParser():
         self._gettoken()  # Initialize lookahead
 
     def parse(self):
-        dfas = {}
-        start_symbol = None
         # grammar: (NEWLINE | rule)* ENDMARKER
         while self.type != token.ENDMARKER:
             while self.type == token.NEWLINE:
@@ -175,19 +173,7 @@ class _GrammarParser():
             a, z = self._parse_rhs()
             self._expect(token.NEWLINE)
 
-            #_dump_nfa(a, z)
-            dfa = _make_dfa(a, z)
-            #_dump_dfa(self._current_rule_name, dfa)
-            # oldlen = len(dfa)
-            _simplify_dfa(dfa)
-            # newlen = len(dfa)
-            dfas[self._current_rule_name] = dfa
-            #print(self._current_rule_name, oldlen, newlen)
-
-            if start_symbol is None:
-                start_symbol = self._current_rule_name
-
-        return dfas, start_symbol
+            yield a, z
 
     def _parse_rhs(self):
         # rhs: items ('|' items)*
@@ -432,6 +418,20 @@ def generate_grammar(bnf_grammar, token_namespace):
     It's not EBNF according to ISO/IEC 14977. It's a dialect Python uses in its
     own parser.
     """
-    dfas, start_symbol = _GrammarParser(bnf_grammar).parse()
+    dfas = {}
+    start_symbol = None
+    for a, z in _GrammarParser(bnf_grammar).parse():
+        #_dump_nfa(a, z)
+        dfa = _make_dfa(a, z)
+        #_dump_dfa(self._current_rule_name, dfa)
+        # oldlen = len(dfa)
+        _simplify_dfa(dfa)
+        # newlen = len(dfa)
+        dfas[a.from_rule] = dfa
+        #print(self._current_rule_name, oldlen, newlen)
+
+        if start_symbol is None:
+            start_symbol = a.from_rule
+
     p = ParserGenerator(dfas, token_namespace)
     return p.make_grammar(Grammar(bnf_grammar, start_symbol))
