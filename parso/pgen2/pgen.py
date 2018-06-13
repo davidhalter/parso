@@ -420,18 +420,18 @@ def generate_grammar(bnf_grammar, token_namespace):
     """
     dfas = {}
     start_symbol = None
-    for a, z in _GrammarParser(bnf_grammar).parse():
+    for nfa_a, nfa_z in _GrammarParser(bnf_grammar).parse():
         #_dump_nfa(a, z)
-        dfa = _make_dfa(a, z)
+        dfa = _make_dfa(nfa_a, nfa_z)
         #_dump_dfa(self._current_rule_name, dfa)
         # oldlen = len(dfa)
         _simplify_dfa(dfa)
         # newlen = len(dfa)
-        dfas[a.from_rule] = dfa
+        dfas[nfa_a.from_rule] = dfa
         #print(self._current_rule_name, oldlen, newlen)
 
         if start_symbol is None:
-            start_symbol = a.from_rule
+            start_symbol = nfa_a.from_rule
 
     p = ParserGenerator(dfas, token_namespace)
     return p.make_grammar(Grammar(bnf_grammar, start_symbol))
