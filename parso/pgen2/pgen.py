@@ -26,20 +26,20 @@ from parso.pgen2.grammar_parser import GrammarParser, NFAState
 class ParserGenerator(object):
     def __init__(self, rule_to_dfas, token_namespace):
         self._token_namespace = token_namespace
-        self.dfas = rule_to_dfas
+        self._rule_to_dfas = rule_to_dfas
 
     def make_grammar(self, grammar):
         self._first = {}  # map from symbol name to set of tokens
         self._addfirstsets()
 
-        names = list(self.dfas.keys())
+        names = list(self._rule_to_dfas.keys())
         names.sort()
         for name in names:
             i = 256 + len(grammar.symbol2number)
             grammar.symbol2number[name] = i
             grammar.number2symbol[i] = name
         for name in names:
-            dfa = self.dfas[name]
+            dfa = self._rule_to_dfas[name]
             states = []
             for state in dfa:
                 arcs = []
@@ -109,7 +109,7 @@ class ParserGenerator(object):
                     return ilabel
 
     def _addfirstsets(self):
-        names = list(self.dfas.keys())
+        names = list(self._rule_to_dfas.keys())
         names.sort()
         for name in names:
             if name not in self._first:
@@ -117,13 +117,13 @@ class ParserGenerator(object):
             #print name, self._first[name].keys()
 
     def _calcfirst(self, name):
-        dfa = self.dfas[name]
+        dfa = self._rule_to_dfas[name]
         self._first[name] = None  # dummy to detect left recursion
         state = dfa[0]
         totalset = {}
         overlapcheck = {}
         for label, next in state.arcs.items():
-            if label in self.dfas:
+            if label in self._rule_to_dfas:
                 if label in self._first:
                     fset = self._first[label]
                     if fset is None:
