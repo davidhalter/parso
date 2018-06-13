@@ -322,7 +322,7 @@ class DFAState(object):
     __hash__ = None  # For Py3 compatibility.
 
 
-def _simplify_dfa(dfas):
+def _simplify_dfas(dfas):
     # This is not theoretically optimal, but works well enough.
     # Algorithm: repeatedly look for two states that have the same
     # set of arcs (same labels pointing to the same nodes) and
@@ -344,7 +344,7 @@ def _simplify_dfa(dfas):
                     break
 
 
-def _make_dfa(start, finish):
+def _make_dfas(start, finish):
     # To turn an NFA into a DFA, we define the states of the DFA
     # to correspond to *sets* of states of the NFA.  Then do some
     # state reduction.  Let's represent sets as dicts with 1 for
@@ -401,12 +401,12 @@ def _dump_nfa(start, finish):
                 print("    %s -> %d" % (label, j))
 
 
-def _dump_dfa(name, dfa):
+def _dump_dfas(name, dfas):
     print("Dump of DFA for", name)
-    for i, state in enumerate(dfa):
+    for i, state in enumerate(dfas):
         print("  State", i, state.isfinal and "(final)" or "")
         for label, next in state.arcs.items():
-            print("    %s -> %d" % (label, dfa.index(next)))
+            print("    %s -> %d" % (label, dfas.index(next)))
 
 
 def generate_grammar(bnf_grammar, token_namespace):
@@ -418,20 +418,20 @@ def generate_grammar(bnf_grammar, token_namespace):
     It's not EBNF according to ISO/IEC 14977. It's a dialect Python uses in its
     own parser.
     """
-    dfas = {}
+    rule_to_dfa = {}
     start_symbol = None
     for nfa_a, nfa_z in _GrammarParser(bnf_grammar).parse():
         #_dump_nfa(a, z)
-        dfa = _make_dfa(nfa_a, nfa_z)
-        #_dump_dfa(self._current_rule_name, dfa)
-        # oldlen = len(dfa)
-        _simplify_dfa(dfa)
-        # newlen = len(dfa)
-        dfas[nfa_a.from_rule] = dfa
+        dfas = _make_dfas(nfa_a, nfa_z)
+        #_dump_dfas(self._current_rule_name, dfas)
+        # oldlen = len(dfas)
+        _simplify_dfas(dfas)
+        # newlen = len(dfas)
+        rule_to_dfa[nfa_a.from_rule] = dfas
         #print(self._current_rule_name, oldlen, newlen)
 
         if start_symbol is None:
             start_symbol = nfa_a.from_rule
 
-    p = ParserGenerator(dfas, token_namespace)
+    p = ParserGenerator(rule_to_dfa, token_namespace)
     return p.make_grammar(Grammar(bnf_grammar, start_symbol))
