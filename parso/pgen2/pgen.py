@@ -214,27 +214,24 @@ def _make_dfas(start, finish):
     assert isinstance(start, NFAState)
     assert isinstance(finish, NFAState)
 
-    def closure(state):
-        base = {}
-        addclosure(state, base)
-        return base
-
     def addclosure(state, base):
         assert isinstance(state, NFAState)
         if state in base:
             return
         base[state] = 1
-        for label, next in state.arcs:
+        for label, next_ in state.arcs:
             if label is None:
-                addclosure(next, base)
+                addclosure(next_, base)
 
-    states = [DFAState(closure(start), finish)]
+    base = {}
+    addclosure(start, base)
+    states = [DFAState(base, finish)]
     for state in states:  # NB states grows while we're iterating
         arcs = {}
         for nfastate in state.nfaset:
-            for label, next in nfastate.arcs:
+            for label, next_ in nfastate.arcs:
                 if label is not None:
-                    addclosure(next, arcs.setdefault(label, {}))
+                    addclosure(next_, arcs.setdefault(label, {}))
         for label, nfaset in arcs.items():
             for st in states:
                 if st.nfaset == nfaset:
@@ -285,12 +282,12 @@ def generate_grammar(bnf_grammar, token_namespace):
     for nfa_a, nfa_z in GrammarParser(bnf_grammar).parse():
         #_dump_nfa(a, z)
         dfas = _make_dfas(nfa_a, nfa_z)
-        #_dump_dfas(self._current_rule_name, dfas)
+        #_dump_dfas(nfa_a.from_rule, dfas)
         # oldlen = len(dfas)
         _simplify_dfas(dfas)
         # newlen = len(dfas)
         rule_to_dfas[nfa_a.from_rule] = dfas
-        #print(self._current_rule_name, oldlen, newlen)
+        #print(nfa_a.from_rule, oldlen, newlen)
 
         if start_symbol is None:
             start_symbol = nfa_a.from_rule
