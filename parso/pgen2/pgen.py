@@ -160,7 +160,7 @@ class _GrammarParser():
         )
         self._gettoken()  # Initialize lookahead
 
-    def _parse(self):
+    def parse(self):
         dfas = {}
         start_symbol = None
         # grammar: (NEWLINE | rule)* ENDMARKER
@@ -175,7 +175,7 @@ class _GrammarParser():
             a, z = self._parse_rhs()
             self._expect(token.NEWLINE)
 
-            _dump_nfa(a, z)
+            #_dump_nfa(a, z)
             dfa = _make_dfa(a, z)
             #_dump_dfa(self._current_rule_name, dfa)
             # oldlen = len(dfa)
@@ -272,8 +272,6 @@ class _GrammarParser():
 
     def _gettoken(self):
         tup = next(self.generator)
-        while tup[0] in (token.COMMENT, token.NL):
-            tup = next(self.generator)
         self.type, self.value, self.begin, prefix = tup
 
     def _raise_error(self, msg, *args):
@@ -434,6 +432,6 @@ def generate_grammar(bnf_grammar, token_namespace):
     It's not EBNF according to ISO/IEC 14977. It's a dialect Python uses in its
     own parser.
     """
-    dfas, start_symbol = _GrammarParser(bnf_grammar)._parse()
+    dfas, start_symbol = _GrammarParser(bnf_grammar).parse()
     p = ParserGenerator(dfas, token_namespace)
     return p.make_grammar(Grammar(bnf_grammar, start_symbol))
