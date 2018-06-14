@@ -133,15 +133,21 @@ class GrammarParser():
                                 self.begin[1], line))
 
 
+class NFAArc(object):
+    def __init__(self, next_, label_or_string):
+        self.next = next_
+        self.label_or_string = label_or_string
+
+
 class NFAState(object):
     def __init__(self, from_rule):
         self.from_rule = from_rule
         self.arcs = []  # list of (label, NFAState) pairs
 
-    def add_arc(self, next, label=None):
+    def add_arc(self, next_, label=None):
         assert label is None or isinstance(label, str)
-        assert isinstance(next, NFAState)
-        self.arcs.append((label, next))
+        assert isinstance(next_, NFAState)
+        self.arcs.append(NFAArc(next_, label))
 
     def __repr__(self):
         return '<%s: from %s>' % (self.__class__.__name__, self.from_rule)

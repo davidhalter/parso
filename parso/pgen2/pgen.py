@@ -39,14 +39,14 @@ class ParserGenerator(object):
             grammar.symbol2number[name] = i
             grammar.number2symbol[i] = name
         for name in names:
-            dfa = self._rule_to_dfas[name]
+            dfas = self._rule_to_dfas[name]
             states = []
-            for state in dfa:
+            for state in dfas:
                 arcs = []
                 for label, next in state.arcs.items():
-                    arcs.append((self._make_label(grammar, label), dfa.index(next)))
+                    arcs.append((self._make_label(grammar, label), dfas.index(next)))
                 if state.isfinal:
-                    arcs.append((0, dfa.index(state)))
+                    arcs.append((0, dfas.index(state)))
                 states.append(arcs)
             grammar.states.append(states)
             grammar.dfas[grammar.symbol2number[name]] = (states, self._make_first(grammar, name))
@@ -148,19 +148,19 @@ class ParserGenerator(object):
 
 
 class DFAState(object):
-    def __init__(self, nfaset, final):
-        assert isinstance(nfaset, dict)
-        assert isinstance(next(iter(nfaset)), NFAState)
+    def __init__(self, nfa_set, final):
+        assert isinstance(nfa_set, dict)
+        assert isinstance(next(iter(nfa_set)), NFAState)
         assert isinstance(final, NFAState)
-        self.nfaset = nfaset
-        self.isfinal = final in nfaset
+        self.nfa_set = nfa_set
+        self.isfinal = final in nfa_set
         self.arcs = {}  # map from label to DFAState
 
-    def add_arc(self, next, label):
+    def add_arc(self, next_, label):
         assert isinstance(label, str)
         assert label not in self.arcs
-        assert isinstance(next, DFAState)
-        self.arcs[label] = next
+        assert isinstance(next_, DFAState)
+        self.arcs[label] = next_
 
     def unifystate(self, old, new):
         for label, next in self.arcs.items():
@@ -168,7 +168,7 @@ class DFAState(object):
                 self.arcs[label] = new
 
     def __eq__(self, other):
-        # Equality test -- ignore the nfaset instance variable
+        # Equality test -- ignore the nfa_set instance variable
         assert isinstance(other, DFAState)
         if self.isfinal != other.isfinal:
             return False
@@ -219,27 +219,27 @@ def _make_dfas(start, finish):
         if state in base:
             return
         base[state] = 1
-        for label, next_ in state.arcs:
-            if label is None:
-                addclosure(next_, base)
+        for nfa_arc in state.arcs:
+            if nfa_arc.label_or_string is None:
+                addclosure(nfa_arc.next, base)
 
     base = {}
     addclosure(start, base)
     states = [DFAState(base, finish)]
     for state in states:  # NB states grows while we're iterating
         arcs = {}
-        for nfastate in state.nfaset:
-            for label, next_ in nfastate.arcs:
-                if label is not None:
-                    addclosure(next_, arcs.setdefault(label, {}))
-        for label, nfaset in arcs.items():
+        for nfa_state in state.nfa_set:
+            for nfa_arc in nfa_state.arcs:
+                if nfa_arc.label_or_string is not None:
+                    addclosure(nfa_arc.next, arcs.setdefault(nfa_arc.label_or_string, {}))
+        for label_or_string, nfa_set in arcs.items():
             for st in states:
-                if st.nfaset == nfaset:
+                if st.nfa_set == nfa_set:
                     break
             else:
-                st = DFAState(nfaset, finish)
+                st = DFAState(nfa_set, finish)
                 states.append(st)
-            state.add_arc(st, label)
+            state.add_arc(st, label_or_string)
     return states  # List of DFAState instances; first one is start
 
 
