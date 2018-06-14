@@ -38,6 +38,7 @@ class ParserGenerator(object):
             i = 256 + len(grammar.symbol2number)
             grammar.symbol2number[name] = i
             grammar.number2symbol[i] = name
+
         for name in names:
             dfas = self._rule_to_dfas[name]
             states = []
@@ -148,10 +149,11 @@ class ParserGenerator(object):
 
 
 class DFAState(object):
-    def __init__(self, nfa_set, final):
+    def __init__(self, from_rule, nfa_set, final):
         assert isinstance(nfa_set, dict)
         assert isinstance(next(iter(nfa_set)), NFAState)
         assert isinstance(final, NFAState)
+        self.from_rule = from_rule
         self.nfa_set = nfa_set
         self.isfinal = final in nfa_set
         self.arcs = {}  # map from label to DFAState
@@ -225,7 +227,7 @@ def _make_dfas(start, finish):
 
     base = {}
     addclosure(start, base)
-    states = [DFAState(base, finish)]
+    states = [DFAState(start.from_rule, base, finish)]
     for state in states:  # NB states grows while we're iterating
         arcs = {}
         for nfa_state in state.nfa_set:
@@ -237,7 +239,7 @@ def _make_dfas(start, finish):
                 if st.nfa_set == nfa_set:
                     break
             else:
-                st = DFAState(nfa_set, finish)
+                st = DFAState(start.from_rule, nfa_set, finish)
                 states.append(st)
             state.add_arc(st, label_or_string)
     return states  # List of DFAState instances; first one is start
@@ -260,8 +262,8 @@ def _dump_nfa(start, finish):
                 print("    %s -> %d" % (label, j))
 
 
-def _dump_dfas(name, dfas):
-    print("Dump of DFA for", name)
+def _dump_dfas(dfas):
+    print("Dump of DFA for", dfas[0].from_rule)
     for i, state in enumerate(dfas):
         print("  State", i, state.isfinal and "(final)" or "")
         for label, next in state.arcs.items():
@@ -282,7 +284,7 @@ def generate_grammar(bnf_grammar, token_namespace):
     for nfa_a, nfa_z in GrammarParser(bnf_grammar).parse():
         #_dump_nfa(a, z)
         dfas = _make_dfas(nfa_a, nfa_z)
-        #_dump_dfas(nfa_a.from_rule, dfas)
+        #_dump_dfas(dfas)
         # oldlen = len(dfas)
         _simplify_dfas(dfas)
         # newlen = len(dfas)
