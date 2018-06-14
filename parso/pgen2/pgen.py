@@ -30,11 +30,14 @@ class ParserGenerator(object):
 
     def make_grammar(self, grammar):
         self._first = {}  # map from symbol name to set of tokens
-        self._addfirstsets()
 
         names = list(self._rule_to_dfas.keys())
         names.sort()
         for name in names:
+            if name not in self._first:
+                self._calcfirst(name)
+            #print name, self._first[name].keys()
+
             i = 256 + len(grammar.symbol2number)
             grammar.symbol2number[name] = i
             grammar.number2symbol[i] = name
@@ -108,14 +111,6 @@ class ParserGenerator(object):
                     grammar.labels.append((itoken, None))
                     grammar.tokens[itoken] = ilabel
                     return ilabel
-
-    def _addfirstsets(self):
-        names = list(self._rule_to_dfas.keys())
-        names.sort()
-        for name in names:
-            if name not in self._first:
-                self._calcfirst(name)
-            #print name, self._first[name].keys()
 
     def _calcfirst(self, name):
         dfa = self._rule_to_dfas[name]
