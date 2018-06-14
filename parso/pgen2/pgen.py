@@ -123,7 +123,7 @@ class ParserGenerator(object):
                 if label in self._first:
                     fset = self._first[label]
                     if fset is None:
-                        raise ValueError("recursion for rule %r" % name)
+                        raise ValueError("left recursion for rule %r" % name)
                 else:
                     self._calcfirst(label)
                     fset = self._first[label]
@@ -145,7 +145,7 @@ class ParserGenerator(object):
 
 class DFAState(object):
     def __init__(self, from_rule, nfa_set, final):
-        assert isinstance(nfa_set, dict)
+        assert isinstance(nfa_set, set)
         assert isinstance(next(iter(nfa_set)), NFAState)
         assert isinstance(final, NFAState)
         self.from_rule = from_rule
@@ -215,12 +215,12 @@ def _make_dfas(start, finish):
         assert isinstance(state, NFAState)
         if state in base:
             return
-        base[state] = 1
+        base.add(state)
         for nfa_arc in state.arcs:
             if nfa_arc.label_or_string is None:
                 addclosure(nfa_arc.next, base)
 
-    base = {}
+    base = set()
     addclosure(start, base)
     states = [DFAState(start.from_rule, base, finish)]
     for state in states:  # NB states grows while we're iterating
@@ -228,7 +228,7 @@ def _make_dfas(start, finish):
         for nfa_state in state.nfa_set:
             for nfa_arc in nfa_state.arcs:
                 if nfa_arc.label_or_string is not None:
-                    addclosure(nfa_arc.next, arcs.setdefault(nfa_arc.label_or_string, {}))
+                    addclosure(nfa_arc.next, arcs.setdefault(nfa_arc.label_or_string, set()))
         for label_or_string, nfa_set in arcs.items():
             for st in states:
                 if st.nfa_set == nfa_set:
