@@ -206,37 +206,44 @@ def _simplify_dfas(dfas):
 def _make_dfas(start, finish):
     # To turn an NFA into a DFA, we define the states of the DFA
     # to correspond to *sets* of states of the NFA.  Then do some
-    # state reduction.  Let's represent sets as dicts with 1 for
-    # values.
+    # state reduction.
     assert isinstance(start, NFAState)
     assert isinstance(finish, NFAState)
 
-    def addclosure(state, base):
-        assert isinstance(state, NFAState)
-        if state in base:
+    def addclosure(nfa_state, base_nfa_set):
+        assert isinstance(nfa_state, NFAState)
+        if nfa_state in base_nfa_set:
             return
-        base.add(state)
-        for nfa_arc in state.arcs:
+        base_nfa_set.add(nfa_state)
+        for nfa_arc in nfa_state.arcs:
             if nfa_arc.label_or_string is None:
-                addclosure(nfa_arc.next, base)
+                addclosure(nfa_arc.next, base_nfa_set)
 
-    base = set()
-    addclosure(start, base)
-    states = [DFAState(start.from_rule, base, finish)]
+    base_nfa_set = set()
+    addclosure(start, base_nfa_set)
+    states = [DFAState(start.from_rule, base_nfa_set, finish)]
     for state in states:  # NB states grows while we're iterating
         arcs = {}
+        # Find state transitions and store them in arcs.
         for nfa_state in state.nfa_set:
             for nfa_arc in nfa_state.arcs:
                 if nfa_arc.label_or_string is not None:
-                    addclosure(nfa_arc.next, arcs.setdefault(nfa_arc.label_or_string, set()))
+                    nfa_set = arcs.setdefault(nfa_arc.label_or_string, set())
+                    addclosure(nfa_arc.next, nfa_set)
+
+        # Now create the dfa's with no None's in arcs anymore. All Nones have
+        # been eliminated and state transitions (arcs) are properly defined, we
+        # just need to create the dfa's.
         for label_or_string, nfa_set in arcs.items():
-            for st in states:
-                if st.nfa_set == nfa_set:
+            for nested_state in states:
+                if nested_state.nfa_set == nfa_set:
+                    # The DFA state already exists for this rule.
                     break
             else:
-                st = DFAState(start.from_rule, nfa_set, finish)
-                states.append(st)
-            state.add_arc(st, label_or_string)
+                nested_state = DFAState(start.from_rule, nfa_set, finish)
+                states.append(nested_state)
+
+            state.add_arc(nested_state, label_or_string)
     return states  # List of DFAState instances; first one is start
 
 
