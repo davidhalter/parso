@@ -204,6 +204,9 @@ def _simplify_dfas(dfas):
 
 
 def _make_dfas(start, finish):
+    """
+    This is basically doing what the powerset construction algorithm is doing.
+    """
     # To turn an NFA into a DFA, we define the states of the DFA
     # to correspond to *sets* of states of the NFA.  Then do some
     # state reduction.

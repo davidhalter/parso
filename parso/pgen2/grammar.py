@@ -16,11 +16,6 @@ fallback token code OP, but the parser needs the actual token code.
 
 """
 
-try:
-    import cPickle as pickle
-except:
-    import pickle
-
 
 class Grammar(object):
     """Pgen parsing tables conversion class.
