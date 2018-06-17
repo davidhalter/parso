@@ -58,11 +58,11 @@ class ParserGenerator(object):
 
     def _make_first(self, grammar, name):
         rawfirst = self._first[name]
-        first = {}
+        first = set()
         for label in rawfirst:
             ilabel = self._make_label(grammar, label)
-            ##assert ilabel not in first # XXX failed on <> ... !=
-            first[ilabel] = 1
+            ##assert ilabel not in first, "%s failed on <> ... !=" % label
+            first.add(ilabel)
         return first
 
     def _make_label(self, grammar, label):
@@ -98,7 +98,6 @@ class ParserGenerator(object):
                 if value in grammar.keywords:
                     return grammar.keywords[value]
                 else:
-                    # TODO this might be an issue?! Using token.NAME here?
                     grammar.labels.append((token.NAME, value))
                     grammar.keywords[value] = ilabel
                     return ilabel
