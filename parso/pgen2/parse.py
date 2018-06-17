@@ -118,8 +118,8 @@ class PgenParser(object):
         up.
 
         A concrete syntax tree node is a (type, nodes) tuple, where
-        type is the node type (a token or symbol number) and nodes
-        is a list of children for symbols, and None for tokens.
+        type is the node type (a token or nonterminal number) and nodes
+        is a list of children for nonterminals, and None for tokens.
 
         An abstract syntax tree node may be anything; this is entirely
         up to the converter function.
@@ -184,11 +184,11 @@ class PgenParser(object):
                     # Done with this token
                     return False
                 elif t >= 256:
-                    # See if it's a symbol and if we're in its first set
+                    # See if it's a nonterminal and if we're in its first set
                     itsdfa = _gram.dfas[t]
                     itsstates, itsfirst = itsdfa
                     if ilabel in itsfirst:
-                        # Push a symbol
+                        # Push a nonterminal
                         _push(t, itsdfa, newstate)
                         break  # To continue the outer while loop
             else:
@@ -231,7 +231,7 @@ class PgenParser(object):
         try:
             # Equal to:
             # dfa, state, node = self.stack[-1]
-            # symbol, children = node
+            # nonterminal, children = node
             self.stack[-1][2][1].append(newnode)
         except IndexError:
             # Stack is empty, set the rootnode.

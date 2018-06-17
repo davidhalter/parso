@@ -38,13 +38,13 @@ class BaseParser(object):
     }
     default_leaf = tree.Leaf
 
-    def __init__(self, pgen_grammar, start_symbol='file_input', error_recovery=False):
+    def __init__(self, pgen_grammar, start_nonterminal='file_input', error_recovery=False):
         self._pgen_grammar = pgen_grammar
-        self._start_symbol = start_symbol
+        self._start_nonterminal = start_nonterminal
         self._error_recovery = error_recovery
 
     def parse(self, tokens):
-        start_number = self._pgen_grammar.symbol2number[self._start_symbol]
+        start_number = self._pgen_grammar.nonterminal2number[self._start_nonterminal]
         self.pgen_parser = PgenParser(
             self._pgen_grammar, self.convert_node, self.convert_leaf,
             self.error_recovery, start_number
@@ -64,12 +64,12 @@ class BaseParser(object):
             raise ParserSyntaxError('SyntaxError: invalid syntax', error_leaf)
 
     def convert_node(self, pgen_grammar, type_, children):
-        # TODO REMOVE symbol, we don't want type here.
-        symbol = pgen_grammar.number2symbol[type_]
+        # TODO REMOVE nonterminal, we don't want type here.
+        nonterminal = pgen_grammar.number2nonterminal[type_]
         try:
-            return self.node_map[symbol](children)
+            return self.node_map[nonterminal](children)
         except KeyError:
-            return self.default_node(symbol, children)
+            return self.default_node(nonterminal, children)
 
     def convert_leaf(self, pgen_grammar, type_, value, prefix, start_pos):
         try:

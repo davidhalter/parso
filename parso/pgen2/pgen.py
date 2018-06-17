@@ -29,7 +29,8 @@ class ParserGenerator(object):
         self._nonterminal_to_dfas = rule_to_dfas
 
     def make_grammar(self, grammar):
-        self._first_terminals = {}  # map from symbol name to set of tokens
+        # Map from grammar rule (nonterminal) name to a set of tokens.
+        self._first_terminals = {}
 
         names = list(self._nonterminal_to_dfas.keys())
         names.sort()
@@ -37,9 +38,9 @@ class ParserGenerator(object):
             if name not in self._first_terminals:
                 self._calculate_first_terminals(name)
 
-            i = 256 + len(grammar.symbol2number)
-            grammar.symbol2number[name] = i
-            grammar.number2symbol[i] = name
+            i = 256 + len(grammar.nonterminal2number)
+            grammar.nonterminal2number[name] = i
+            grammar.number2nonterminal[i] = name
 
         # Now that we have calculated the first terminals, we are sure that
         # there is no left recursion or ambiguities.
@@ -55,7 +56,7 @@ class ParserGenerator(object):
                     arcs.append((0, dfas.index(state)))
                 states.append(arcs)
             grammar.states.append(states)
-            grammar.dfas[grammar.symbol2number[name]] = (states, self._make_first(grammar, name))
+            grammar.dfas[grammar.nonterminal2number[name]] = (states, self._make_first(grammar, name))
         return grammar
 
     def _make_first(self, grammar, name):
@@ -71,15 +72,15 @@ class ParserGenerator(object):
         # XXX Maybe this should be a method on a subclass of converter?
         ilabel = len(grammar.labels)
         if label[0].isalpha():
-            # Either a symbol name or a named token
-            if label in grammar.symbol2number:
-                # A symbol name (a non-terminal)
-                if label in grammar.symbol2label:
-                    return grammar.symbol2label[label]
+            # Either a nonterminal name or a named token
+            if label in grammar.nonterminal2number:
+                # A nonterminal name (a non-terminal)
+                if label in grammar.nonterminal2label:
+                    return grammar.nonterminal2label[label]
                 else:
-                    grammar.labels.append((grammar.symbol2number[label], None))
-                    grammar.symbol2label[label] = ilabel
-                    grammar.label2symbol[ilabel] = label
+                    grammar.labels.append((grammar.nonterminal2number[label], None))
+                    grammar.nonterminal2label[label] = ilabel
+                    grammar.label2nonterminal[ilabel] = label
                     return ilabel
             else:
                 # A named token (NAME, NUMBER, STRING)
@@ -293,7 +294,7 @@ def generate_grammar(bnf_grammar, token_namespace):
     own parser.
     """
     rule_to_dfas = {}
-    start_symbol = None
+    start_nonterminal = None
     for nfa_a, nfa_z in GrammarParser(bnf_grammar).parse():
         #_dump_nfa(a, z)
         dfas = _make_dfas(nfa_a, nfa_z)
@@ -304,8 +305,8 @@ def generate_grammar(bnf_grammar, token_namespace):
         rule_to_dfas[nfa_a.from_rule] = dfas
         #print(nfa_a.from_rule, oldlen, newlen)
 
-        if start_symbol is None:
-            start_symbol = nfa_a.from_rule
+        if start_nonterminal is None:
+            start_nonterminal = nfa_a.from_rule
 
     p = ParserGenerator(rule_to_dfas, token_namespace)
-    return p.make_grammar(Grammar(bnf_grammar, start_symbol))
+    return p.make_grammar(Grammar(bnf_grammar, start_nonterminal))
