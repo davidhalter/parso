@@ -32,21 +32,21 @@ class ParserGenerator(object):
         # Map from grammar rule (nonterminal) name to a set of tokens.
         self._first_terminals = {}
 
-        names = list(self._nonterminal_to_dfas.keys())
-        names.sort()
-        for name in names:
-            if name not in self._first_terminals:
-                self._calculate_first_terminals(name)
+        nonterminals = list(self._nonterminal_to_dfas.keys())
+        nonterminals.sort()
+        for nonterminal in nonterminals:
+            if nonterminal not in self._first_terminals:
+                self._calculate_first_terminals(nonterminal)
 
             i = 256 + len(grammar.nonterminal2number)
-            grammar.nonterminal2number[name] = i
-            grammar.number2nonterminal[i] = name
+            grammar.nonterminal2number[nonterminal] = i
+            grammar.number2nonterminal[i] = nonterminal
 
         # Now that we have calculated the first terminals, we are sure that
         # there is no left recursion or ambiguities.
 
-        for name in names:
-            dfas = self._nonterminal_to_dfas[name]
+        for nonterminal in nonterminals:
+            dfas = self._nonterminal_to_dfas[nonterminal]
             states = []
             for state in dfas:
                 arcs = []
@@ -56,11 +56,11 @@ class ParserGenerator(object):
                     arcs.append((0, dfas.index(state)))
                 states.append(arcs)
             grammar.states.append(states)
-            grammar.dfas[grammar.nonterminal2number[name]] = (states, self._make_first(grammar, name))
+            grammar.dfas[grammar.nonterminal2number[nonterminal]] = (states, self._make_first(grammar, nonterminal))
         return grammar
 
-    def _make_first(self, grammar, name):
-        rawfirst = self._first_terminals[name]
+    def _make_first(self, grammar, nonterminal):
+        rawfirst = self._first_terminals[nonterminal]
         first = set()
         for label in rawfirst:
             ilabel = self._make_label(grammar, label)
@@ -74,7 +74,7 @@ class ParserGenerator(object):
         if label[0].isalpha():
             # Either a nonterminal name or a named token
             if label in grammar.nonterminal2number:
-                # A nonterminal name (a non-terminal)
+                # A nonterminal name
                 if label in grammar.nonterminal2label:
                     return grammar.nonterminal2label[label]
                 else:
@@ -114,9 +114,9 @@ class ParserGenerator(object):
                     grammar.tokens[itoken] = ilabel
                     return ilabel
 
-    def _calculate_first_terminals(self, name):
-        dfas = self._nonterminal_to_dfas[name]
-        self._first_terminals[name] = None  # dummy to detect left recursion
+    def _calculate_first_terminals(self, nonterminal):
+        dfas = self._nonterminal_to_dfas[nonterminal]
+        self._first_terminals[nonterminal] = None  # dummy to detect left recursion
         # We only need to check the first dfa. All the following ones are not
         # interesting to find first terminals.
         state = dfas[0]
@@ -133,7 +133,7 @@ class ParserGenerator(object):
                     fset = self._first_terminals[nonterminal_or_string]
                 else:
                     if fset is None:
-                        raise ValueError("left recursion for rule %r" % name)
+                        raise ValueError("left recursion for rule %r" % nonterminal)
                 totalset.update(fset)
                 overlapcheck[nonterminal_or_string] = fset
             else:
@@ -147,9 +147,9 @@ class ParserGenerator(object):
                 if terminal in inverse:
                     raise ValueError("rule %s is ambiguous; %s is in the"
                                      " first sets of %s as well as %s" %
-                                     (name, terminal, nonterminal_or_string, inverse[terminal]))
+                                     (nonterminal, terminal, nonterminal_or_string, inverse[terminal]))
                 inverse[terminal] = nonterminal_or_string
-        self._first_terminals[name] = totalset
+        self._first_terminals[nonterminal] = totalset
 
 
 class DFAState(object):
