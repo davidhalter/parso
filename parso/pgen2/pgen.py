@@ -218,7 +218,7 @@ def _make_dfas(start, finish):
             return
         base_nfa_set.add(nfa_state)
         for nfa_arc in nfa_state.arcs:
-            if nfa_arc.label_or_string is None:
+            if nfa_arc.nonterminal_or_string is None:
                 addclosure(nfa_arc.next, base_nfa_set)
 
     base_nfa_set = set()
@@ -229,14 +229,14 @@ def _make_dfas(start, finish):
         # Find state transitions and store them in arcs.
         for nfa_state in state.nfa_set:
             for nfa_arc in nfa_state.arcs:
-                if nfa_arc.label_or_string is not None:
-                    nfa_set = arcs.setdefault(nfa_arc.label_or_string, set())
+                if nfa_arc.nonterminal_or_string is not None:
+                    nfa_set = arcs.setdefault(nfa_arc.nonterminal_or_string, set())
                     addclosure(nfa_arc.next, nfa_set)
 
         # Now create the dfa's with no None's in arcs anymore. All Nones have
         # been eliminated and state transitions (arcs) are properly defined, we
         # just need to create the dfa's.
-        for label_or_string, nfa_set in arcs.items():
+        for nonterminal_or_string, nfa_set in arcs.items():
             for nested_state in states:
                 if nested_state.nfa_set == nfa_set:
                     # The DFA state already exists for this rule.
@@ -245,7 +245,7 @@ def _make_dfas(start, finish):
                 nested_state = DFAState(start.from_rule, nfa_set, finish)
                 states.append(nested_state)
 
-            state.add_arc(nested_state, label_or_string)
+            state.add_arc(nested_state, nonterminal_or_string)
     return states  # List of DFAState instances; first one is start
 
 
@@ -270,8 +270,8 @@ def _dump_dfas(dfas):
     print("Dump of DFA for", dfas[0].from_rule)
     for i, state in enumerate(dfas):
         print("  State", i, state.isfinal and "(final)" or "")
-        for label, next in state.arcs.items():
-            print("    %s -> %d" % (label, dfas.index(next)))
+        for nonterminal, next in state.arcs.items():
+            print("    %s -> %d" % (nonterminal, dfas.index(next)))
 
 
 def generate_grammar(bnf_grammar, token_namespace):
