@@ -47,8 +47,8 @@ class ParserGenerator(object):
             states = []
             for state in dfas:
                 arcs = []
-                for label, next in state.arcs.items():
-                    arcs.append((self._make_label(grammar, label), dfas.index(next)))
+                for label, next_ in state.arcs.items():
+                    arcs.append((self._make_label(grammar, label), dfas.index(next_)))
                 if state.isfinal:
                     arcs.append((0, dfas.index(state)))
                 states.append(arcs)
@@ -117,7 +117,7 @@ class ParserGenerator(object):
         state = dfas[0]
         totalset = set()
         overlapcheck = {}
-        for nonterminal_or_string, next in state.arcs.items():
+        for nonterminal_or_string, next_ in state.arcs.items():
             if nonterminal_or_string in self._nonterminal_to_dfas:
                 # It's a nonterminal and we have either a left recursion issue
                 # in the grammare or we have to recurse.
@@ -163,8 +163,8 @@ class DFAState(object):
         self.arcs[label] = next_
 
     def unifystate(self, old, new):
-        for label, next in self.arcs.items():
-            if next is old:
+        for label, next_ in self.arcs.items():
+            if next_ is old:
                 self.arcs[label] = new
 
     def __eq__(self, other):
@@ -176,8 +176,8 @@ class DFAState(object):
         # would invoke this method recursively, with cycles...
         if len(self.arcs) != len(other.arcs):
             return False
-        for label, next in self.arcs.items():
-            if next is not other.arcs.get(label):
+        for label, next_ in self.arcs.items():
+            if next_ is not other.arcs.get(label):
                 return False
         return True
 
@@ -258,12 +258,12 @@ def _dump_nfa(start, finish):
     todo = [start]
     for i, state in enumerate(todo):
         print("  State", i, state is finish and "(final)" or "")
-        for label, next in state.arcs:
-            if next in todo:
-                j = todo.index(next)
+        for label, next_ in state.arcs:
+            if next_ in todo:
+                j = todo.index(next_)
             else:
                 j = len(todo)
-                todo.append(next)
+                todo.append(next_)
             if label is None:
                 print("    -> %d" % j)
             else:
@@ -274,8 +274,8 @@ def _dump_dfas(dfas):
     print("Dump of DFA for", dfas[0].from_rule)
     for i, state in enumerate(dfas):
         print("  State", i, state.isfinal and "(final)" or "")
-        for nonterminal, next in state.arcs.items():
-            print("    %s -> %d" % (nonterminal, dfas.index(next)))
+        for nonterminal, next_ in state.arcs.items():
+            print("    %s -> %d" % (nonterminal, dfas.index(next_)))
 
 
 def generate_grammar(bnf_grammar, token_namespace):
