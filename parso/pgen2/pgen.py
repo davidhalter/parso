@@ -29,18 +29,20 @@ class ParserGenerator(object):
         self._nonterminal_to_dfas = rule_to_dfas
 
     def make_grammar(self, grammar):
-        self._first = {}  # map from symbol name to set of tokens
+        self._first_terminals = {}  # map from symbol name to set of tokens
 
         names = list(self._nonterminal_to_dfas.keys())
         names.sort()
         for name in names:
-            if name not in self._first:
-                self._calcfirst(name)
-            #print name, self._first[name].keys()
+            if name not in self._first_terminals:
+                self._calculate_first_terminals(name)
 
             i = 256 + len(grammar.symbol2number)
             grammar.symbol2number[name] = i
             grammar.number2symbol[i] = name
+
+        # Now that we have calculated the first terminals, we are sure that
+        # there is no left recursion or ambiguities.
 
         for name in names:
             dfas = self._nonterminal_to_dfas[name]
@@ -57,7 +59,7 @@ class ParserGenerator(object):
         return grammar
 
     def _make_first(self, grammar, name):
-        rawfirst = self._first[name]
+        rawfirst = self._first_terminals[name]
         first = set()
         for label in rawfirst:
             ilabel = self._make_label(grammar, label)
@@ -111,9 +113,11 @@ class ParserGenerator(object):
                     grammar.tokens[itoken] = ilabel
                     return ilabel
 
-    def _calcfirst(self, name):
+    def _calculate_first_terminals(self, name):
         dfas = self._nonterminal_to_dfas[name]
-        self._first[name] = None  # dummy to detect left recursion
+        self._first_terminals[name] = None  # dummy to detect left recursion
+        # We only need to check the first dfa. All the following ones are not
+        # interesting to find first terminals.
         state = dfas[0]
         totalset = set()
         overlapcheck = {}
@@ -122,10 +126,10 @@ class ParserGenerator(object):
                 # It's a nonterminal and we have either a left recursion issue
                 # in the grammare or we have to recurse.
                 try:
-                    fset = self._first[nonterminal_or_string]
+                    fset = self._first_terminals[nonterminal_or_string]
                 except KeyError:
-                    self._calcfirst(nonterminal_or_string)
-                    fset = self._first[nonterminal_or_string]
+                    self._calculate_first_terminals(nonterminal_or_string)
+                    fset = self._first_terminals[nonterminal_or_string]
                 else:
                     if fset is None:
                         raise ValueError("left recursion for rule %r" % name)
@@ -143,7 +147,7 @@ class ParserGenerator(object):
                                      " first sets of %s as well as %s" %
                                      (name, symbol, nonterminal_or_string, inverse[symbol]))
                 inverse[symbol] = nonterminal_or_string
-        self._first[name] = totalset
+        self._first_terminals[name] = totalset
 
 
 class DFAState(object):
