@@ -139,14 +139,15 @@ class ParserGenerator(object):
                 # It's a string. We have finally found a possible first token.
                 totalset.add(nonterminal_or_string)
                 overlapcheck[nonterminal_or_string] = set([nonterminal_or_string])
+
         inverse = {}
-        for nonterminal_or_string, itsfirst in overlapcheck.items():
-            for symbol in itsfirst:
-                if symbol in inverse:
+        for nonterminal_or_string, first_set in overlapcheck.items():
+            for terminal in first_set:
+                if terminal in inverse:
                     raise ValueError("rule %s is ambiguous; %s is in the"
                                      " first sets of %s as well as %s" %
-                                     (name, symbol, nonterminal_or_string, inverse[symbol]))
-                inverse[symbol] = nonterminal_or_string
+                                     (name, terminal, nonterminal_or_string, inverse[terminal]))
+                inverse[terminal] = nonterminal_or_string
         self._first_terminals[name] = totalset
 
 
