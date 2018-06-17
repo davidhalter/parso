@@ -16,6 +16,8 @@ fallback token code OP, but the parser needs the actual token code.
 
 """
 
+from parso.python import token
+
 
 class Grammar(object):
     """Pgen parsing tables conversion class.
@@ -67,7 +69,10 @@ class Grammar(object):
 
     """
 
-    def __init__(self, bnf_text, start_nonterminal):
+    def __init__(self, bnf_grammar, start_nonterminal, rule_to_dfas, token_namespace):
+        self._token_namespace = token_namespace
+        self._nonterminal_to_dfas = rule_to_dfas
+
         self.nonterminal2number = {}
         self.number2nonterminal = {}
         self.states = []
@@ -78,6 +83,130 @@ class Grammar(object):
         self.nonterminal2label = {}
         self.label2nonterminal = {}
         self.start_nonterminal = start_nonterminal
+
+        self._make_grammar()
+
+    def _make_grammar(self):
+        # Map from grammar rule (nonterminal) name to a set of tokens.
+        self._first_terminals = {}
+
+        nonterminals = list(self._nonterminal_to_dfas.keys())
+        nonterminals.sort()
+        for nonterminal in nonterminals:
+            if nonterminal not in self._first_terminals:
+                self._calculate_first_terminals(nonterminal)
+
+            i = 256 + len(self.nonterminal2number)
+            self.nonterminal2number[nonterminal] = i
+            self.number2nonterminal[i] = nonterminal
+
+        # Now that we have calculated the first terminals, we are sure that
+        # there is no left recursion or ambiguities.
+
+        for nonterminal in nonterminals:
+            dfas = self._nonterminal_to_dfas[nonterminal]
+            states = []
+            for state in dfas:
+                arcs = []
+                for label, next_ in state.arcs.items():
+                    arcs.append((self._make_label(label), dfas.index(next_)))
+                if state.isfinal:
+                    arcs.append((0, dfas.index(state)))
+                states.append(arcs)
+            self.states.append(states)
+            self.dfas[self.nonterminal2number[nonterminal]] = (states, self._make_first(nonterminal))
+
+    def _make_first(self, nonterminal):
+        rawfirst = self._first_terminals[nonterminal]
+        first = set()
+        for label in rawfirst:
+            ilabel = self._make_label(label)
+            ##assert ilabel not in first, "%s failed on <> ... !=" % label
+            first.add(ilabel)
+        return first
+
+    def _make_label(self, label):
+        # XXX Maybe this should be a method on a subclass of converter?
+        ilabel = len(self.labels)
+        if label[0].isalpha():
+            # Either a nonterminal name or a named token
+            if label in self.nonterminal2number:
+                # A nonterminal name
+                if label in self.nonterminal2label:
+                    return self.nonterminal2label[label]
+                else:
+                    self.labels.append((self.nonterminal2number[label], None))
+                    self.nonterminal2label[label] = ilabel
+                    self.label2nonterminal[ilabel] = label
+                    return ilabel
+            else:
+                # A named token (NAME, NUMBER, STRING)
+                itoken = getattr(self._token_namespace, label, None)
+                assert isinstance(itoken, int), label
+                if itoken in self.tokens:
+                    return self.tokens[itoken]
+                else:
+                    self.labels.append((itoken, None))
+                    self.tokens[itoken] = ilabel
+                    return ilabel
+        else:
+            # Either a keyword or an operator
+            assert label[0] in ('"', "'"), label
+            value = eval(label)
+            if value[0].isalpha():
+                # A keyword
+                if value in self.keywords:
+                    return self.keywords[value]
+                else:
+                    self.labels.append((token.NAME, value))
+                    self.keywords[value] = ilabel
+                    return ilabel
+            else:
+                # An operator (any non-numeric token)
+                itoken = self._token_namespace.generate_token_id(value)
+                if itoken in self.tokens:
+                    return self.tokens[itoken]
+                else:
+                    self.labels.append((itoken, None))
+                    self.tokens[itoken] = ilabel
+                    return ilabel
+
+    def _calculate_first_terminals(self, nonterminal):
+        dfas = self._nonterminal_to_dfas[nonterminal]
+        self._first_terminals[nonterminal] = None  # dummy to detect left recursion
+        # We only need to check the first dfa. All the following ones are not
+        # interesting to find first terminals.
+        state = dfas[0]
+        totalset = set()
+        overlapcheck = {}
+        for nonterminal_or_string, next_ in state.arcs.items():
+            if nonterminal_or_string in self._nonterminal_to_dfas:
+                # It's a nonterminal and we have either a left recursion issue
+                # in the grammare or we have to recurse.
+                try:
+                    fset = self._first_terminals[nonterminal_or_string]
+                except KeyError:
+                    self._calculate_first_terminals(nonterminal_or_string)
+                    fset = self._first_terminals[nonterminal_or_string]
+                else:
+                    if fset is None:
+                        raise ValueError("left recursion for rule %r" % nonterminal)
+                totalset.update(fset)
+                overlapcheck[nonterminal_or_string] = fset
+            else:
+                # It's a string. We have finally found a possible first token.
+                totalset.add(nonterminal_or_string)
+                overlapcheck[nonterminal_or_string] = set([nonterminal_or_string])
+
+        inverse = {}
+        for nonterminal_or_string, first_set in overlapcheck.items():
+            for terminal in first_set:
+                if terminal in inverse:
+                    raise ValueError("rule %s is ambiguous; %s is in the"
+                                     " first sets of %s as well as %s" %
+                                     (nonterminal, terminal, nonterminal_or_string, inverse[terminal]))
+                inverse[terminal] = nonterminal_or_string
+        self._first_terminals[nonterminal] = totalset
 
     @property
     def start(self):
