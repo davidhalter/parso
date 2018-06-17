@@ -30,7 +30,7 @@ class DFAState(object):
         self.from_rule = from_rule
         self.nfa_set = nfa_set
         self.isfinal = final in nfa_set
-        self.arcs = {}  # map from nonterminals or strings to DFAState
+        self.arcs = {}  # map from terminals/nonterminals to DFAState
 
     def add_arc(self, next_, label):
         assert isinstance(label, str)

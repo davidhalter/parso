@@ -108,8 +108,8 @@ class Grammar(object):
             states = []
             for state in dfas:
                 arcs = []
-                for label, next_ in state.arcs.items():
-                    arcs.append((self._make_label(label), dfas.index(next_)))
+                for terminal_or_nonterminal, next_ in state.arcs.items():
+                    arcs.append((self._make_label(terminal_or_nonterminal), dfas.index(next_)))
                 if state.isfinal:
                     arcs.append((0, dfas.index(state)))
                 states.append(arcs)
@@ -119,9 +119,9 @@ class Grammar(object):
     def _make_first(self, nonterminal):
         rawfirst = self._first_terminals[nonterminal]
         first = set()
-        for label in rawfirst:
-            ilabel = self._make_label(label)
-            ##assert ilabel not in first, "%s failed on <> ... !=" % label
+        for terminal_or_nonterminal in rawfirst:
+            ilabel = self._make_label(terminal_or_nonterminal)
+            ##assert ilabel not in first, "%s failed on <> ... !=" % terminal_or_nonterminal
             first.add(ilabel)
         return first
 
