@@ -26,12 +26,12 @@ from parso.pgen2.grammar_parser import GrammarParser, NFAState
 class ParserGenerator(object):
     def __init__(self, rule_to_dfas, token_namespace):
         self._token_namespace = token_namespace
-        self._rule_to_dfas = rule_to_dfas
+        self._nonterminal_to_dfas = rule_to_dfas
 
     def make_grammar(self, grammar):
         self._first = {}  # map from symbol name to set of tokens
 
-        names = list(self._rule_to_dfas.keys())
+        names = list(self._nonterminal_to_dfas.keys())
         names.sort()
         for name in names:
             if name not in self._first:
@@ -43,7 +43,7 @@ class ParserGenerator(object):
             grammar.number2symbol[i] = name
 
         for name in names:
-            dfas = self._rule_to_dfas[name]
+            dfas = self._nonterminal_to_dfas[name]
             states = []
             for state in dfas:
                 arcs = []
@@ -112,33 +112,37 @@ class ParserGenerator(object):
                     return ilabel
 
     def _calcfirst(self, name):
-        dfa = self._rule_to_dfas[name]
+        dfas = self._nonterminal_to_dfas[name]
         self._first[name] = None  # dummy to detect left recursion
-        state = dfa[0]
+        state = dfas[0]
         totalset = {}
         overlapcheck = {}
-        for label, next in state.arcs.items():
-            if label in self._rule_to_dfas:
-                if label in self._first:
-                    fset = self._first[label]
+        for nonterminal_or_string, next in state.arcs.items():
+            if nonterminal_or_string in self._nonterminal_to_dfas:
+                # It's a nonterminal and we have either a left recursion issue
+                # in the grammare or we have to recurse.
+                try:
+                    fset = self._first[nonterminal_or_string]
+                except KeyError:
+                    self._calcfirst(nonterminal_or_string)
+                    fset = self._first[nonterminal_or_string]
+                else:
                     if fset is None:
                         raise ValueError("left recursion for rule %r" % name)
-                else:
-                    self._calcfirst(label)
-                    fset = self._first[label]
                 totalset.update(fset)
-                overlapcheck[label] = fset
+                overlapcheck[nonterminal_or_string] = fset
             else:
-                totalset[label] = 1
-                overlapcheck[label] = {label: 1}
+                # It's a string. We have finally found a possible first token.
+                totalset[nonterminal_or_string] = 1
+                overlapcheck[nonterminal_or_string] = {nonterminal_or_string: 1}
         inverse = {}
-        for label, itsfirst in overlapcheck.items():
+        for nonterminal_or_string, itsfirst in overlapcheck.items():
             for symbol in itsfirst:
                 if symbol in inverse:
                     raise ValueError("rule %s is ambiguous; %s is in the"
                                      " first sets of %s as well as %s" %
-                                     (name, symbol, label, inverse[symbol]))
-                inverse[symbol] = label
+                                     (name, symbol, nonterminal_or_string, inverse[symbol]))
+                inverse[symbol] = nonterminal_or_string
         self._first[name] = totalset
 
 
@@ -150,7 +154,7 @@ class DFAState(object):
         self.from_rule = from_rule
         self.nfa_set = nfa_set
         self.isfinal = final in nfa_set
-        self.arcs = {}  # map from label to DFAState
+        self.arcs = {}  # map from nonterminals or strings to DFAState
 
     def add_arc(self, next_, label):
         assert isinstance(label, str)
