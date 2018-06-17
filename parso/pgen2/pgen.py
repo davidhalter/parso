@@ -115,7 +115,7 @@ class ParserGenerator(object):
         dfas = self._nonterminal_to_dfas[name]
         self._first[name] = None  # dummy to detect left recursion
         state = dfas[0]
-        totalset = {}
+        totalset = set()
         overlapcheck = {}
         for nonterminal_or_string, next in state.arcs.items():
             if nonterminal_or_string in self._nonterminal_to_dfas:
@@ -133,8 +133,8 @@ class ParserGenerator(object):
                 overlapcheck[nonterminal_or_string] = fset
             else:
                 # It's a string. We have finally found a possible first token.
-                totalset[nonterminal_or_string] = 1
-                overlapcheck[nonterminal_or_string] = {nonterminal_or_string: 1}
+                totalset.add(nonterminal_or_string)
+                overlapcheck[nonterminal_or_string] = set([nonterminal_or_string])
         inverse = {}
         for nonterminal_or_string, itsfirst in overlapcheck.items():
             for symbol in itsfirst:
