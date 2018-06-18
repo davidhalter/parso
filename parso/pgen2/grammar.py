@@ -84,6 +84,7 @@ class Grammar(object):
         self.label2nonterminal = {}
         self.start_nonterminal = start_nonterminal
 
+        self._label_cache = {}
         self._make_grammar()
 
     def _make_grammar(self):
@@ -125,6 +126,18 @@ class Grammar(object):
             first.add(ilabel)
         return first
 
+    def _cache_labels(func):
+        def wrapper(self, label):
+            try:
+                return self._label_cache[label]
+            except KeyError:
+                result = func(self, label)
+                self._label_cache[label] = result
+                return result
+
+        return wrapper
+
+    #@_cache_labels
     def _make_label(self, label):
         # XXX Maybe this should be a method on a subclass of converter?
         ilabel = len(self.labels)
@@ -152,6 +165,7 @@ class Grammar(object):
         else:
             # Either a keyword or an operator
             assert label[0] in ('"', "'"), label
+            # TODO use literal_eval instead of a simple eval.
             value = eval(label)
             if value[0].isalpha():
                 # A keyword
