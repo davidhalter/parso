@@ -56,6 +56,8 @@ class Stack(list):
 
 def token_to_ilabel(grammar, type_, value):
     # Map from token to label
+    # TODO this is not good, shouldn't use tokenize.NAME, but somehow use the
+    # grammar.
     if type_ == tokenize.NAME:
         # Check for reserved words (keywords)
         try:
@@ -186,8 +188,8 @@ class PgenParser(object):
                 elif t >= 256:
                     # See if it's a nonterminal and if we're in its first set
                     itsdfa = _gram.dfas[t]
-                    itsstates, itsfirst = itsdfa
-                    if ilabel in itsfirst:
+                    itsstates, first_terminals = itsdfa
+                    if ilabel in first_terminals:
                         # Push a nonterminal
                         _push(t, itsdfa, newstate)
                         break  # To continue the outer while loop
