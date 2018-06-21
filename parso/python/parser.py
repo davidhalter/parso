@@ -162,17 +162,19 @@ class Parser(BaseParser):
             # possible (and valid in Python ) that there's no newline at the
             # end of a file, we have to recover even if the user doesn't want
             # error recovery.
-            #print('x', pprint.pprint(stack))
-            ilabel = token_to_ilabel(pgen_grammar, NEWLINE, value)
-            try:
-                plan = stack[-1].dfa.ilabel_to_plan[ilabel]
-            except KeyError:
-                pass
-            else:
-                if plan.next_dfa.is_final and not plan.dfa_pushes:
-                    stack[-1].dfa = plan.next_dfa
-                    add_token_callback(typ, value, start_pos, prefix)
-                    return
+            if stack[-1].dfa.from_rule == 'simple_stmt':
+                ilabel = token_to_ilabel(pgen_grammar, NEWLINE, value)
+                try:
+                    plan = stack[-1].dfa.ilabel_to_plan[ilabel]
+                except KeyError:
+                    pass
+                else:
+                    if plan.next_dfa.is_final and not plan.dfa_pushes:
+                        # We are ignoring here that the newline would be
+                        # required for a simple_stmt.
+                        stack[-1].dfa = plan.next_dfa
+                        add_token_callback(typ, value, start_pos, prefix)
+                        return
 
         if not self._error_recovery:
             return super(Parser, self).error_recovery(
