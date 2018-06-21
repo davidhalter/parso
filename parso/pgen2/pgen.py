@@ -60,6 +60,11 @@ class DFAState(object):
 
     __hash__ = None  # For Py3 compatibility.
 
+    def __repr__(self):
+        return '<%s: %s is_final=%s>' % (
+            self.__class__.__name__, self.from_rule, self.is_final
+        )
+
 
 def _simplify_dfas(dfas):
     # This is not theoretically optimal, but works well enough.

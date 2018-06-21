@@ -63,6 +63,9 @@ class StackNode(object):
     def nonterminal(self):
         return self.dfa.from_rule
 
+    def __repr__(self):
+        return '%s(%s, %s)' % (self.__class__.__name__, self.dfa, self.nodes)
+
 
 def token_to_ilabel(grammar, type_, value):
     # Map from token to label
@@ -171,20 +174,20 @@ class PgenParser(object):
         grammar = self.grammar
 
         try:
-            plan = stack[-1].current_dfa.ilabel_to_plan[ilabel]
+            plan = stack[-1].dfa.ilabel_to_plan[ilabel]
         except KeyError:
             self.error_recovery(grammar, stack, type_,
                                 value, start_pos, prefix, self.add_token)
             return False
 
-        stack[-1].current_dfa = plan.next_dfa
-        for push in plan.pushes:
-            stack.append(StackNode(push.dfa))
+        stack[-1].dfa = plan.next_dfa
+        for push in plan.dfa_pushes:
+            stack.append(StackNode(push))
 
         leaf = self.convert_leaf(grammar, type_, value, prefix, start_pos)
         stack[-1].nodes.append(leaf)
 
-        while stack[-1].current_dfa.is_final:
+        while stack[-1].dfa.is_final:
             tos = stack.pop()
             # If there's exactly one child, return that child instead of
             # creating a new node.  We still create expr_stmt and

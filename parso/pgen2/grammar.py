@@ -20,9 +20,12 @@ from parso.python import token
 
 
 class DFAPlan(object):
-    def __init__(self, next_dfa, pushes=[]):
+    def __init__(self, next_dfa, dfa_pushes=[]):
         self.next_dfa = next_dfa
-        self.pushes = pushes
+        self.dfa_pushes = dfa_pushes
+
+    def __repr__(self):
+        return '%s(%s, %s)' % (self.__class__.__name__, self.next_dfa, self.dfa_pushes)
 
 
 class Grammar(object):
@@ -130,7 +133,7 @@ class Grammar(object):
                 for terminal_or_nonterminal, next_dfa in dfa_state.arcs.items():
                     if terminal_or_nonterminal in self.nonterminal2number:
                         for t, plan in self._first_plans[terminal_or_nonterminal].items():
-                            plans[t] = plan
+                            plans[self._make_label(t)] = plan
                     else:
                         ilabel = self._make_label(terminal_or_nonterminal)
                         plans[ilabel] = DFAPlan(next_dfa)
@@ -231,7 +234,7 @@ class Grammar(object):
                     assert not self._first_plans[nonterminal].get(t)
                     self._first_plans[nonterminal][t] = DFAPlan(
                         plan.next_dfa,
-                        [nonterminal_or_string] + plan.pushes
+                        [next_] + plan.dfa_pushes
                     )
             else:
                 # It's a string. We have finally found a possible first token.
