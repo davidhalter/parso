@@ -118,7 +118,7 @@ class Grammar(object):
                 arcs = []
                 for terminal_or_nonterminal, next_ in state.arcs.items():
                     arcs.append((self._make_label(terminal_or_nonterminal), dfas.index(next_)))
-                if state.isfinal:
+                if state.is_final:
                     arcs.append((0, dfas.index(state)))
                 states.append(arcs)
             self.states.append(states)

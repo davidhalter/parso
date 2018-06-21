@@ -29,7 +29,7 @@ class DFAState(object):
         assert isinstance(final, NFAState)
         self.from_rule = from_rule
         self.nfa_set = nfa_set
-        self.isfinal = final in nfa_set
+        self.is_final = final in nfa_set
         self.arcs = {}  # map from terminals/nonterminals to DFAState
         self.ilabel_to_plan = {}
 
@@ -47,7 +47,7 @@ class DFAState(object):
     def __eq__(self, other):
         # Equality test -- ignore the nfa_set instance variable
         assert isinstance(other, DFAState)
-        if self.isfinal != other.isfinal:
+        if self.is_final != other.is_final:
             return False
         # Can't just return self.arcs == other.arcs, because that
         # would invoke this method recursively, with cycles...
@@ -150,7 +150,7 @@ def _dump_nfa(start, finish):
 def _dump_dfas(dfas):
     print("Dump of DFA for", dfas[0].from_rule)
     for i, state in enumerate(dfas):
-        print("  State", i, state.isfinal and "(final)" or "")
+        print("  State", i, state.is_final and "(final)" or "")
         for nonterminal, next_ in state.arcs.items():
             print("    %s -> %d" % (nonterminal, dfas.index(next_)))
 
