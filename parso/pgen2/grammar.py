@@ -96,6 +96,7 @@ class Grammar(object):
     def _make_grammar(self):
         # Map from grammar rule (nonterminal) name to a set of tokens.
         self._first_terminals = {}
+        self._first_plans = {}
 
         nonterminals = list(self._nonterminal_to_dfas.keys())
         nonterminals.sort()
@@ -128,8 +129,8 @@ class Grammar(object):
                 dfa_state.ilabel_to_plan = plans = {}
                 for terminal_or_nonterminal, next_dfa in dfa_state.arcs.items():
                     if terminal_or_nonterminal in self.nonterminal2number:
-                        for first in self._make_first(terminal_or_nonterminal):
-                            plans[first] = None
+                        for t, plan in self._first_plans[terminal_or_nonterminal].items():
+                            plans[t] = plan
                     else:
                         ilabel = self._make_label(terminal_or_nonterminal)
                         plans[ilabel] = DFAPlan(next_dfa)
@@ -205,6 +206,7 @@ class Grammar(object):
     def _calculate_first_terminals(self, nonterminal):
         dfas = self._nonterminal_to_dfas[nonterminal]
         self._first_terminals[nonterminal] = None  # dummy to detect left recursion
+        self._first_plans[nonterminal] = {}
         # We only need to check the first dfa. All the following ones are not
         # interesting to find first terminals.
         state = dfas[0]
@@ -213,7 +215,7 @@ class Grammar(object):
         for nonterminal_or_string, next_ in state.arcs.items():
             if nonterminal_or_string in self._nonterminal_to_dfas:
                 # It's a nonterminal and we have either a left recursion issue
-                # in the grammare or we have to recurse.
+                # in the grammar or we have to recurse.
                 try:
                     fset = self._first_terminals[nonterminal_or_string]
                 except KeyError:
@@ -224,10 +226,18 @@ class Grammar(object):
                         raise ValueError("left recursion for rule %r" % nonterminal)
                 totalset.update(fset)
                 overlapcheck[nonterminal_or_string] = fset
+
+                for t, plan in self._first_plans[nonterminal_or_string].items():
+                    assert not self._first_plans[nonterminal].get(t)
+                    self._first_plans[nonterminal][t] = DFAPlan(
+                        plan.next_dfa,
+                        [nonterminal_or_string] + plan.pushes
+                    )
             else:
                 # It's a string. We have finally found a possible first token.
                 totalset.add(nonterminal_or_string)
                 overlapcheck[nonterminal_or_string] = set([nonterminal_or_string])
+                self._first_plans[nonterminal][nonterminal_or_string] = DFAPlan(next_)
 
         inverse = {}
         for nonterminal_or_string, first_set in overlapcheck.items():
