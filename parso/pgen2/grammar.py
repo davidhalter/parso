@@ -132,8 +132,8 @@ class Grammar(object):
                 dfa_state.ilabel_to_plan = plans = {}
                 for terminal_or_nonterminal, next_dfa in dfa_state.arcs.items():
                     if terminal_or_nonterminal in self.nonterminal2number:
-                        for t, plan in self._first_plans[terminal_or_nonterminal].items():
-                            plans[self._make_label(t)] = plan
+                        for t, pushes in self._first_plans[terminal_or_nonterminal].items():
+                            plans[self._make_label(t)] = DFAPlan(next_dfa, pushes)
                     else:
                         ilabel = self._make_label(terminal_or_nonterminal)
                         plans[ilabel] = DFAPlan(next_dfa)
@@ -230,17 +230,14 @@ class Grammar(object):
                 totalset.update(fset)
                 overlapcheck[nonterminal_or_string] = fset
 
-                for t, plan in self._first_plans[nonterminal_or_string].items():
+                for t, pushes in self._first_plans[nonterminal_or_string].items():
                     assert not self._first_plans[nonterminal].get(t)
-                    self._first_plans[nonterminal][t] = DFAPlan(
-                        plan.next_dfa,
-                        [next_] + plan.dfa_pushes
-                    )
+                    self._first_plans[nonterminal][t] = [next_] + pushes
             else:
                 # It's a string. We have finally found a possible first token.
                 totalset.add(nonterminal_or_string)
                 overlapcheck[nonterminal_or_string] = set([nonterminal_or_string])
-                self._first_plans[nonterminal][nonterminal_or_string] = DFAPlan(next_)
+                self._first_plans[nonterminal][nonterminal_or_string] = [next_]
 
         inverse = {}
         for nonterminal_or_string, first_set in overlapcheck.items():

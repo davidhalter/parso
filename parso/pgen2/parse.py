@@ -173,41 +173,48 @@ class PgenParser(object):
         stack = self._stack
         grammar = self.grammar
 
-        try:
-            plan = stack[-1].dfa.ilabel_to_plan[ilabel]
-        except KeyError:
-            self.error_recovery(grammar, stack, type_,
-                                value, start_pos, prefix, self.add_token)
-            return False
+        while True:
+            try:
+                plan = stack[-1].dfa.ilabel_to_plan[ilabel]
+                break
+            except KeyError:
+                if stack[-1].dfa.is_final:
+                    tos = stack.pop()
+                    # If there's exactly one child, return that child instead of
+                    # creating a new node.  We still create expr_stmt and
+                    # file_input though, because a lot of Jedi depends on its
+                    # logic.
+                    if len(tos.nodes) == 1:
+                        new_node = tos.nodes[0]
+                    else:
+                        # XXX don't use that type
+                        xxx_type = grammar.nonterminal2number[tos.dfa.from_rule]
+                        new_node = self.convert_node(grammar, xxx_type, tos.nodes)
+
+                    try:
+                        stack[-1].nodes.append(new_node)
+                    except IndexError:
+                        # Stack is empty, set the rootnode.
+                        self.rootnode = new_node
+                        return True
+                else:
+                    self.error_recovery(grammar, stack, type_,
+                                        value, start_pos, prefix, self.add_token)
+                    return False
 
         stack[-1].dfa = plan.next_dfa
+
         for push in plan.dfa_pushes:
             stack.append(StackNode(push))
 
         leaf = self.convert_leaf(grammar, type_, value, prefix, start_pos)
         stack[-1].nodes.append(leaf)
 
-        while stack[-1].dfa.is_final:
-            tos = stack.pop()
-            # If there's exactly one child, return that child instead of
-            # creating a new node.  We still create expr_stmt and
-            # file_input though, because a lot of Jedi depends on its
-            # logic.
-            if len(tos.nodes) == 1:
-                new_node = tos.nodes[0]
-            else:
-                new_node = self.convert_node(grammar, type_, tos.nodes)
-
-            try:
-                stack[-1].nodes.append(new_node)
-            except IndexError:
-                # Stack is empty, set the rootnode.
-                self.rootnode = new_node
-                return True
         return False
 
     def add_token(self, type_, value, start_pos, prefix):
         """Add a token; return True if this is the end of the program."""
+        self._new_add_token(type_, value, start_pos, prefix)
         ilabel = token_to_ilabel(self.grammar, type_, value)
 
         # Loop until the token is shifted; may raise exceptions
