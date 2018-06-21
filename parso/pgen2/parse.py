@@ -147,6 +147,8 @@ class PgenParser(object):
         newnode = (start, [])
         stackentry = (self.grammar.dfas[start], 0, newnode)
         self.stack = Stack([stackentry])
+        start_nonterminal = grammar.number2nonterminal[start]
+        self._stack = Stack([StackNode(grammar._nonterminal_to_dfas[start_nonterminal][0])])
         self.rootnode = None
         self.error_recovery = error_recovery
 
@@ -162,15 +164,16 @@ class PgenParser(object):
                 raise InternalParseError("incomplete input", type_, value, start_pos)
         return self.rootnode
 
-    def add_token(self, type_, value, start_pos, prefix):
+    def _new_add_token(self, type_, value, start_pos, prefix):
         """Add a token; return True if this is the end of the program."""
         ilabel = token_to_ilabel(self.grammar, type_, value)
-        stack = self.stack
+        stack = self._stack
+        grammar = self.grammar
 
         try:
             plan = stack[-1].current_dfa.ilabel_to_plan[ilabel]
         except KeyError:
-            self.error_recovery(self.grammar, stack, type_,
+            self.error_recovery(grammar, stack, type_,
                                 value, start_pos, prefix, self.add_token)
             return False
 
@@ -178,11 +181,11 @@ class PgenParser(object):
         for push in plan.pushes:
             stack.append(StackNode(push.dfa))
 
-        leaf = self.convert_leaf(self.grammar, type_, value, prefix, start_pos)
+        leaf = self.convert_leaf(grammar, type_, value, prefix, start_pos)
         stack[-1].nodes.append(leaf)
 
         while stack[-1].current_dfa.is_final:
-            tos = self.stack.pop()
+            tos = stack.pop()
             # If there's exactly one child, return that child instead of
             # creating a new node.  We still create expr_stmt and
             # file_input though, because a lot of Jedi depends on its
@@ -190,7 +193,7 @@ class PgenParser(object):
             if len(tos.nodes) == 1:
                 new_node = tos.nodes[0]
             else:
-                new_node = self.convert_node(self.grammar, type_, tos.nodes)
+                new_node = self.convert_node(grammar, type_, tos.nodes)
 
             try:
                 stack[-1].nodes.append(new_node)
