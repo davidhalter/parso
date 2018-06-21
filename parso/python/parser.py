@@ -134,14 +134,14 @@ class Parser(BaseParser):
 
         return self._leaf_map.get(type, tree.Operator)(value, start_pos, prefix)
 
-    def error_recovery(self, pgen_grammar, stack, arcs, typ, value, start_pos, prefix,
+    def error_recovery(self, pgen_grammar, stack, typ, value, start_pos, prefix,
                        add_token_callback):
         def get_nonterminal_and_nodes(stack):
             for dfa, state, (type_, nodes) in stack:
                 nonterminal = pgen_grammar.number2nonterminal[type_]
                 yield nonterminal, nodes
 
-        tos_nodes = stack.get_tos_nodes()
+        tos_nodes = stack[-1].nodes
         if tos_nodes:
             last_leaf = tos_nodes[-1].get_last_leaf()
         else:
@@ -164,32 +164,19 @@ class Parser(BaseParser):
             # error recovery.
             #print('x', pprint.pprint(stack))
             ilabel = token_to_ilabel(pgen_grammar, NEWLINE, value)
-
-            dfa, state, (type_, nodes) = stack[-1]
-            nonterminal = pgen_grammar.number2nonterminal[type_]
-            states, first = dfa
-            arcs = states[state]
-            # Look for a state with this label
-            for i, newstate in arcs:
-                if ilabel == i:
-                    if nonterminal == 'simple_stmt':
-                        # This is basically shifting
-                        stack[-1] = (dfa, newstate, (type_, nodes))
-
-                        reduce_stack(states, newstate)
-                        add_token_callback(typ, value, start_pos, prefix)
-                        return
-                    # Check if we're at the right point
-                    #for nonterminal, nodes in get_nonterminal_and_nodes(stack):
-                    #        self.pgen_parser._pop()
-
-                            #break
-                    break
-            #nonterminal = pgen_grammar.number2nonterminal[type_]
+            try:
+                plan = stack[-1].dfa.ilabel_to_plan[ilabel]
+            except KeyError:
+                pass
+            else:
+                if plan.next_dfa.is_final and not plan.dfa_pushes:
+                    stack[-1].dfa = plan.next_dfa
+                    add_token_callback(typ, value, start_pos, prefix)
+                    return
 
         if not self._error_recovery:
             return super(Parser, self).error_recovery(
-                pgen_grammar, stack, arcs, typ, value, start_pos, prefix,
+                pgen_grammar, stack, typ, value, start_pos, prefix,
                 add_token_callback)
 
         def current_suite(stack):

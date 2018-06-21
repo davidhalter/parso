@@ -55,7 +55,7 @@ class BaseParser(object):
         del self.pgen_parser
         return node
 
-    def error_recovery(self, pgen_grammar, stack, arcs, typ, value, start_pos, prefix,
+    def error_recovery(self, pgen_grammar, stack, typ, value, start_pos, prefix,
                        add_token_callback):
         if self._error_recovery:
             raise NotImplementedError("Error Recovery is not implemented")
