@@ -19,6 +19,12 @@ fallback token code OP, but the parser needs the actual token code.
 from parso.python import token
 
 
+class DFAPlan(object):
+    def __init__(self, next_dfa, pushes=[]):
+        self.next_dfa = next_dfa
+        self.pushes = pushes
+
+
 class Grammar(object):
     """Pgen parsing tables conversion class.
 
@@ -116,6 +122,17 @@ class Grammar(object):
                 states.append(arcs)
             self.states.append(states)
             self.dfas[self.nonterminal2number[nonterminal]] = (states, self._make_first(nonterminal))
+
+        for dfas in self._nonterminal_to_dfas.values():
+            for dfa_state in dfas:
+                dfa_state.ilabel_to_plan = plans = {}
+                for terminal_or_nonterminal, next_dfa in dfa_state.arcs.items():
+                    if terminal_or_nonterminal in self.nonterminal2number:
+                        for first in self._make_first(terminal_or_nonterminal):
+                            plans[first] = None
+                    else:
+                        ilabel = self._make_label(terminal_or_nonterminal)
+                        plans[ilabel] = DFAPlan(next_dfa)
 
     def _make_first(self, nonterminal):
         rawfirst = self._first_terminals[nonterminal]

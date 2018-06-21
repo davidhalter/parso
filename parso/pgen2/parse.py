@@ -54,6 +54,16 @@ class Stack(list):
         return sorted(check())
 
 
+class StackNode(object):
+    def __init__(self, dfa):
+        self.dfa = dfa
+        self.nodes = []
+
+    @property
+    def nonterminal(self):
+        return self.dfa.from_rule
+
+
 def token_to_ilabel(grammar, type_, value):
     # Map from token to label
     # TODO this is not good, shouldn't use tokenize.NAME, but somehow use the
@@ -151,6 +161,44 @@ class PgenParser(object):
             if self.stack:
                 raise InternalParseError("incomplete input", type_, value, start_pos)
         return self.rootnode
+
+    def add_token(self, type_, value, start_pos, prefix):
+        """Add a token; return True if this is the end of the program."""
+        ilabel = token_to_ilabel(self.grammar, type_, value)
+        stack = self.stack
+
+        while True:
+            ilabel
+            try:
+                plan = stack[-1].current_dfa.ilabel_to_plan[ilabel]
+            except KeyError:
+                self.error_recovery(self.grammar, stack, type_,
+                                    value, start_pos, prefix, self.add_token)
+                break
+
+            stack[-1].current_dfa = plan.next_dfa
+            for push in plan.pushes:
+                stack.append(StackNode(push.dfa))
+
+            leaf = self.convert_leaf(self.grammar, type_, value, prefix, start_pos)
+            stack[-1].nodes.append(leaf)
+
+            while stack[-1].current_dfa.is_final:
+                tos = self.stack.pop()
+                # If there's exactly one child, return that child instead of
+                # creating a new node.  We still create expr_stmt and
+                # file_input though, because a lot of Jedi depends on its
+                # logic.
+                if len(tos.nodes) == 1:
+                    new_node = tos.nodes[0]
+                else:
+                    new_node = self.convert_node(self.grammar, type_, tos.nodes)
+
+                try:
+                    stack[-1].nodes.append(new_node)
+                except IndexError:
+                    # Stack is empty, set the rootnode.
+                    self.rootnode = new_node
 
     def add_token(self, type_, value, start_pos, prefix):
         """Add a token; return True if this is the end of the program."""

@@ -31,6 +31,7 @@ class DFAState(object):
         self.nfa_set = nfa_set
         self.isfinal = final in nfa_set
         self.arcs = {}  # map from terminals/nonterminals to DFAState
+        self.ilabel_to_plan = {}
 
     def add_arc(self, next_, label):
         assert isinstance(label, str)
