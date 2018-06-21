@@ -167,38 +167,38 @@ class PgenParser(object):
         ilabel = token_to_ilabel(self.grammar, type_, value)
         stack = self.stack
 
-        while True:
-            ilabel
+        try:
+            plan = stack[-1].current_dfa.ilabel_to_plan[ilabel]
+        except KeyError:
+            self.error_recovery(self.grammar, stack, type_,
+                                value, start_pos, prefix, self.add_token)
+            return False
+
+        stack[-1].current_dfa = plan.next_dfa
+        for push in plan.pushes:
+            stack.append(StackNode(push.dfa))
+
+        leaf = self.convert_leaf(self.grammar, type_, value, prefix, start_pos)
+        stack[-1].nodes.append(leaf)
+
+        while stack[-1].current_dfa.is_final:
+            tos = self.stack.pop()
+            # If there's exactly one child, return that child instead of
+            # creating a new node.  We still create expr_stmt and
+            # file_input though, because a lot of Jedi depends on its
+            # logic.
+            if len(tos.nodes) == 1:
+                new_node = tos.nodes[0]
+            else:
+                new_node = self.convert_node(self.grammar, type_, tos.nodes)
+
             try:
-                plan = stack[-1].current_dfa.ilabel_to_plan[ilabel]
-            except KeyError:
-                self.error_recovery(self.grammar, stack, type_,
-                                    value, start_pos, prefix, self.add_token)
-                break
-
-            stack[-1].current_dfa = plan.next_dfa
-            for push in plan.pushes:
-                stack.append(StackNode(push.dfa))
-
-            leaf = self.convert_leaf(self.grammar, type_, value, prefix, start_pos)
-            stack[-1].nodes.append(leaf)
-
-            while stack[-1].current_dfa.is_final:
-                tos = self.stack.pop()
-                # If there's exactly one child, return that child instead of
-                # creating a new node.  We still create expr_stmt and
-                # file_input though, because a lot of Jedi depends on its
-                # logic.
-                if len(tos.nodes) == 1:
-                    new_node = tos.nodes[0]
-                else:
-                    new_node = self.convert_node(self.grammar, type_, tos.nodes)
-
-                try:
-                    stack[-1].nodes.append(new_node)
-                except IndexError:
-                    # Stack is empty, set the rootnode.
-                    self.rootnode = new_node
+                stack[-1].nodes.append(new_node)
+            except IndexError:
+                # Stack is empty, set the rootnode.
+                self.rootnode = new_node
+                return True
+        return False
 
     def add_token(self, type_, value, start_pos, prefix):
         """Add a token; return True if this is the end of the program."""
