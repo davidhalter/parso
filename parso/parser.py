@@ -63,9 +63,7 @@ class BaseParser(object):
             error_leaf = tree.ErrorLeaf('TODO %s' % typ, value, start_pos, prefix)
             raise ParserSyntaxError('SyntaxError: invalid syntax', error_leaf)
 
-    def convert_node(self, pgen_grammar, type_, children):
-        # TODO REMOVE nonterminal, we don't want type here.
-        nonterminal = pgen_grammar.number2nonterminal[type_]
+    def convert_node(self, pgen_grammar, nonterminal, children):
         try:
             return self.node_map[nonterminal](children)
         except KeyError:

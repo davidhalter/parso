@@ -147,30 +147,32 @@ class PgenParser(object):
         # Each stack entry is a tuple: (dfa, state, node).
         # A node is a tuple: (type, children),
         # where children is a list of nodes or None
-        newnode = (start, [])
-        stackentry = (self.grammar.dfas[start], 0, newnode)
-        self.stack = Stack([stackentry])
+#        newnode = (start, [])
+#        stackentry = (self.grammar.dfas[start], 0, newnode)
+#        self.stack = Stack([stackentry])
         start_nonterminal = grammar.number2nonterminal[start]
-        self._stack = Stack([StackNode(grammar._nonterminal_to_dfas[start_nonterminal][0])])
+        self.stack = Stack([StackNode(grammar._nonterminal_to_dfas[start_nonterminal][0])])
         self.rootnode = None
         self.error_recovery = error_recovery
 
     def parse(self, tokens):
         for type_, value, start_pos, prefix in tokens:
-            if self.add_token(type_, value, start_pos, prefix):
-                break
-        else:
+            self.add_token(type_, value, start_pos, prefix)
+
+        while self.stack and self.stack[-1].dfa.is_final:
+            self._pop()
+
+        if self.stack:
             # We never broke out -- EOF is too soon -- Unfinished statement.
             # However, the error recovery might have added the token again, if
             # the stack is empty, we're fine.
-            if self.stack:
-                raise InternalParseError("incomplete input", type_, value, start_pos)
+            raise InternalParseError("incomplete input", type_, value, start_pos)
         return self.rootnode
 
-    def _new_add_token(self, type_, value, start_pos, prefix):
+    def add_token(self, type_, value, start_pos, prefix):
         """Add a token; return True if this is the end of the program."""
         ilabel = token_to_ilabel(self.grammar, type_, value)
-        stack = self._stack
+        stack = self.stack
         grammar = self.grammar
 
         while True:
@@ -179,40 +181,25 @@ class PgenParser(object):
                 break
             except KeyError:
                 if stack[-1].dfa.is_final:
-                    tos = stack.pop()
-                    # If there's exactly one child, return that child instead of
-                    # creating a new node.  We still create expr_stmt and
-                    # file_input though, because a lot of Jedi depends on its
-                    # logic.
-                    if len(tos.nodes) == 1:
-                        new_node = tos.nodes[0]
-                    else:
-                        # XXX don't use that type
-                        xxx_type = grammar.nonterminal2number[tos.dfa.from_rule]
-                        new_node = self.convert_node(grammar, xxx_type, tos.nodes)
-
-                    try:
-                        stack[-1].nodes.append(new_node)
-                    except IndexError:
-                        # Stack is empty, set the rootnode.
-                        self.rootnode = new_node
-                        return True
+                    self._pop()
                 else:
                     self.error_recovery(grammar, stack, type_,
                                         value, start_pos, prefix, self.add_token)
-                    return False
+                    return
+            except IndexError:
+                raise InternalParseError("too much input", type_, value, start_pos)
 
         stack[-1].dfa = plan.next_dfa
 
         for push in plan.dfa_pushes:
+            print('insert', push.from_rule)
             stack.append(StackNode(push))
 
+        print('set next', plan.next_dfa.from_rule)
         leaf = self.convert_leaf(grammar, type_, value, prefix, start_pos)
         stack[-1].nodes.append(leaf)
 
-        return False
-
-    def add_token(self, type_, value, start_pos, prefix):
+    def _old_add_token(self, type_, value, start_pos, prefix):
         """Add a token; return True if this is the end of the program."""
         self._new_add_token(type_, value, start_pos, prefix)
         ilabel = token_to_ilabel(self.grammar, type_, value)
@@ -299,3 +286,21 @@ class PgenParser(object):
         except IndexError:
             # Stack is empty, set the rootnode.
             self.rootnode = newnode
+
+    def _pop(self):
+        tos = self.stack.pop()
+        print('pop', tos.nonterminal, tos.nodes)
+        # If there's exactly one child, return that child instead of
+        # creating a new node.  We still create expr_stmt and
+        # file_input though, because a lot of Jedi depends on its
+        # logic.
+        if len(tos.nodes) == 1:
+            new_node = tos.nodes[0]
+        else:
+            new_node = self.convert_node(self.grammar, tos.dfa.from_rule, tos.nodes)
+
+        try:
+            self.stack[-1].nodes.append(new_node)
+        except IndexError:
+            # Stack is empty, set the rootnode.
+            self.rootnode = new_node

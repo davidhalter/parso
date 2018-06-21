@@ -99,7 +99,7 @@ class Parser(BaseParser):
 
         return node
 
-    def convert_node(self, pgen_grammar, type, children):
+    def convert_node(self, pgen_grammar, nonterminal, children):
         """
         Convert raw node information to a PythonBaseNode instance.
 
@@ -107,8 +107,6 @@ class Parser(BaseParser):
         grammar rule produces a new complete node, so that the tree is build
         strictly bottom-up.
         """
-        # TODO REMOVE nonterminal, we don't want type here.
-        nonterminal = pgen_grammar.number2nonterminal[type]
         try:
             return self.node_map[nonterminal](children)
         except KeyError:
