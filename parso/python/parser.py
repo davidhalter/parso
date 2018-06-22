@@ -185,24 +185,23 @@ class Parser(BaseParser):
             # For now just discard everything that is not a suite or
             # file_input, if we detect an error.
             one_line_suite = False
-            for index, (nonterminal, nodes) in reversed(list(enumerate(get_nonterminal_and_nodes(stack)))):
+            for until_index, stack_node in reversed(list(enumerate(stack))):
                 # `suite` can sometimes be only simple_stmt, not stmt.
                 if one_line_suite:
                     break
-                elif nonterminal == 'file_input':
+                elif stack_node.nonterminal == 'file_input':
                     break
-                elif nonterminal == 'suite':
-                    if len(nodes) > 1:
+                elif stack_node.nonterminal == 'suite':
+                    if len(stack_node.nodes) > 1:
                         break
-                    elif not nodes:
+                    elif not stack_node.nodes:
                         one_line_suite = True
                     # `suite` without an indent are error nodes.
-            return index, nonterminal, nodes
+            return until_index
 
-        index, nonterminal, nodes = current_suite(stack)
+        until_index = current_suite(stack)
 
-        # print('err', token.tok_name[typ], repr(value), start_pos, len(stack), index)
-        if self._stack_removal(pgen_grammar, stack, arcs, index + 1, value, start_pos):
+        if self._stack_removal(stack, until_index + 1):
             add_token_callback(typ, value, start_pos, prefix)
         else:
             if typ == INDENT:
@@ -211,9 +210,10 @@ class Parser(BaseParser):
                 self._omit_dedent_list.append(self._indent_counter)
 
             error_leaf = tree.PythonErrorLeaf(tok_name[typ].lower(), value, start_pos, prefix)
-            stack[-1][2][1].append(error_leaf)
+            stack[-1].nodes.append(error_leaf)
 
-        if nonterminal == 'suite':
+        tos = stack[-1]
+        if tos.nonterminal == 'suite':
             dfa, state, node = stack[-1]
             states, first = dfa
             arcs = states[state]
@@ -224,21 +224,15 @@ class Parser(BaseParser):
                 new_state = arcs[0][1]
                 stack[-1] = dfa, new_state, node
 
-    def _stack_removal(self, pgen_grammar, stack, arcs, start_index, value, start_pos):
-        failed_stack = False
-        found = False
+    def _stack_removal(self, stack, start_index):
         all_nodes = []
-        for dfa, state, (type_, nodes) in stack[start_index:]:
-            if nodes:
-                found = True
-            if found:
-                failed_stack = True
-                all_nodes += nodes
-        if failed_stack:
-            stack[start_index - 1][2][1].append(tree.PythonErrorNode(all_nodes))
+        for stack_node in stack[start_index:]:
+            all_nodes += stack_node.nodes
+        if all_nodes:
+            stack[start_index - 1].nodes.append(tree.PythonErrorNode(all_nodes))
 
         stack[start_index:] = []
-        return failed_stack
+        return bool(all_nodes)
 
     def _recovery_tokenize(self, tokens):
         for typ, value, start_pos, prefix in tokens:

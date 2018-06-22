@@ -192,10 +192,8 @@ class PgenParser(object):
         stack[-1].dfa = plan.next_dfa
 
         for push in plan.dfa_pushes:
-            print('insert', push.from_rule)
             stack.append(StackNode(push))
 
-        print('set next', plan.next_dfa.from_rule)
         leaf = self.convert_leaf(grammar, type_, value, prefix, start_pos)
         stack[-1].nodes.append(leaf)
 
@@ -289,7 +287,6 @@ class PgenParser(object):
 
     def _pop(self):
         tos = self.stack.pop()
-        print('pop', tos.nonterminal, tos.nodes)
         # If there's exactly one child, return that child instead of
         # creating a new node.  We still create expr_stmt and
         # file_input though, because a lot of Jedi depends on its
