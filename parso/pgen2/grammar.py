@@ -61,8 +61,6 @@ class Grammar(object):
         self.labels = [(0, "EMPTY")]
         self.keywords = {}
         self.tokens = {}
-        self.nonterminal2label = {}
-        self.label2nonterminal = {}
         self.start_nonterminal = start_nonterminal
 
         self._label_cache = {}
