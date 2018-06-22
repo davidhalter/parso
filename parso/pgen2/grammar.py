@@ -49,20 +49,6 @@ class Grammar(object):
                      A dict mapping numbers to nonterminal names;
                      these two are each other's inverse.
 
-    states        -- a list of DFAs, where each DFA is a list of
-                     states, each state is a list of arcs, and each
-                     arc is a (i, j) pair where i is a label and j is
-                     a state number.  The DFA number is the index into
-                     this list.  (This name is slightly confusing.)
-                     Final states are represented by a special arc of
-                     the form (0, j) where j is its own state number.
-
-    dfas          -- a dict mapping nonterminal numbers to (DFA, first)
-                     pairs, where DFA is an item from the states list
-                     above, and first is a set of tokens that can
-                     begin this grammar rule (represented by a dict
-                     whose values are always 1).
-
     labels        -- a list of (x, y) pairs where x is either a token
                      number or a nonterminal number, and y is either None
                      or a string; the strings are keywords.  The label
@@ -149,25 +135,17 @@ class Grammar(object):
         ilabel = len(self.labels)
         if label[0].isalpha():
             # Either a nonterminal name or a named token
-            if label in self.nonterminal2number:
-                # A nonterminal name
-                if label in self.nonterminal2label:
-                    return self.nonterminal2label[label]
-                else:
-                    self.labels.append((self.nonterminal2number[label], None))
-                    self.nonterminal2label[label] = ilabel
-                    self.label2nonterminal[ilabel] = label
-                    return ilabel
+            assert label not in self.nonterminal2number
+
+            # A named token (e.g. NAME, NUMBER, STRING)
+            itoken = getattr(self._token_namespace, label, None)
+            assert isinstance(itoken, int), label
+            if itoken in self.tokens:
+                return self.tokens[itoken]
             else:
-                # A named token (NAME, NUMBER, STRING)
-                itoken = getattr(self._token_namespace, label, None)
-                assert isinstance(itoken, int), label
-                if itoken in self.tokens:
-                    return self.tokens[itoken]
-                else:
-                    self.labels.append((itoken, None))
-                    self.tokens[itoken] = ilabel
-                    return ilabel
+                self.labels.append((itoken, None))
+                self.tokens[itoken] = ilabel
+                return ilabel
         else:
             # Either a keyword or an operator
             assert label[0] in ('"', "'"), label
