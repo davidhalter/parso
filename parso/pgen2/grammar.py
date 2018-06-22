@@ -84,8 +84,6 @@ class Grammar(object):
 
         self.nonterminal2number = {}
         self.number2nonterminal = {}
-        self.states = []
-        self.dfas = {}
         self.labels = [(0, "EMPTY")]
         self.keywords = {}
         self.tokens = {}
@@ -113,19 +111,6 @@ class Grammar(object):
 
         # Now that we have calculated the first terminals, we are sure that
         # there is no left recursion or ambiguities.
-
-        for nonterminal in nonterminals:
-            dfas = self._nonterminal_to_dfas[nonterminal]
-            states = []
-            for state in dfas:
-                arcs = []
-                for terminal_or_nonterminal, next_ in state.arcs.items():
-                    arcs.append((self._make_label(terminal_or_nonterminal), dfas.index(next_)))
-                if state.is_final:
-                    arcs.append((0, dfas.index(state)))
-                states.append(arcs)
-            self.states.append(states)
-            self.dfas[self.nonterminal2number[nonterminal]] = (states, self._make_first(nonterminal))
 
         for dfas in self._nonterminal_to_dfas.values():
             for dfa_state in dfas:
@@ -252,18 +237,3 @@ class Grammar(object):
     @property
     def start(self):
         return self.nonterminal2number[self.start_nonterminal]
-
-    def report(self):
-        """Dump the grammar tables to standard output, for debugging."""
-        from pprint import pprint
-        print("s2n")
-        pprint(self.nonterminal2number)
-        print("n2s")
-        pprint(self.number2nonterminal)
-        print("states")
-        pprint(self.states)
-        print("dfas")
-        pprint(self.dfas)
-        print("labels")
-        pprint(self.labels)
-        print("start", self.start)
