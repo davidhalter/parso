@@ -93,7 +93,7 @@ class Parser(BaseParser):
             # not what we want, we want a module, so we add it here:
             node = self.convert_node(
                 self._pgen_grammar,
-                self._pgen_grammar.nonterminal2number['file_input'],
+                'file_input',
                 [node]
             )
 
@@ -214,15 +214,13 @@ class Parser(BaseParser):
 
         tos = stack[-1]
         if tos.nonterminal == 'suite':
-            dfa, state, node = stack[-1]
-            states, first = dfa
-            arcs = states[state]
-            intended_label = pgen_grammar.nonterminal2label['stmt']
-            # Introduce a proper state transition. We're basically allowing
-            # there to be no valid statements inside a suite.
-            if [x[0] for x in arcs] == [intended_label]:
-                new_state = arcs[0][1]
-                stack[-1] = dfa, new_state, node
+            # Need at least one statement in the suite. This happend with the
+            # error recovery above.
+            try:
+                tos.dfa = tos.dfa.arcs['stmt']
+            except KeyError:
+                # We're already in a final state.
+                pass
 
     def _stack_removal(self, stack, start_index):
         all_nodes = []
