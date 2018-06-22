@@ -114,7 +114,8 @@ class PgenParser(object):
 
     """
 
-    def __init__(self, grammar, convert_node, convert_leaf, error_recovery, start):
+    def __init__(self, grammar, convert_node, convert_leaf, error_recovery,
+                 start_nonterminal):
         """Constructor.
 
         The grammar argument is a grammar.Grammar instance; see the
@@ -144,7 +145,6 @@ class PgenParser(object):
         self.convert_node = convert_node
         self.convert_leaf = convert_leaf
 
-        start_nonterminal = grammar.number2nonterminal[start]
         self.stack = Stack([StackNode(grammar._nonterminal_to_dfas[start_nonterminal][0])])
         self.rootnode = None
         self.error_recovery = error_recovery

@@ -44,10 +44,9 @@ class BaseParser(object):
         self._error_recovery = error_recovery
 
     def parse(self, tokens):
-        start_number = self._pgen_grammar.nonterminal2number[self._start_nonterminal]
         self.pgen_parser = PgenParser(
             self._pgen_grammar, self.convert_node, self.convert_leaf,
-            self.error_recovery, start_number
+            self.error_recovery, self._start_nonterminal
         )
 
         node = self.pgen_parser.parse(tokens)

@@ -211,7 +211,3 @@ class Grammar(object):
                                      (nonterminal, terminal, nonterminal_or_string, inverse[terminal]))
                 inverse[terminal] = nonterminal_or_string
         self._first_terminals[nonterminal] = totalset
-
-    @property
-    def start(self):
-        return self.nonterminal2number[self.start_nonterminal]
