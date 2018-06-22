@@ -91,15 +91,6 @@ class Grammar(object):
                         ilabel = self._make_label(terminal_or_nonterminal)
                         plans[ilabel] = DFAPlan(next_dfa)
 
-    def _make_first(self, nonterminal):
-        rawfirst = self._first_terminals[nonterminal]
-        first = set()
-        for terminal_or_nonterminal in rawfirst:
-            ilabel = self._make_label(terminal_or_nonterminal)
-            ##assert ilabel not in first, "%s failed on <> ... !=" % terminal_or_nonterminal
-            first.add(ilabel)
-        return first
-
     def _cache_labels(func):
         def wrapper(self, label):
             try:
