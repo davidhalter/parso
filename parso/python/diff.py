@@ -41,9 +41,8 @@ def _flows_finished(pgen_grammar, stack):
     if, while, for and try might not be finished, because another part might
     still be parsed.
     """
-    for dfa, newstate, (nonterminal_number, nodes) in stack:
-        if pgen_grammar.number2nonterminal[nonterminal_number] \
-                in ('if_stmt', 'while_stmt', 'for_stmt', 'try_stmt'):
+    for stack_node in stack:
+        if stack_node.nonterminal in ('if_stmt', 'while_stmt', 'for_stmt', 'try_stmt'):
             return False
     return True
 
@@ -52,10 +51,10 @@ def suite_or_file_input_is_valid(pgen_grammar, stack):
     if not _flows_finished(pgen_grammar, stack):
         return False
 
-    for dfa, newstate, (nonterminal_number, nodes) in reversed(stack):
-        if pgen_grammar.number2nonterminal[nonterminal_number] == 'suite':
+    for stack_node in reversed(stack):
+        if stack_node.nonterminal == 'suite':
             # If only newline is in the suite, the suite is not valid, yet.
-            return len(nodes) > 1
+            return len(stack_node.nodes) > 1
     # Not reaching a suite means that we're dealing with file_input levels
     # where there's no need for a valid statement in it. It can also be empty.
     return True
