@@ -144,12 +144,6 @@ class PgenParser(object):
         self.convert_node = convert_node
         self.convert_leaf = convert_leaf
 
-        # Each stack entry is a tuple: (dfa, state, node).
-        # A node is a tuple: (type, children),
-        # where children is a list of nodes or None
-#        newnode = (start, [])
-#        stackentry = (self.grammar.dfas[start], 0, newnode)
-#        self.stack = Stack([stackentry])
         start_nonterminal = grammar.number2nonterminal[start]
         self.stack = Stack([StackNode(grammar._nonterminal_to_dfas[start_nonterminal][0])])
         self.rootnode = None
@@ -196,94 +190,6 @@ class PgenParser(object):
 
         leaf = self.convert_leaf(grammar, type_, value, prefix, start_pos)
         stack[-1].nodes.append(leaf)
-
-    def _old_add_token(self, type_, value, start_pos, prefix):
-        """Add a token; return True if this is the end of the program."""
-        self._new_add_token(type_, value, start_pos, prefix)
-        ilabel = token_to_ilabel(self.grammar, type_, value)
-
-        # Loop until the token is shifted; may raise exceptions
-        _gram = self.grammar
-        _labels = _gram.labels
-        _push = self._push
-        _pop = self._pop
-        _shift = self._shift
-        while True:
-            dfa, state, node = self.stack[-1]
-            states, first = dfa
-            arcs = states[state]
-            # Look for a state with this label
-            for i, newstate in arcs:
-                t, v = _labels[i]
-                if ilabel == i:
-                    # Look it up in the list of labels
-                    assert t < 256
-                    # Shift a token; we're done with it
-                    _shift(type_, value, newstate, prefix, start_pos)
-                    # Pop while we are in an accept-only state
-                    state = newstate
-                    while states[state] == [(0, state)]:
-                        _pop()
-                        if not self.stack:
-                            # Done parsing!
-                            return True
-                        dfa, state, node = self.stack[-1]
-                        states, first = dfa
-                    # Done with this token
-                    return False
-                elif t >= 256:
-                    # See if it's a nonterminal and if we're in its first set
-                    itsdfa = _gram.dfas[t]
-                    itsstates, first_terminals = itsdfa
-                    if ilabel in first_terminals:
-                        # Push a nonterminal
-                        _push(t, itsdfa, newstate)
-                        break  # To continue the outer while loop
-            else:
-                if (0, state) in arcs:
-                    # An accepting state, pop it and try something else
-                    _pop()
-                    if not self.stack:
-                        # Done parsing, but another token is input
-                        raise InternalParseError("too much input", type_, value, start_pos)
-                else:
-                    self.error_recovery(self.grammar, self.stack, arcs, type_,
-                                        value, start_pos, prefix, self.add_token)
-                    break
-
-    def _shift(self, type_, value, newstate, prefix, start_pos):
-        """Shift a token.  (Internal)"""
-        dfa, state, node = self.stack[-1]
-        newnode = self.convert_leaf(self.grammar, type_, value, prefix, start_pos)
-        node[-1].append(newnode)
-        self.stack[-1] = (dfa, newstate, node)
-
-    def _push(self, type_, newdfa, newstate):
-        """Push a nonterminal.  (Internal)"""
-        dfa, state, node = self.stack[-1]
-        newnode = (type_, [])
-        self.stack[-1] = (dfa, newstate, node)
-        self.stack.append((newdfa, 0, newnode))
-
-    def _pop(self):
-        """Pop a nonterminal.  (Internal)"""
-        popdfa, popstate, (type_, children) = self.stack.pop()
-        # If there's exactly one child, return that child instead of creating a
-        # new node.  We still create expr_stmt and file_input though, because a
-        # lot of Jedi depends on its logic.
-        if len(children) == 1:
-            newnode = children[0]
-        else:
-            newnode = self.convert_node(self.grammar, type_, children)
-
-        try:
-            # Equal to:
-            # dfa, state, node = self.stack[-1]
-            # nonterminal, children = node
-            self.stack[-1][2][1].append(newnode)
-        except IndexError:
-            # Stack is empty, set the rootnode.
-            self.rootnode = newnode
 
     def _pop(self):
         tos = self.stack.pop()
