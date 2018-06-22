@@ -39,16 +39,6 @@ class Grammar(object):
 
     The instance variables are as follows:
 
-    nonterminal2number --
-                     A dict mapping nonterminal names to numbers.
-                     Nonterminal numbers are always 256 or higher, to
-                     distinguish them from token numbers, which are between 0
-                     and 255 (inclusive).
-
-    number2nonterminal --
-                     A dict mapping numbers to nonterminal names;
-                     these two are each other's inverse.
-
     labels        -- a list of (x, y) pairs where x is either a token
                      number or a nonterminal number, and y is either None
                      or a string; the strings are keywords.  The label
@@ -68,8 +58,6 @@ class Grammar(object):
         self._token_namespace = token_namespace
         self._nonterminal_to_dfas = rule_to_dfas
 
-        self.nonterminal2number = {}
-        self.number2nonterminal = {}
         self.labels = [(0, "EMPTY")]
         self.keywords = {}
         self.tokens = {}
@@ -91,10 +79,6 @@ class Grammar(object):
             if nonterminal not in self._first_terminals:
                 self._calculate_first_terminals(nonterminal)
 
-            i = 256 + len(self.nonterminal2number)
-            self.nonterminal2number[nonterminal] = i
-            self.number2nonterminal[i] = nonterminal
-
         # Now that we have calculated the first terminals, we are sure that
         # there is no left recursion or ambiguities.
 
@@ -102,7 +86,7 @@ class Grammar(object):
             for dfa_state in dfas:
                 dfa_state.ilabel_to_plan = plans = {}
                 for terminal_or_nonterminal, next_dfa in dfa_state.arcs.items():
-                    if terminal_or_nonterminal in self.nonterminal2number:
+                    if terminal_or_nonterminal in self._nonterminal_to_dfas:
                         for t, pushes in self._first_plans[terminal_or_nonterminal].items():
                             plans[self._make_label(t)] = DFAPlan(next_dfa, pushes)
                     else:
@@ -135,7 +119,7 @@ class Grammar(object):
         ilabel = len(self.labels)
         if label[0].isalpha():
             # Either a nonterminal name or a named token
-            assert label not in self.nonterminal2number
+            assert label not in self._nonterminal_to_dfas
 
             # A named token (e.g. NAME, NUMBER, STRING)
             itoken = getattr(self._token_namespace, label, None)

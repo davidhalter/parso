@@ -136,11 +136,6 @@ class Parser(BaseParser):
 
     def error_recovery(self, pgen_grammar, stack, typ, value, start_pos, prefix,
                        add_token_callback):
-        def get_nonterminal_and_nodes(stack):
-            for dfa, state, (type_, nodes) in stack:
-                nonterminal = pgen_grammar.number2nonterminal[type_]
-                yield nonterminal, nodes
-
         tos_nodes = stack[-1].nodes
         if tos_nodes:
             last_leaf = tos_nodes[-1].get_last_leaf()

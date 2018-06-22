@@ -186,8 +186,8 @@ class Grammar(object):
         return normalizer.issues
 
     def __repr__(self):
-        labels = self._pgen_grammar.number2nonterminal.values()
-        txt = ' '.join(list(labels)[:3]) + ' ...'
+        nonterminals = self._pgen_grammar._nonterminal_to_dfas.keys()
+        txt = ' '.join(list(nonterminals)[:3]) + ' ...'
         return '<%s:%s>' % (self.__class__.__name__, txt)
 
 
