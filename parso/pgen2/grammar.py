@@ -41,15 +41,6 @@ class Grammar(object):
     accesses the instance variables directly.  The class here does not
     provide initialization of the tables; several subclasses exist to
     do this (see the conv and pgen modules).
-
-    The instance variables are as follows:
-
-    start         -- the number of the grammar's start nonterminal.
-
-    keywords      -- a dict mapping keyword strings to arc labels.
-
-    tokens        -- a dict mapping token numbers to arc labels.
-
     """
 
     def __init__(self, bnf_grammar, start_nonterminal, rule_to_dfas, token_namespace):
@@ -57,7 +48,6 @@ class Grammar(object):
         self._nonterminal_to_dfas = rule_to_dfas
 
         self.reserved_syntax_strings = {}
-        self.tokens = {}
         self.start_nonterminal = start_nonterminal
 
         self._make_grammar()
@@ -94,7 +84,6 @@ class Grammar(object):
 
             # A named token (e.g. NAME, NUMBER, STRING)
             token_type = getattr(self._token_namespace, label, None)
-            self.tokens[token_type] = token_type
             return token_type
         else:
             # Either a keyword or an operator
