@@ -192,7 +192,6 @@ class PgenParser(object):
         # creating a new node.  We still create expr_stmt and
         # file_input though, because a lot of Jedi depends on its
         # logic.
-        print(tos.nodes)
         if len(tos.nodes) == 1:
             new_node = tos.nodes[0]
         else:
