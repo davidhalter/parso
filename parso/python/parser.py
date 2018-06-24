@@ -1,7 +1,6 @@
 from parso.python import tree
 from parso.python.token import PythonTokenTypes
 from parso.parser import BaseParser
-from parso.pgen2.parse import token_to_ilabel
 
 
 NAME = PythonTokenTypes.NAME
@@ -163,9 +162,8 @@ class Parser(BaseParser):
             # end of a file, we have to recover even if the user doesn't want
             # error recovery.
             if stack[-1].dfa.from_rule == 'simple_stmt':
-                ilabel = token_to_ilabel(pgen_grammar, PythonTokenTypes.NEWLINE, value)
                 try:
-                    plan = stack[-1].dfa.ilabel_to_plan[ilabel]
+                    plan = stack[-1].dfa.ilabel_to_plan[PythonTokenTypes.NEWLINE]
                 except KeyError:
                     pass
                 else:
