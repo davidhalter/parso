@@ -1,7 +1,5 @@
 from parso.python import tree
-from parso.python.token import (DEDENT, INDENT, ENDMARKER, NEWLINE, NUMBER,
-                                STRING, tok_name, NAME, FSTRING_STRING,
-                                FSTRING_START, FSTRING_END)
+from parso.python.token import PythonTokenTypes
 from parso.parser import BaseParser
 from parso.pgen2.parse import token_to_ilabel
 
@@ -53,17 +51,18 @@ class Parser(BaseParser):
 
     # Names/Keywords are handled separately
     _leaf_map = {
-        STRING: tree.String,
-        NUMBER: tree.Number,
-        NEWLINE: tree.Newline,
-        ENDMARKER: tree.EndMarker,
-        FSTRING_STRING: tree.FStringString,
-        FSTRING_START: tree.FStringStart,
-        FSTRING_END: tree.FStringEnd,
+        PythonTokenTypes.STRING: tree.String,
+        PythonTokenTypes.NUMBER: tree.Number,
+        PythonTokenTypes.NEWLINE: tree.Newline,
+        PythonTokenTypes.ENDMARKER: tree.EndMarker,
+        PythonTokenTypes.FSTRING_STRING: tree.FStringString,
+        PythonTokenTypes.FSTRING_START: tree.FStringStart,
+        PythonTokenTypes.FSTRING_END: tree.FStringEnd,
     }
 
     def __init__(self, pgen_grammar, error_recovery=True, start_nonterminal='file_input'):
-        super(Parser, self).__init__(pgen_grammar, start_nonterminal, error_recovery=error_recovery)
+        super(Parser, self).__init__(pgen_grammar, start_nonterminal,
+                                     error_recovery=error_recovery)
 
         self.syntax_errors = []
         self._omit_dedent_list = []
@@ -126,7 +125,7 @@ class Parser(BaseParser):
 
     def convert_leaf(self, pgen_grammar, type, value, prefix, start_pos):
         # print('leaf', repr(value), token.tok_name[type])
-        if type == NAME:
+        if type == PythonTokenTypes.NAME:
             if value in pgen_grammar.reserved_syntax_strings:
                 return tree.Keyword(value, start_pos, prefix)
             else:
@@ -143,7 +142,8 @@ class Parser(BaseParser):
             last_leaf = None
 
         if self._start_nonterminal == 'file_input' and \
-                (typ == ENDMARKER or typ == DEDENT and '\n' not in last_leaf.value):
+                (typ == PythonTokenTypes.ENDMARKER or
+                 typ == PythonTokenTypes.DEDENT and '\n' not in last_leaf.value):
             def reduce_stack(states, newstate):
                 # reduce
                 state = newstate
@@ -158,7 +158,7 @@ class Parser(BaseParser):
             # end of a file, we have to recover even if the user doesn't want
             # error recovery.
             if stack[-1].dfa.from_rule == 'simple_stmt':
-                ilabel = token_to_ilabel(pgen_grammar, NEWLINE, value)
+                ilabel = token_to_ilabel(pgen_grammar, PythonTokenTypes.NEWLINE, value)
                 try:
                     plan = stack[-1].dfa.ilabel_to_plan[ilabel]
                 except KeyError:
@@ -199,12 +199,12 @@ class Parser(BaseParser):
         if self._stack_removal(stack, until_index + 1):
             add_token_callback(typ, value, start_pos, prefix)
         else:
-            if typ == INDENT:
+            if typ == PythonTokenTypes.INDENT:
                 # For every deleted INDENT we have to delete a DEDENT as well.
                 # Otherwise the parser will get into trouble and DEDENT too early.
                 self._omit_dedent_list.append(self._indent_counter)
 
-            error_leaf = tree.PythonErrorLeaf(tok_name[typ].lower(), value, start_pos, prefix)
+            error_leaf = tree.PythonErrorLeaf(typ.name, value, start_pos, prefix)
             stack[-1].nodes.append(error_leaf)
 
         tos = stack[-1]
@@ -230,7 +230,7 @@ class Parser(BaseParser):
     def _recovery_tokenize(self, tokens):
         for typ, value, start_pos, prefix in tokens:
             # print(tok_name[typ], repr(value), start_pos, repr(prefix))
-            if typ == DEDENT:
+            if typ == PythonTokenTypes.DEDENT:
                 # We need to count indents, because if we just omit any DEDENT,
                 # we might omit them in the wrong place.
                 o = self._omit_dedent_list
@@ -239,6 +239,6 @@ class Parser(BaseParser):
                     continue
 
                 self._indent_counter -= 1
-            elif typ == INDENT:
+            elif typ == PythonTokenTypes.INDENT:
                 self._indent_counter += 1
             yield typ, value, start_pos, prefix

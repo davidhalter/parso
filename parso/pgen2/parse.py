@@ -14,8 +14,6 @@ See Parser/parser.c in the Python distribution for additional info on
 how this parsing engine works.
 """
 
-from parso.python import tokenize
-
 
 class InternalParseError(Exception):
     """
@@ -24,9 +22,9 @@ class InternalParseError(Exception):
     wrong.
     """
 
-    def __init__(self, msg, type, value, start_pos):
+    def __init__(self, msg, type_, value, start_pos):
         Exception.__init__(self, "%s: type=%r, value=%r, start_pos=%r" %
-                           (msg, tokenize.tok_name[type], value, start_pos))
+                           (msg, type_.name, value, start_pos))
         self.msg = msg
         self.type = type
         self.value = value
@@ -69,9 +67,7 @@ class StackNode(object):
 
 def token_to_ilabel(grammar, type_, value):
     # Map from token to label
-    # TODO this is not good, shouldn't use tokenize.NAME, but somehow use the
-    # grammar.
-    if type_ in (tokenize.NAME, tokenize.OP):
+    if type_.contains_syntax:
         # Check for reserved words (keywords)
         try:
             return grammar.reserved_syntax_strings[value]
@@ -196,6 +192,7 @@ class PgenParser(object):
         # creating a new node.  We still create expr_stmt and
         # file_input though, because a lot of Jedi depends on its
         # logic.
+        print(tos.nodes)
         if len(tos.nodes) == 1:
             new_node = tos.nodes[0]
         else:

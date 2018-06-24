@@ -1,18 +1,27 @@
 # -*- coding: utf-8    # This file contains Unicode characters.
 
 from textwrap import dedent
-import tokenize as stdlib_tokenize
 
 import pytest
 
 from parso._compatibility import py_version
 from parso.utils import split_lines, parse_version_string
-from parso.python.token import (
-    NAME, NEWLINE, STRING, INDENT, DEDENT, ERRORTOKEN, ENDMARKER, ERROR_DEDENT,
-    FSTRING_START)
+from parso.python.token import PythonTokenTypes
 from parso.python import tokenize
 from parso import parse
 from parso.python.tokenize import PythonToken
+
+
+# To make it easier to access some of the token types, just put them here.
+NAME = PythonTokenTypes.NAME
+NEWLINE = PythonTokenTypes.NEWLINE
+STRING = PythonTokenTypes.STRING
+INDENT = PythonTokenTypes.INDENT
+DEDENT = PythonTokenTypes.DEDENT
+ERRORTOKEN = PythonTokenTypes.ERRORTOKEN
+ENDMARKER = PythonTokenTypes.ENDMARKER
+ERROR_DEDENT = PythonTokenTypes.ERROR_DEDENT
+FSTRING_START = PythonTokenTypes.FSTRING_START
 
 
 def _get_token_list(string):
@@ -128,7 +137,7 @@ def test_identifier_contains_unicode():
     else:
         # Unicode tokens in Python 2 seem to be identified as operators.
         # They will be ignored in the parser, that's ok.
-        assert unicode_token[0] == tokenize.ERRORTOKEN
+        assert unicode_token[0] == ERRORTOKEN
 
 
 def test_quoted_strings():
@@ -188,17 +197,17 @@ def test_ur_literals():
 
 def test_error_literal():
     error_token, endmarker = _get_token_list('"\n')
-    assert error_token.type == tokenize.ERRORTOKEN
+    assert error_token.type == ERRORTOKEN
     assert endmarker.prefix == ''
     assert error_token.string == '"\n'
-    assert endmarker.type == tokenize.ENDMARKER
+    assert endmarker.type == ENDMARKER
     assert endmarker.prefix == ''
 
     bracket, error_token, endmarker = _get_token_list('( """')
-    assert error_token.type == tokenize.ERRORTOKEN
+    assert error_token.type == ERRORTOKEN
     assert error_token.prefix == ' '
     assert error_token.string == '"""'
-    assert endmarker.type == tokenize.ENDMARKER
+    assert endmarker.type == ENDMARKER
     assert endmarker.prefix == ''
 
 
@@ -236,14 +245,3 @@ def test_error_string():
     assert t1.prefix == ' '
     assert t1.string == '"\n'
     assert endmarker.string == ''
-
-def test_tok_name_copied():
-    # Make sure parso doesn't mutate the standard library
-    tok_len = len(stdlib_tokenize.tok_name)
-    correct_len = stdlib_tokenize.N_TOKENS
-    if 'N_TOKENS' in stdlib_tokenize.tok_name.values(): # Python 3.7
-        correct_len += 1
-    if 'NT_OFFSET' in stdlib_tokenize.tok_name.values(): # Not there in PyPy
-        correct_len += 1
-
-    assert tok_len == correct_len

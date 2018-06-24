@@ -1,47 +1,4 @@
 from __future__ import absolute_import
-from itertools import count
-from token import *
-
-from parso._compatibility import py_version
-
-# Don't mutate the standard library dict
-tok_name = tok_name.copy()
-
-_counter = count(N_TOKENS)
-# Never want to see this thing again.
-del N_TOKENS
-
-COMMENT = next(_counter)
-tok_name[COMMENT] = 'COMMENT'
-
-NL = next(_counter)
-tok_name[NL] = 'NL'
-
-# Sets the attributes that don't exist in these tok_name versions.
-if py_version >= 30:
-    BACKQUOTE = next(_counter)
-    tok_name[BACKQUOTE] = 'BACKQUOTE'
-else:
-    RARROW = next(_counter)
-    tok_name[RARROW] = 'RARROW'
-    ELLIPSIS = next(_counter)
-    tok_name[ELLIPSIS] = 'ELLIPSIS'
-
-if py_version < 35:
-    ATEQUAL = next(_counter)
-    tok_name[ATEQUAL] = 'ATEQUAL'
-
-ERROR_DEDENT = next(_counter)
-tok_name[ERROR_DEDENT] = 'ERROR_DEDENT'
-
-FSTRING_START = next(_counter)
-tok_name[FSTRING_START] = 'FSTRING_START'
-FSTRING_END = next(_counter)
-tok_name[FSTRING_END] = 'FSTRING_END'
-FSTRING_STRING = next(_counter)
-tok_name[FSTRING_STRING] = 'FSTRING_STRING'
-EXCLAMATION = next(_counter)
-tok_name[EXCLAMATION] = 'EXCLAMATION'
 
 # Map from operator to number (since tokenize doesn't do this)
 
@@ -100,7 +57,7 @@ opmap_raw = """\
 opmap = {}
 for line in opmap_raw.splitlines():
     op, name = line.split()
-    opmap[op] = globals()[name]
+    opmap[op] = name
 
 
 def generate_token_id(string):
@@ -115,26 +72,25 @@ def generate_token_id(string):
     return globals()[string]
 
 
-class Token(object):
-    def __init__(self, name):
+class TokenType(object):
+    def __init__(self, name, contains_syntax=False):
         self.name = name
+        self.contains_syntax = contains_syntax
 
     def __repr__(self):
         return '%s(%s)' % (self.__class__.__name__, self.name)
 
 
-class Tokens(object):
+class TokenTypes(object):
     """
     Basically an enum, but Python 2 doesn't have enums in the standard library.
     """
     def __init__(self, names, contains_syntax):
         for name in names:
-            setattr(self, name, Token(name))
-
-        self.contains_syntax = [getattr(self, name) for name in contains_syntax]
+            setattr(self, name, TokenType(name, contains_syntax=name in contains_syntax))
 
 
-PythonTokens = Tokens((
+PythonTokenTypes = TokenTypes((
     'STRING', 'NUMBER', 'NAME', 'ERRORTOKEN', 'NEWLINE', 'INDENT', 'DEDENT',
     'ERROR_DEDENT', 'FSTRING_STRING', 'FSTRING_START', 'FSTRING_END', 'OP',
     'ENDMARKER'),

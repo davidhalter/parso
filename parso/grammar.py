@@ -6,7 +6,7 @@ from parso.pgen2.pgen import generate_grammar
 from parso.utils import split_lines, python_bytes_to_unicode, parse_version_string
 from parso.python.diff import DiffParser
 from parso.python.tokenize import tokenize_lines, tokenize
-from parso.python import token
+from parso.python.token import PythonTokenTypes
 from parso.cache import parser_cache, load_module, save_module
 from parso.parser import BaseParser
 from parso.python.parser import Parser as PythonParser
@@ -193,7 +193,7 @@ class Grammar(object):
 
 class PythonGrammar(Grammar):
     _error_normalizer_config = ErrorFinderConfig()
-    _token_namespace = token
+    _token_namespace = PythonTokenTypes
     _start_nonterminal = 'file_input'
 
     def __init__(self, version_info, bnf_text):

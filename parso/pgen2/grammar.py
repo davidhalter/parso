@@ -16,9 +16,6 @@ fallback token code OP, but the parser needs the actual token code.
 
 """
 
-from parso.python import token
-
-
 class DFAPlan(object):
     def __init__(self, next_dfa, dfa_pushes=[]):
         self.next_dfa = next_dfa
@@ -111,7 +108,6 @@ class Grammar(object):
 
             # A named token (e.g. NAME, NUMBER, STRING)
             itoken = getattr(self._token_namespace, label, None)
-            assert isinstance(itoken, int), label
             if itoken in self.tokens:
                 return self.tokens[itoken]
             else:
@@ -126,7 +122,7 @@ class Grammar(object):
             if value in self.reserved_syntax_strings:
                 return self.reserved_syntax_strings[value]
             else:
-                self.labels.append((token.NAME, value))
+                self.labels.append(('XXX', value))
                 self.reserved_syntax_strings[value] = ilabel
                 return self.reserved_syntax_strings[value]
 
