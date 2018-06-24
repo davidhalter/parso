@@ -60,7 +60,6 @@ class Grammar(object):
         self.tokens = {}
         self.start_nonterminal = start_nonterminal
 
-        self._label_cache = {}
         self._make_grammar()
 
     def _make_grammar(self):
@@ -88,18 +87,6 @@ class Grammar(object):
                         ilabel = self._make_label(terminal_or_nonterminal)
                         plans[ilabel] = DFAPlan(next_dfa)
 
-    def _cache_labels(func):
-        def wrapper(self, label):
-            try:
-                return self._label_cache[label]
-            except KeyError:
-                result = func(self, label)
-                self._label_cache[label] = result
-                return result
-
-        return wrapper
-
-    @_cache_labels
     def _make_label(self, label):
         if label[0].isalpha():
             # Either a nonterminal name or a named token
