@@ -16,6 +16,8 @@ fallback token code OP, but the parser needs the actual token code.
 
 """
 
+from ast import literal_eval
+
 
 class DFAPlan(object):
     def __init__(self, next_dfa, dfa_pushes=[]):
@@ -24,6 +26,11 @@ class DFAPlan(object):
 
     def __repr__(self):
         return '%s(%s, %s)' % (self.__class__.__name__, self.next_dfa, self.dfa_pushes)
+
+
+class ReservedString(object):
+    def __init__(self, value):
+        self.value = value
 
 
 class Grammar(object):
@@ -37,13 +44,6 @@ class Grammar(object):
 
     The instance variables are as follows:
 
-    labels        -- a list of (x, y) pairs where x is either a token
-                     number or a nonterminal number, and y is either None
-                     or a string; the strings are keywords.  The label
-                     number is the index in this list; label numbers
-                     are used to mark state transitions (arcs) in the
-                     DFAs.
-
     start         -- the number of the grammar's start nonterminal.
 
     keywords      -- a dict mapping keyword strings to arc labels.
@@ -56,7 +56,6 @@ class Grammar(object):
         self._token_namespace = token_namespace
         self._nonterminal_to_dfas = rule_to_dfas
 
-        self.labels = [(0, "EMPTY")]
         self.reserved_syntax_strings = {}
         self.tokens = {}
         self.start_nonterminal = start_nonterminal
@@ -102,24 +101,24 @@ class Grammar(object):
 
     @_cache_labels
     def _make_label(self, label):
-        ilabel = len(self.labels)
         if label[0].isalpha():
             # Either a nonterminal name or a named token
             assert label not in self._nonterminal_to_dfas
 
             # A named token (e.g. NAME, NUMBER, STRING)
-            itoken = getattr(self._token_namespace, label, None)
-            self.labels.append((itoken, None))
-            self.tokens[itoken] = ilabel
-            return ilabel
+            token_type = getattr(self._token_namespace, label, None)
+            self.tokens[token_type] = token_type
+            return token_type
         else:
             # Either a keyword or an operator
             assert label[0] in ('"', "'"), label
             # TODO use literal_eval instead of a simple eval.
-            value = eval(label)
-            self.labels.append(('XXX', value))
-            self.reserved_syntax_strings[value] = ilabel
-            return self.reserved_syntax_strings[value]
+            value = literal_eval(label)
+            try:
+                return self.reserved_syntax_strings[value]
+            except KeyError:
+                r = self.reserved_syntax_strings[value] = ReservedString(value)
+                return r
 
     def _calculate_first_terminals(self, nonterminal):
         dfas = self._nonterminal_to_dfas[nonterminal]
