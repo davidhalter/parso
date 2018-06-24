@@ -127,7 +127,7 @@ class Parser(BaseParser):
     def convert_leaf(self, pgen_grammar, type, value, prefix, start_pos):
         # print('leaf', repr(value), token.tok_name[type])
         if type == NAME:
-            if value in pgen_grammar.keywords:
+            if value in pgen_grammar.reserved_syntax_strings:
                 return tree.Keyword(value, start_pos, prefix)
             else:
                 return tree.Name(value, start_pos, prefix)

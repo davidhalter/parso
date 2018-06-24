@@ -59,7 +59,7 @@ class Grammar(object):
         self._nonterminal_to_dfas = rule_to_dfas
 
         self.labels = [(0, "EMPTY")]
-        self.keywords = {}
+        self.reserved_syntax_strings = {}
         self.tokens = {}
         self.start_nonterminal = start_nonterminal
 
@@ -104,7 +104,6 @@ class Grammar(object):
 
     #@_cache_labels
     def _make_label(self, label):
-        # XXX Maybe this should be a method on a subclass of converter?
         ilabel = len(self.labels)
         if label[0].isalpha():
             # Either a nonterminal name or a named token
@@ -124,23 +123,12 @@ class Grammar(object):
             assert label[0] in ('"', "'"), label
             # TODO use literal_eval instead of a simple eval.
             value = eval(label)
-            if value[0].isalpha():
-                # A keyword
-                if value in self.keywords:
-                    return self.keywords[value]
-                else:
-                    self.labels.append((token.NAME, value))
-                    self.keywords[value] = ilabel
-                    return ilabel
+            if value in self.reserved_syntax_strings:
+                return self.reserved_syntax_strings[value]
             else:
-                # An operator (any non-numeric token)
-                itoken = self._token_namespace.generate_token_id(value)
-                if itoken in self.tokens:
-                    return self.tokens[itoken]
-                else:
-                    self.labels.append((itoken, None))
-                    self.tokens[itoken] = ilabel
-                    return ilabel
+                self.labels.append((token.NAME, value))
+                self.reserved_syntax_strings[value] = ilabel
+                return self.reserved_syntax_strings[value]
 
     def _calculate_first_terminals(self, nonterminal):
         dfas = self._nonterminal_to_dfas[nonterminal]

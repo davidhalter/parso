@@ -30,7 +30,7 @@ class GrammarParser():
 
             # rule: NAME ':' rhs NEWLINE
             self._current_rule_name = self._expect(token.NAME)
-            self._expect(token.COLON)
+            self._expect(token.OP, ':')
 
             a, z = self._parse_rhs()
             self._expect(token.NEWLINE)
@@ -60,7 +60,7 @@ class GrammarParser():
     def _parse_items(self):
         # items: item+
         a, b = self._parse_item()
-        while self.type in (token.NAME, token.STRING, token.LPAR, token.LSQB):
+        while self.type in (token.NAME, token.STRING) or self.value in ('(', '['):
             c, d = self._parse_item()
             # Need to end on the next item.
             b.add_arc(c)
@@ -72,7 +72,7 @@ class GrammarParser():
         if self.value == "[":
             self._gettoken()
             a, z = self._parse_rhs()
-            self._expect(token.RSQB)
+            self._expect(token.OP, ']')
             # Make it also possible that there is no token and change the
             # state.
             a.add_arc(z)
@@ -97,7 +97,7 @@ class GrammarParser():
         if self.value == "(":
             self._gettoken()
             a, z = self._parse_rhs()
-            self._expect(token.RPAR)
+            self._expect(token.OP, ')')
             return a, z
         elif self.type in (token.NAME, token.STRING):
             a = NFAState(self._current_rule_name)
@@ -110,10 +110,12 @@ class GrammarParser():
             self._raise_error("expected (...) or NAME or STRING, got %s/%s",
                               self.type, self.value)
 
-    def _expect(self, type):
+    def _expect(self, type, value=None):
         if self.type != type:
             self._raise_error("expected %s(%s), got %s(%s)",
                               type, token.tok_name[type], self.type, self.value)
+        if value is not None and self.value != value:
+            self._raise_error("expected %s, got %s", value, self.value)
         value = self.value
         self._gettoken()
         return value

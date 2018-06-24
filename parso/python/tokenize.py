@@ -21,7 +21,7 @@ from codecs import BOM_UTF8
 from parso.python.token import (tok_name, ENDMARKER, STRING, NUMBER, opmap,
                                 NAME, ERRORTOKEN, NEWLINE, INDENT, DEDENT,
                                 ERROR_DEDENT, FSTRING_STRING, FSTRING_START,
-                                FSTRING_END)
+                                FSTRING_END, OP)
 from parso._compatibility import py_version
 from parso.utils import split_lines
 
@@ -574,7 +574,8 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                 try:
                     # This check is needed in any case to check if it's a valid
                     # operator or just some random unicode character.
-                    typ = opmap[token]
+                    opmap[token]
+                    typ = OP
                 except KeyError:
                     typ = ERRORTOKEN
                 yield PythonToken(typ, token, spos, prefix)

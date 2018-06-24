@@ -71,10 +71,10 @@ def token_to_ilabel(grammar, type_, value):
     # Map from token to label
     # TODO this is not good, shouldn't use tokenize.NAME, but somehow use the
     # grammar.
-    if type_ == tokenize.NAME:
+    if type_ in (tokenize.NAME, tokenize.OP):
         # Check for reserved words (keywords)
         try:
-            return grammar.keywords[value]
+            return grammar.reserved_syntax_strings[value]
         except KeyError:
             pass
 
