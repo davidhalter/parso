@@ -12,6 +12,8 @@ import pytest
 
 from parso import load_grammar
 from parso import ParserSyntaxError
+from parso.pgen2.pgen import generate_grammar
+from parso.python import tokenize
 
 
 def _parse(code, version=None):
@@ -270,3 +272,13 @@ def py_br(each_version):
 def test_py3_rb(works_ge_py3):
     works_ge_py3.parse("rb'1'")
     works_ge_py3.parse("RB'1'")
+
+
+def test_left_recursion():
+    with pytest.raises(ValueError, match='left recursion'):
+        generate_grammar('foo: foo NAME\n', tokenize.PythonTokenTypes)
+
+
+def test_ambiguities():
+    with pytest.raises(ValueError, match='ambiguous'):
+        generate_grammar('foo: bar | baz\nbar: NAME\nbaz: NAME\n', tokenize.PythonTokenTypes)

@@ -99,7 +99,7 @@ class Grammar(object):
     def _calculate_first_terminals(self, nonterminal):
         dfas = self._nonterminal_to_dfas[nonterminal]
         self._first_terminals[nonterminal] = None  # dummy to detect left recursion
-        self._first_plans[nonterminal] = {}
+        first_plans = self._first_plans[nonterminal] = {}
         # We only need to check the first dfa. All the following ones are not
         # interesting to find first terminals.
         state = dfas[0]
@@ -121,13 +121,19 @@ class Grammar(object):
                 overlapcheck[nonterminal_or_string] = fset
 
                 for t, pushes in self._first_plans[nonterminal_or_string].items():
-                    assert not self._first_plans[nonterminal].get(t)
-                    self._first_plans[nonterminal][t] = [next_] + pushes
+                    check = first_plans.get(t)
+                    if check is not None:
+                        raise ValueError(
+                            "Rule %s is ambiguous; %s is the"
+                            " start of the rule %s as well as %s."
+                            % (nonterminal, t, nonterminal_or_string, check[-1].from_rule)
+                        )
+                    first_plans[t] = [next_] + pushes
             else:
                 # It's a string. We have finally found a possible first token.
                 totalset.add(nonterminal_or_string)
                 overlapcheck[nonterminal_or_string] = set([nonterminal_or_string])
-                self._first_plans[nonterminal][nonterminal_or_string] = [next_]
+                first_plans[nonterminal_or_string] = [next_]
 
         inverse = {}
         for nonterminal_or_string, first_set in overlapcheck.items():
