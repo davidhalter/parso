@@ -16,6 +16,7 @@ fallback token code OP, but the parser needs the actual token code.
 
 """
 
+
 class DFAPlan(object):
     def __init__(self, next_dfa, dfa_pushes=[]):
         self.next_dfa = next_dfa
@@ -99,7 +100,7 @@ class Grammar(object):
 
         return wrapper
 
-    #@_cache_labels
+    @_cache_labels
     def _make_label(self, label):
         ilabel = len(self.labels)
         if label[0].isalpha():
@@ -108,23 +109,17 @@ class Grammar(object):
 
             # A named token (e.g. NAME, NUMBER, STRING)
             itoken = getattr(self._token_namespace, label, None)
-            if itoken in self.tokens:
-                return self.tokens[itoken]
-            else:
-                self.labels.append((itoken, None))
-                self.tokens[itoken] = ilabel
-                return ilabel
+            self.labels.append((itoken, None))
+            self.tokens[itoken] = ilabel
+            return ilabel
         else:
             # Either a keyword or an operator
             assert label[0] in ('"', "'"), label
             # TODO use literal_eval instead of a simple eval.
             value = eval(label)
-            if value in self.reserved_syntax_strings:
-                return self.reserved_syntax_strings[value]
-            else:
-                self.labels.append(('XXX', value))
-                self.reserved_syntax_strings[value] = ilabel
-                return self.reserved_syntax_strings[value]
+            self.labels.append(('XXX', value))
+            self.reserved_syntax_strings[value] = ilabel
+            return self.reserved_syntax_strings[value]
 
     def _calculate_first_terminals(self, nonterminal):
         dfas = self._nonterminal_to_dfas[nonterminal]
