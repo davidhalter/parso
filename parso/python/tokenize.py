@@ -18,7 +18,7 @@ from collections import namedtuple
 import itertools as _itertools
 from codecs import BOM_UTF8
 
-from parso.python.token import PythonTokenTypes, opmap
+from parso.python.token import PythonTokenTypes
 from parso._compatibility import py_version
 from parso.utils import split_lines
 
@@ -567,14 +567,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                         and fstring_stack[-1].parentheses_count == 1:
                     fstring_stack[-1].format_spec_count += 1
 
-                try:
-                    # This check is needed in any case to check if it's a valid
-                    # operator or just some random unicode character.
-                    opmap[token]
-                    typ = PythonTokenTypes.OP
-                except KeyError:
-                    typ = PythonTokenTypes.ERRORTOKEN
-                yield PythonToken(typ, token, spos, prefix)
+                yield PythonToken(PythonTokenTypes.OP, token, spos, prefix)
 
     if contstr:
         yield PythonToken(PythonTokenTypes.ERRORTOKEN, contstr, contstr_start, prefix)
