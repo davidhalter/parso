@@ -23,6 +23,20 @@ from parso._compatibility import py_version
 from parso.utils import split_lines
 
 
+STRING = PythonTokenTypes.STRING
+NAME = PythonTokenTypes.NAME
+NUMBER = PythonTokenTypes.NUMBER
+OP = PythonTokenTypes.OP
+NEWLINE = PythonTokenTypes.NEWLINE
+INDENT = PythonTokenTypes.INDENT
+DEDENT = PythonTokenTypes.DEDENT
+ENDMARKER = PythonTokenTypes.ENDMARKER
+ERRORTOKEN = PythonTokenTypes.ERRORTOKEN
+ERROR_DEDENT = PythonTokenTypes.ERROR_DEDENT
+FSTRING_START = PythonTokenTypes.FSTRING_START
+FSTRING_STRING = PythonTokenTypes.FSTRING_STRING
+FSTRING_END = PythonTokenTypes.FSTRING_END
+
 TokenCollection = namedtuple(
     'TokenCollection',
     'pseudo_token single_quoted triple_quoted endpats whitespace '
@@ -391,7 +405,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
             if endmatch:
                 pos = endmatch.end(0)
                 yield PythonToken(
-                    PythonTokenTypes.STRING, contstr + line[:pos],
+                    STRING, contstr + line[:pos],
                     contstr_start, prefix)
                 contstr = ''
                 contline = None
@@ -405,7 +419,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                 string, pos = _find_fstring_string(fstring_stack, line, lnum, pos)
                 if string:
                     yield PythonToken(
-                        PythonTokenTypes.FSTRING_STRING, string,
+                        FSTRING_STRING, string,
                         fstring_stack[-1].last_string_start_pos,
                         # Never has a prefix because it can start anywhere and
                         # include whitespace.
@@ -422,7 +436,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
 
                 if fstring_index is not None:
                     yield PythonToken(
-                        PythonTokenTypes.FSTRING_END,
+                        FSTRING_END,
                         fstring_stack[fstring_index].quote,
                         (lnum, pos),
                         prefix=additional_prefix,
@@ -439,7 +453,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                 match = whitespace.match(line, pos)
                 pos = match.end()
                 yield PythonToken(
-                    PythonTokenTypes.ERRORTOKEN, line[pos:], (lnum, pos),
+                    ERRORTOKEN, line[pos:], (lnum, pos),
                     additional_prefix + match.group(0)
                 )
                 additional_prefix = ''
@@ -467,24 +481,24 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                         # TODO don't we need to change spos as well?
                         start -= 1
                     if start > indents[-1]:
-                        yield PythonToken(PythonTokenTypes.INDENT, '', spos, '')
+                        yield PythonToken(INDENT, '', spos, '')
                         indents.append(start)
                     while start < indents[-1]:
                         if start > indents[-2]:
-                            yield PythonToken(PythonTokenTypes.ERROR_DEDENT, '', (lnum, 0), '')
+                            yield PythonToken(ERROR_DEDENT, '', (lnum, 0), '')
                             break
-                        yield PythonToken(PythonTokenTypes.DEDENT, '', spos, '')
+                        yield PythonToken(DEDENT, '', spos, '')
                         indents.pop()
 
             if fstring_stack:
                 fstring_index, end = _check_fstring_ending(fstring_stack, token)
                 if fstring_index is not None:
                     if end != 0:
-                        yield PythonToken(PythonTokenTypes.ERRORTOKEN, token[:end], spos, prefix)
+                        yield PythonToken(ERRORTOKEN, token[:end], spos, prefix)
                         prefix = ''
 
                     yield PythonToken(
-                        PythonTokenTypes.FSTRING_END,
+                        FSTRING_END,
                         fstring_stack[fstring_index].quote,
                         (lnum, spos[1] + 1),
                         prefix=prefix
@@ -495,7 +509,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
 
             if (initial in numchars or                      # ordinary number
                     (initial == '.' and token != '.' and token != '...')):
-                yield PythonToken(PythonTokenTypes.NUMBER, token, spos, prefix)
+                yield PythonToken(NUMBER, token, spos, prefix)
             elif initial in '\r\n':
                 if any(not f.allow_multiline() for f in fstring_stack):
                     # Would use fstring_stack.clear, but that's not available
@@ -503,7 +517,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                     fstring_stack[:] = []
 
                 if not new_line and paren_level == 0 and not fstring_stack:
-                    yield PythonToken(PythonTokenTypes.NEWLINE, token, spos, prefix)
+                    yield PythonToken(NEWLINE, token, spos, prefix)
                 else:
                     additional_prefix = prefix + token
                 new_line = True
@@ -516,7 +530,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                 if endmatch:                                # all on one line
                     pos = endmatch.end(0)
                     token = line[start:pos]
-                    yield PythonToken(PythonTokenTypes.STRING, token, spos, prefix)
+                    yield PythonToken(STRING, token, spos, prefix)
                 else:
                     contstr_start = (lnum, start)           # multiple lines
                     contstr = line[start:]
@@ -533,10 +547,10 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                     contline = line
                     break
                 else:                                       # ordinary string
-                    yield PythonToken(PythonTokenTypes.STRING, token, spos, prefix)
+                    yield PythonToken(STRING, token, spos, prefix)
             elif token in fstring_pattern_map:  # The start of an fstring.
                 fstring_stack.append(FStringNode(fstring_pattern_map[token]))
-                yield PythonToken(PythonTokenTypes.FSTRING_START, token, spos, prefix)
+                yield PythonToken(FSTRING_START, token, spos, prefix)
             elif is_identifier(initial):                      # ordinary name
                 if token in always_break_tokens:
                     fstring_stack[:] = []
@@ -544,11 +558,11 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                     while True:
                         indent = indents.pop()
                         if indent > start:
-                            yield PythonToken(PythonTokenTypes.DEDENT, '', spos, '')
+                            yield PythonToken(DEDENT, '', spos, '')
                         else:
                             indents.append(indent)
                             break
-                yield PythonToken(PythonTokenTypes.NAME, token, spos, prefix)
+                yield PythonToken(NAME, token, spos, prefix)
             elif initial == '\\' and line[start:] in ('\\\n', '\\\r\n'):  # continued stmt
                 additional_prefix += prefix + line[start:]
                 break
@@ -567,10 +581,10 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                         and fstring_stack[-1].parentheses_count == 1:
                     fstring_stack[-1].format_spec_count += 1
 
-                yield PythonToken(PythonTokenTypes.OP, token, spos, prefix)
+                yield PythonToken(OP, token, spos, prefix)
 
     if contstr:
-        yield PythonToken(PythonTokenTypes.ERRORTOKEN, contstr, contstr_start, prefix)
+        yield PythonToken(ERRORTOKEN, contstr, contstr_start, prefix)
         if contstr.endswith('\n'):
             new_line = True
 
@@ -578,8 +592,8 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
     # As the last position we just take the maximally possible position. We
     # remove -1 for the last new line.
     for indent in indents[1:]:
-        yield PythonToken(PythonTokenTypes.DEDENT, '', end_pos, '')
-    yield PythonToken(PythonTokenTypes.ENDMARKER, '', end_pos, additional_prefix)
+        yield PythonToken(DEDENT, '', end_pos, '')
+    yield PythonToken(ENDMARKER, '', end_pos, additional_prefix)
 
 
 if __name__ == "__main__":
