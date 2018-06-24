@@ -113,3 +113,30 @@ def generate_token_id(string):
     except KeyError:
         pass
     return globals()[string]
+
+
+class Token(object):
+    def __init__(self, name):
+        self.name = name
+
+    def __repr__(self):
+        return '%s(%s)' % (self.__class__.__name__, self.name)
+
+
+class Tokens(object):
+    """
+    Basically an enum, but Python 2 doesn't have enums in the standard library.
+    """
+    def __init__(self, names, contains_syntax):
+        for name in names:
+            setattr(self, name, Token(name))
+
+        self.contains_syntax = [getattr(self, name) for name in contains_syntax]
+
+
+PythonTokens = Tokens((
+    'STRING', 'NUMBER', 'NAME', 'ERRORTOKEN', 'NEWLINE', 'INDENT', 'DEDENT',
+    'ERROR_DEDENT', 'FSTRING_STRING', 'FSTRING_START', 'FSTRING_END', 'OP',
+    'ENDMARKER'),
+    contains_syntax=('NAME', 'OP'),
+)
