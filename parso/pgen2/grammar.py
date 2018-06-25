@@ -63,7 +63,6 @@ class Grammar(object):
                 for nonterminal, next_dfa in dfa_state.nonterminal_arcs.items():
                     for transition, pushes in self._first_plans[nonterminal].items():
                         dfa_state.ilabel_to_plan[transition] = DFAPlan(next_dfa, pushes)
-                #print(dfa_state.from_rule, dfa_state.ilabel_to_plan)
 
     def _calculate_first_terminals(self, nonterminal):
         dfas = self._nonterminal_to_dfas[nonterminal]
@@ -73,11 +72,9 @@ class Grammar(object):
         # interesting to find first terminals.
         state = dfas[0]
         totalset = set()
-        overlapcheck = {}
         for transition, next_ in state.ilabel_to_plan.items():
             # It's a string. We have finally found a possible first token.
             totalset.add(transition)
-            #overlapcheck[nonterminal] = set([transition])
             first_plans[transition] = [next_.next_dfa]
 
         for nonterminal2, next_ in state.nonterminal_arcs.items():
@@ -92,7 +89,6 @@ class Grammar(object):
                 if fset is None:
                     raise ValueError("left recursion for rule %r" % nonterminal)
             totalset.update(fset)
-            overlapcheck[nonterminal2] = fset
 
             for t, pushes in self._first_plans[nonterminal2].items():
                 check = first_plans.get(t)
@@ -104,12 +100,4 @@ class Grammar(object):
                     )
                 first_plans[t] = [next_] + pushes
 
-        inverse = {}
-        for nonterminal_or_string, first_set in overlapcheck.items():
-            for terminal in first_set:
-                if terminal in inverse:
-                    raise ValueError("rule %s is ambiguous; %s is in the"
-                                     " first sets of %s as well as %s" %
-                                     (nonterminal, terminal, nonterminal_or_string, inverse[terminal]))
-                inverse[terminal] = nonterminal_or_string
         self._first_terminals[nonterminal] = totalset
