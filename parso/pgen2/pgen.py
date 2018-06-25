@@ -18,7 +18,9 @@ Specifying grammars in pgen is possible with this grammar::
 This grammar is self-referencing.
 """
 
-from parso.pgen2.grammar import Grammar
+from ast import literal_eval
+
+from parso.pgen2.grammar import Grammar, DFAPlan
 from parso.pgen2.grammar_parser import GrammarParser, NFAState
 
 
@@ -32,6 +34,7 @@ class DFAState(object):
         self.is_final = final in nfa_set
         self.arcs = {}  # map from terminals/nonterminals to DFAState
         self.ilabel_to_plan = {}
+        self.nonterminal_arcs = {}
 
     def add_arc(self, next_, label):
         assert isinstance(label, str)
@@ -64,6 +67,14 @@ class DFAState(object):
         return '<%s: %s is_final=%s>' % (
             self.__class__.__name__, self.from_rule, self.is_final
         )
+
+
+class ReservedString(object):
+    def __init__(self, value):
+        self.value = value
+
+    def __repr__(self):
+        return '%s(%s)' % (self.__class__.__name__, self.value)
 
 
 def _simplify_dfas(dfas):
@@ -184,4 +195,35 @@ def generate_grammar(bnf_grammar, token_namespace):
         if start_nonterminal is None:
             start_nonterminal = nfa_a.from_rule
 
-    return Grammar(bnf_grammar, start_nonterminal, rule_to_dfas, token_namespace)
+    reserved_strings = {}
+    for nonterminal, dfas in rule_to_dfas.items():
+        for dfa_state in dfas:
+            for terminal_or_nonterminal, next_dfa in dfa_state.arcs.items():
+                if terminal_or_nonterminal in rule_to_dfas:
+                    dfa_state.nonterminal_arcs[terminal_or_nonterminal] = next_dfa
+                else:
+                    transition = _make_transition(
+                        token_namespace,
+                        reserved_strings,
+                        terminal_or_nonterminal
+                    )
+                    dfa_state.ilabel_to_plan[transition] = DFAPlan(next_dfa)
+
+    return Grammar(bnf_grammar, start_nonterminal, rule_to_dfas, reserved_strings)
+
+
+def _make_transition(token_namespace, reserved_syntax_strings, label):
+    if label[0].isalpha():
+        # A named token (e.g. NAME, NUMBER, STRING)
+        return getattr(token_namespace, label)
+    else:
+        # Either a keyword or an operator
+        assert label[0] in ('"', "'"), label
+        assert not label.startswith('"""') and not label.startswith("'''")
+        # TODO use literal_eval instead of a simple eval.
+        value = literal_eval(label)
+        try:
+            return reserved_syntax_strings[value]
+        except KeyError:
+            r = reserved_syntax_strings[value] = ReservedString(value)
+            return r

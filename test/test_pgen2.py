@@ -282,3 +282,6 @@ def test_left_recursion():
 def test_ambiguities():
     with pytest.raises(ValueError, match='ambiguous'):
         generate_grammar('foo: bar | baz\nbar: NAME\nbaz: NAME\n', tokenize.PythonTokenTypes)
+
+    with pytest.raises(ValueError, match='ambiguous'):
+        generate_grammar('''foo: bar | baz\nbar: 'x'\nbaz: "x"\n''', tokenize.PythonTokenTypes)

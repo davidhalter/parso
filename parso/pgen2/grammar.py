@@ -16,8 +16,6 @@ fallback token code OP, but the parser needs the actual token code.
 
 """
 
-from ast import literal_eval
-
 
 class DFAPlan(object):
     def __init__(self, next_dfa, dfa_pushes=[]):
@@ -26,11 +24,6 @@ class DFAPlan(object):
 
     def __repr__(self):
         return '%s(%s, %s)' % (self.__class__.__name__, self.next_dfa, self.dfa_pushes)
-
-
-class ReservedString(object):
-    def __init__(self, value):
-        self.value = value
 
 
 class Grammar(object):
@@ -43,11 +36,10 @@ class Grammar(object):
     do this (see the conv and pgen modules).
     """
 
-    def __init__(self, bnf_grammar, start_nonterminal, rule_to_dfas, token_namespace):
-        self._token_namespace = token_namespace
+    def __init__(self, bnf_grammar, start_nonterminal, rule_to_dfas, reserved_syntax_strings):
         self._nonterminal_to_dfas = rule_to_dfas
 
-        self.reserved_syntax_strings = {}
+        self.reserved_syntax_strings = reserved_syntax_strings
         self.start_nonterminal = start_nonterminal
 
         self._make_grammar()
@@ -68,33 +60,10 @@ class Grammar(object):
 
         for dfas in self._nonterminal_to_dfas.values():
             for dfa_state in dfas:
-                dfa_state.ilabel_to_plan = plans = {}
-                for terminal_or_nonterminal, next_dfa in dfa_state.arcs.items():
-                    if terminal_or_nonterminal in self._nonterminal_to_dfas:
-                        for t, pushes in self._first_plans[terminal_or_nonterminal].items():
-                            plans[self._make_label(t)] = DFAPlan(next_dfa, pushes)
-                    else:
-                        ilabel = self._make_label(terminal_or_nonterminal)
-                        plans[ilabel] = DFAPlan(next_dfa)
-
-    def _make_label(self, label):
-        if label[0].isalpha():
-            # Either a nonterminal name or a named token
-            assert label not in self._nonterminal_to_dfas
-
-            # A named token (e.g. NAME, NUMBER, STRING)
-            token_type = getattr(self._token_namespace, label, None)
-            return token_type
-        else:
-            # Either a keyword or an operator
-            assert label[0] in ('"', "'"), label
-            # TODO use literal_eval instead of a simple eval.
-            value = literal_eval(label)
-            try:
-                return self.reserved_syntax_strings[value]
-            except KeyError:
-                r = self.reserved_syntax_strings[value] = ReservedString(value)
-                return r
+                for nonterminal, next_dfa in dfa_state.nonterminal_arcs.items():
+                    for transition, pushes in self._first_plans[nonterminal].items():
+                        dfa_state.ilabel_to_plan[transition] = DFAPlan(next_dfa, pushes)
+                #print(dfa_state.from_rule, dfa_state.ilabel_to_plan)
 
     def _calculate_first_terminals(self, nonterminal):
         dfas = self._nonterminal_to_dfas[nonterminal]
@@ -105,35 +74,35 @@ class Grammar(object):
         state = dfas[0]
         totalset = set()
         overlapcheck = {}
-        for nonterminal_or_string, next_ in state.arcs.items():
-            if nonterminal_or_string in self._nonterminal_to_dfas:
-                # It's a nonterminal and we have either a left recursion issue
-                # in the grammar or we have to recurse.
-                try:
-                    fset = self._first_terminals[nonterminal_or_string]
-                except KeyError:
-                    self._calculate_first_terminals(nonterminal_or_string)
-                    fset = self._first_terminals[nonterminal_or_string]
-                else:
-                    if fset is None:
-                        raise ValueError("left recursion for rule %r" % nonterminal)
-                totalset.update(fset)
-                overlapcheck[nonterminal_or_string] = fset
+        for transition, next_ in state.ilabel_to_plan.items():
+            # It's a string. We have finally found a possible first token.
+            totalset.add(transition)
+            #overlapcheck[nonterminal] = set([transition])
+            first_plans[transition] = [next_.next_dfa]
 
-                for t, pushes in self._first_plans[nonterminal_or_string].items():
-                    check = first_plans.get(t)
-                    if check is not None:
-                        raise ValueError(
-                            "Rule %s is ambiguous; %s is the"
-                            " start of the rule %s as well as %s."
-                            % (nonterminal, t, nonterminal_or_string, check[-1].from_rule)
-                        )
-                    first_plans[t] = [next_] + pushes
+        for nonterminal2, next_ in state.nonterminal_arcs.items():
+            # It's a nonterminal and we have either a left recursion issue
+            # in the grammar or we have to recurse.
+            try:
+                fset = self._first_terminals[nonterminal2]
+            except KeyError:
+                self._calculate_first_terminals(nonterminal2)
+                fset = self._first_terminals[nonterminal2]
             else:
-                # It's a string. We have finally found a possible first token.
-                totalset.add(nonterminal_or_string)
-                overlapcheck[nonterminal_or_string] = set([nonterminal_or_string])
-                first_plans[nonterminal_or_string] = [next_]
+                if fset is None:
+                    raise ValueError("left recursion for rule %r" % nonterminal)
+            totalset.update(fset)
+            overlapcheck[nonterminal2] = fset
+
+            for t, pushes in self._first_plans[nonterminal2].items():
+                check = first_plans.get(t)
+                if check is not None:
+                    raise ValueError(
+                        "Rule %s is ambiguous; %s is the"
+                        " start of the rule %s as well as %s."
+                        % (nonterminal, t, nonterminal2, check[-1].from_rule)
+                    )
+                first_plans[t] = [next_] + pushes
 
         inverse = {}
         for nonterminal_or_string, first_set in overlapcheck.items():
