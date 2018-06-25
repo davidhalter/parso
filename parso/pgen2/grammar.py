@@ -71,10 +71,8 @@ class Grammar(object):
         # We only need to check the first dfa. All the following ones are not
         # interesting to find first terminals.
         state = dfas[0]
-        totalset = set()
         for transition, next_ in state.ilabel_to_plan.items():
             # It's a string. We have finally found a possible first token.
-            totalset.add(transition)
             first_plans[transition] = [next_.next_dfa]
 
         for nonterminal2, next_ in state.nonterminal_arcs.items():
@@ -84,11 +82,9 @@ class Grammar(object):
                 fset = self._first_terminals[nonterminal2]
             except KeyError:
                 self._calculate_first_terminals(nonterminal2)
-                fset = self._first_terminals[nonterminal2]
             else:
                 if fset is None:
                     raise ValueError("left recursion for rule %r" % nonterminal)
-            totalset.update(fset)
 
             for t, pushes in self._first_plans[nonterminal2].items():
                 check = first_plans.get(t)
@@ -100,4 +96,4 @@ class Grammar(object):
                     )
                 first_plans[t] = [next_] + pushes
 
-        self._first_terminals[nonterminal] = totalset
+        self._first_terminals[nonterminal] = 1
