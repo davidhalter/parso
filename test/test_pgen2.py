@@ -285,3 +285,6 @@ def test_ambiguities():
 
     with pytest.raises(ValueError, match='ambiguous'):
         generate_grammar('''foo: bar | baz\nbar: 'x'\nbaz: "x"\n''', tokenize.PythonTokenTypes)
+
+    with pytest.raises(ValueError, match='ambiguous'):
+        generate_grammar('''foo: bar | 'x'\nbar: 'x'\n''', tokenize.PythonTokenTypes)

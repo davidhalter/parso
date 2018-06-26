@@ -282,6 +282,10 @@ def _calculate_first_plans(nonterminal_to_dfas, first_plans, nonterminal):
     # We only need to check the first dfa. All the following ones are not
     # interesting to find first terminals.
     state = dfas[0]
+    for transition, next_ in state.ilabel_to_plan.items():
+        # It's a string. We have finally found a possible first token.
+        new_first_plans[transition] = [next_.next_dfa]
+
     for nonterminal2, next_ in state.nonterminal_arcs.items():
         # It's a nonterminal and we have either a left recursion issue
         # in the grammar or we have to recurse.
@@ -302,10 +306,6 @@ def _calculate_first_plans(nonterminal_to_dfas, first_plans, nonterminal):
                     % (nonterminal, t, nonterminal2, check[-1].from_rule)
                 )
             new_first_plans[t] = [next_] + pushes
-
-    for transition, next_ in state.ilabel_to_plan.items():
-        # It's a string. We have finally found a possible first token.
-        new_first_plans[transition] = [next_.next_dfa]
 
     first_plans[nonterminal] = new_first_plans
     return new_first_plans
