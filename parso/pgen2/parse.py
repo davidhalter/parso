@@ -157,13 +157,13 @@ class PgenParser(object):
 
     def add_token(self, type_, value, start_pos, prefix):
         """Add a token; return True if this is the end of the program."""
-        ilabel = _token_to_transition(self.grammar, type_, value)
+        transition = _token_to_transition(self.grammar, type_, value)
         stack = self.stack
         grammar = self.grammar
 
         while True:
             try:
-                plan = stack[-1].dfa.transition_to_plan[ilabel]
+                plan = stack[-1].dfa.transition_to_plan[transition]
                 break
             except KeyError:
                 if stack[-1].dfa.is_final:
