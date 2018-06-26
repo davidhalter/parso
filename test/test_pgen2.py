@@ -12,7 +12,7 @@ import pytest
 
 from parso import load_grammar
 from parso import ParserSyntaxError
-from parso.pgen2.pgen import generate_grammar
+from parso.pgen2 import generate_grammar
 from parso.python import tokenize
 
 

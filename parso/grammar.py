@@ -2,7 +2,7 @@ import hashlib
 import os
 
 from parso._compatibility import FileNotFoundError, is_pypy
-from parso.pgen2.pgen import generate_grammar
+from parso.pgen2 import generate_grammar
 from parso.utils import split_lines, python_bytes_to_unicode, parse_version_string
 from parso.python.diff import DiffParser
 from parso.python.tokenize import tokenize_lines, tokenize
