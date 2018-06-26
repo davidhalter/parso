@@ -138,7 +138,7 @@ class PgenParser(object):
         self.convert_node = convert_node
         self.convert_leaf = convert_leaf
 
-        self.stack = Stack([StackNode(grammar._nonterminal_to_dfas[start_nonterminal][0])])
+        self.stack = Stack([StackNode(grammar.nonterminal_to_dfas[start_nonterminal][0])])
         self.error_recovery = error_recovery
 
     def parse(self, tokens):

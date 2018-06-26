@@ -36,8 +36,8 @@ class Grammar(object):
     do this (see the conv and pgen modules).
     """
 
-    def __init__(self, bnf_grammar, start_nonterminal, rule_to_dfas, reserved_syntax_strings):
-        self._nonterminal_to_dfas = rule_to_dfas
+    def __init__(self, start_nonterminal, rule_to_dfas, reserved_syntax_strings):
+        self.nonterminal_to_dfas = rule_to_dfas
 
         self.reserved_syntax_strings = reserved_syntax_strings
         self.start_nonterminal = start_nonterminal
@@ -48,7 +48,7 @@ class Grammar(object):
         # Map from grammar rule (nonterminal) name to a set of tokens.
         self._first_plans = {}
 
-        nonterminals = list(self._nonterminal_to_dfas.keys())
+        nonterminals = list(self.nonterminal_to_dfas.keys())
         nonterminals.sort()
         for nonterminal in nonterminals:
             if nonterminal not in self._first_plans:
@@ -57,14 +57,14 @@ class Grammar(object):
         # Now that we have calculated the first terminals, we are sure that
         # there is no left recursion or ambiguities.
 
-        for dfas in self._nonterminal_to_dfas.values():
+        for dfas in self.nonterminal_to_dfas.values():
             for dfa_state in dfas:
                 for nonterminal, next_dfa in dfa_state.nonterminal_arcs.items():
                     for transition, pushes in self._first_plans[nonterminal].items():
                         dfa_state.ilabel_to_plan[transition] = DFAPlan(next_dfa, pushes)
 
     def _calculate_first_terminals(self, nonterminal):
-        dfas = self._nonterminal_to_dfas[nonterminal]
+        dfas = self.nonterminal_to_dfas[nonterminal]
         new_first_plans = {}
         self._first_plans[nonterminal] = None  # dummy to detect left recursion
         # We only need to check the first dfa. All the following ones are not

@@ -209,7 +209,7 @@ def generate_grammar(bnf_grammar, token_namespace):
                     )
                     dfa_state.ilabel_to_plan[transition] = DFAPlan(next_dfa)
 
-    return Grammar(bnf_grammar, start_nonterminal, rule_to_dfas, reserved_strings)
+    return Grammar(start_nonterminal, rule_to_dfas, reserved_strings)
 
 
 def _make_transition(token_namespace, reserved_syntax_strings, label):
