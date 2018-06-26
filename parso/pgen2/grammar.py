@@ -46,13 +46,12 @@ class Grammar(object):
 
     def _make_grammar(self):
         # Map from grammar rule (nonterminal) name to a set of tokens.
-        self._first_terminals = {}
         self._first_plans = {}
 
         nonterminals = list(self._nonterminal_to_dfas.keys())
         nonterminals.sort()
         for nonterminal in nonterminals:
-            if nonterminal not in self._first_terminals:
+            if nonterminal not in self._first_plans:
                 self._calculate_first_terminals(nonterminal)
 
         # Now that we have calculated the first terminals, we are sure that
@@ -66,34 +65,35 @@ class Grammar(object):
 
     def _calculate_first_terminals(self, nonterminal):
         dfas = self._nonterminal_to_dfas[nonterminal]
-        self._first_terminals[nonterminal] = None  # dummy to detect left recursion
-        first_plans = self._first_plans[nonterminal] = {}
+        new_first_plans = {}
+        self._first_plans[nonterminal] = None  # dummy to detect left recursion
         # We only need to check the first dfa. All the following ones are not
         # interesting to find first terminals.
         state = dfas[0]
-        for transition, next_ in state.ilabel_to_plan.items():
-            # It's a string. We have finally found a possible first token.
-            first_plans[transition] = [next_.next_dfa]
-
         for nonterminal2, next_ in state.nonterminal_arcs.items():
             # It's a nonterminal and we have either a left recursion issue
             # in the grammar or we have to recurse.
             try:
-                fset = self._first_terminals[nonterminal2]
+                first_plans2 = self._first_plans[nonterminal2]
             except KeyError:
-                self._calculate_first_terminals(nonterminal2)
+                first_plans2 = self._calculate_first_terminals(nonterminal2)
             else:
-                if fset is None:
+                if first_plans2 is None:
                     raise ValueError("left recursion for rule %r" % nonterminal)
 
-            for t, pushes in self._first_plans[nonterminal2].items():
-                check = first_plans.get(t)
+            for t, pushes in first_plans2.items():
+                check = new_first_plans.get(t)
                 if check is not None:
                     raise ValueError(
                         "Rule %s is ambiguous; %s is the"
                         " start of the rule %s as well as %s."
                         % (nonterminal, t, nonterminal2, check[-1].from_rule)
                     )
-                first_plans[t] = [next_] + pushes
+                new_first_plans[t] = [next_] + pushes
 
-        self._first_terminals[nonterminal] = 1
+        for transition, next_ in state.ilabel_to_plan.items():
+            # It's a string. We have finally found a possible first token.
+            new_first_plans[transition] = [next_.next_dfa]
+
+        self._first_plans[nonterminal] = new_first_plans
+        return new_first_plans
