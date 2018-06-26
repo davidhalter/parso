@@ -11,16 +11,19 @@ def test_with_stmt():
     assert module.children[2].type == 'name'
 
 
-def test_one_line_function():
-    module = parse('def x(): f.')
+def test_one_line_function(each_version):
+    module = parse('def x(): f.', version=each_version)
     assert module.children[0].type == 'funcdef'
     def_, name, parameters, colon, f = module.children[0].children
     assert f.type == 'error_node'
 
-    module = parse('def x(a:')
+    module = parse('def x(a:', version=each_version)
     func = module.children[0]
     assert func.type == 'error_node'
-    assert func.children[-1] == ':'
+    if each_version.startswith('2'):
+        assert func.children[-1].value == 'a'
+    else:
+        assert func.children[-1] == ':'
 
 
 def test_if_stmt():

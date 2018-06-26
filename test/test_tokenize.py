@@ -19,6 +19,7 @@ STRING = PythonTokenTypes.STRING
 INDENT = PythonTokenTypes.INDENT
 DEDENT = PythonTokenTypes.DEDENT
 ERRORTOKEN = PythonTokenTypes.ERRORTOKEN
+OP = PythonTokenTypes.OP
 ENDMARKER = PythonTokenTypes.ENDMARKER
 ERROR_DEDENT = PythonTokenTypes.ERROR_DEDENT
 FSTRING_START = PythonTokenTypes.FSTRING_START
@@ -137,7 +138,7 @@ def test_identifier_contains_unicode():
     else:
         # Unicode tokens in Python 2 seem to be identified as operators.
         # They will be ignored in the parser, that's ok.
-        assert unicode_token[0] == ERRORTOKEN
+        assert unicode_token[0] == OP
 
 
 def test_quoted_strings():
