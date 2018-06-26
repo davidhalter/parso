@@ -16,7 +16,7 @@ complexity of the ``Parser`` (there's another parser sitting inside
 ``Statement``, which produces ``Array`` and ``Call``).
 """
 from parso import tree
-from parso.pgen2.parse import PgenParser
+from parso.pgen2 import PgenParser
 
 
 class ParserSyntaxError(Exception):
