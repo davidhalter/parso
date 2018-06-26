@@ -58,7 +58,7 @@ class DFAState(object):
         self.nfa_set = nfa_set
         self.is_final = final in nfa_set
         self.arcs = {}  # map from terminals/nonterminals to DFAState
-        self.ilabel_to_plan = {}
+        self.transition_to_plan = {}
         self.nonterminal_arcs = {}
 
     def add_arc(self, next_, label):
@@ -232,7 +232,7 @@ def generate_grammar(bnf_grammar, token_namespace):
                         reserved_strings,
                         terminal_or_nonterminal
                     )
-                    dfa_state.ilabel_to_plan[transition] = DFAPlan(next_dfa)
+                    dfa_state.transition_to_plan[transition] = DFAPlan(next_dfa)
 
     _calculate_tree_traversal(rule_to_dfas)
     return Grammar(start_nonterminal, rule_to_dfas, reserved_strings)
@@ -272,7 +272,7 @@ def _calculate_tree_traversal(nonterminal_to_dfas):
         for dfa_state in dfas:
             for nonterminal, next_dfa in dfa_state.nonterminal_arcs.items():
                 for transition, pushes in first_plans[nonterminal].items():
-                    dfa_state.ilabel_to_plan[transition] = DFAPlan(next_dfa, pushes)
+                    dfa_state.transition_to_plan[transition] = DFAPlan(next_dfa, pushes)
 
 
 def _calculate_first_plans(nonterminal_to_dfas, first_plans, nonterminal):
@@ -282,7 +282,7 @@ def _calculate_first_plans(nonterminal_to_dfas, first_plans, nonterminal):
     # We only need to check the first dfa. All the following ones are not
     # interesting to find first terminals.
     state = dfas[0]
-    for transition, next_ in state.ilabel_to_plan.items():
+    for transition, next_ in state.transition_to_plan.items():
         # It's a string. We have finally found a possible first token.
         new_first_plans[transition] = [next_.next_dfa]
 

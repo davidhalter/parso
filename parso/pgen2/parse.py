@@ -65,7 +65,7 @@ class StackNode(object):
         return '%s(%s, %s)' % (self.__class__.__name__, self.dfa, self.nodes)
 
 
-def token_to_ilabel(grammar, type_, value):
+def _token_to_transition(grammar, type_, value):
     # Map from token to label
     if type_.contains_syntax:
         # Check for reserved words (keywords)
@@ -157,13 +157,13 @@ class PgenParser(object):
 
     def add_token(self, type_, value, start_pos, prefix):
         """Add a token; return True if this is the end of the program."""
-        ilabel = token_to_ilabel(self.grammar, type_, value)
+        ilabel = _token_to_transition(self.grammar, type_, value)
         stack = self.stack
         grammar = self.grammar
 
         while True:
             try:
-                plan = stack[-1].dfa.ilabel_to_plan[ilabel]
+                plan = stack[-1].dfa.transition_to_plan[ilabel]
                 break
             except KeyError:
                 if stack[-1].dfa.is_final:

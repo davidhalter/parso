@@ -163,7 +163,7 @@ class Parser(BaseParser):
             # error recovery.
             if stack[-1].dfa.from_rule == 'simple_stmt':
                 try:
-                    plan = stack[-1].dfa.ilabel_to_plan[PythonTokenTypes.NEWLINE]
+                    plan = stack[-1].dfa.transition_to_plan[PythonTokenTypes.NEWLINE]
                 except KeyError:
                     pass
                 else:
