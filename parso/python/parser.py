@@ -148,15 +148,6 @@ class Parser(BaseParser):
         if self._start_nonterminal == 'file_input' and \
                 (typ == PythonTokenTypes.ENDMARKER or
                  typ == DEDENT and '\n' not in last_leaf.value):
-            def reduce_stack(states, newstate):
-                # reduce
-                state = newstate
-                while states[state] == [(0, state)]:
-                    self.pgen_parser._pop()
-
-                    dfa, state, (type_, nodes) = stack[-1]
-                    states, first = dfa
-
             # In Python statements need to end with a newline. But since it's
             # possible (and valid in Python ) that there's no newline at the
             # end of a file, we have to recover even if the user doesn't want
