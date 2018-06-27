@@ -182,19 +182,16 @@ class Parser(BaseParser):
         def current_suite(stack):
             # For now just discard everything that is not a suite or
             # file_input, if we detect an error.
-            one_line_suite = False
             for until_index, stack_node in reversed(list(enumerate(stack))):
                 # `suite` can sometimes be only simple_stmt, not stmt.
-                if one_line_suite:
-                    break
-                elif stack_node.nonterminal == 'file_input':
+                if stack_node.nonterminal == 'file_input':
                     break
                 elif stack_node.nonterminal == 'suite':
-                    if len(stack_node.nodes) > 1:
+                    # In the case where we just have a newline we don't want to
+                    # do error recovery here. In all other cases, we want to do
+                    # error recovery.
+                    if len(stack_node.nodes) != 1:
                         break
-                    elif not stack_node.nodes:
-                        one_line_suite = True
-                    # `suite` without an indent are error nodes.
             return until_index
 
         until_index = current_suite(stack)
@@ -221,9 +218,8 @@ class Parser(BaseParser):
                 pass
 
     def _stack_removal(self, stack, start_index):
-        all_nodes = []
-        for stack_node in stack[start_index:]:
-            all_nodes += stack_node.nodes
+        all_nodes = [node for stack_node in stack[start_index:] for node in stack_node.nodes]
+
         if all_nodes:
             stack[start_index - 1].nodes.append(tree.PythonErrorNode(all_nodes))
 
