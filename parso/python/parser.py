@@ -95,14 +95,13 @@ class Parser(BaseParser):
             # If there's only one statement, we get back a non-module. That's
             # not what we want, we want a module, so we add it here:
             node = self.convert_node(
-                self._pgen_grammar,
                 'file_input',
                 [node]
             )
 
         return node
 
-    def convert_node(self, pgen_grammar, nonterminal, children):
+    def convert_node(self, nonterminal, children):
         """
         Convert raw node information to a PythonBaseNode instance.
 
@@ -127,19 +126,18 @@ class Parser(BaseParser):
                 nonterminal = 'testlist_comp'
             return self.default_node(nonterminal, children)
 
-    def convert_leaf(self, pgen_grammar, type, value, prefix, start_pos):
+    def convert_leaf(self, type, value, prefix, start_pos):
         # print('leaf', repr(value), token.tok_name[type])
         if type == NAME:
-            if value in pgen_grammar.reserved_syntax_strings:
+            if value in self._pgen_grammar.reserved_syntax_strings:
                 return tree.Keyword(value, start_pos, prefix)
             else:
                 return tree.Name(value, start_pos, prefix)
 
         return self._leaf_map.get(type, tree.Operator)(value, start_pos, prefix)
 
-    def error_recovery(self, pgen_grammar, stack, typ, value, start_pos, prefix,
-                       add_token_callback):
-        tos_nodes = stack[-1].nodes
+    def error_recovery(self, typ, value, start_pos, prefix):
+        tos_nodes = self.stack[-1].nodes
         if tos_nodes:
             last_leaf = tos_nodes[-1].get_last_leaf()
         else:
@@ -152,23 +150,21 @@ class Parser(BaseParser):
             # possible (and valid in Python ) that there's no newline at the
             # end of a file, we have to recover even if the user doesn't want
             # error recovery.
-            if stack[-1].dfa.from_rule == 'simple_stmt':
+            if self.stack[-1].dfa.from_rule == 'simple_stmt':
                 try:
-                    plan = stack[-1].dfa.transition_to_plan[PythonTokenTypes.NEWLINE]
+                    plan = self.stack[-1].dfa.transition_to_plan[PythonTokenTypes.NEWLINE]
                 except KeyError:
                     pass
                 else:
                     if plan.next_dfa.is_final and not plan.dfa_pushes:
                         # We are ignoring here that the newline would be
                         # required for a simple_stmt.
-                        stack[-1].dfa = plan.next_dfa
-                        add_token_callback(typ, value, start_pos, prefix)
+                        self.stack[-1].dfa = plan.next_dfa
+                        self._add_token(typ, value, start_pos, prefix)
                         return
 
         if not self._error_recovery:
-            return super(Parser, self).error_recovery(
-                pgen_grammar, stack, typ, value, start_pos, prefix,
-                add_token_callback)
+            return super(Parser, self).error_recovery(typ, value, start_pos, prefix)
 
         def current_suite(stack):
             # For now just discard everything that is not a suite or
@@ -185,10 +181,10 @@ class Parser(BaseParser):
                         break
             return until_index
 
-        until_index = current_suite(stack)
+        until_index = current_suite(self.stack)
 
-        if self._stack_removal(stack, until_index + 1):
-            add_token_callback(typ, value, start_pos, prefix)
+        if self._stack_removal(self.stack, until_index + 1):
+            self._add_token(typ, value, start_pos, prefix)
         else:
             if typ == INDENT:
                 # For every deleted INDENT we have to delete a DEDENT as well.
@@ -196,9 +192,9 @@ class Parser(BaseParser):
                 self._omit_dedent_list.append(self._indent_counter)
 
             error_leaf = tree.PythonErrorLeaf(typ.name, value, start_pos, prefix)
-            stack[-1].nodes.append(error_leaf)
+            self.stack[-1].nodes.append(error_leaf)
 
-        tos = stack[-1]
+        tos = self.stack[-1]
         if tos.nonterminal == 'suite':
             # Need at least one statement in the suite. This happend with the
             # error recovery above.

@@ -99,7 +99,6 @@ def _token_to_transition(grammar, type_, value):
     return type_
 
 
-
 class BaseParser(object):
     """Parser engine.
 
@@ -129,7 +128,7 @@ class BaseParser(object):
         self.stack = Stack([StackNode(first_dfa)])
 
         for type_, value, start_pos, prefix in tokens:
-            self.add_token(type_, value, start_pos, prefix)
+            self._add_token(type_, value, start_pos, prefix)
 
         while self.stack and self.stack[-1].dfa.is_final:
             self._pop()
@@ -141,27 +140,26 @@ class BaseParser(object):
             raise InternalParseError("incomplete input", type_, value, start_pos)
         return self.rootnode
 
-    def error_recovery(self, pgen_grammar, stack, typ, value, start_pos, prefix,
-                       add_token_callback):
+    def error_recovery(self, typ, value, start_pos, prefix):
         if self._error_recovery:
             raise NotImplementedError("Error Recovery is not implemented")
         else:
             error_leaf = tree.ErrorLeaf('TODO %s' % typ, value, start_pos, prefix)
             raise ParserSyntaxError('SyntaxError: invalid syntax', error_leaf)
 
-    def convert_node(self, pgen_grammar, nonterminal, children):
+    def convert_node(self, nonterminal, children):
         try:
             return self.node_map[nonterminal](children)
         except KeyError:
             return self.default_node(nonterminal, children)
 
-    def convert_leaf(self, pgen_grammar, type_, value, prefix, start_pos):
+    def convert_leaf(self, type_, value, prefix, start_pos):
         try:
             return self.leaf_map[type_](value, start_pos, prefix)
         except KeyError:
             return self.default_leaf(value, start_pos, prefix)
 
-    def add_token(self, type_, value, start_pos, prefix):
+    def _add_token(self, type_, value, start_pos, prefix):
         """Add a token; return True if this is the end of the program."""
         grammar = self._pgen_grammar
         stack = self.stack
@@ -175,8 +173,7 @@ class BaseParser(object):
                 if stack[-1].dfa.is_final:
                     self._pop()
                 else:
-                    self.error_recovery(grammar, stack, type_,
-                                        value, start_pos, prefix, self.add_token)
+                    self.error_recovery(type_, value, start_pos, prefix)
                     return
             except IndexError:
                 raise InternalParseError("too much input", type_, value, start_pos)
@@ -186,7 +183,7 @@ class BaseParser(object):
         for push in plan.dfa_pushes:
             stack.append(StackNode(push))
 
-        leaf = self.convert_leaf(grammar, type_, value, prefix, start_pos)
+        leaf = self.convert_leaf(type_, value, prefix, start_pos)
         stack[-1].nodes.append(leaf)
 
     def _pop(self):
@@ -198,7 +195,7 @@ class BaseParser(object):
         if len(tos.nodes) == 1:
             new_node = tos.nodes[0]
         else:
-            new_node = self.convert_node(self._pgen_grammar, tos.dfa.from_rule, tos.nodes)
+            new_node = self.convert_node(tos.dfa.from_rule, tos.nodes)
 
         try:
             self.stack[-1].nodes.append(new_node)
