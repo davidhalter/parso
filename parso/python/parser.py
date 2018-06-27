@@ -72,16 +72,6 @@ class Parser(BaseParser):
         self._omit_dedent_list = []
         self._indent_counter = 0
 
-        # TODO do print absolute import detection here.
-        # try:
-        #     del python_grammar_no_print_statement.keywords["print"]
-        # except KeyError:
-        #     pass  # Doesn't exist in the Python 3 grammar.
-
-        # if self.options["print_function"]:
-        #     python_grammar = pygram.python_grammar_no_print_statement
-        # else:
-
     def parse(self, tokens):
         if self._error_recovery:
             if self._start_nonterminal != 'file_input':
