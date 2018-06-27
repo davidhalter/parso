@@ -130,15 +130,20 @@ class BaseParser(object):
         for token in tokens:
             self._add_token(token)
 
-        while self.stack and self.stack[-1].dfa.is_final:
-            self._pop()
+        while True:
+            tos = self.stack[-1]
+            if not tos.dfa.is_final:
+                # We never broke out -- EOF is too soon -- Unfinished statement.
+                # However, the error recovery might have added the token again, if
+                # the stack is empty, we're fine.
+                raise InternalParseError(
+                    "incomplete input", token.type, token.value, token.start_pos
+                )
 
-        if self.stack:
-            # We never broke out -- EOF is too soon -- Unfinished statement.
-            # However, the error recovery might have added the token again, if
-            # the stack is empty, we're fine.
-            raise InternalParseError("incomplete input", token.type, token.value, token.start_pos)
-        return self.rootnode
+            if len(self.stack) > 1:
+                self._pop()
+            else:
+                return self.convert_node(tos.nonterminal, tos.nodes)
 
     def error_recovery(self, token):
         if self._error_recovery:
@@ -199,8 +204,4 @@ class BaseParser(object):
         else:
             new_node = self.convert_node(tos.dfa.from_rule, tos.nodes)
 
-        try:
-            self.stack[-1].nodes.append(new_node)
-        except IndexError:
-            # Stack is empty, set the rootnode.
-            self.rootnode = new_node
+        self.stack[-1].nodes.append(new_node)

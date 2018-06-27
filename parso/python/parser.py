@@ -89,17 +89,7 @@ class Parser(BaseParser):
 
             tokens = self._recovery_tokenize(tokens)
 
-        node = super(Parser, self).parse(tokens)
-
-        if self._start_nonterminal == 'file_input' != node.type:
-            # If there's only one statement, we get back a non-module. That's
-            # not what we want, we want a module, so we add it here:
-            node = self.convert_node(
-                'file_input',
-                [node]
-            )
-
-        return node
+        return super(Parser, self).parse(tokens)
 
     def convert_node(self, nonterminal, children):
         """
