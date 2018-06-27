@@ -136,7 +136,7 @@ class Parser(BaseParser):
 
         return self._leaf_map.get(type, tree.Operator)(value, start_pos, prefix)
 
-    def error_recovery(self, typ, value, start_pos, prefix):
+    def error_recovery(self, token):
         tos_nodes = self.stack[-1].nodes
         if tos_nodes:
             last_leaf = tos_nodes[-1].get_last_leaf()
@@ -144,8 +144,8 @@ class Parser(BaseParser):
             last_leaf = None
 
         if self._start_nonterminal == 'file_input' and \
-                (typ == PythonTokenTypes.ENDMARKER or
-                 typ == DEDENT and '\n' not in last_leaf.value):
+                (token.type == PythonTokenTypes.ENDMARKER or
+                 token.type == DEDENT and '\n' not in last_leaf.value):
             # In Python statements need to end with a newline. But since it's
             # possible (and valid in Python ) that there's no newline at the
             # end of a file, we have to recover even if the user doesn't want
@@ -160,11 +160,11 @@ class Parser(BaseParser):
                         # We are ignoring here that the newline would be
                         # required for a simple_stmt.
                         self.stack[-1].dfa = plan.next_dfa
-                        self._add_token(typ, value, start_pos, prefix)
+                        self._add_token(token)
                         return
 
         if not self._error_recovery:
-            return super(Parser, self).error_recovery(typ, value, start_pos, prefix)
+            return super(Parser, self).error_recovery(token)
 
         def current_suite(stack):
             # For now just discard everything that is not a suite or
@@ -184,8 +184,9 @@ class Parser(BaseParser):
         until_index = current_suite(self.stack)
 
         if self._stack_removal(until_index + 1):
-            self._add_token(typ, value, start_pos, prefix)
+            self._add_token(token)
         else:
+            typ, value, start_pos, prefix = token
             if typ == INDENT:
                 # For every deleted INDENT we have to delete a DEDENT as well.
                 # Otherwise the parser will get into trouble and DEDENT too early.

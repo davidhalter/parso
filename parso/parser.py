@@ -127,8 +127,8 @@ class BaseParser(object):
         first_dfa = self._pgen_grammar.nonterminal_to_dfas[self._start_nonterminal][0]
         self.stack = Stack([StackNode(first_dfa)])
 
-        for type_, value, start_pos, prefix in tokens:
-            self._add_token(type_, value, start_pos, prefix)
+        for token in tokens:
+            self._add_token(token)
 
         while self.stack and self.stack[-1].dfa.is_final:
             self._pop()
@@ -137,14 +137,15 @@ class BaseParser(object):
             # We never broke out -- EOF is too soon -- Unfinished statement.
             # However, the error recovery might have added the token again, if
             # the stack is empty, we're fine.
-            raise InternalParseError("incomplete input", type_, value, start_pos)
+            raise InternalParseError("incomplete input", token.type, token.value, token.start_pos)
         return self.rootnode
 
-    def error_recovery(self, typ, value, start_pos, prefix):
+    def error_recovery(self, token):
         if self._error_recovery:
             raise NotImplementedError("Error Recovery is not implemented")
         else:
-            error_leaf = tree.ErrorLeaf('TODO %s' % typ, value, start_pos, prefix)
+            type_, value, start_pos, prefix = token
+            error_leaf = tree.ErrorLeaf('TODO %s' % type_, value, start_pos, prefix)
             raise ParserSyntaxError('SyntaxError: invalid syntax', error_leaf)
 
     def convert_node(self, nonterminal, children):
@@ -159,10 +160,11 @@ class BaseParser(object):
         except KeyError:
             return self.default_leaf(value, start_pos, prefix)
 
-    def _add_token(self, type_, value, start_pos, prefix):
+    def _add_token(self, token):
         """Add a token; return True if this is the end of the program."""
         grammar = self._pgen_grammar
         stack = self.stack
+        type_, value, start_pos, prefix = token
         transition = _token_to_transition(grammar, type_, value)
 
         while True:
@@ -173,7 +175,7 @@ class BaseParser(object):
                 if stack[-1].dfa.is_final:
                     self._pop()
                 else:
-                    self.error_recovery(type_, value, start_pos, prefix)
+                    self.error_recovery(token)
                     return
             except IndexError:
                 raise InternalParseError("too much input", type_, value, start_pos)
