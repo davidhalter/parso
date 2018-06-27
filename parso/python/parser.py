@@ -214,7 +214,8 @@ class Parser(BaseParser):
         return bool(all_nodes)
 
     def _recovery_tokenize(self, tokens):
-        for typ, value, start_pos, prefix in tokens:
+        for token in tokens:
+            typ = token[0]
             # print(tok_name[typ], repr(value), start_pos, repr(prefix))
             if typ == DEDENT:
                 # We need to count indents, because if we just omit any DEDENT,
@@ -227,4 +228,4 @@ class Parser(BaseParser):
                 self._indent_counter -= 1
             elif typ == INDENT:
                 self._indent_counter += 1
-            yield typ, value, start_pos, prefix
+            yield token
