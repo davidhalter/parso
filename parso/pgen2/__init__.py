@@ -8,4 +8,3 @@
 # Modifications are dual-licensed: MIT and PSF.
 
 from parso.pgen2.generator import generate_grammar
-from parso.pgen2.parse import PgenParser
