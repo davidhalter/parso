@@ -183,7 +183,7 @@ class Parser(BaseParser):
 
         until_index = current_suite(self.stack)
 
-        if self._stack_removal(self.stack, until_index + 1):
+        if self._stack_removal(until_index + 1):
             self._add_token(typ, value, start_pos, prefix)
         else:
             if typ == INDENT:
@@ -204,13 +204,13 @@ class Parser(BaseParser):
                 # We're already in a final state.
                 pass
 
-    def _stack_removal(self, stack, start_index):
-        all_nodes = [node for stack_node in stack[start_index:] for node in stack_node.nodes]
+    def _stack_removal(self, start_index):
+        all_nodes = [node for stack_node in self.stack[start_index:] for node in stack_node.nodes]
 
         if all_nodes:
-            stack[start_index - 1].nodes.append(tree.PythonErrorNode(all_nodes))
+            self.stack[start_index - 1].nodes.append(tree.PythonErrorNode(all_nodes))
 
-        stack[start_index:] = []
+        self.stack[start_index:] = []
         return bool(all_nodes)
 
     def _recovery_tokenize(self, tokens):
