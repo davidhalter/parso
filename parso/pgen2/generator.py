@@ -35,9 +35,10 @@ class Grammar(object):
     """
     Once initialized, this class supplies the grammar tables for the
     parsing engine implemented by parse.py.  The parsing engine
-    accesses the instance variables directly.  The class here does not
-    provide initialization of the tables; several subclasses exist to
-    do this (see the conv and pgen modules).
+    accesses the instance variables directly.
+
+    The only important part in this parsers are dfas and transitions between
+    dfas.
     """
 
     def __init__(self, start_nonterminal, rule_to_dfas, reserved_syntax_strings):
@@ -47,6 +48,10 @@ class Grammar(object):
 
 
 class DFAPlan(object):
+    """
+    Plans are used for the parser to create stack nodes and do the proper
+    DFA state transitions.
+    """
     def __init__(self, next_dfa, dfa_pushes=[]):
         self.next_dfa = next_dfa
         self.dfa_pushes = dfa_pushes
@@ -56,6 +61,15 @@ class DFAPlan(object):
 
 
 class DFAState(object):
+    """
+    The DFAState object is the core class for pretty much anything. DFAState
+    are the vertices of an ordered graph while arcs and transitions are the
+    edges.
+
+    Arcs are the initial edges, where most DFAStates are not connected and
+    transitions are then calculated to connect the DFA state machines that have
+    different nonterminals.
+    """
     def __init__(self, from_rule, nfa_set, final):
         assert isinstance(nfa_set, set)
         assert isinstance(next(iter(nfa_set)), NFAState)
@@ -106,6 +120,12 @@ class DFAState(object):
 
 
 class ReservedString(object):
+    """
+    Most grammars will have certain keywords and operators that are mentioned
+    in the grammar as strings (e.g. "if") and not token types (e.g. NUMBER).
+    This class basically is the former.
+    """
+
     def __init__(self, value):
         self.value = value
 
@@ -114,12 +134,14 @@ class ReservedString(object):
 
 
 def _simplify_dfas(dfas):
-    # This is not theoretically optimal, but works well enough.
-    # Algorithm: repeatedly look for two states that have the same
-    # set of arcs (same labels pointing to the same nodes) and
-    # unify them, until things stop changing.
+    """
+    This is not theoretically optimal, but works well enough.
+    Algorithm: repeatedly look for two states that have the same
+    set of arcs (same labels pointing to the same nodes) and
+    unify them, until things stop changing.
 
-    # dfas is a list of DFAState instances
+    dfas is a list of DFAState instances
+    """
     changes = True
     while changes:
         changes = False
@@ -137,7 +159,10 @@ def _simplify_dfas(dfas):
 
 def _make_dfas(start, finish):
     """
-    This is basically doing what the powerset construction algorithm is doing.
+    Uses the powerset construction algorithm to create DFA states from sets of
+    NFA states.
+
+    Also does state reduction if some states are not needed.
     """
     # To turn an NFA into a DFA, we define the states of the DFA
     # to correspond to *sets* of states of the NFA.  Then do some
@@ -250,6 +275,10 @@ def generate_grammar(bnf_grammar, token_namespace):
 
 
 def _make_transition(token_namespace, reserved_syntax_strings, label):
+    """
+    Creates a reserved string ("if", "for", "*", ...) or returns the token type
+    (NUMBER, STRING, ...) for a given grammar terminal.
+    """
     if label[0].isalpha():
         # A named token (e.g. NAME, NUMBER, STRING)
         return getattr(token_namespace, label)
@@ -267,6 +296,10 @@ def _make_transition(token_namespace, reserved_syntax_strings, label):
 
 
 def _calculate_tree_traversal(nonterminal_to_dfas):
+    """
+    By this point we know how dfas can move around within a stack node, but we
+    don't know how we can add a new stack node (nonterminal transitions).
+    """
     # Map from grammar rule (nonterminal) name to a set of tokens.
     first_plans = {}
 
@@ -287,6 +320,10 @@ def _calculate_tree_traversal(nonterminal_to_dfas):
 
 
 def _calculate_first_plans(nonterminal_to_dfas, first_plans, nonterminal):
+    """
+    Calculates the first plan in the first_plans dictionary for every given
+    nonterminal. This is going to be used to know when to create stack nodes.
+    """
     dfas = nonterminal_to_dfas[nonterminal]
     new_first_plans = {}
     first_plans[nonterminal] = None  # dummy to detect left recursion
