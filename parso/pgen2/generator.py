@@ -18,6 +18,12 @@ Specifying grammars in pgen is possible with this grammar::
     atom: '(' rhs ')' | NAME | STRING
 
 This grammar is self-referencing.
+
+This parser generator (pgen2) was created by Guido Rossum and used for lib2to3.
+Most of the code has been refactored to make it more Pythonic. Since this was a
+"copy" of the CPython Parser parser "pgen", there was some work needed to make
+it more readable. It should also be slightly faster than the original pgen2,
+because we made some optimizations.
 """
 
 from ast import literal_eval
@@ -56,10 +62,15 @@ class DFAState(object):
         assert isinstance(final, NFAState)
         self.from_rule = from_rule
         self.nfa_set = nfa_set
-        self.is_final = final in nfa_set
         self.arcs = {}  # map from terminals/nonterminals to DFAState
-        self.transitions = {}  #: Dict[Union[TokenType, ReservedString], DFAPlan]
+        # In an intermediary step we set these nonterminal arcs (which has the
+        # same structure as arcs). These don't contain terminals anymore.
         self.nonterminal_arcs = {}
+
+        # Transitions are basically the only thing that  the parser is using
+        # with is_final. Everyting else is purely here to create a parser.
+        self.transitions = {}  #: Dict[Union[TokenType, ReservedString], DFAPlan]
+        self.is_final = final in nfa_set
 
     def add_arc(self, next_, label):
         assert isinstance(label, str)
