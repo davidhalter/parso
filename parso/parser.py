@@ -166,7 +166,11 @@ class BaseParser(object):
             return self.default_leaf(value, start_pos, prefix)
 
     def _add_token(self, token):
-        """Add a token; return True if this is the end of the program."""
+        """
+        This is the only core function for parsing. Here happens basically
+        everything. Everything is well prepared by the parser generator and we
+        only apply the necessary steps here.
+        """
         grammar = self._pgen_grammar
         stack = self.stack
         type_, value, start_pos, prefix = token
