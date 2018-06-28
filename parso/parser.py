@@ -174,7 +174,7 @@ class BaseParser(object):
 
         while True:
             try:
-                plan = stack[-1].dfa.transition_to_plan[transition]
+                plan = stack[-1].dfa.transitions[transition]
                 break
             except KeyError:
                 if stack[-1].dfa.is_final:

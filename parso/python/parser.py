@@ -132,7 +132,7 @@ class Parser(BaseParser):
             # error recovery.
             if self.stack[-1].dfa.from_rule == 'simple_stmt':
                 try:
-                    plan = self.stack[-1].dfa.transition_to_plan[PythonTokenTypes.NEWLINE]
+                    plan = self.stack[-1].dfa.transitions[PythonTokenTypes.NEWLINE]
                 except KeyError:
                     pass
                 else:
