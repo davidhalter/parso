@@ -18,13 +18,24 @@ from collections import namedtuple
 import itertools as _itertools
 from codecs import BOM_UTF8
 
-from parso.python.token import (tok_name, ENDMARKER, STRING, NUMBER, opmap,
-                                NAME, ERRORTOKEN, NEWLINE, INDENT, DEDENT,
-                                ERROR_DEDENT, FSTRING_STRING, FSTRING_START,
-                                FSTRING_END)
+from parso.python.token import PythonTokenTypes
 from parso._compatibility import py_version
 from parso.utils import split_lines
 
+
+STRING = PythonTokenTypes.STRING
+NAME = PythonTokenTypes.NAME
+NUMBER = PythonTokenTypes.NUMBER
+OP = PythonTokenTypes.OP
+NEWLINE = PythonTokenTypes.NEWLINE
+INDENT = PythonTokenTypes.INDENT
+DEDENT = PythonTokenTypes.DEDENT
+ENDMARKER = PythonTokenTypes.ENDMARKER
+ERRORTOKEN = PythonTokenTypes.ERRORTOKEN
+ERROR_DEDENT = PythonTokenTypes.ERROR_DEDENT
+FSTRING_START = PythonTokenTypes.FSTRING_START
+FSTRING_STRING = PythonTokenTypes.FSTRING_STRING
+FSTRING_END = PythonTokenTypes.FSTRING_END
 
 TokenCollection = namedtuple(
     'TokenCollection',
@@ -242,12 +253,9 @@ class Token(namedtuple('Token', ['type', 'string', 'start_pos', 'prefix'])):
 
 
 class PythonToken(Token):
-    def _get_type_name(self, exact=True):
-        return tok_name[self.type]
-
     def __repr__(self):
         return ('TokenInfo(type=%s, string=%r, start_pos=%r, prefix=%r)' %
-                self._replace(type=self._get_type_name()))
+                self._replace(type=self.type.name))
 
 
 class FStringNode(object):
@@ -396,7 +404,9 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
             endmatch = endprog.match(line)
             if endmatch:
                 pos = endmatch.end(0)
-                yield PythonToken(STRING, contstr + line[:pos], contstr_start, prefix)
+                yield PythonToken(
+                    STRING, contstr + line[:pos],
+                    contstr_start, prefix)
                 contstr = ''
                 contline = None
             else:
@@ -571,13 +581,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                         and fstring_stack[-1].parentheses_count == 1:
                     fstring_stack[-1].format_spec_count += 1
 
-                try:
-                    # This check is needed in any case to check if it's a valid
-                    # operator or just some random unicode character.
-                    typ = opmap[token]
-                except KeyError:
-                    typ = ERRORTOKEN
-                yield PythonToken(typ, token, spos, prefix)
+                yield PythonToken(OP, token, spos, prefix)
 
     if contstr:
         yield PythonToken(ERRORTOKEN, contstr, contstr_start, prefix)

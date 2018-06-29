@@ -5,9 +5,9 @@
 # Copyright David Halter and Contributors
 # Modifications are dual-licensed: MIT and PSF.
 
-from parso.python import tokenize
+from parso.python.tokenize import tokenize
 from parso.utils import parse_version_string
-from parso.python import token
+from parso.python.token import PythonTokenTypes
 
 
 class GrammarParser():
@@ -16,7 +16,7 @@ class GrammarParser():
     """
     def __init__(self, bnf_grammar):
         self._bnf_grammar = bnf_grammar
-        self.generator = tokenize.tokenize(
+        self.generator = tokenize(
             bnf_grammar,
             version_info=parse_version_string('3.6')
         )
@@ -24,16 +24,16 @@ class GrammarParser():
 
     def parse(self):
         # grammar: (NEWLINE | rule)* ENDMARKER
-        while self.type != token.ENDMARKER:
-            while self.type == token.NEWLINE:
+        while self.type != PythonTokenTypes.ENDMARKER:
+            while self.type == PythonTokenTypes.NEWLINE:
                 self._gettoken()
 
             # rule: NAME ':' rhs NEWLINE
-            self._current_rule_name = self._expect(token.NAME)
-            self._expect(token.COLON)
+            self._current_rule_name = self._expect(PythonTokenTypes.NAME)
+            self._expect(PythonTokenTypes.OP, ':')
 
             a, z = self._parse_rhs()
-            self._expect(token.NEWLINE)
+            self._expect(PythonTokenTypes.NEWLINE)
 
             yield a, z
 
@@ -60,7 +60,8 @@ class GrammarParser():
     def _parse_items(self):
         # items: item+
         a, b = self._parse_item()
-        while self.type in (token.NAME, token.STRING, token.LPAR, token.LSQB):
+        while self.type in (PythonTokenTypes.NAME, PythonTokenTypes.STRING) \
+                or self.value in ('(', '['):
             c, d = self._parse_item()
             # Need to end on the next item.
             b.add_arc(c)
@@ -72,7 +73,7 @@ class GrammarParser():
         if self.value == "[":
             self._gettoken()
             a, z = self._parse_rhs()
-            self._expect(token.RSQB)
+            self._expect(PythonTokenTypes.OP, ']')
             # Make it also possible that there is no token and change the
             # state.
             a.add_arc(z)
@@ -97,9 +98,9 @@ class GrammarParser():
         if self.value == "(":
             self._gettoken()
             a, z = self._parse_rhs()
-            self._expect(token.RPAR)
+            self._expect(PythonTokenTypes.OP, ')')
             return a, z
-        elif self.type in (token.NAME, token.STRING):
+        elif self.type in (PythonTokenTypes.NAME, PythonTokenTypes.STRING):
             a = NFAState(self._current_rule_name)
             z = NFAState(self._current_rule_name)
             # Make it clear that the state transition requires that value.
@@ -110,10 +111,12 @@ class GrammarParser():
             self._raise_error("expected (...) or NAME or STRING, got %s/%s",
                               self.type, self.value)
 
-    def _expect(self, type):
-        if self.type != type:
-            self._raise_error("expected %s(%s), got %s(%s)",
-                              type, token.tok_name[type], self.type, self.value)
+    def _expect(self, type_, value=None):
+        if self.type != type_:
+            self._raise_error("expected %s, got %s [%s]",
+                              type_, self.type, self.value)
+        if value is not None and self.value != value:
+            self._raise_error("expected %s, got %s", value, self.value)
         value = self.value
         self._gettoken()
         return value
@@ -134,20 +137,20 @@ class GrammarParser():
 
 
 class NFAArc(object):
-    def __init__(self, next_, label_or_string):
+    def __init__(self, next_, nonterminal_or_string):
         self.next = next_
-        self.label_or_string = label_or_string
+        self.nonterminal_or_string = nonterminal_or_string
 
 
 class NFAState(object):
     def __init__(self, from_rule):
         self.from_rule = from_rule
-        self.arcs = []  # list of (label, NFAState) pairs
+        self.arcs = []  # List[nonterminal (str), NFAState]
 
-    def add_arc(self, next_, label=None):
-        assert label is None or isinstance(label, str)
+    def add_arc(self, next_, nonterminal_or_string=None):
+        assert nonterminal_or_string is None or isinstance(nonterminal_or_string, str)
         assert isinstance(next_, NFAState)
-        self.arcs.append(NFAArc(next_, label))
+        self.arcs.append(NFAArc(next_, nonterminal_or_string))
 
     def __repr__(self):
         return '<%s: from %s>' % (self.__class__.__name__, self.from_rule)
