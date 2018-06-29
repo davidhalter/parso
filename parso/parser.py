@@ -24,6 +24,7 @@ complexity of the ``Parser`` (there's another parser sitting inside
 ``Statement``, which produces ``Array`` and ``Call``).
 """
 from parso import tree
+from parso.pgen2.generator import ReservedString
 
 
 class ParserSyntaxError(Exception):
@@ -54,7 +55,20 @@ class InternalParseError(Exception):
 
 
 class Stack(list):
-    pass
+    def _allowed_transition_names_and_token_types(self):
+        def iterate():
+            # An API just for Jedi.
+            for stack_node in reversed(self):
+                for transition in stack_node.dfa.transitions:
+                    if isinstance(transition, ReservedString):
+                        yield transition.value
+                    else:
+                        yield transition  # A token type
+
+                if not stack_node.dfa.is_final:
+                    break
+
+        return list(iterate())
 
 
 class StackNode(object):
