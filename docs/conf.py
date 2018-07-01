@@ -144,7 +144,7 @@ html_sidebars = {
         #'relations.html',
         'ghbuttons.html',
         #'sourcelink.html',
-        #'searchbox.html'
+        'searchbox.html'
     ]
 }
 
