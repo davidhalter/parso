@@ -199,10 +199,9 @@ def test_ur_literals():
 def test_error_literal():
     error_token, endmarker = _get_token_list('"\n')
     assert error_token.type == ERRORTOKEN
-    assert endmarker.prefix == ''
-    assert error_token.string == '"\n'
+    assert error_token.string == '"'
     assert endmarker.type == ENDMARKER
-    assert endmarker.prefix == ''
+    assert endmarker.prefix == '\n'
 
     bracket, error_token, endmarker = _get_token_list('( """')
     assert error_token.type == ERRORTOKEN
@@ -244,5 +243,6 @@ def test_error_string():
     t1, endmarker = _get_token_list(' "\n')
     assert t1.type == ERRORTOKEN
     assert t1.prefix == ' '
-    assert t1.string == '"\n'
+    assert t1.string == '"'
+    assert endmarker.prefix == '\n'
     assert endmarker.string == ''

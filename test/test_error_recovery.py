@@ -1,4 +1,4 @@
-from parso import parse
+from parso import parse, load_grammar
 
 
 def test_with_stmt():
@@ -59,3 +59,27 @@ def test_if_stmt():
     assert in_else_stmt.type == 'error_node'
     assert in_else_stmt.children[0].value == 'g'
     assert in_else_stmt.children[1].value == '('
+
+
+def test_invalid_token():
+    module = parse('a + ? + b')
+    error_node, q, plus_b, endmarker = module.children
+    assert error_node.get_code() == 'a +'
+    assert q.value == '?'
+    assert q.type == 'error_leaf'
+    assert plus_b.type == 'factor'
+    assert plus_b.get_code() == ' + b'
+
+
+def test_invalid_token_in_fstr():
+    module = load_grammar(version='3.6').parse('f"{a + ? + b}"')
+    error_node, q, plus_b, error1, error2, endmarker = module.children
+    assert error_node.get_code() == 'f"{a +'
+    assert q.value == '?'
+    assert q.type == 'error_leaf'
+    assert plus_b.type == 'error_node'
+    assert plus_b.get_code() == ' + b'
+    assert error1.value == '}'
+    assert error1.type == 'error_leaf'
+    assert error2.value == '"'
+    assert error2.type == 'error_leaf'
