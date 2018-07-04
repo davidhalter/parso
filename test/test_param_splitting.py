@@ -32,3 +32,16 @@ def test_split_params_with_stars():
     assert_params(u'x, *args', x=None, args=None)
     assert_params(u'**kwargs', kwargs=None)
     assert_params(u'*args, **kwargs', args=None, kwargs=None)
+
+
+def test_kw_only_no_kw(works_ge_py3):
+    """
+    Parsing this should be working. In CPython the parser also parses this and
+    in a later step the AST complains.
+    """
+    module = works_ge_py3.parse('def test(arg, *):\n    pass')
+    if module is not None:
+        func = module.children[0]
+        open_, p1, asterisk, close = func._get_param_nodes()
+        assert p1.get_code('arg,')
+        assert asterisk.value == '*'
