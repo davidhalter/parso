@@ -580,9 +580,7 @@ class _NodesStack(object):
             self._tos = _NodesStackNode(tree_node, self._tos)
             self._tos.add(list(tree_node.children))
             self._update_tos(tree_node.children[-1])
-        elif tree_node.type in ('decorated', 'classdef', 'funcdef',
-                                'async_funcdef') \
-                or tree_node.type == 'async_stmt' and tree_node.children[0].type == 'funcdef':
+        elif _func_or_class_has_suite(tree_node):
             self._update_tos(tree_node.children[-1])
 
     def close(self):
