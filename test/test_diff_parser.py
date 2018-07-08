@@ -517,7 +517,7 @@ def test_end_newline_with_decorator(differ):
             json.l''')
 
     differ.initialize(code)
-    module = differ.parse(code + '\n', copies=0)
+    module = differ.parse(code + '\n', copies=1)
     decorated, endmarker = module.children
     assert decorated.type == 'decorated'
     decorator, func = decorated.children
