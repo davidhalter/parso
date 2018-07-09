@@ -3,7 +3,12 @@
 Changelog
 ---------
 
-0.3.0 (2018-07-30)
+0.3.1 (2018-07-09)
++++++++++++++++++++
+
+- Bugfixes in the diff parser and keyword-only arguments
+
+0.3.0 (2018-06-30)
 +++++++++++++++++++
 
 - Rewrote the pgen2 parser generator.
