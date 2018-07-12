@@ -252,7 +252,7 @@ class String(Literal):
 
     @property
     def string_prefix(self):
-        return re.match('\w*(?=[\'"])', self.value).group(0)
+        return re.match(r'\w*(?=[\'"])', self.value).group(0)
 
     def _get_payload(self):
         match = re.search(
