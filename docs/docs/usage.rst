@@ -61,6 +61,8 @@ Used By
 -------
 
 - jedi_ (which is used by IPython and a lot of editor plugins).
+- mutmut_ (mutation tester)
 
 
 .. _jedi: https://github.com/davidhalter/jedi
+.. _mutmut: https://github.com/boxed/mutmut
