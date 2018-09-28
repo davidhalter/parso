@@ -2,12 +2,13 @@
 parso - A Python Parser
 ###################################################################
 
-.. image:: https://secure.travis-ci.org/davidhalter/parso.png?branch=master
-    :target: http://travis-ci.org/davidhalter/parso
-    :alt: Travis-CI build status
 
-.. image:: https://coveralls.io/repos/davidhalter/parso/badge.png?branch=master
-    :target: https://coveralls.io/r/davidhalter/parso
+.. image:: https://travis-ci.org/davidhalter/parso.svg?branch=master
+    :target: https://travis-ci.org/davidhalter/parso
+    :alt: Travis CI build status
+
+.. image:: https://coveralls.io/repos/github/davidhalter/parso/badge.svg?branch=master
+    :target: https://coveralls.io/github/davidhalter/parso?branch=master
     :alt: Coverage Status
 
 .. image:: https://raw.githubusercontent.com/davidhalter/parso/master/docs/_static/logo_characters.png
@@ -55,10 +56,10 @@ To list multiple issues:
 Resources
 =========
 
-- `Testing <http://parso.readthedocs.io/en/latest/docs/development.html#testing>`_
+- `Testing <https://parso.readthedocs.io/en/latest/docs/development.html#testing>`_
 - `PyPI <https://pypi.python.org/pypi/parso>`_
 - `Docs <https://parso.readthedocs.org/en/latest/>`_
-- Uses `semantic versioning <http://semver.org/>`_
+- Uses `semantic versioning <https://semver.org/>`_
 
 Installation
 ============
