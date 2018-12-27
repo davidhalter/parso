@@ -165,9 +165,11 @@ class DiffParser(object):
         if last_pos != line_length:
             current_lines = split_lines(self._module.get_code(), keepends=True)
             diff = difflib.unified_diff(current_lines, new_lines)
+            import parso
             raise Exception(
-                "There's an issue (%s != %s) with the diff parser. Please report:\n%s"
-                % (last_pos, line_length, ''.join(diff))
+                "There's an issue (%s != %s) with the diff parser. Please "
+                "report (parso v%s):\n%s"
+                % (last_pos, line_length, parso.__version__, ''.join(diff))
             )
 
         LOG.debug('diff parser end')
