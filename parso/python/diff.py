@@ -531,7 +531,7 @@ class _NodesStack(object):
             return [], tos
 
         last_node = new_nodes[-1]
-        line_offset_index = -1
+        had_valid_suite_last = False
         if _func_or_class_has_suite(last_node):
             suite = last_node
             while suite.type != 'suite':
@@ -548,7 +548,7 @@ class _NodesStack(object):
             else:
                 suite_tos.parent = tos
                 new_tos = recursive_tos
-                line_offset_index = -2
+                had_valid_suite_last = True
 
         elif (last_node.type in ('error_leaf', 'error_node') or
               _is_flow_node(new_nodes[-1])):
@@ -567,13 +567,10 @@ class _NodesStack(object):
                 new_nodes.pop()
 
         if new_nodes:
-            try:
-                last_line_offset_leaf = new_nodes[line_offset_index].get_last_leaf()
-            except IndexError:
-                line_offset = 0
-                # In this case we don't have to calculate an offset, because
-                # there's no children to be managed.
-                last_line_offset_leaf = None
+            if had_valid_suite_last:
+                last_line_offset_leaf = new_nodes[-1].children[-2].get_last_leaf()
+            else:
+                last_line_offset_leaf = new_nodes[-1].get_last_leaf()
             tos.add(new_nodes, line_offset, last_line_offset_leaf)
         return new_nodes, new_tos
 

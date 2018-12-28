@@ -43,9 +43,8 @@ def _assert_valid_graph(node):
     except AttributeError:
         previous_leaf = node.get_previous_leaf()
         if previous_leaf is not None:
-            if previous_leaf.type != 'error_leaf' or previous_leaf.token_type != 'INDENT':
-                assert previous_leaf.end_pos == node.get_start_pos_of_prefix(), \
-                    (previous_leaf, node)
+            assert previous_leaf.end_pos <= node.start_pos, \
+                (previous_leaf, node)
         return
 
     for child in children:
