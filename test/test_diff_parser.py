@@ -142,7 +142,7 @@ def test_if_simple(differ):
     differ.initialize(src + 'a')
     differ.parse(src + else_ + "a", copies=0, parsers=1)
 
-    differ.parse(else_, parsers=1, expect_error_leaves=True)
+    differ.parse(else_, parsers=1, copies=1, expect_error_leaves=True)
     differ.parse(src + else_, parsers=1)
 
 
@@ -560,3 +560,34 @@ def test_invalid_to_valid_nodes(differ):
 
     differ.initialize(code1)
     differ.parse(code2, parsers=1, copies=3)
+
+
+def test_if_removal_and_reappearence(differ):
+    code1 = dedent('''\
+        la = 3
+        if foo:
+            latte = 3
+        else:
+            la
+        pass
+    ''')
+
+    code2 = dedent('''\
+        la = 3
+            latte = 3
+        else:
+            la
+        pass
+    ''')
+
+    code3 = dedent('''\
+        la = 3
+        if foo:
+            latte = 3
+        else:
+            la
+    ''')
+    differ.initialize(code1)
+    differ.parse(code2, parsers=1, copies=4, expect_error_leaves=True)
+    differ.parse(code1, parsers=1, copies=1)
+    differ.parse(code3, parsers=1, copies=1)

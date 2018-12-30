@@ -171,6 +171,7 @@ class DiffParser(object):
                 % (last_pos, line_length, parso.__version__, ''.join(diff))
             )
 
+        #assert self._module.get_code() == ''.join(new_lines)
         LOG.debug('diff parser end')
         return self._module
 
@@ -212,7 +213,9 @@ class DiffParser(object):
 
                     to = self._nodes_tree.parsed_until_line
 
-                    LOG.debug('actually copy %s to %s', from_, to)
+                    LOG.debug('copy old[%s:%s] new[%s:%s]',
+                              copied_nodes[0].start_pos[0],
+                              copied_nodes[-1].end_pos[0] - 1, from_, to)
             # Since there are potential bugs that might loop here endlessly, we
             # just stop here.
             assert last_until_line != self._nodes_tree.parsed_until_line \
@@ -228,7 +231,11 @@ class DiffParser(object):
             node = leaf
             while node.parent.type not in ('file_input', 'suite'):
                 node = node.parent
-            return node
+
+            # Make sure that if only the `else:` line of an if statement is
+            # copied that not the whole thing is going to be copied.
+            if node.start_pos[0] >= old_line:
+                return node
         # Must be on the same line. Otherwise we need to parse that bit.
         return None
 
