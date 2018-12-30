@@ -530,3 +530,33 @@ def test_end_newline_with_decorator(differ):
     newline, first_stmt, second_stmt = suite.children
     assert first_stmt.get_code() == '    import json\n'
     assert second_stmt.get_code() == '    json.l\n'
+
+
+def test_invalid_to_valid_nodes(differ):
+    code1 = dedent('''\
+    def a():
+        foo = 3
+        def b():
+            la = 3
+            else:
+                la
+            return
+        foo
+    base
+    ''')
+    code2 = dedent('''\
+    def a():
+        foo = 3
+        def b():
+            la = 3
+            if foo:
+                latte = 3
+            else:
+                la
+            return
+        foo
+    base
+    ''')
+
+    differ.initialize(code1)
+    differ.parse(code2, parsers=2, copies=3)
