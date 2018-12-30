@@ -78,7 +78,7 @@ class Differ(object):
         self.lines = lines
         assert code == new_module.get_code()
         assert diff_parser._copy_count == copies
-        #assert diff_parser._parser_count == parsers
+        assert diff_parser._parser_count == parsers
 
         assert expect_error_leaves == _check_error_leaves_nodes(new_module)
         _assert_valid_graph(new_module)
@@ -126,7 +126,7 @@ def test_positions(differ):
 
     m = differ.parse('a\n\n', parsers=1)
     assert m.end_pos == (3, 0)
-    m = differ.parse('a\n\n ', copies=1, parsers=1)
+    m = differ.parse('a\n\n ', copies=1, parsers=2)
     assert m.end_pos == (3, 1)
     m = differ.parse('a ', parsers=1)
     assert m.end_pos == (1, 2)
@@ -259,7 +259,7 @@ def test_backslash(differ):
 def test_full_copy(differ):
     code = 'def foo(bar, baz):\n pass\n bar'
     differ.initialize(code)
-    differ.parse(code, copies=1, parsers=1)
+    differ.parse(code, copies=1)
 
 
 def test_wrong_whitespace(differ):
@@ -267,10 +267,10 @@ def test_wrong_whitespace(differ):
     hello
     '''
     differ.initialize(code)
-    differ.parse(code + 'bar\n    ', parsers=1)
+    differ.parse(code + 'bar\n    ', parsers=3)
 
     code += """abc(\npass\n    """
-    differ.parse(code, parsers=1, copies=1, expect_error_leaves=True)
+    differ.parse(code, parsers=2, copies=1, expect_error_leaves=True)
 
 
 def test_issues_with_error_leaves(differ):
@@ -371,7 +371,7 @@ def test_totally_wrong_whitespace(differ):
     '''
 
     differ.initialize(code1)
-    differ.parse(code2, parsers=3, copies=0, expect_error_leaves=True)
+    differ.parse(code2, parsers=4, copies=0, expect_error_leaves=True)
 
 
 def test_node_insertion(differ):
@@ -487,7 +487,7 @@ def test_indentation_issue(differ):
     """)
 
     differ.initialize(code1)
-    differ.parse(code2, parsers=2)
+    differ.parse(code2, parsers=1)
 
 
 def test_endmarker_newline(differ):
@@ -505,7 +505,7 @@ def test_endmarker_newline(differ):
     code2 = code1.replace('codet', 'coded')
 
     differ.initialize(code1)
-    differ.parse(code2, parsers=2, copies=2, expect_error_leaves=True)
+    differ.parse(code2, parsers=1, copies=2, expect_error_leaves=True)
 
 
 def test_newlines_at_end(differ):
@@ -521,7 +521,7 @@ def test_end_newline_with_decorator(differ):
             json.l''')
 
     differ.initialize(code)
-    module = differ.parse(code + '\n', copies=1)
+    module = differ.parse(code + '\n', copies=1, parsers=1)
     decorated, endmarker = module.children
     assert decorated.type == 'decorated'
     decorator, func = decorated.children
@@ -559,4 +559,4 @@ def test_invalid_to_valid_nodes(differ):
     ''')
 
     differ.initialize(code1)
-    differ.parse(code2, parsers=2, copies=3)
+    differ.parse(code2, parsers=1, copies=3)
