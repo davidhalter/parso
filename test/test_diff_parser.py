@@ -59,11 +59,11 @@ class Differ(object):
         new_module = diff_parser.update(self.lines, lines)
         self.lines = lines
         assert code == new_module.get_code()
+        _assert_valid_graph(new_module)
         assert diff_parser._copy_count == copies
         assert diff_parser._parser_count == parsers
 
         assert expect_error_leaves == _check_error_leaves_nodes(new_module)
-        _assert_valid_graph(new_module)
         return new_module
 
 
@@ -573,3 +573,9 @@ def test_if_removal_and_reappearence(differ):
     differ.parse(code2, parsers=1, copies=4, expect_error_leaves=True)
     differ.parse(code1, parsers=1, copies=1)
     differ.parse(code3, parsers=1, copies=1)
+
+
+def test_add_error_indentation(differ):
+    code = 'if x:\n 1\n'
+    differ.initialize(code)
+    differ.parse(code + '  2\n', parsers=1, copies=0, expect_error_leaves=True)

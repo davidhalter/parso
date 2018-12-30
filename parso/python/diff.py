@@ -29,6 +29,16 @@ def _assert_valid_graph(node):
     except AttributeError:
         previous_leaf = node.get_previous_leaf()
 
+        # Ignore INDENT is necessary, because indent/dedent tokens don't
+        # contain value/prefix and are just around, because of the tokenizer.
+        if node.type == 'error_leaf' and node.token_type == 'INDENT':
+            return
+        while previous_leaf and previous_leaf.type == 'error_leaf' \
+                and previous_leaf.token_type == 'INDENT':
+            assert previous_leaf.end_pos <= node.start_pos, \
+                (previous_leaf, node)
+            previous_leaf = previous_leaf.get_previous_leaf()
+
         # Calculate the content between two start positions.
         if previous_leaf is None:
             content = node.prefix
