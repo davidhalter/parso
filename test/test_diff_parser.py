@@ -6,7 +6,7 @@ import pytest
 from parso.utils import split_lines
 from parso import cache
 from parso import load_grammar
-from parso.python.diff import DiffParser
+from parso.python.diff import DiffParser, _assert_valid_graph
 from parso import parse
 
 
@@ -32,24 +32,6 @@ def _check_error_leaves_nodes(node):
             if _check_error_leaves_nodes(child):
                 return True
     return False
-
-
-def _assert_valid_graph(node):
-    """
-    Checks if the parent/children relationship is correct.
-    """
-    try:
-        children = node.children
-    except AttributeError:
-        previous_leaf = node.get_previous_leaf()
-        if previous_leaf is not None:
-            assert previous_leaf.end_pos <= node.start_pos, \
-                (previous_leaf, node)
-        return
-
-    for child in children:
-        assert child.parent == node
-        _assert_valid_graph(child)
 
 
 class Differ(object):

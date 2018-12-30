@@ -17,6 +17,25 @@ from parso.python.tokenize import PythonToken
 from parso.python.token import PythonTokenTypes
 
 LOG = logging.getLogger(__name__)
+DEBUG_DIFF_PARSER = False
+
+
+def _assert_valid_graph(node):
+    """
+    Checks if the parent/children relationship is correct.
+    """
+    try:
+        children = node.children
+    except AttributeError:
+        previous_leaf = node.get_previous_leaf()
+        if previous_leaf is not None:
+            assert previous_leaf.end_pos <= node.start_pos, \
+                (previous_leaf, node)
+        return
+
+    for child in children:
+        assert child.parent == node
+        _assert_valid_graph(child)
 
 
 def _get_last_line(node_or_leaf):
@@ -171,7 +190,12 @@ class DiffParser(object):
                 % (last_pos, line_length, parso.__version__, ''.join(diff))
             )
 
-        #assert self._module.get_code() == ''.join(new_lines)
+        if DEBUG_DIFF_PARSER:
+            # If there is reasonable suspicion that the diff parser is not
+            # behaving well, this should be enabled.
+            assert self._module.get_code() == ''.join(new_lines)
+            _assert_valid_graph(self._module)
+
         LOG.debug('diff parser end')
         return self._module
 
