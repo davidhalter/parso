@@ -28,14 +28,30 @@ def _assert_valid_graph(node):
         children = node.children
     except AttributeError:
         previous_leaf = node.get_previous_leaf()
-        if previous_leaf is not None:
+
+        # Calculate the content between two start positions.
+        if previous_leaf is None:
+            content = node.prefix
+            previous_start_pos = 1, 0
+        else:
             assert previous_leaf.end_pos <= node.start_pos, \
                 (previous_leaf, node)
-        return
 
-    for child in children:
-        assert child.parent == node
-        _assert_valid_graph(child)
+            content = previous_leaf.value + node.prefix
+            previous_start_pos = previous_leaf.start_pos
+
+        if '\n' in content:
+            splitted = split_lines(content)
+            line = previous_start_pos[0] + len(splitted) - 1
+            actual = line, len(splitted[-1])
+        else:
+            actual = previous_start_pos[0], previous_start_pos[1] + len(content)
+
+        assert node.start_pos == actual, (node.start_pos, actual)
+    else:
+        for child in children:
+            assert child.parent == node
+            _assert_valid_graph(child)
 
 
 def _get_last_line(node_or_leaf):
