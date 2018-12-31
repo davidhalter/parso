@@ -447,6 +447,9 @@ class _NodesTreeNode(object):
         if suffix and not suffix.endswith('\n'):
             # This is the end of a file (that doesn't end with a newline).
             line += 1
+
+        if self._node_children:
+            return max(line, self._node_children[-1].get_last_line(suffix))
         return line
 
 

@@ -579,3 +579,29 @@ def test_add_error_indentation(differ):
     code = 'if x:\n 1\n'
     differ.initialize(code)
     differ.parse(code + '  2\n', parsers=1, copies=0, expect_error_leaves=True)
+
+
+def test_differing_docstrings(differ):
+    code1 = dedent('''\
+        def foobar(x, y):
+            1
+            return x
+
+        def bazbiz():
+            foobar()
+        lala
+        ''')
+
+    code2 = dedent('''\
+        def foobar(x, y):
+            2
+            return x + y
+
+        def bazbiz():
+            z = foobar()
+        lala
+        ''')
+
+    differ.initialize(code1)
+    differ.parse(code2, parsers=3, copies=1)
+    differ.parse(code1, parsers=3, copies=1)
