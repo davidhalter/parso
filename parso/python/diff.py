@@ -64,6 +64,18 @@ def _assert_valid_graph(node):
             _assert_valid_graph(child)
 
 
+def _get_debug_error_message(module, old_lines, new_lines):
+    current_lines = split_lines(module.get_code(), keepends=True)
+    current_diff = difflib.unified_diff(current_lines, new_lines)
+    old_new_diff = difflib.unified_diff(old_lines, new_lines)
+    import parso
+    return (
+        "There's an issue with the diff parser. Please "
+        "report (parso v%s) - Old/New:\n%s\nActual Diff (May be empty):\n%s"
+        % (parso.__version__, ''.join(old_new_diff), ''.join(current_diff))
+    )
+
+
 def _get_last_line(node_or_leaf):
     last_leaf = node_or_leaf.get_last_leaf()
     if _ends_with_newline(last_leaf):
@@ -207,20 +219,20 @@ class DiffParser(object):
 
         last_pos = self._module.end_pos[0]
         if last_pos != line_length:
-            current_lines = split_lines(self._module.get_code(), keepends=True)
-            diff = difflib.unified_diff(current_lines, new_lines)
-            import parso
             raise Exception(
-                "There's an issue (%s != %s) with the diff parser. Please "
-                "report (parso v%s):\n%s"
-                % (last_pos, line_length, parso.__version__, ''.join(diff))
+                ('(%s != %s) ' % (last_pos, line_length))
+                + _get_debug_error_message(self._module, old_lines, new_lines)
             )
 
         if DEBUG_DIFF_PARSER:
             # If there is reasonable suspicion that the diff parser is not
             # behaving well, this should be enabled.
-            assert self._module.get_code() == ''.join(new_lines)
-            _assert_valid_graph(self._module)
+            try:
+                assert self._module.get_code() == ''.join(new_lines)
+                _assert_valid_graph(self._module)
+            except AssertionError:
+                print(_get_debug_error_message(self._module, old_lines, new_lines))
+                raise
 
         LOG.debug('diff parser end')
         return self._module
