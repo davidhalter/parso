@@ -66,7 +66,7 @@ def _assert_valid_graph(node):
 
 def _get_debug_error_message(module, old_lines, new_lines):
     current_lines = split_lines(module.get_code(), keepends=True)
-    current_diff = difflib.unified_diff(current_lines, new_lines)
+    current_diff = difflib.unified_diff(new_lines, current_lines)
     old_new_diff = difflib.unified_diff(old_lines, new_lines)
     import parso
     return (
