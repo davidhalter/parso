@@ -90,7 +90,7 @@ class Parser(BaseParser):
         strictly bottom-up.
         """
         try:
-            return self.node_map[nonterminal](children)
+            node = self.node_map[nonterminal](children)
         except KeyError:
             if nonterminal == 'suite':
                 # We don't want the INDENT/DEDENT in our parser tree. Those
@@ -104,7 +104,10 @@ class Parser(BaseParser):
             elif nonterminal == 'listmaker':
                 # Same as list_if above.
                 nonterminal = 'testlist_comp'
-            return self.default_node(nonterminal, children)
+            node = self.default_node(nonterminal, children)
+        for c in children:
+            c.parent = node
+        return node
 
     def convert_leaf(self, type, value, prefix, start_pos):
         # print('leaf', repr(value), token.tok_name[type])
@@ -189,7 +192,10 @@ class Parser(BaseParser):
         all_nodes = [node for stack_node in self.stack[start_index:] for node in stack_node.nodes]
 
         if all_nodes:
-            self.stack[start_index - 1].nodes.append(tree.PythonErrorNode(all_nodes))
+            node = tree.PythonErrorNode(all_nodes)
+            for n in all_nodes:
+                n.parent = node
+            self.stack[start_index - 1].nodes.append(node)
 
         self.stack[start_index:] = []
         return bool(all_nodes)

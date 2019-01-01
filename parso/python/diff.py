@@ -60,7 +60,7 @@ def _assert_valid_graph(node):
         assert node.start_pos == actual, (node.start_pos, actual)
     else:
         for child in children:
-            assert child.parent == node
+            assert child.parent == node, (node, child)
             _assert_valid_graph(child)
 
 

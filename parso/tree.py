@@ -244,8 +244,6 @@ class BaseNode(NodeOrLeaf):
     type = None
 
     def __init__(self, children):
-        for c in children:
-            c.parent = self
         self.children = children
         """
         A list of :class:`NodeOrLeaf` child nodes.
