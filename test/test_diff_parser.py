@@ -208,6 +208,7 @@ def test_open_parentheses_at_end(differ):
     differ.initialize(code)
     differ.parse(code, parsers=1, expect_error_leaves=True)
 
+
 def test_backslash(differ):
     src = dedent(r"""
     a = 1\
@@ -451,6 +452,9 @@ def test_in_parentheses_newlines(differ):
         pass
 
     b = 2""")
+
+    differ.initialize(code1)
+    differ.parse(code2, parsers=1, copies=1)
 
 
 def test_indentation_issue(differ):
