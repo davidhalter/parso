@@ -701,3 +701,24 @@ def test_docstring_removal(differ):
     differ.initialize(code1)
     differ.parse(code2, parsers=1, copies=2)
     differ.parse(code1, parsers=2, copies=1)
+
+
+def test_paren_in_strange_position(differ):
+    code1 = dedent('''\
+        class C:
+            """ ha """
+            def __init__(self, message):
+                self.message = message
+        ''')
+
+    code2 = dedent('''\
+        class C:
+            """ ha """
+                    )
+            def __init__(self, message):
+                self.message = message
+        ''')
+
+    differ.initialize(code1)
+    differ.parse(code2, parsers=1, copies=2, expect_error_leaves=True)
+    differ.parse(code1, parsers=1, copies=1)

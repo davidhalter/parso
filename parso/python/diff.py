@@ -403,7 +403,7 @@ class DiffParser(object):
 
 
 class _NodesTreeNode(object):
-    _ChildrenGroup = namedtuple('_ChildrenGroup', 'children line_offset last_line_offset_leaf')
+    _ChildrenGroup = namedtuple('_ChildrenGroup', 'prefix children line_offset last_line_offset_leaf')
 
     def __init__(self, tree_node, parent=None):
         self.tree_node = tree_node
@@ -413,7 +413,9 @@ class _NodesTreeNode(object):
 
     def finish(self):
         children = []
-        for children_part, line_offset, last_line_offset_leaf in self._children_groups:
+        for prefix, children_part, line_offset, last_line_offset_leaf in self._children_groups:
+            first_leaf = children_part[0].get_first_leaf()
+            first_leaf.prefix = prefix + first_leaf.prefix
             if line_offset != 0:
                 try:
                     _update_positions(
@@ -432,10 +434,10 @@ class _NodesTreeNode(object):
     def add_child_node(self, child_node):
         self._node_children.append(child_node)
 
-    def add_tree_nodes(self, children, line_offset=0, last_line_offset_leaf=None):
+    def add_tree_nodes(self, prefix, children, line_offset=0, last_line_offset_leaf=None):
         if last_line_offset_leaf is None:
             last_line_offset_leaf = children[-1].get_last_leaf()
-        group = self._ChildrenGroup(children, line_offset, last_line_offset_leaf)
+        group = self._ChildrenGroup(prefix, children, line_offset, last_line_offset_leaf)
         self._children_groups.append(group)
 
     def get_last_line(self, suffix):
@@ -450,6 +452,7 @@ class _NodesTreeNode(object):
             if _ends_with_newline(last_leaf, suffix):
                 line -= 1
         line += suffix.count('\n')
+
         if suffix and not suffix.endswith('\n'):
             # This is the end of a file (that doesn't end with a newline).
             line += 1
@@ -466,7 +469,7 @@ class _NodesTree(object):
         self._base_node = _NodesTreeNode(module)
         self._working_stack = [self._base_node]
         self._module = module
-        self._last_prefix = ''
+        self._prefix_remainder = ''
         self.prefix = ''
 
     @property
@@ -496,22 +499,24 @@ class _NodesTree(object):
             self._working_stack.pop()
 
     def add_parsed_nodes(self, tree_nodes):
+        old_prefix = self.prefix
         tree_nodes = self._remove_endmarker(tree_nodes)
         if not tree_nodes:
+            self.prefix = old_prefix + self.prefix
             return
 
         assert tree_nodes[0].type != 'newline'
 
         node = self._get_insertion_node(tree_nodes[0])
         assert node.tree_node.type in ('suite', 'file_input')
-        node.add_tree_nodes(tree_nodes)
+        node.add_tree_nodes(old_prefix, tree_nodes)
         # tos = Top of stack
         self._update_tos(tree_nodes[-1])
 
     def _update_tos(self, tree_node):
         if tree_node.type in ('suite', 'file_input'):
             new_tos = _NodesTreeNode(tree_node)
-            new_tos.add_tree_nodes(list(tree_node.children))
+            new_tos.add_tree_nodes('', list(tree_node.children))
 
             self._working_stack[-1].add_child_node(new_tos)
             self._working_stack.append(new_tos)
@@ -526,7 +531,7 @@ class _NodesTree(object):
         """
         last_leaf = tree_nodes[-1].get_last_leaf()
         is_endmarker = last_leaf.type == self.endmarker_type
-        self._last_prefix = ''
+        self._prefix_remainder = ''
         if is_endmarker:
             try:
                 separation = last_leaf.prefix.rindex('\n') + 1
@@ -536,11 +541,9 @@ class _NodesTree(object):
                 # Remove the whitespace part of the prefix after a newline.
                 # That is not relevant if parentheses were opened. Always parse
                 # until the end of a line.
-                last_leaf.prefix, self._last_prefix = \
+                last_leaf.prefix, self._prefix_remainder = \
                     last_leaf.prefix[:separation], last_leaf.prefix[separation:]
 
-        first_leaf = tree_nodes[0].get_first_leaf()
-        first_leaf.prefix = self.prefix + first_leaf.prefix
         self.prefix = ''
 
         if is_endmarker:
@@ -561,13 +564,15 @@ class _NodesTree(object):
             list(self._working_stack),
             tree_nodes,
             until_line,
-            line_offset
+            line_offset,
+            self.prefix,
         )
         return new_nodes
 
-    def _copy_nodes(self, working_stack, nodes, until_line, line_offset):
+    def _copy_nodes(self, working_stack, nodes, until_line, line_offset, prefix=''):
         new_nodes = []
 
+        new_prefix = ''
         for node in nodes:
             if node.start_pos[0] > until_line:
                 break
@@ -577,7 +582,7 @@ class _NodesTree(object):
                 # remove the newline at the end of the line, otherwise it's
                 # going to be missing.
                 try:
-                    self.prefix = node.prefix[:node.prefix.rindex('\n') + 1]
+                    new_prefix = node.prefix[:node.prefix.rindex('\n') + 1]
                 except ValueError:
                     pass
                 # Endmarkers just distort all the checks below. Remove them.
@@ -645,7 +650,10 @@ class _NodesTree(object):
                 assert last_line_offset_leaf == ':'
             else:
                 last_line_offset_leaf = new_nodes[-1].get_last_leaf()
-            tos.add_tree_nodes(new_nodes, line_offset, last_line_offset_leaf)
+            tos.add_tree_nodes(prefix, new_nodes, line_offset, last_line_offset_leaf)
+            self.prefix = new_prefix
+            self._prefix_remainder = ''
+
         return new_nodes, working_stack
 
     def close(self):
@@ -665,6 +673,6 @@ class _NodesTree(object):
             end_pos[0] += len(lines) - 1
             end_pos[1] = len(lines[-1])
 
-        endmarker = EndMarker('', tuple(end_pos), self.prefix + self._last_prefix)
+        endmarker = EndMarker('', tuple(end_pos), self.prefix + self._prefix_remainder)
         endmarker.parent = self._module
         self._module.children.append(endmarker)
