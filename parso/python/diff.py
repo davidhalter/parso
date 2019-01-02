@@ -638,7 +638,11 @@ class _NodesTree(object):
 
         if new_nodes:
             if had_valid_suite_last:
-                last_line_offset_leaf = new_nodes[-1].children[-2].get_last_leaf()
+                last = new_nodes[-1]
+                if last.type == 'decorated':
+                    last = last.children[-1]
+                last_line_offset_leaf = last.children[-2].get_last_leaf()
+                assert last_line_offset_leaf == ':'
             else:
                 last_line_offset_leaf = new_nodes[-1].get_last_leaf()
             tos.add_tree_nodes(new_nodes, line_offset, last_line_offset_leaf)

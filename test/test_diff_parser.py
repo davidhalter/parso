@@ -665,3 +665,39 @@ def test_function_deletion(differ):
     differ.initialize(code1)
     differ.parse(code2, parsers=1, copies=0, expect_error_leaves=True)
     differ.parse(code1, parsers=1, copies=0)
+
+
+def test_docstring_removal(differ):
+    code1 = dedent('''\
+        class E(Exception):
+            """
+            1
+            2
+            3
+            """
+
+        class S(object):
+            @property
+            def f(self):
+                return cmd
+            def __repr__(self):
+                return cmd2
+        ''')
+
+    code2 = dedent('''\
+        class E(Exception):
+            """
+            1
+            3
+            """
+
+        class S(object):
+            @property
+            def f(self):
+                return cmd
+                return cmd2
+        ''')
+
+    differ.initialize(code1)
+    differ.parse(code2, parsers=1, copies=2)
+    differ.parse(code1, parsers=2, copies=1)
