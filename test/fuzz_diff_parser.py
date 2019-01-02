@@ -14,6 +14,7 @@ Options:
   --ipdb                 Launch ipdb when error is raised
 """
 
+from __future__ import print_function
 import logging
 import sys
 import os
@@ -71,6 +72,7 @@ def run(path, maxtries, debugger, change_count):
             grammar.parse(code2, diff_cache=True)
             print('.', end='')
             sys.stdout.flush()
+        print()
     except Exception:
         print("Issue in file: %s" % path)
         if debugger:
