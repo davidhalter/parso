@@ -196,7 +196,7 @@ class DiffParser(object):
         LOG.debug('line_lengths old: %s; new: %s' % (len(old_lines), line_length))
 
         for operation, i1, i2, j1, j2 in opcodes:
-            LOG.debug('code[%s] old[%s:%s] new[%s:%s]',
+            LOG.debug('-> code[%s] old[%s:%s] new[%s:%s]',
                       operation, i1 + 1, i2, j1 + 1, j2)
 
             if j2 == line_length and new_lines[-1] == '':
@@ -403,7 +403,7 @@ class DiffParser(object):
 
 
 class _NodesTreeNode(object):
-    ChildrenGroup = namedtuple('ChildrenGroup', 'children line_offset last_line_offset_leaf')
+    _ChildrenGroup = namedtuple('_ChildrenGroup', 'children line_offset last_line_offset_leaf')
 
     def __init__(self, tree_node, parent=None):
         self.tree_node = tree_node
@@ -433,23 +433,17 @@ class _NodesTreeNode(object):
         self._node_children.append(child_node)
 
     def add_tree_nodes(self, children, line_offset=0, last_line_offset_leaf=None):
-        group = self.ChildrenGroup(children, line_offset, last_line_offset_leaf)
+        if last_line_offset_leaf is None:
+            last_line_offset_leaf = children[-1].get_last_leaf()
+        group = self._ChildrenGroup(children, line_offset, last_line_offset_leaf)
         self._children_groups.append(group)
 
     def get_last_line(self, suffix):
         line = 0
         if self._children_groups:
             children_group = self._children_groups[-1]
-            last_leaf = children_group.children[-1].get_last_leaf()
-            line = last_leaf.end_pos[0]
-
-            # Calculate the line offsets
-            offset = children_group.line_offset
-            if offset:
-                # In case the line_offset is not applied to this specific leaf,
-                # just ignore it.
-                if last_leaf.line <= children_group.last_line_offset_leaf.line:
-                    line += children_group.line_offset
+            last_leaf = children_group.last_line_offset_leaf
+            line = last_leaf.end_pos[0] + children_group.line_offset
 
             # Newlines end on the next line, which means that they would cover
             # the next line. That line is not fully parsed at this point.

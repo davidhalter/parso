@@ -609,3 +609,34 @@ def test_differing_docstrings(differ):
     differ.initialize(code1)
     differ.parse(code2, parsers=3, copies=1)
     differ.parse(code1, parsers=3, copies=1)
+
+
+def test_one_call_in_function_change(differ):
+    code1 = dedent('''\
+        def f(self):
+            mro = [self]
+            for a in something:
+                yield a
+
+        def g(self):
+            return C(
+                a=str,
+                b=self,
+            )
+        ''')
+
+    code2 = dedent('''\
+        def f(self):
+            mro = [self]
+
+        def g(self):
+            return C(
+                a=str,
+                t
+                b=self,
+            )
+        ''')
+
+    differ.initialize(code1)
+    differ.parse(code2, parsers=1, copies=1, expect_error_leaves=True)
+    differ.parse(code1, parsers=2, copies=1)
