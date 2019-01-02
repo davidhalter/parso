@@ -640,3 +640,28 @@ def test_one_call_in_function_change(differ):
     differ.initialize(code1)
     differ.parse(code2, parsers=1, copies=1, expect_error_leaves=True)
     differ.parse(code1, parsers=2, copies=1)
+
+
+def test_function_deletion(differ):
+    code1 = dedent('''\
+        class C(list):
+            def f(self):
+                def iterate():
+                    for x in b:
+                        break
+
+                return list(iterate())
+        ''')
+
+    code2 = dedent('''\
+        class C():
+            def f(self):
+                    for x in b:
+                        break
+
+                return list(iterate())
+        ''')
+
+    differ.initialize(code1)
+    differ.parse(code2, parsers=1, copies=0, expect_error_leaves=True)
+    differ.parse(code1, parsers=1, copies=0)
