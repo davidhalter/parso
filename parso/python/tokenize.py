@@ -554,13 +554,15 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                 if token in always_break_tokens:
                     fstring_stack[:] = []
                     paren_level = 0
-                    while True:
-                        indent = indents.pop()
-                        if indent > start:
-                            yield PythonToken(DEDENT, '', spos, '')
-                        else:
-                            indents.append(indent)
-                            break
+                    # We only want to dedent if the token is on a new line.
+                    if re.match(r'[ \f\t]*$', line[:start]):
+                        while True:
+                            indent = indents.pop()
+                            if indent > start:
+                                yield PythonToken(DEDENT, '', spos, '')
+                            else:
+                                indents.append(indent)
+                                break
                 yield PythonToken(NAME, token, spos, prefix)
             elif initial == '\\' and line[start:] in ('\\\n', '\\\r\n'):  # continued stmt
                 additional_prefix += prefix + line[start:]

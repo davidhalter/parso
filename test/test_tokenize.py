@@ -246,3 +246,25 @@ def test_error_string():
     assert t1.string == '"'
     assert endmarker.prefix == '\n'
     assert endmarker.string == ''
+
+
+def test_indent_error_recovery():
+    code = dedent("""\
+                        str(
+        from x import a
+        def
+        """)
+    lst = _get_token_list(code)
+    expected = [
+        # `str(`
+        INDENT, NAME, OP,
+        # `from parso`
+        NAME, NAME,
+        # `import a` on same line as the previous from parso
+        NAME, NAME, NEWLINE,
+        # Dedent happens, because there's an import now and the import
+        # statement "breaks" out of the opening paren on the first line.
+        DEDENT,
+        # `b`
+        NAME, NEWLINE, ENDMARKER]
+    assert [t.type for t in lst] == expected

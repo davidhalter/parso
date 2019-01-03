@@ -722,3 +722,26 @@ def test_paren_in_strange_position(differ):
     differ.initialize(code1)
     differ.parse(code2, parsers=1, copies=2, expect_error_leaves=True)
     differ.parse(code1, parsers=1, copies=1)
+
+
+def insert_line_into_code(code, index, line):
+    lines = split_lines(code, keepends=True)
+    lines.insert(index, line)
+    return ''.join(lines)
+
+
+def test_paren_before_docstring(differ):
+    code1 = dedent('''\
+        # comment
+        """
+        The
+        """
+        from parso import tree
+        from parso import python
+        ''')
+
+    code2 = insert_line_into_code(code1, 1, ' ' * 16 + 'raise InternalParseError(\n')
+
+    differ.initialize(code1)
+    differ.parse(code2, parsers=1, copies=1, expect_error_leaves=True)
+    differ.parse(code1, parsers=2, copies=1)
