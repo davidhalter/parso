@@ -774,3 +774,47 @@ def test_parentheses_before_method(differ):
     differ.initialize(code1)
     differ.parse(code2, parsers=2, copies=1, expect_error_leaves=True)
     differ.parse(code1, parsers=1, copies=1)
+
+
+def test_indentation_issues(differ):
+    code1 = dedent('''\
+        class C:
+            def f():
+                1
+                if 2:
+                    return 3
+
+            def g():
+                to_be_removed
+                pass
+        ''')
+
+    code2 = dedent('''\
+        class C:
+            def f():
+                1
+        ``something``, very ``weird``).
+                if 2:
+                    return 3
+
+            def g():
+                to_be_removed
+                pass
+        ''')
+
+    code3 = dedent('''\
+        class C:
+            def f():
+                1
+                if 2:
+                    return 3
+
+            def g():
+                pass
+        ''')
+
+    differ.initialize(code1)
+    differ.parse(code2, parsers=1, copies=2, expect_error_leaves=True)
+    differ.parse(code1, parsers=2, copies=1)
+    differ.parse(code3, parsers=1, copies=1)
+    differ.parse(code1, parsers=1, copies=2)

@@ -564,6 +564,10 @@ class _NodesTree(object):
 
         Returns the number of tree nodes that were copied.
         """
+        if tree_nodes[0].type == 'error_leaf' and tree_nodes[0].token_type == 'INDENT':
+            # Avoid copying error indents. Just parse them again.
+            return []
+
         self._get_insertion_node(tree_nodes[0])
 
         new_nodes, self._working_stack = self._copy_nodes(
