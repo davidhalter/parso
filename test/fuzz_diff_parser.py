@@ -1,7 +1,9 @@
 """
+A script to find bugs in the diff parser.
+
 Usage:
   fuzz_diff_parser.py [--pdb|--ipdb] [-l] [-n=<nr>] [-x=<nr>] random [<path>]
-  fuzz_diff_parser.py [--pdb|--ipdb] [-l] redo
+  fuzz_diff_parser.py [--pdb|--ipdb] [-l] redo [-o=<nr>]
   fuzz_diff_parser.py -h | --help
 
 Options:
@@ -9,6 +11,7 @@ Options:
   -n, --maxtries=<nr>    Maximum of random tries [default: 100]
   -x, --changes=<nr>     Amount of changes to be done to a file per try [default: 2]
   -l, --logging          Prints all the logs
+  -o, --only-last=<nr>   Only runs the last n iterations. Defaults to running all.
   --pdb                  Launch pdb when error is raised
   --ipdb                 Launch ipdb when error is raised
 """
@@ -131,8 +134,11 @@ class FileTests:
                 pdb.post_mortem(einfo[2])
             raise
 
-    def redo(self, grammar, debugger):
-        self._run(grammar, self._file_modifications, debugger)
+    def redo(self, grammar, debugger, *, only_last):
+        mods = self._file_modifications
+        if only_last is not None:
+            mods = mods[-only_last:]
+        self._run(grammar, mods, debugger)
 
     def run(self, grammar, debugger):
         def iterate():
@@ -162,7 +168,8 @@ def main(arguments):
     if arguments['redo']:
         with open(redo_file, 'rb') as f:
             file_tests_obj = pickle.load(f)
-        file_tests_obj.redo(grammar, debugger)
+        only_last = arguments['--only-last'] and int(arguments['--only-last'])
+        file_tests_obj.redo(grammar, debugger, only_last=only_last)
     elif arguments['random']:
         # A random file is used to do diff parser checks if no file is given.
         # This helps us to find errors in a lot of different files.
