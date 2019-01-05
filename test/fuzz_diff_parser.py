@@ -3,7 +3,7 @@ A script to find bugs in the diff parser.
 
 Usage:
   fuzz_diff_parser.py [--pdb|--ipdb] [-l] [-n=<nr>] [-x=<nr>] random [<path>]
-  fuzz_diff_parser.py [--pdb|--ipdb] [-l] redo [-o=<nr>]
+  fuzz_diff_parser.py [--pdb|--ipdb] [-l] redo [-o=<nr>] [-p]
   fuzz_diff_parser.py -h | --help
 
 Options:
@@ -11,7 +11,8 @@ Options:
   -n, --maxtries=<nr>    Maximum of random tries [default: 100]
   -x, --changes=<nr>     Amount of changes to be done to a file per try [default: 2]
   -l, --logging          Prints all the logs
-  -o, --only-last=<nr>   Only runs the last n iterations. Defaults to running all.
+  -o, --only-last=<nr>   Only runs the last n iterations; Defaults to running all
+  -p, --print-diffs      Print all test diffs
   --pdb                  Launch pdb when error is raised
   --ipdb                 Launch ipdb when error is raised
 """
@@ -22,6 +23,7 @@ import sys
 import os
 import random
 import pickle
+import difflib
 
 from docopt import docopt
 
@@ -92,11 +94,17 @@ class FileModification:
         changed_lines = list(code_lines)
         for modification in self._modification_list:
             modification.apply(changed_lines)
-        return ''.join(changed_lines)
+        return changed_lines
 
-    def run(self, grammar, code_lines):
+    def run(self, grammar, code_lines, *, print_diff):
         code = ''.join(code_lines)
-        modified_code = self._apply(code_lines)
+        modified_lines = self._apply(code_lines)
+        modified_code = ''.join(modified_lines)
+
+        if print_diff:
+            print(''.join(
+                difflib.unified_diff(modified_lines, code_lines)
+            ))
 
         grammar.parse(code, diff_cache=True)
         grammar.parse(modified_code, diff_cache=True)
@@ -117,11 +125,11 @@ class FileTests:
             code = f.read()
         self._file_modifications = []
 
-    def _run(self, grammar, file_modifications, debugger):
+    def _run(self, grammar, file_modifications, debugger, *, print_diffs=False):
         try:
             print("Checking %s" % self._path)
             for fm in file_modifications:
-                fm.run(grammar, self._code_lines)
+                fm.run(grammar, self._code_lines, print_diff=print_diffs)
                 print('.', end='')
                 sys.stdout.flush()
             print()
@@ -134,11 +142,11 @@ class FileTests:
                 pdb.post_mortem(einfo[2])
             raise
 
-    def redo(self, grammar, debugger, *, only_last):
+    def redo(self, grammar, debugger, *, only_last, print_diffs):
         mods = self._file_modifications
         if only_last is not None:
             mods = mods[-only_last:]
-        self._run(grammar, mods, debugger)
+        self._run(grammar, mods, debugger, print_diffs=print_diffs)
 
     def run(self, grammar, debugger):
         def iterate():
@@ -169,7 +177,12 @@ def main(arguments):
         with open(redo_file, 'rb') as f:
             file_tests_obj = pickle.load(f)
         only_last = arguments['--only-last'] and int(arguments['--only-last'])
-        file_tests_obj.redo(grammar, debugger, only_last=only_last)
+        file_tests_obj.redo(
+            grammar,
+            debugger,
+            only_last=only_last,
+            print_diffs=arguments['--print-diffs']
+        )
     elif arguments['random']:
         # A random file is used to do diff parser checks if no file is given.
         # This helps us to find errors in a lot of different files.
