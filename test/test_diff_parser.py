@@ -59,6 +59,7 @@ class Differ(object):
         new_module = diff_parser.update(self.lines, lines)
         self.lines = lines
         assert code == new_module.get_code()
+
         _assert_valid_graph(new_module)
         assert diff_parser._copy_count == copies
         assert diff_parser._parser_count == parsers
@@ -745,3 +746,42 @@ def test_paren_before_docstring(differ):
     differ.initialize(code1)
     differ.parse(code2, parsers=1, copies=1, expect_error_leaves=True)
     differ.parse(code1, parsers=2, copies=1)
+
+
+def test_x(differ):
+    code1 = dedent('''\
+        class StackNode(object):
+            def __init__(self, dfa):
+                self.dfa = dfa
+                self.nodes = []
+
+            @property
+            def nonterminal(self):
+                return self.dfa.from_rule
+
+            def __repr__(self):
+                return '%s(%s, %s)' % (self.__class__.__name__, self.dfa, self.nodes)
+
+        def x():
+            pass
+        ''')
+
+    code2 = dedent('''\
+        class StackNode(object):
+            def __init__(self, dfa):
+                self.dfa = dfa
+                self.nodes = []
+                           (msg, type_.name, value, start_pos))
+
+            @property
+            def nonterminal(self):
+
+            def __repr__(self):
+
+        def x():
+            pass
+        ''')
+
+    differ.initialize(code1)
+    differ.parse(code2, parsers=3, copies=1, expect_error_leaves=True)
+    differ.parse(code1, parsers=2, copies=2)

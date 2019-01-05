@@ -23,6 +23,8 @@ DEBUG_DIFF_PARSER = False
 def _assert_valid_graph(node):
     """
     Checks if the parent/children relationship is correct.
+
+    This is a check that only runs during debugging/testing.
     """
     try:
         children = node.children
@@ -112,11 +114,15 @@ def _func_or_class_has_suite(node):
     return node.type in ('classdef', 'funcdef') and node.children[-1].type == 'suite'
 
 
-def suite_or_file_input_is_valid(pgen_grammar, stack):
+def _suite_or_file_input_is_valid(pgen_grammar, stack):
     if not _flows_finished(pgen_grammar, stack):
         return False
 
     for stack_node in reversed(stack):
+        if stack_node.nonterminal == 'decorator':
+            # A decorator is only valid with the upcoming function.
+            return False
+
         if stack_node.nonterminal == 'suite':
             # If only newline is in the suite, the suite is not valid, yet.
             return len(stack_node.nodes) > 1
@@ -388,7 +394,7 @@ class DiffParser(object):
             elif typ == PythonTokenTypes.NEWLINE and start_pos[0] >= until_line:
                 yield PythonToken(typ, string, start_pos, prefix)
                 # Check if the parser is actually in a valid suite state.
-                if suite_or_file_input_is_valid(self._pgen_grammar, stack):
+                if _suite_or_file_input_is_valid(self._pgen_grammar, stack):
                     start_pos = start_pos[0] + 1, 0
                     while len(indents) > int(omitted_first_indent):
                         indents.pop()
