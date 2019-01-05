@@ -49,6 +49,7 @@ setup(name='parso',
       extras_require={
           'testing': [
               'pytest>=3.0.7',
+              'docopt',
           ],
       },
       )
