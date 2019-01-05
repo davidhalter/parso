@@ -96,7 +96,7 @@ class FileModification:
             modification.apply(changed_lines)
         return changed_lines
 
-    def run(self, grammar, code_lines, *, print_diff):
+    def run(self, grammar, code_lines, print_diff):
         code = ''.join(code_lines)
         modified_lines = self._apply(code_lines)
         modified_code = ''.join(modified_lines)
@@ -125,7 +125,7 @@ class FileTests:
             code = f.read()
         self._file_modifications = []
 
-    def _run(self, grammar, file_modifications, debugger, *, print_diffs=False):
+    def _run(self, grammar, file_modifications, debugger, print_diffs=False):
         try:
             print("Checking %s" % self._path)
             for fm in file_modifications:
@@ -142,7 +142,7 @@ class FileTests:
                 pdb.post_mortem(einfo[2])
             raise
 
-    def redo(self, grammar, debugger, *, only_last, print_diffs):
+    def redo(self, grammar, debugger, only_last, print_diffs):
         mods = self._file_modifications
         if only_last is not None:
             mods = mods[-only_last:]
