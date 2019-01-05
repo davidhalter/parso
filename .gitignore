@@ -10,3 +10,4 @@
 parso.egg-info/
 /.cache/
 /.pytest_cache
+test/fuzz-redo.pickle
