@@ -103,7 +103,7 @@ class FileModification:
 
         if print_diff:
             print(''.join(
-                difflib.unified_diff(modified_lines, code_lines)
+                difflib.unified_diff(code_lines, modified_lines)
             ))
 
         grammar.parse(code, diff_cache=True)
