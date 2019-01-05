@@ -659,6 +659,10 @@ class _NodesTree(object):
             tos.add_tree_nodes(prefix, new_nodes, line_offset, last_line_offset_leaf)
             self.prefix = new_prefix
             self._prefix_remainder = ''
+        else:
+            # Need to reset the prefix, because it might have been reset higher
+            # up in the stack.
+            self.prefix = prefix
 
         return new_nodes, working_stack
 

@@ -748,40 +748,29 @@ def test_paren_before_docstring(differ):
     differ.parse(code1, parsers=2, copies=1)
 
 
-def test_x(differ):
+def test_parentheses_before_method(differ):
     code1 = dedent('''\
-        class StackNode(object):
-            def __init__(self, dfa):
-                self.dfa = dfa
-                self.nodes = []
+        class A:
+            def a(self):
+                pass
 
-            @property
-            def nonterminal(self):
-                return self.dfa.from_rule
-
-            def __repr__(self):
-                return '%s(%s, %s)' % (self.__class__.__name__, self.dfa, self.nodes)
-
-        def x():
-            pass
+        class B:
+            def b(self):
+                if 1:
+                    pass
         ''')
 
     code2 = dedent('''\
-        class StackNode(object):
-            def __init__(self, dfa):
-                self.dfa = dfa
-                self.nodes = []
-                           (msg, type_.name, value, start_pos))
+        class A:
+            def a(self):
+                pass
+                Exception.__init__(self, "x" %
 
-            @property
-            def nonterminal(self):
-
-            def __repr__(self):
-
-        def x():
-            pass
+            def b(self):
+                if 1:
+                    pass
         ''')
 
     differ.initialize(code1)
-    differ.parse(code2, parsers=3, copies=1, expect_error_leaves=True)
-    differ.parse(code1, parsers=2, copies=2)
+    differ.parse(code2, parsers=2, copies=1, expect_error_leaves=True)
+    differ.parse(code1, parsers=1, copies=1)
