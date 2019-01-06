@@ -820,7 +820,7 @@ def test_indentation_issues(differ):
     differ.parse(code1, parsers=1, copies=2)
 
 
-def test_x(differ):
+def test_error_dedent_issues(differ):
     code1 = dedent('''\
         while True:
             try:
