@@ -1,6 +1,10 @@
 """
 A script to find bugs in the diff parser.
 
+This script is extremely useful if changes are made to the diff parser. By
+running a few thousand iterations, we can assure that the diff parser is in
+good shape.
+
 Usage:
   fuzz_diff_parser.py [--pdb|--ipdb] [-l] [-n=<nr>] [-x=<nr>] random [<path>]
   fuzz_diff_parser.py [--pdb|--ipdb] [-l] redo [-o=<nr>] [-p]
@@ -8,8 +12,8 @@ Usage:
 
 Options:
   -h --help              Show this screen
-  -n, --maxtries=<nr>    Maximum of random tries [default: 100]
-  -x, --changes=<nr>     Amount of changes to be done to a file per try [default: 2]
+  -n, --maxtries=<nr>    Maximum of random tries [default: 1000]
+  -x, --changes=<nr>     Amount of changes to be done to a file per try [default: 5]
   -l, --logging          Prints all the logs
   -o, --only-last=<nr>   Only runs the last n iterations; Defaults to running all
   -p, --print-diffs      Print all test diffs
