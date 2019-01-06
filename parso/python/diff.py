@@ -33,10 +33,11 @@ def _assert_valid_graph(node):
 
         # Ignore INDENT is necessary, because indent/dedent tokens don't
         # contain value/prefix and are just around, because of the tokenizer.
-        if node.type == 'error_leaf' and node.token_type in ('INDENT', 'ERROR_DEDENT'):
+        error_tokens = 'INDENT', 'ERROR_DEDENT', 'DEDENT'
+        if node.type == 'error_leaf' and node.token_type in error_tokens:
             return
         while previous_leaf and previous_leaf.type == 'error_leaf' \
-                and previous_leaf.token_type in ('INDENT', 'ERROR_DEDENT'):
+                and previous_leaf.token_type in error_tokens:
             assert previous_leaf.end_pos <= node.start_pos, \
                 (previous_leaf, node)
             previous_leaf = previous_leaf.get_previous_leaf()

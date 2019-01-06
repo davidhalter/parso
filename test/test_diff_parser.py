@@ -884,3 +884,38 @@ Some'random text: yeah
     differ.initialize(code1)
     differ.parse(code2, parsers=1, copies=1, expect_error_leaves=True)
     differ.parse(code1, parsers=1, copies=1)
+
+
+def test_l(differ):
+    code1 = dedent('''\
+        class C:
+            def f(self):
+                def iterate():
+                    if 1:
+                        yield t
+                    else:
+                        yield
+                return
+
+        def g():
+            3
+        ''')
+
+    code2 = dedent('''\
+            def f(self):
+                def iterate():
+                    if 1:
+                        yield t
+        hahahaha
+                        if 2:
+                            else:
+                                yield
+                return
+
+        def g():
+            3
+        ''')
+
+    differ.initialize(code1)
+    differ.parse(code2, parsers=2, copies=1, expect_error_leaves=True)
+    differ.parse(code1, parsers=1, copies=1)
