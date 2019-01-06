@@ -886,7 +886,7 @@ Some'random text: yeah
     differ.parse(code1, parsers=1, copies=1)
 
 
-def test_l(differ):
+def test_many_nested_ifs(differ):
     code1 = dedent('''\
         class C:
             def f(self):
@@ -919,3 +919,28 @@ def test_l(differ):
     differ.initialize(code1)
     differ.parse(code2, parsers=2, copies=1, expect_error_leaves=True)
     differ.parse(code1, parsers=1, copies=1)
+
+
+def test_with_and_funcdef_in_call(differ):
+    code1 = dedent('''\
+        with x:
+            la = C(
+                a=1,
+                b=2,
+                c=3,
+            )
+        ''')
+
+    code2 = dedent('''\
+        with x:
+            la = C(
+                a=1,
+        def y(self, args):
+                b=2,
+                c=3,
+            )
+        ''')
+
+    differ.initialize(code1)
+    differ.parse(code2, parsers=3, copies=0, expect_error_leaves=True)
+    differ.parse(code1, parsers=1, copies=0)

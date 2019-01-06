@@ -140,7 +140,7 @@ def _is_flow_node(node):
         value = node.children[0].value
     except AttributeError:
         return False
-    return value in ('if', 'for', 'while', 'try')
+    return value in ('if', 'for', 'while', 'try', 'with')
 
 
 class _PositionUpdatingFinished(Exception):
