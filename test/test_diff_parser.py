@@ -852,3 +852,35 @@ def test_error_dedent_issues(differ):
     differ.initialize(code1)
     differ.parse(code2, parsers=5, copies=1, expect_error_leaves=True)
     differ.parse(code1, parsers=1, copies=0)
+
+
+def test_random_text_insertion(differ):
+    code1 = dedent('''\
+class C:
+    def f():
+        return node
+
+    def g():
+        try:
+            1
+        except KeyError:
+            2
+        ''')
+
+    code2 = dedent('''\
+class C:
+    def f():
+        return node
+Some'random text: yeah
+        for push in plan.dfa_pushes:
+
+    def g():
+        try:
+            1
+        except KeyError:
+            2
+        ''')
+
+    differ.initialize(code1)
+    differ.parse(code2, parsers=1, copies=1, expect_error_leaves=True)
+    differ.parse(code1, parsers=1, copies=1)

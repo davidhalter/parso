@@ -638,21 +638,23 @@ class _NodesTree(object):
                 working_stack = new_working_stack
                 had_valid_suite_last = True
 
-        elif (last_node.type in ('error_leaf', 'error_node') or
-              _is_flow_node(new_nodes[-1])):
-            # Error leafs/nodes don't have a defined start/end. Error
-            # nodes might not end with a newline (e.g. if there's an
-            # open `(`). Therefore ignore all of them unless they are
-            # succeeded with valid parser state.
-            # If we copy flows at the end, they might be continued
-            # after the copy limit (in the new parser).
-            # In this while loop we try to remove until we find a newline.
-            new_nodes.pop()
-            while new_nodes:
-                last_node = new_nodes[-1]
-                if last_node.get_last_leaf().type == 'newline':
-                    break
+        if new_nodes:
+            last_node = new_nodes[-1]
+            if (last_node.type in ('error_leaf', 'error_node') or
+                    _is_flow_node(new_nodes[-1])):
+                # Error leafs/nodes don't have a defined start/end. Error
+                # nodes might not end with a newline (e.g. if there's an
+                # open `(`). Therefore ignore all of them unless they are
+                # succeeded with valid parser state.
+                # If we copy flows at the end, they might be continued
+                # after the copy limit (in the new parser).
+                # In this while loop we try to remove until we find a newline.
                 new_nodes.pop()
+                while new_nodes:
+                    last_node = new_nodes[-1]
+                    if last_node.get_last_leaf().type == 'newline':
+                        break
+                    new_nodes.pop()
 
         if new_nodes:
             if had_valid_suite_last:
