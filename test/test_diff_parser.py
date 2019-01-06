@@ -818,3 +818,37 @@ def test_indentation_issues(differ):
     differ.parse(code1, parsers=2, copies=1)
     differ.parse(code3, parsers=1, copies=1)
     differ.parse(code1, parsers=1, copies=2)
+
+
+def test_x(differ):
+    code1 = dedent('''\
+        while True:
+            try:
+                1
+            except KeyError:
+                if 2:
+                    3
+            except IndexError:
+                4
+
+        5
+        ''')
+
+    code2 = dedent('''\
+        while True:
+            try:
+        except KeyError:
+                1
+            except KeyError:
+                if 2:
+                    3
+            except IndexError:
+                4
+
+                    something_inserted
+        5
+        ''')
+
+    differ.initialize(code1)
+    differ.parse(code2, parsers=5, copies=1, expect_error_leaves=True)
+    differ.parse(code1, parsers=1, copies=0)
