@@ -131,12 +131,9 @@ class FileTests:
 
     def _run(self, grammar, file_modifications, debugger, print_diffs=False):
         try:
-            print("Checking %s" % self._path)
             for i, fm in enumerate(file_modifications, 1):
                 fm.run(grammar, self._code_lines, print_diff=print_diffs)
                 print('.', end='')
-                if i % 1000 == 0:
-                    print('\n%s tries' % i)
                 sys.stdout.flush()
             print()
         except Exception:
@@ -192,13 +189,17 @@ def main(arguments):
     elif arguments['random']:
         # A random file is used to do diff parser checks if no file is given.
         # This helps us to find errors in a lot of different files.
-        file_path_generator = find_python_files_in_tree(arguments['<path>'] or '.')
-        path = next(file_path_generator)
-        file_tests_obj = FileTests(
-            path, int(arguments['--maxtries']), int(arguments['--changes'])
-        )
+        file_paths = list(find_python_files_in_tree(arguments['<path>'] or '.'))
+        max_tries = int(arguments['--maxtries'])
+        tries = 0
         try:
-            file_tests_obj.run(grammar, debugger)
+            while tries < max_tries:
+                path = random.choice(file_paths)
+                print("Checking %s: %s tries" % (path, tries))
+                now_tries = min(1000, max_tries - tries)
+                file_tests_obj = FileTests(path, now_tries, int(arguments['--changes']))
+                file_tests_obj.run(grammar, debugger)
+                tries += now_tries
         except Exception:
             with open(redo_file, 'wb') as f:
                 pickle.dump(file_tests_obj, f)
