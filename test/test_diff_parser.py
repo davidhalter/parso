@@ -921,8 +921,9 @@ def test_many_nested_ifs(differ):
     differ.parse(code1, parsers=1, copies=1)
 
 
-def test_with_and_funcdef_in_call(differ):
-    code1 = dedent('''\
+@pytest.mark.parametrize('prefix', ['', 'async '])
+def test_with_and_funcdef_in_call(differ, prefix):
+    code1 = prefix + dedent('''\
         with x:
             la = C(
                 a=1,
@@ -931,15 +932,7 @@ def test_with_and_funcdef_in_call(differ):
             )
         ''')
 
-    code2 = dedent('''\
-        with x:
-            la = C(
-                a=1,
-        def y(self, args):
-                b=2,
-                c=3,
-            )
-        ''')
+    code2 = insert_line_into_code(code1, 3, 'def y(self, args):\n')
 
     differ.initialize(code1)
     differ.parse(code2, parsers=3, copies=0, expect_error_leaves=True)

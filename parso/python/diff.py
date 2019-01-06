@@ -136,6 +136,8 @@ def _suite_or_file_input_is_valid(pgen_grammar, stack):
 
 
 def _is_flow_node(node):
+    if node.type == 'async_stmt':
+        node = node.children[1]
     try:
         value = node.children[0].value
     except AttributeError:
