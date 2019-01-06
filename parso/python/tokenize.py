@@ -364,6 +364,14 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
     token. This idea comes from lib2to3. The prefix contains all information
     that is irrelevant for the parser like newlines in parentheses or comments.
     """
+    def dedent_if_necessary(start):
+        while start < indents[-1]:
+            if start > indents[-2]:
+                yield PythonToken(ERROR_DEDENT, '', (lnum, 0), '')
+                break
+            yield PythonToken(DEDENT, '', spos, '')
+            indents.pop()
+
     pseudo_token, single_quoted, triple_quoted, endpats, whitespace, \
         fstring_pattern_map, always_break_tokens, = \
         _get_token_collection(version_info)
@@ -450,6 +458,9 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
             if not pseudomatch:                             # scan for tokens
                 match = whitespace.match(line, pos)
                 pos = match.end()
+                new_line = False
+                for t in dedent_if_necessary(pos):
+                    yield t
                 yield PythonToken(
                     ERRORTOKEN, line[pos], (lnum, pos),
                     additional_prefix + match.group(0)
@@ -482,12 +493,8 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                     if start > indents[-1]:
                         yield PythonToken(INDENT, '', spos, '')
                         indents.append(start)
-                    while start < indents[-1]:
-                        if start > indents[-2]:
-                            yield PythonToken(ERROR_DEDENT, '', (lnum, 0), '')
-                            break
-                        yield PythonToken(DEDENT, '', spos, '')
-                        indents.pop()
+                    for t in dedent_if_necessary(start):
+                        yield t
 
             if fstring_stack:
                 fstring_index, end = _check_fstring_ending(fstring_stack, token)

@@ -935,5 +935,20 @@ def test_with_and_funcdef_in_call(differ, prefix):
     code2 = insert_line_into_code(code1, 3, 'def y(self, args):\n')
 
     differ.initialize(code1)
-    differ.parse(code2, parsers=3, copies=0, expect_error_leaves=True)
-    differ.parse(code1, parsers=1, copies=0)
+    differ.parse(code2, parsers=3, expect_error_leaves=True)
+    differ.parse(code1, parsers=1)
+
+
+def test_wrong_backslash(differ):
+    code1 = dedent('''\
+        def y():
+            1
+            for x in y:
+                continue
+        ''')
+
+    code2 = insert_line_into_code(code1, 3, '\.whl$\n')
+
+    differ.initialize(code1)
+    differ.parse(code2, parsers=2, copies=2, expect_error_leaves=True)
+    differ.parse(code1, parsers=1, copies=1)

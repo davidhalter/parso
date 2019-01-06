@@ -197,11 +197,12 @@ def test_ur_literals():
 
 
 def test_error_literal():
-    error_token, endmarker = _get_token_list('"\n')
+    error_token, newline, endmarker = _get_token_list('"\n')
     assert error_token.type == ERRORTOKEN
     assert error_token.string == '"'
+    assert newline.type == NEWLINE
     assert endmarker.type == ENDMARKER
-    assert endmarker.prefix == '\n'
+    assert endmarker.prefix == ''
 
     bracket, error_token, endmarker = _get_token_list('( """')
     assert error_token.type == ERRORTOKEN
@@ -240,11 +241,12 @@ def test_indentation(code, types):
 
 
 def test_error_string():
-    t1, endmarker = _get_token_list(' "\n')
+    t1, newline, endmarker = _get_token_list(' "\n')
     assert t1.type == ERRORTOKEN
     assert t1.prefix == ' '
     assert t1.string == '"'
-    assert endmarker.prefix == '\n'
+    assert newline.type == NEWLINE
+    assert endmarker.prefix == ''
     assert endmarker.string == ''
 
 
@@ -267,4 +269,19 @@ def test_indent_error_recovery():
         DEDENT,
         # `b`
         NAME, NEWLINE, ENDMARKER]
+    assert [t.type for t in lst] == expected
+
+
+def test_error_token_after_dedent():
+    code = dedent("""\
+        class C:
+            pass
+        $foo
+        """)
+    lst = _get_token_list(code)
+    expected = [
+        NAME, NAME, OP, NEWLINE, INDENT, NAME, NEWLINE, DEDENT,
+        # $foo\n
+        ERRORTOKEN, NAME, NEWLINE, ENDMARKER
+    ]
     assert [t.type for t in lst] == expected
