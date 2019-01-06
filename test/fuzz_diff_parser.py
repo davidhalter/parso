@@ -128,9 +128,11 @@ class FileTests:
     def _run(self, grammar, file_modifications, debugger, print_diffs=False):
         try:
             print("Checking %s" % self._path)
-            for fm in file_modifications:
+            for i, fm in enumerate(file_modifications, 1):
                 fm.run(grammar, self._code_lines, print_diff=print_diffs)
                 print('.', end='')
+                if i % 1000 == 0:
+                    print('\n%s tries' % i)
                 sys.stdout.flush()
             print()
         except Exception:
