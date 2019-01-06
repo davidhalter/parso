@@ -45,6 +45,15 @@ def find_python_files_in_tree(file_path):
                 yield os.path.join(root, name)
 
 
+class LineReplacement:
+    def __init__(self, line_nr, new_line):
+        self._line_nr = line_nr
+        self._new_line = new_line
+
+    def apply(self, code_lines):
+        code_lines[self._line_nr] = self._new_line
+
+
 class LineDeletion:
     def __init__(self, line_nr):
         self.line_nr = line_nr
@@ -82,12 +91,20 @@ class FileModification:
             if not lines:
                 break
 
-            if random.choice([False, True]):
+            rand = random.randint(1, 3)
+            if rand == 1:
                 l = LineDeletion(random_line())
-            else:
+            elif rand == 2:
                 # Copy / Insertion
                 # Make it possible to insert into the first and the last line
                 l = LineCopy(random_line(), random_line(include_end=True))
+            elif rand == 3:
+                # Modify a line in some weird random ways.
+                line_nr = random_line()
+                line = lines[line_nr]
+                column = random.randint(0, len(line))
+                random_string = ''.join(chr(random.randint(0, 1000)) for _ in range(5))
+                l = LineReplacement(line_nr, line[:column] + random_string + line[column:])
             l.apply(lines)
             yield l
 
