@@ -41,7 +41,7 @@ def split_lines(string, keepends=False):
         # The stdlib's implementation of the end is inconsistent when calling
         # it with/without keepends. One time there's an empty string in the
         # end, one time there's none.
-        if string.endswith('\n') or string == '':
+        if string.endswith('\n') or string.endswith('\r') or string == '':
             lst.append('')
         return lst
     else:

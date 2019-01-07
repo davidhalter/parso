@@ -3,21 +3,36 @@ from codecs import BOM_UTF8
 from parso.utils import split_lines, python_bytes_to_unicode
 import parso
 
-
-def test_split_lines_no_keepends():
-    assert split_lines('asd\r\n') == ['asd', '']
-    assert split_lines('asd\r\n\f') == ['asd', '\f']
-    assert split_lines('\fasd\r\n') == ['\fasd', '']
-    assert split_lines('') == ['']
-    assert split_lines('\n') == ['', '']
+import pytest
 
 
-def test_split_lines_keepends():
-    assert split_lines('asd\r\n', keepends=True) == ['asd\r\n', '']
-    assert split_lines('asd\r\n\f', keepends=True) == ['asd\r\n', '\f']
-    assert split_lines('\fasd\r\n', keepends=True) == ['\fasd\r\n', '']
-    assert split_lines('', keepends=True) == ['']
-    assert split_lines('\n', keepends=True) == ['\n', '']
+@pytest.mark.parametrize(
+    ('string', 'expected_result', 'keepends'), [
+        ('asd\r\n', ['asd', ''], False),
+        ('asd\r\n', ['asd\r\n', ''], True),
+        ('asd\r', ['asd', ''], False),
+        ('asd\r', ['asd\r', ''], True),
+        ('asd\n', ['asd', ''], False),
+        ('asd\n', ['asd\n', ''], True),
+
+        ('asd\r\n\f', ['asd', '\f'], False),
+        ('asd\r\n\f', ['asd\r\n', '\f'], True),
+
+        ('\fasd\r\n', ['\fasd', ''], False),
+        ('\fasd\r\n', ['\fasd\r\n', ''], True),
+
+        ('', [''], False),
+        ('', [''], True),
+
+        ('\n', ['', ''], False),
+        ('\n', ['\n', ''], True),
+
+        ('\r', ['', ''], False),
+        ('\r', ['\r', ''], True),
+    ]
+)
+def test_split_lines(string, expected_result, keepends):
+    assert split_lines(string, keepends=keepends) == expected_result
 
 
 def test_python_bytes_to_unicode_unicode_text():
