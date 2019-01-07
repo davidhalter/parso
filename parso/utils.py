@@ -45,7 +45,7 @@ def split_lines(string, keepends=False):
             lst.append('')
         return lst
     else:
-        return re.split(r'\n|\r\n', string)
+        return re.split(r'\n|\r\n|\r', string)
 
 
 def python_bytes_to_unicode(source, encoding='utf-8', errors='strict'):
