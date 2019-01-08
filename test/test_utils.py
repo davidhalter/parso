@@ -29,6 +29,12 @@ import pytest
 
         ('\r', ['', ''], False),
         ('\r', ['\r', ''], True),
+
+        # Invalid line breaks
+        ('a\vb', ['a\vb'], False),
+        ('a\vb', ['a\vb'], True),
+        ('\x1C', ['\x1C'], False),
+        ('\x1C', ['\x1C'], True),
     ]
 )
 def test_split_lines(string, expected_result, keepends):

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from textwrap import dedent
 import logging
 
@@ -952,3 +953,9 @@ def test_wrong_backslash(differ):
     differ.initialize(code1)
     differ.parse(code2, parsers=2, copies=2, expect_error_leaves=True)
     differ.parse(code1, parsers=1, copies=1)
+
+
+def test_random_unicode_characters(differ):
+    differ.initialize('')
+    differ.parse('\x1dĔBϞɛˁşʑ˳˻ȣſéÎ\x90̕ȟòwʘ\x1dĔBϞɛˁşʑ˳˻ȣſéÎ', parsers=1, expect_error_leaves=True)
+    differ.parse('')
