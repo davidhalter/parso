@@ -48,6 +48,7 @@ from parso._compatibility import utf8_repr, unicode
 from parso.tree import Node, BaseNode, Leaf, ErrorNode, ErrorLeaf, \
     search_ancestor
 from parso.python.prefix import split_prefix
+from parso.utils import split_lines
 
 _FLOW_CONTAINERS = set(['if_stmt', 'while_stmt', 'for_stmt', 'try_stmt',
                         'with_stmt', 'async_stmt', 'suite'])
@@ -127,8 +128,10 @@ class PythonLeaf(PythonMixin, Leaf):
                 and previous_leaf.token_type in ('INDENT', 'ERROR_DEDENT'):
             previous_leaf = previous_leaf.get_previous_leaf()
 
-        if previous_leaf is None:
-            return self.line - self.prefix.count('\n'), 0  # It's the first leaf.
+        if previous_leaf is None:  # It's the first leaf.
+            lines = split_lines(self.prefix)
+            # + 1 is needed because split_lines always returns at least [''].
+            return self.line - len(lines) + 1, 0  # It's the first leaf.
         return previous_leaf.end_pos
 
 

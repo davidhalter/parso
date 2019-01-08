@@ -155,7 +155,6 @@ class FileTests:
             print()
         except Exception:
             print("Issue in file: %s" % self._path)
-            raise
             if debugger:
                 einfo = sys.exc_info()
                 pdb = __import__(debugger)
