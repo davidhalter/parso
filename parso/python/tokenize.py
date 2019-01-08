@@ -186,7 +186,7 @@ def _create_token_collection(version_info):
 
     Bracket = '[][(){}]'
 
-    special_args = [r'\r?\n', r'[:;.,@]']
+    special_args = [r'\r\n?', r'\n', r'[:;.,@]']
     if version_info >= (3, 0):
         special_args.insert(0, r'\.\.\.')
     Special = group(*special_args)
@@ -194,16 +194,16 @@ def _create_token_collection(version_info):
     Funny = group(Operator, Bracket, Special)
 
     # First (or only) line of ' or " string.
-    ContStr = group(StringPrefix + r"'[^\n'\\]*(?:\\.[^\n'\\]*)*" +
-                    group("'", r'\\\r?\n'),
-                    StringPrefix + r'"[^\n"\\]*(?:\\.[^\n"\\]*)*' +
-                    group('"', r'\\\r?\n'))
+    ContStr = group(StringPrefix + r"'[^\r\n'\\]*(?:\\.[^\r\n'\\]*)*" +
+                    group("'", r'\\(?:\r\n?|\n)'),
+                    StringPrefix + r'"[^\r\n"\\]*(?:\\.[^\r\n"\\]*)*' +
+                    group('"', r'\\(?:\r\n?|\n)'))
     pseudo_extra_pool = [Comment, Triple]
     all_quotes = '"', "'", '"""', "'''"
     if fstring_prefixes:
         pseudo_extra_pool.append(FStringStart + group(*all_quotes))
 
-    PseudoExtras = group(r'\\\r?\n|\Z', *pseudo_extra_pool)
+    PseudoExtras = group(r'\\(?:\r\n?|\n)|\Z', *pseudo_extra_pool)
     PseudoToken = group(Whitespace, capture=True) + \
         group(PseudoExtras, Number, Funny, ContStr, Name, capture=True)
 
@@ -328,7 +328,7 @@ def _find_fstring_string(fstring_stack, line, lnum, pos):
                     pass  # The string was not found.
 
             new_pos += len(string)
-            if allow_multiline and string.endswith('\n'):
+            if allow_multiline and (string.endswith('\n') or string.endswith('\r')):
                 tos.previous_lines += string
                 string = ''
             else:
@@ -545,7 +545,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
             elif initial in single_quoted or \
                     token[:2] in single_quoted or \
                     token[:3] in single_quoted:
-                if token[-1] == '\n':                       # continued string
+                if token[-1] in '\r\n':                       # continued string
                     contstr_start = lnum, start
                     endprog = (endpats.get(initial) or endpats.get(token[1])
                                or endpats.get(token[2]))
@@ -571,7 +571,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                                 indents.append(indent)
                                 break
                 yield PythonToken(NAME, token, spos, prefix)
-            elif initial == '\\' and line[start:] in ('\\\n', '\\\r\n'):  # continued stmt
+            elif initial == '\\' and line[start:] in ('\\\n', '\\\r\n', '\\r'):  # continued stmt
                 additional_prefix += prefix + line[start:]
                 break
             else:
@@ -593,7 +593,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
 
     if contstr:
         yield PythonToken(ERRORTOKEN, contstr, contstr_start, prefix)
-        if contstr.endswith('\n'):
+        if contstr.endswith('\n') or contstr.endswith('\r'):
             new_line = True
 
     end_pos = lnum, max

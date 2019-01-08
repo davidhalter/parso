@@ -53,7 +53,7 @@ def _assert_valid_graph(node):
             content = previous_leaf.value + node.prefix
             previous_start_pos = previous_leaf.start_pos
 
-        if '\n' in content:
+        if '\n' in content or '\r' in content:
             splitted = split_lines(content)
             line = previous_start_pos[0] + len(splitted) - 1
             actual = line, len(splitted[-1])
@@ -96,7 +96,7 @@ def _ends_with_newline(leaf, suffix=''):
     else:
         typ = leaf.type
 
-    return typ == 'newline' or suffix.endswith('\n')
+    return typ == 'newline' or suffix.endswith('\n') or suffix.endswith('\r')
 
 
 def _flows_finished(pgen_grammar, stack):
@@ -387,8 +387,8 @@ class DiffParser(object):
                     # We are done here, only thing that can come now is an
                     # endmarker or another dedented code block.
                     typ, string, start_pos, prefix = next(tokens)
-                    if '\n' in prefix:
-                        prefix = re.sub(r'(<=\n)[^\n]+$', '', prefix)
+                    if '\n' in prefix or '\r' in prefix:
+                        prefix = re.sub(r'(<=\n|\r)[^\n\r]+$', '', prefix)
                     else:
                         prefix = ''
                     yield PythonToken(
@@ -463,9 +463,9 @@ class _NodesTreeNode(object):
             # the next line. That line is not fully parsed at this point.
             if _ends_with_newline(last_leaf, suffix):
                 line -= 1
-        line += suffix.count('\n')
+        line += len(split_lines(suffix)) - 1
 
-        if suffix and not suffix.endswith('\n'):
+        if suffix and not suffix.endswith('\n') and not suffix.endswith('\r'):
             # This is the end of a file (that doesn't end with a newline).
             line += 1
 
@@ -545,16 +545,13 @@ class _NodesTree(object):
         is_endmarker = last_leaf.type == self.endmarker_type
         self._prefix_remainder = ''
         if is_endmarker:
-            try:
-                separation = last_leaf.prefix.rindex('\n') + 1
-            except ValueError:
-                pass
-            else:
+            separation = max(last_leaf.prefix.rfind('\n'), last_leaf.prefix.rfind('\r'))
+            if separation > -1:
                 # Remove the whitespace part of the prefix after a newline.
                 # That is not relevant if parentheses were opened. Always parse
                 # until the end of a line.
                 last_leaf.prefix, self._prefix_remainder = \
-                    last_leaf.prefix[:separation], last_leaf.prefix[separation:]
+                    last_leaf.prefix[:separation + 1], last_leaf.prefix[separation + 1:]
 
         self.prefix = ''
 
@@ -597,10 +594,9 @@ class _NodesTree(object):
                 # We basically removed the endmarker, but we are not allowed to
                 # remove the newline at the end of the line, otherwise it's
                 # going to be missing.
-                try:
-                    new_prefix = node.prefix[:node.prefix.rindex('\n') + 1]
-                except ValueError:
-                    pass
+                newline_index = max(node.prefix.rfind('\n'), node.prefix.rfind('\r'))
+                if newline_index > -1:
+                    new_prefix = node.prefix[:newline_index + 1]
                 # Endmarkers just distort all the checks below. Remove them.
                 break
 
