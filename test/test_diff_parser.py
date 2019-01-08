@@ -961,4 +961,8 @@ def test_random_unicode_characters(differ):
     differ.parse('\r\r', parsers=1)
     differ.parse("˟Ę\x05À\r   rúƣ@\x8a\x15r()\n", parsers=1, expect_error_leaves=True)
     differ.parse('a\ntaǁ\rGĒōns__\n\nb', parsers=1)
+    s = '        if not (self, "_fi\x02\x0e\x08\n\nle"):'
+    differ.parse(s, parsers=1, expect_error_leaves=True)
+    differ.parse('')
+    differ.parse(s + '\n', parsers=1, expect_error_leaves=True)
     differ.parse('')

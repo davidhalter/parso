@@ -457,10 +457,11 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
             pseudomatch = pseudo_token.match(line, pos)
             if not pseudomatch:                             # scan for tokens
                 match = whitespace.match(line, pos)
+                if pos == 0:
+                    for t in dedent_if_necessary(match.end()):
+                        yield t
                 pos = match.end()
                 new_line = False
-                for t in dedent_if_necessary(pos):
-                    yield t
                 yield PythonToken(
                     ERRORTOKEN, line[pos], (lnum, pos),
                     additional_prefix + match.group(0)
