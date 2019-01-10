@@ -51,6 +51,7 @@ class LineReplacement:
         self._new_line = new_line
 
     def apply(self, code_lines):
+        #print(repr(self._new_line))
         code_lines[self._line_nr] = self._new_line
 
 
@@ -103,7 +104,9 @@ class FileModification:
                 line_nr = random_line()
                 line = lines[line_nr]
                 column = random.randint(0, len(line))
-                random_string = ''.join(chr(random.randint(0, 1000)) for _ in range(5))
+                # The lower characters cause way more issues.
+                unicode_range = 0x1f if random.randint(0, 1) else 0x3000
+                random_string = ''.join(chr(random.randint(0, unicode_range)) for _ in range(5))
                 l = LineReplacement(line_nr, line[:column] + random_string + line[column:])
             l.apply(lines)
             yield l
