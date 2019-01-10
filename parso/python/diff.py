@@ -388,8 +388,10 @@ class DiffParser(object):
                     # endmarker or another dedented code block.
                     typ, string, start_pos, prefix = next(tokens)
                     if '\n' in prefix or '\r' in prefix:
-                        prefix = re.sub(r'(?<=\n|\r)[^\n\r]+$', '', prefix)
+                        prefix = re.sub(r'[^\n\r]+\Z', '', prefix)
                     else:
+                        # This is basically the next line and it still needs to
+                        # be parserd.
                         prefix = ''
                     yield PythonToken(
                         PythonTokenTypes.ENDMARKER, '',

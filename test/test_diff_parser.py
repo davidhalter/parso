@@ -955,6 +955,10 @@ def test_wrong_backslash(differ):
     differ.parse(code1, parsers=1, copies=1)
 
 
+def test_comment_change(differ):
+    differ.initialize('')
+
+
 def test_random_unicode_characters(differ):
     """
     Those issues were all found with the fuzzer.
@@ -970,3 +974,4 @@ def test_random_unicode_characters(differ):
     differ.parse(s + '\n', parsers=1, expect_error_leaves=True)
     differ.parse('   result = (\r\f\x17\t\x11res)', parsers=2, expect_error_leaves=True)
     differ.parse('')
+    differ.parse('   a( # xx\ndef', parsers=2, expect_error_leaves=True)
