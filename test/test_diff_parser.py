@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from textwrap import dedent
 import logging
+import sys
 
 import pytest
 
@@ -922,6 +923,7 @@ def test_many_nested_ifs(differ):
     differ.parse(code1, parsers=1, copies=1)
 
 
+@pytest.mark.skipif(sys.version_info[0] < 3, reason="Async doesn't work in Python 2.")
 @pytest.mark.parametrize('prefix', ['', 'async '])
 def test_with_and_funcdef_in_call(differ, prefix):
     code1 = prefix + dedent('''\
@@ -964,14 +966,14 @@ def test_random_unicode_characters(differ):
     Those issues were all found with the fuzzer.
     """
     differ.initialize('')
-    differ.parse('\x1dĔBϞɛˁşʑ˳˻ȣſéÎ\x90̕ȟòwʘ\x1dĔBϞɛˁşʑ˳˻ȣſéÎ', parsers=1, expect_error_leaves=True)
-    differ.parse('\r\r', parsers=1)
-    differ.parse("˟Ę\x05À\r   rúƣ@\x8a\x15r()\n", parsers=1, expect_error_leaves=True)
-    differ.parse('a\ntaǁ\rGĒōns__\n\nb', parsers=1)
+    differ.parse(u'\x1dĔBϞɛˁşʑ˳˻ȣſéÎ\x90̕ȟòwʘ\x1dĔBϞɛˁşʑ˳˻ȣſéÎ', parsers=1, expect_error_leaves=True)
+    differ.parse(u'\r\r', parsers=1)
+    differ.parse(u"˟Ę\x05À\r   rúƣ@\x8a\x15r()\n", parsers=1, expect_error_leaves=True)
+    differ.parse(u'a\ntaǁ\rGĒōns__\n\nb', parsers=1)
     s = '        if not (self, "_fi\x02\x0e\x08\n\nle"):'
     differ.parse(s, parsers=1, expect_error_leaves=True)
     differ.parse('')
     differ.parse(s + '\n', parsers=1, expect_error_leaves=True)
-    differ.parse('   result = (\r\f\x17\t\x11res)', parsers=2, expect_error_leaves=True)
+    differ.parse(u'   result = (\r\f\x17\t\x11res)', parsers=2, expect_error_leaves=True)
     differ.parse('')
     differ.parse('   a( # xx\ndef', parsers=2, expect_error_leaves=True)
