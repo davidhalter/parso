@@ -34,6 +34,18 @@ from docopt import docopt
 import parso
 from parso.utils import split_lines
 
+_latest_grammar = parso.load_grammar(version='3.8')
+_python_reserved_strings = tuple(
+    # Keywords are ususally only interesting in combination with spaces after
+    # them. We don't put a space before keywords, to avoid indentation errors.
+    s + (' ' if s.isalpha() else '')
+    for s in _latest_grammar._pgen_grammar.reserved_syntax_strings.keys()
+)
+_random_python_fragments = _python_reserved_strings + (
+    ' ', '\t', '\n', '\r', '\f', 'f"', 'F"""', "fr'", "RF'''", '"', '"""', "'",
+    "'''", ';', ' some_random_word ', '\\'
+)
+
 
 def find_python_files_in_tree(file_path):
     if not os.path.isdir(file_path):
@@ -51,7 +63,7 @@ class LineReplacement:
         self._new_line = new_line
 
     def apply(self, code_lines):
-        #print(repr(self._new_line))
+        # print(repr(self._new_line))
         code_lines[self._line_nr] = self._new_line
 
 
@@ -92,23 +104,31 @@ class FileModification:
             if not lines:
                 break
 
-            rand = random.randint(1, 3)
+            rand = random.randint(1, 4)
             if rand == 1:
                 l = LineDeletion(random_line())
             elif rand == 2:
                 # Copy / Insertion
                 # Make it possible to insert into the first and the last line
                 l = LineCopy(random_line(), random_line(include_end=True))
-            elif rand == 3:
+            elif rand in (3, 4):
                 # Modify a line in some weird random ways.
                 line_nr = random_line()
                 line = lines[line_nr]
                 column = random.randint(0, len(line))
-                # The lower characters cause way more issues.
-                unicode_range = 0x1f if random.randint(0, 1) else 0x3000
-                random_string = ''.join(chr(random.randint(0, unicode_range)) for _ in range(5))
+                random_string = ''
+                for _ in range(random.randint(1, 7)):
+                    if rand == 3:
+                        # The lower characters cause way more issues.
+                        unicode_range = 0x1f if random.randint(0, 1) else 0x3000
+                        random_string += chr(random.randint(0, unicode_range))
+                    else:
+                        # These insertions let us understand how random
+                        # keyword/operator insertions work. Theoretically this
+                        # could also be done with unicode insertions, but the
+                        # fuzzer is just way more effective here.
+                        random_string += random.choice(_random_python_fragments)
                 l = LineReplacement(line_nr, line[:column] + random_string + line[column:])
-            l.apply(lines)
             yield l
 
     def __init__(self, modification_list):
