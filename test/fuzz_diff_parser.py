@@ -16,7 +16,7 @@ Options:
   -x, --changes=<nr>     Amount of changes to be done to a file per try [default: 5]
   -l, --logging          Prints all the logs
   -o, --only-last=<nr>   Only runs the last n iterations; Defaults to running all
-  -p, --print-diffs      Print all test diffs
+  -p, --print-code      Print all test diffs
   --pdb                  Launch pdb when error is raised
   --ipdb                 Launch ipdb when error is raised
 """
@@ -140,15 +140,16 @@ class FileModification:
             modification.apply(changed_lines)
         return changed_lines
 
-    def run(self, grammar, code_lines, print_diff):
+    def run(self, grammar, code_lines, print_code):
         code = ''.join(code_lines)
         modified_lines = self._apply(code_lines)
         modified_code = ''.join(modified_lines)
 
-        if print_diff:
-            print(''.join(
-                difflib.unified_diff(code_lines, modified_lines)
-            ))
+        if print_code:
+            print('Original:')
+            print(code)
+            print('Modified:')
+            print(modified_code)
 
         grammar.parse(code, diff_cache=True)
         grammar.parse(modified_code, diff_cache=True)
@@ -169,10 +170,10 @@ class FileTests:
             code = f.read()
         self._file_modifications = []
 
-    def _run(self, grammar, file_modifications, debugger, print_diffs=False):
+    def _run(self, grammar, file_modifications, debugger, print_code=False):
         try:
             for i, fm in enumerate(file_modifications, 1):
-                fm.run(grammar, self._code_lines, print_diff=print_diffs)
+                fm.run(grammar, self._code_lines, print_code=print_code)
                 print('.', end='')
                 sys.stdout.flush()
             print()
@@ -184,11 +185,11 @@ class FileTests:
                 pdb.post_mortem(einfo[2])
             raise
 
-    def redo(self, grammar, debugger, only_last, print_diffs):
+    def redo(self, grammar, debugger, only_last, print_code):
         mods = self._file_modifications
         if only_last is not None:
             mods = mods[-only_last:]
-        self._run(grammar, mods, debugger, print_diffs=print_diffs)
+        self._run(grammar, mods, debugger, print_code=print_code)
 
     def run(self, grammar, debugger):
         def iterate():
@@ -223,7 +224,7 @@ def main(arguments):
             grammar,
             debugger,
             only_last=only_last,
-            print_diffs=arguments['--print-diffs']
+            print_code=arguments['--print-code']
         )
     elif arguments['random']:
         # A random file is used to do diff parser checks if no file is given.
