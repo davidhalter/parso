@@ -29,8 +29,6 @@ import random
 import pickle
 import difflib
 
-from docopt import docopt
-
 import parso
 from parso.utils import split_lines
 
@@ -248,5 +246,7 @@ def main(arguments):
 
 
 if __name__ == '__main__':
+    from docopt import docopt
+
     arguments = docopt(__doc__)
     main(arguments)
