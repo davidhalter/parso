@@ -487,14 +487,15 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                 new_line = False
                 if paren_level == 0 and not fstring_stack:
                     i = 0
+                    indent_start = start
                     while line[i] == '\f':
                         i += 1
                         # TODO don't we need to change spos as well?
-                        start -= 1
-                    if start > indents[-1]:
+                        indent_start -= 1
+                    if indent_start > indents[-1]:
                         yield PythonToken(INDENT, '', spos, '')
-                        indents.append(start)
-                    for t in dedent_if_necessary(start):
+                        indents.append(indent_start)
+                    for t in dedent_if_necessary(indent_start):
                         yield t
 
             if fstring_stack:

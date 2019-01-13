@@ -299,3 +299,11 @@ def test_brackets_no_indentation():
         """)
     lst = _get_token_list(code)
     assert [t.type for t in lst] == [OP, NEWLINE, OP, OP, NEWLINE, ENDMARKER]
+
+
+def test_form_feed():
+    error_token, endmarker = _get_token_list(dedent('''\
+        \f"""'''))
+    assert error_token.prefix == '\f'
+    assert error_token.string == '"""'
+    assert endmarker.prefix == ''
