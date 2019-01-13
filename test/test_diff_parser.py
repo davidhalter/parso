@@ -1012,3 +1012,25 @@ def test_special_no_newline_ending(differ):
     differ.initialize(code1)
     differ.parse(code2, copies=1, parsers=1, expect_error_leaves=True)
     differ.parse(code1, copies=1, parsers=0)
+
+
+def test_random_character_insertion(differ):
+    code1 = dedent('''\
+            def create(self):
+                1
+                if self.path is not None:
+                    return
+                # 3
+                # 4
+        ''')
+    code2 = dedent('''\
+            def create(self):
+                1
+                if 2:
+             x       return
+                # 3
+                # 4
+        ''')
+    differ.initialize(code1)
+    differ.parse(code2, copies=1, parsers=3, expect_error_leaves=True)
+    differ.parse(code1, copies=1, parsers=1)
