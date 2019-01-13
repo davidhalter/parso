@@ -258,8 +258,6 @@ class DiffParser(object):
             LOG.warning('parser issue:\n%s\n%s', ''.join(old_lines), ''.join(lines_new))
 
     def _copy_from_old_parser(self, line_offset, until_line_old, until_line_new):
-        copied_nodes = [None]
-
         last_until_line = -1
         while until_line_new > self._nodes_tree.parsed_until_line:
             parsed_until_line_old = self._nodes_tree.parsed_until_line - line_offset
@@ -269,11 +267,6 @@ class DiffParser(object):
                 # want to get into a state where the old parser has statements
                 # again that can be copied (e.g. not lines within parentheses).
                 self._parse(self._nodes_tree.parsed_until_line + 1)
-            elif not copied_nodes:
-                # We have copied as much as possible (but definitely not too
-                # much). Therefore we just parse a bit more.
-                self._parse(self._nodes_tree.parsed_until_line + 1)
-                copied_nodes = [None]
             else:
                 p_children = line_stmt.parent.children
                 index = p_children.index(line_stmt)
@@ -293,10 +286,13 @@ class DiffParser(object):
                     LOG.debug('copy old[%s:%s] new[%s:%s]',
                               copied_nodes[0].start_pos[0],
                               copied_nodes[-1].end_pos[0] - 1, from_, to)
+                else:
+                    # We have copied as much as possible (but definitely not too
+                    # much). Therefore we just parse a bit more.
+                    self._parse(self._nodes_tree.parsed_until_line + 1)
             # Since there are potential bugs that might loop here endlessly, we
             # just stop here.
-            assert last_until_line != self._nodes_tree.parsed_until_line \
-                or not copied_nodes, last_until_line
+            assert last_until_line != self._nodes_tree.parsed_until_line, last_until_line
             last_until_line = self._nodes_tree.parsed_until_line
 
     def _get_old_line_stmt(self, old_line):
