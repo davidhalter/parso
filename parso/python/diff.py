@@ -87,9 +87,14 @@ def _get_last_line(node_or_leaf):
         return last_leaf.end_pos[0]
 
 
-def _ends_with_newline(leaf, suffix=''):
-    while leaf.type == 'error_leaf' and leaf.token_type == 'DEDENT':
+def _skip_dedent_error_leaves(leaf):
+    while leaf is not None and leaf.type == 'error_leaf' and leaf.token_type == 'DEDENT':
         leaf = leaf.get_previous_leaf()
+    return leaf
+
+
+def _ends_with_newline(leaf, suffix=''):
+    leaf = _skip_dedent_error_leaves(leaf)
 
     if leaf.type == 'error_leaf':
         typ = leaf.token_type.lower()
@@ -229,13 +234,6 @@ class DiffParser(object):
         # changed module.
         self._nodes_tree.close()
 
-        last_pos = self._module.end_pos[0]
-        if last_pos != line_length:
-            raise Exception(
-                ('(%s != %s) ' % (last_pos, line_length))
-                + _get_debug_error_message(self._module, old_lines, new_lines)
-            )
-
         if DEBUG_DIFF_PARSER:
             # If there is reasonable suspicion that the diff parser is not
             # behaving well, this should be enabled.
@@ -246,6 +244,12 @@ class DiffParser(object):
                 print(_get_debug_error_message(self._module, old_lines, new_lines))
                 raise
 
+        last_pos = self._module.end_pos[0]
+        if last_pos != line_length:
+            raise Exception(
+                ('(%s != %s) ' % (last_pos, line_length))
+                + _get_debug_error_message(self._module, old_lines, new_lines)
+            )
         LOG.debug('diff parser end')
         return self._module
 
@@ -682,9 +686,11 @@ class _NodesTree(object):
         # Add an endmarker.
         try:
             last_leaf = self._module.get_last_leaf()
-            end_pos = list(last_leaf.end_pos)
         except IndexError:
             end_pos = [1, 0]
+        else:
+            last_leaf = _skip_dedent_error_leaves(last_leaf)
+            end_pos = list(last_leaf.end_pos)
         lines = split_lines(self.prefix)
         assert len(lines) > 0
         if len(lines) == 1:
