@@ -271,10 +271,9 @@ class DiffParser(object):
                 self._parse(self._nodes_tree.parsed_until_line + 1)
             elif not copied_nodes:
                 # We have copied as much as possible (but definitely not too
-                # much). Therefore we just parse the rest.
-                # We might not reach the end, because there's a statement
-                # that is not finished.
-                self._parse(until_line_new)
+                # much). Therefore we just parse a bit more.
+                self._parse(self._nodes_tree.parsed_until_line + 1)
+                copied_nodes = [None]
             else:
                 p_children = line_stmt.parent.children
                 index = p_children.index(line_stmt)
@@ -393,10 +392,6 @@ class DiffParser(object):
                     typ, string, start_pos, prefix = next(tokens)
                     if '\n' in prefix or '\r' in prefix:
                         prefix = re.sub(r'[^\n\r]+\Z', '', prefix)
-                    else:
-                        # This is basically the next line and it still needs to
-                        # be parserd.
-                        prefix = ''
                     yield PythonToken(
                         PythonTokenTypes.ENDMARKER, '',
                         (start_pos[0] + line_offset, 0),

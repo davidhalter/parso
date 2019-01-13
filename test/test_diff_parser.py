@@ -67,8 +67,8 @@ class Differ(object):
 
         error_node = _check_error_leaves_nodes(new_module)
         assert expect_error_leaves == (error_node is not None), error_node
-        #assert diff_parser._parser_count == parsers
-        #assert diff_parser._copy_count == copies
+        assert diff_parser._parser_count == parsers
+        assert diff_parser._copy_count == copies
         return new_module
 
 
@@ -726,7 +726,7 @@ def test_paren_in_strange_position(differ):
 
     differ.initialize(code1)
     differ.parse(code2, parsers=1, copies=2, expect_error_leaves=True)
-    differ.parse(code1, parsers=1, copies=1)
+    differ.parse(code1, parsers=0, copies=2)
 
 
 def insert_line_into_code(code, index, line):
@@ -818,9 +818,9 @@ def test_indentation_issues(differ):
         ''')
 
     differ.initialize(code1)
-    differ.parse(code2, parsers=1, copies=2, expect_error_leaves=True)
-    differ.parse(code1, parsers=2, copies=1)
-    differ.parse(code3, parsers=1, copies=1)
+    differ.parse(code2, parsers=2, copies=2, expect_error_leaves=True)
+    differ.parse(code1, copies=2)
+    differ.parse(code3, parsers=2, copies=1)
     differ.parse(code1, parsers=1, copies=2)
 
 
@@ -854,7 +854,7 @@ def test_error_dedent_issues(differ):
         ''')
 
     differ.initialize(code1)
-    differ.parse(code2, parsers=5, copies=1, expect_error_leaves=True)
+    differ.parse(code2, parsers=6, copies=2, expect_error_leaves=True)
     differ.parse(code1, parsers=1, copies=0)
 
 
@@ -998,5 +998,17 @@ def test_dedent_end_positions(differ):
                      5}
         ''')
     differ.initialize(code1)
-    differ.parse(code2, copies=6, parsers=14, expect_error_leaves=True)
-    differ.parse(code1, copies=6, parsers=11)
+    differ.parse(code2, parsers=1, expect_error_leaves=True)
+    differ.parse(code1, parsers=1)
+
+
+def test_special_no_newline_ending(differ):
+    code1 = dedent('''\
+        1
+        ''')
+    code2 = dedent('''\
+        1
+         is ''')
+    differ.initialize(code1)
+    differ.parse(code2, copies=1, parsers=1, expect_error_leaves=True)
+    differ.parse(code1, copies=1, parsers=0)
