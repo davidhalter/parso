@@ -99,11 +99,12 @@ class FileModification:
 
         lines = list(lines)
         for _ in range(change_count):
-            if not lines:
-                break
-
             rand = random.randint(1, 4)
             if rand == 1:
+                if len(lines) == 1:
+                    # We cannot delete every line, that doesn't make sense to
+                    # fuzz and it would be annoying to rewrite everything here.
+                    continue
                 l = LineDeletion(random_line())
             elif rand == 2:
                 # Copy / Insertion
@@ -127,6 +128,7 @@ class FileModification:
                         # fuzzer is just way more effective here.
                         random_string += random.choice(_random_python_fragments)
                 l = LineReplacement(line_nr, line[:column] + random_string + line[column:])
+            l.apply(lines)
             yield l
 
     def __init__(self, modification_list):
