@@ -15,8 +15,6 @@ decorator: '@' dotted_name [ '(' [arglist] ')' ] NEWLINE
 decorators: decorator+
 decorated: decorators (classdef | funcdef | async_funcdef)
 
-# NOTE: Francisco Souza/Reinoud Elhorst, using ASYNC/'await' keywords instead of
-# skipping python3.5+ compatibility, in favour of 3.7 solution
 async_funcdef: 'async' funcdef
 funcdef: 'def' NAME parameters ['->' test] ':' suite
 
