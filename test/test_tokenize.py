@@ -285,3 +285,17 @@ def test_error_token_after_dedent():
         ERRORTOKEN, NAME, NEWLINE, ENDMARKER
     ]
     assert [t.type for t in lst] == expected
+
+
+def test_brackets_no_indentation():
+    """
+    There used to be an issue that the parentheses counting would go below
+    zero. This should not happen.
+    """
+    code = dedent("""\
+        }
+        {
+          }
+        """)
+    lst = _get_token_list(code)
+    assert [t.type for t in lst] == [OP, NEWLINE, OP, OP, NEWLINE, ENDMARKER]

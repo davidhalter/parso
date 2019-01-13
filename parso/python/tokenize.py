@@ -585,7 +585,8 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                     if fstring_stack:
                         fstring_stack[-1].close_parentheses(token)
                     else:
-                        paren_level -= 1
+                        if paren_level:
+                            paren_level -= 1
                 elif token == ':' and fstring_stack \
                         and fstring_stack[-1].parentheses_count == 1:
                     fstring_stack[-1].format_spec_count += 1
