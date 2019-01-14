@@ -573,7 +573,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                                 indents.append(indent)
                                 break
                 yield PythonToken(NAME, token, spos, prefix)
-            elif initial == '\\' and line[start:] in ('\\\n', '\\\r\n', '\\r'):  # continued stmt
+            elif initial == '\\' and line[start:] in ('\\\n', '\\\r\n', '\\\r'):  # continued stmt
                 additional_prefix += prefix + line[start:]
                 break
             else:

@@ -307,3 +307,8 @@ def test_form_feed():
     assert error_token.prefix == '\f'
     assert error_token.string == '"""'
     assert endmarker.prefix == ''
+
+
+def test_carriage_return():
+    lst = _get_token_list(' =\\\rclass')
+    assert [t.type for t in lst] == [INDENT, OP, DEDENT, NAME, ENDMARKER]
