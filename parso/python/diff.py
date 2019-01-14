@@ -572,7 +572,7 @@ class _NodesTree(object):
 
         self._get_insertion_node(tree_nodes[0])
 
-        new_nodes, self._working_stack = self._copy_nodes(
+        new_nodes, self._working_stack, self.prefix = self._copy_nodes(
             list(self._working_stack),
             tree_nodes,
             until_line,
@@ -611,7 +611,7 @@ class _NodesTree(object):
             new_nodes.append(node)
 
         if not new_nodes:
-            return [], working_stack
+            return [], working_stack, prefix
 
         tos = working_stack[-1]
         last_node = new_nodes[-1]
@@ -624,7 +624,7 @@ class _NodesTree(object):
             suite_tos = _NodesTreeNode(suite)
             # Don't need to pass line_offset here, it's already done by the
             # parent.
-            suite_nodes, new_working_stack = self._copy_nodes(
+            suite_nodes, new_working_stack, new_prefix = self._copy_nodes(
                 working_stack + [suite_tos], suite.children, until_line, line_offset
             )
             if len(suite_nodes) < 2:
@@ -666,14 +666,10 @@ class _NodesTree(object):
             else:
                 last_line_offset_leaf = new_nodes[-1].get_last_leaf()
             tos.add_tree_nodes(prefix, new_nodes, line_offset, last_line_offset_leaf)
-            self.prefix = new_prefix
+            prefix = new_prefix
             self._prefix_remainder = ''
-        else:
-            # Need to reset the prefix, because it might have been reset higher
-            # up in the stack.
-            self.prefix = prefix
 
-        return new_nodes, working_stack
+        return new_nodes, working_stack, prefix
 
     def close(self):
         self._base_node.finish()

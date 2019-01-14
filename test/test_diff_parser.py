@@ -1052,3 +1052,20 @@ def test_import_opening_bracket(differ):
     differ.initialize(code1)
     differ.parse(code2, copies=1, parsers=2, expect_error_leaves=True)
     differ.parse(code1, copies=1, parsers=2, expect_error_leaves=True)
+
+
+def test_opening_bracket_at_end(differ):
+    code1 = dedent('''\
+        class C:
+            1
+            [
+        ''')
+    code2 = dedent('''\
+        3
+        class C:
+            1
+            [
+        ''')
+    differ.initialize(code1)
+    differ.parse(code2, copies=1, parsers=2, expect_error_leaves=True)
+    differ.parse(code1, copies=1, parsers=1, expect_error_leaves=True)
