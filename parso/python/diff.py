@@ -476,8 +476,6 @@ class _NodesTreeNode(object):
 
 
 class _NodesTree(object):
-    endmarker_type = 'endmarker'
-
     def __init__(self, module):
         self._base_node = _NodesTreeNode(module)
         self._working_stack = [self._base_node]
@@ -543,7 +541,7 @@ class _NodesTree(object):
         Helps cleaning up the tree nodes that get inserted.
         """
         last_leaf = tree_nodes[-1].get_last_leaf()
-        is_endmarker = last_leaf.type == self.endmarker_type
+        is_endmarker = last_leaf.type == 'endmarker'
         self._prefix_remainder = ''
         if is_endmarker:
             separation = max(last_leaf.prefix.rfind('\n'), last_leaf.prefix.rfind('\r'))
@@ -632,6 +630,7 @@ class _NodesTree(object):
             if len(suite_nodes) < 2:
                 # A suite only with newline is not valid.
                 new_nodes.pop()
+                new_prefix = ''
             else:
                 assert new_nodes
                 tos.add_child_node(suite_tos)
@@ -649,6 +648,7 @@ class _NodesTree(object):
                 # If we copy flows at the end, they might be continued
                 # after the copy limit (in the new parser).
                 # In this while loop we try to remove until we find a newline.
+                new_prefix = ''
                 new_nodes.pop()
                 while new_nodes:
                     last_node = new_nodes[-1]

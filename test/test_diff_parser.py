@@ -49,6 +49,8 @@ class Differ(object):
 
         self.lines = split_lines(code, keepends=True)
         self.module = parse(code, diff_cache=True, cache=True)
+        assert code == self.module.get_code()
+        _assert_valid_graph(self.module)
         return self.module
 
     def parse(self, code, copies=0, parsers=0, expect_error_leaves=False):
@@ -1034,3 +1036,19 @@ def test_random_character_insertion(differ):
     differ.initialize(code1)
     differ.parse(code2, copies=1, parsers=3, expect_error_leaves=True)
     differ.parse(code1, copies=1, parsers=1)
+
+
+def test_import_opening_bracket(differ):
+    code1 = dedent('''\
+        1
+        2
+        from bubu import (X,
+        ''')
+    code2 = dedent('''\
+        11
+        2
+        from bubu import (X,
+        ''')
+    differ.initialize(code1)
+    differ.parse(code2, copies=1, parsers=2, expect_error_leaves=True)
+    differ.parse(code1, copies=1, parsers=2, expect_error_leaves=True)
