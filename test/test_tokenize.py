@@ -312,3 +312,9 @@ def test_form_feed():
 def test_carriage_return():
     lst = _get_token_list(' =\\\rclass')
     assert [t.type for t in lst] == [INDENT, OP, DEDENT, NAME, ENDMARKER]
+
+
+def test_backslash():
+    code = '\\\n# 1 \n'
+    endmarker, = _get_token_list(code)
+    assert endmarker.prefix == code

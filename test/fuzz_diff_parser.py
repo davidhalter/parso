@@ -40,7 +40,7 @@ _python_reserved_strings = tuple(
 )
 _random_python_fragments = _python_reserved_strings + (
     ' ', '\t', '\n', '\r', '\f', 'f"', 'F"""', "fr'", "RF'''", '"', '"""', "'",
-    "'''", ';', ' some_random_word ', '\\'
+    "'''", ';', ' some_random_word ', '\\', '#',
 )
 
 
@@ -172,6 +172,7 @@ class FileTests:
             code = f.read()
         self._code_lines = split_lines(code, keepends=True)
         self._test_count = test_count
+        self._code_lines = self._code_lines[:30]
         self._change_count = change_count
 
         with open(file_path) as f:
