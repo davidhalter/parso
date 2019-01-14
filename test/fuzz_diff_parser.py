@@ -27,7 +27,6 @@ import sys
 import os
 import random
 import pickle
-import difflib
 
 import parso
 from parso.utils import split_lines
@@ -53,6 +52,14 @@ def find_python_files_in_tree(file_path):
         for name in filenames:
             if name.endswith('.py'):
                 yield os.path.join(root, name)
+
+
+def _print_copyable_lines(lines):
+    for line in lines:
+        line = repr(line)[1:-1]
+        if line.endswith(r'\n'):
+            line = line[:-2] + '\n'
+        print(line, end='')
 
 
 class LineReplacement:
@@ -147,9 +154,10 @@ class FileModification:
 
         if print_code:
             print('Original:')
-            print(code)
-            print('Modified:')
-            print(modified_code)
+            _print_copyable_lines(code_lines)
+            print('\nModified:')
+            _print_copyable_lines(modified_lines)
+            print()
 
         grammar.parse(code, diff_cache=True)
         grammar.parse(modified_code, diff_cache=True)
