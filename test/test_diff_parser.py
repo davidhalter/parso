@@ -1097,3 +1097,14 @@ def test_all_sorts_of_indentation(differ):
     differ.initialize(code1)
     differ.parse(code2, copies=2, parsers=3, expect_error_leaves=True)
     differ.parse(code1, copies=1, parsers=3)
+
+    code3 = dedent('''\
+            if 1:
+                a
+                 b
+                  c
+                   d
+        \x00
+        ''')
+    differ.parse(code3, parsers=2, expect_error_leaves=True)
+    differ.parse('')

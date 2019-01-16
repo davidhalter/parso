@@ -466,6 +466,10 @@ class _NodesTreeNode(object):
         if self._children_groups:
             children_group = self._children_groups[-1]
             last_leaf = children_group.last_line_offset_leaf
+            while last_leaf.type == 'error_leaf' \
+                    and last_leaf.token_type in _INDENTATION_TOKENS:
+                last_leaf = last_leaf.get_previous_leaf()
+
             line = last_leaf.end_pos[0] + children_group.line_offset
 
             # Newlines end on the next line, which means that they would cover
