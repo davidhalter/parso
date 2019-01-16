@@ -1069,3 +1069,31 @@ def test_opening_bracket_at_end(differ):
     differ.initialize(code1)
     differ.parse(code2, copies=1, parsers=2, expect_error_leaves=True)
     differ.parse(code1, copies=1, parsers=1, expect_error_leaves=True)
+
+
+def test_all_sorts_of_indentation(differ):
+    code1 = dedent('''\
+        class C:
+            1
+            def f():
+                    'same'
+
+                    if foo:
+                        a = b
+                end
+        ''')
+    code2 = dedent('''\
+        class C:
+            1
+            def f(yield await %|(
+                    'same'
+
+          \x02\x06\x0f\x1c\x11
+                    if foo:
+                        a = b
+
+                end
+        ''')
+    differ.initialize(code1)
+    differ.parse(code2, copies=2, parsers=3, expect_error_leaves=True)
+    differ.parse(code1, copies=1, parsers=3)

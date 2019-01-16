@@ -19,6 +19,8 @@ from parso.python.token import PythonTokenTypes
 LOG = logging.getLogger(__name__)
 DEBUG_DIFF_PARSER = False
 
+_INDENTATION_TOKENS = 'INDENT', 'ERROR_DEDENT', 'DEDENT'
+
 
 def _assert_valid_graph(node):
     """
@@ -33,11 +35,12 @@ def _assert_valid_graph(node):
 
         # Ignore INDENT is necessary, because indent/dedent tokens don't
         # contain value/prefix and are just around, because of the tokenizer.
-        error_tokens = 'INDENT', 'ERROR_DEDENT', 'DEDENT'
-        if node.type == 'error_leaf' and node.token_type in error_tokens:
+        if node.type == 'error_leaf' and node.token_type in _INDENTATION_TOKENS:
+            assert not node.value
+            assert not node.prefix
             return
         while previous_leaf and previous_leaf.type == 'error_leaf' \
-                and previous_leaf.token_type in error_tokens:
+                and previous_leaf.token_type in _INDENTATION_TOKENS:
             assert previous_leaf.end_pos <= node.start_pos, \
                 (previous_leaf, node)
             previous_leaf = previous_leaf.get_previous_leaf()
@@ -428,6 +431,11 @@ class _NodesTreeNode(object):
         children = []
         for prefix, children_part, line_offset, last_line_offset_leaf in self._children_groups:
             first_leaf = children_part[0].get_first_leaf()
+
+            while first_leaf.type == 'error_leaf' \
+                    and first_leaf.token_type in _INDENTATION_TOKENS:
+                first_leaf = first_leaf.get_next_leaf()
+
             first_leaf.prefix = prefix + first_leaf.prefix
             if line_offset != 0:
                 try:

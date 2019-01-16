@@ -169,7 +169,9 @@ class EndMarker(_LeafWithoutNewlines):
 
     @utf8_repr
     def __repr__(self):
-        return "<%s: prefix=%s>" % (type(self).__name__, repr(self.prefix))
+        return "<%s: prefix=%s end_pos=%s>" % (
+            type(self).__name__, repr(self.prefix), self.end_pos
+        )
 
 
 class Newline(PythonLeaf):
