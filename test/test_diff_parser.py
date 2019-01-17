@@ -205,7 +205,7 @@ def test_open_parentheses(differ):
     differ.parse(new_code, parsers=1, expect_error_leaves=True)
 
     new_code = 'a = 1\n' + new_code
-    differ.parse(new_code, copies=1, parsers=1, expect_error_leaves=True)
+    differ.parse(new_code, parsers=2, expect_error_leaves=True)
 
     func += 'def other_func():\n pass\n'
     differ.initialize('isinstance(\n' + func)
@@ -502,7 +502,7 @@ def test_endmarker_newline(differ):
     code2 = code1.replace('codet', 'coded')
 
     differ.initialize(code1)
-    differ.parse(code2, parsers=1, copies=2, expect_error_leaves=True)
+    differ.parse(code2, parsers=2, copies=1, expect_error_leaves=True)
 
 
 def test_newlines_at_end(differ):
@@ -1099,7 +1099,7 @@ def test_all_sorts_of_indentation(differ):
                 end
         ''')
     differ.initialize(code1)
-    differ.parse(code2, copies=2, parsers=3, expect_error_leaves=True)
+    differ.parse(code2, copies=1, parsers=4, expect_error_leaves=True)
     differ.parse(code1, copies=1, parsers=3)
 
     code3 = dedent('''\
@@ -1127,4 +1127,24 @@ def test_dont_copy_dedents_in_beginning(differ):
         ''')
     differ.initialize(code1)
     differ.parse(code2, copies=1, parsers=1, expect_error_leaves=True)
-    differ.parse(code1, copies=1, parsers=1)
+    differ.parse(code1, parsers=2)
+
+
+def test_dont_copy_error_leaves(differ):
+    code1 = dedent('''\
+        def f(n):
+            x
+            if 2:
+                3
+        ''')
+    code2 = dedent('''\
+        def f(n):
+        def if 1:
+                indent
+            x
+            if 2:
+                3
+        ''')
+    differ.initialize(code1)
+    differ.parse(code2, parsers=1, expect_error_leaves=True)
+    differ.parse(code1, parsers=2)

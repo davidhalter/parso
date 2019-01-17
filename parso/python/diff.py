@@ -578,8 +578,14 @@ class _NodesTree(object):
 
         Returns the number of tree nodes that were copied.
         """
-        if tree_nodes[0].type == 'error_leaf' and tree_nodes[0].token_type == 'INDENT':
-            # Avoid copying error indents. Just parse them again.
+        i = 0
+        for i, n in enumerate(tree_nodes):
+            if tree_nodes[0].type not in ('INDENT', 'DEDENT'):
+                break
+
+        if tree_nodes[i].type in ('error_leaf', 'error_node'):
+            # Avoid copying errors in the beginning. Can lead to a lot of
+            # issues.
             return []
 
         self._get_insertion_node(tree_nodes[0])
@@ -621,10 +627,6 @@ class _NodesTree(object):
                 break
 
             new_nodes.append(node)
-
-        while new_nodes and new_nodes[0].type == 'error_leaf' \
-                and new_nodes[0].token_type in _INDENTATION_TOKENS:
-            new_nodes.pop(0)
 
         if not new_nodes:
             return [], working_stack, prefix
