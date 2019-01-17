@@ -30,6 +30,7 @@ import pickle
 
 import parso
 from parso.utils import split_lines
+from test.test_diff_parser import _check_error_leaves_nodes
 
 _latest_grammar = parso.load_grammar(version='3.8')
 _python_reserved_strings = tuple(
@@ -60,6 +61,11 @@ def _print_copyable_lines(lines):
         if line.endswith(r'\n'):
             line = line[:-2] + '\n'
         print(line, end='')
+
+
+def _get_first_error_start_pos_or_none(module):
+    error_leaf = _check_error_leaves_nodes(module)
+    return None if error_leaf is None else error_leaf.start_pos
 
 
 class LineReplacement:
@@ -159,10 +165,13 @@ class FileModification:
             _print_copyable_lines(modified_lines)
             print()
 
-        grammar.parse(code, diff_cache=True)
-        grammar.parse(modified_code, diff_cache=True)
+        m = grammar.parse(code, diff_cache=True)
+        start1 = _get_first_error_start_pos_or_none(m)
+        m = grammar.parse(modified_code, diff_cache=True)
         # Also check if it's possible to "revert" the changes.
-        grammar.parse(code, diff_cache=True)
+        m = grammar.parse(code, diff_cache=True)
+        start2 = _get_first_error_start_pos_or_none(m)
+        assert start1 == start2, (start1, start2)
 
 
 class FileTests:
