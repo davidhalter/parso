@@ -11,6 +11,8 @@ from parso import load_grammar
 from parso.python.diff import DiffParser, _assert_valid_graph
 from parso import parse
 
+ANY = object()
+
 
 def test_simple():
     """
@@ -69,8 +71,10 @@ class Differ(object):
 
         error_node = _check_error_leaves_nodes(new_module)
         assert expect_error_leaves == (error_node is not None), error_node
-        assert diff_parser._parser_count == parsers
-        assert diff_parser._copy_count == copies
+        if parsers is not ANY:
+            assert diff_parser._parser_count == parsers
+        if copies is not ANY:
+            assert diff_parser._copy_count == copies
         return new_module
 
 
@@ -1108,3 +1112,19 @@ def test_all_sorts_of_indentation(differ):
         ''')
     differ.parse(code3, parsers=2, expect_error_leaves=True)
     differ.parse('')
+
+
+def test_dont_copy_dedents_in_beginning(differ):
+    code1 = dedent('''\
+        a
+        4
+        ''')
+    code2 = dedent('''\
+        1
+         2
+          3
+        4
+        ''')
+    differ.initialize(code1)
+    differ.parse(code2, copies=1, parsers=1, expect_error_leaves=True)
+    differ.parse(code1, copies=1, parsers=1)

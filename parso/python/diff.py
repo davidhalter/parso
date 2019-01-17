@@ -622,6 +622,10 @@ class _NodesTree(object):
 
             new_nodes.append(node)
 
+        while new_nodes and new_nodes[0].type == 'error_leaf' \
+                and new_nodes[0].token_type in _INDENTATION_TOKENS:
+            new_nodes.pop(0)
+
         if not new_nodes:
             return [], working_stack, prefix
 
