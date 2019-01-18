@@ -1172,4 +1172,30 @@ def test_error_dedent_in_between(differ):
         ''')
     differ.initialize(code1)
     differ.parse(code2, copies=1, parsers=1, expect_error_leaves=True)
-    differ.parse(code1, parsers=2, copies=1)
+    differ.parse(code1, copies=1, parsers=2)
+
+
+def test_x(differ):
+    code1 = dedent('''\
+        class SocketIO:
+            x
+            def f():
+                ""
+                copied
+        a
+        ''')
+    code2 = dedent('''\
+        try:
+            de
+                a
+                    b
+                c
+                    d
+            def f():
+                ""
+                copied
+        a
+        ''')
+    differ.initialize(code1)
+    differ.parse(code2, copies=ANY, parsers=ANY, expect_error_leaves=True)
+    differ.parse(code1, copies=ANY, parsers=ANY)

@@ -617,7 +617,7 @@ class _NodesTree(object):
                 # Endmarkers just distort all the checks below. Remove them.
                 break
 
-            if node.type == 'error_leaf' and node.token_type == 'ERROR_DEDENT':
+            if node.type == 'error_leaf' and node.token_type in ('DEDENT', 'ERROR_DEDENT'):
                 break
             # TODO this check might take a bit of time for large files. We
             # might want to change this to do more intelligent guessing or
