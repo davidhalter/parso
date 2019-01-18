@@ -1148,3 +1148,28 @@ def test_dont_copy_error_leaves(differ):
     differ.initialize(code1)
     differ.parse(code2, parsers=1, expect_error_leaves=True)
     differ.parse(code1, parsers=2)
+
+
+def test_error_dedent_in_between(differ):
+    code1 = dedent('''\
+        class C:
+            def f():
+                a
+                if something:
+                    x
+            z
+        ''')
+    code2 = dedent('''\
+        class C:
+            def f():
+                a
+        dedent
+                if other_thing:
+                    b
+                if something:
+                    x
+            z
+        ''')
+    differ.initialize(code1)
+    differ.parse(code2, copies=1, parsers=1, expect_error_leaves=True)
+    differ.parse(code1, parsers=2, copies=1)
