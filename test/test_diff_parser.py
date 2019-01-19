@@ -931,7 +931,7 @@ def test_many_nested_ifs(differ):
     differ.parse(code1, parsers=1, copies=1)
 
 
-@pytest.mark.skipif(sys.version_info[0] < 3, reason="Async doesn't work in Python 2.")
+@pytest.mark.skipif(sys.version_info < (3, 4), reason="Async doesn't work in Python 2.")
 @pytest.mark.parametrize('prefix', ['', 'async '])
 def test_with_and_funcdef_in_call(differ, prefix):
     code1 = prefix + dedent('''\
@@ -987,6 +987,7 @@ def test_random_unicode_characters(differ):
     differ.parse('   a( # xx\ndef', parsers=2, expect_error_leaves=True)
 
 
+@pytest.mark.skipif(sys.version_info < (2, 7), reason="No set literals in Python 2.6")
 def test_dedent_end_positions(differ):
     code1 = dedent('''\
         if 1:
