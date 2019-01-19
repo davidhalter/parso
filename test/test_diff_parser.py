@@ -1176,9 +1176,9 @@ def test_error_dedent_in_between(differ):
     differ.parse(code1, copies=1, parsers=2)
 
 
-def test_x(differ):
+def test_some_other_indentation_issues(differ):
     code1 = dedent('''\
-        class SocketIO:
+        class C:
             x
             def f():
                 ""
@@ -1198,5 +1198,19 @@ def test_x(differ):
         a
         ''')
     differ.initialize(code1)
-    differ.parse(code2, copies=ANY, parsers=ANY, expect_error_leaves=True)
-    differ.parse(code1, copies=ANY, parsers=ANY)
+    differ.parse(code2, copies=2, parsers=1, expect_error_leaves=True)
+    differ.parse(code1, copies=2, parsers=2)
+
+
+def test_open_bracket(differ):
+    code1 = dedent('''\
+        class C:
+            1
+            2 # ha
+        ''')
+    code2 = insert_line_into_code(code1, 2, '    [str\n')
+    code3 = insert_line_into_code(code2, 4, '    str\n')
+    differ.initialize(code1)
+    differ.parse(code2, copies=1, parsers=1, expect_error_leaves=True)
+    differ.parse(code3, copies=1, parsers=1, expect_error_leaves=True)
+    differ.parse(code1, copies=1, parsers=1)

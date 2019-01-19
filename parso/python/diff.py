@@ -608,13 +608,6 @@ class _NodesTree(object):
                 break
 
             if node.type == 'endmarker':
-                # We basically removed the endmarker, but we are not allowed to
-                # remove the newline at the end of the line, otherwise it's
-                # going to be missing.
-                newline_index = max(node.prefix.rfind('\n'), node.prefix.rfind('\r'))
-                if newline_index > -1:
-                    new_prefix = node.prefix[:newline_index + 1]
-                # Endmarkers just distort all the checks below. Remove them.
                 break
 
             if node.type == 'error_leaf' and node.token_type in ('DEDENT', 'ERROR_DEDENT'):
@@ -677,6 +670,16 @@ class _NodesTree(object):
                     new_nodes.pop()
 
         if new_nodes:
+            if not _ends_with_newline(new_nodes[-1].get_last_leaf()) and not had_valid_suite_last:
+                p = new_nodes[-1].get_next_leaf().prefix
+                # We are not allowed to remove the newline at the end of the
+                # line, otherwise it's going to be missing. This happens e.g.
+                # if a bracket is around before that moves newlines to
+                # prefixes.
+                newline_index = max(p.rfind('\n'), p.rfind('\r'))
+                if newline_index > -1:
+                    new_prefix = p[:newline_index + 1]
+
             if had_valid_suite_last:
                 last = new_nodes[-1]
                 if last.type == 'decorated':
