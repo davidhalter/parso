@@ -931,7 +931,7 @@ def test_many_nested_ifs(differ):
     differ.parse(code1, parsers=1, copies=1)
 
 
-@pytest.mark.skipif(sys.version_info < (3, 4), reason="Async doesn't work in Python 2.")
+@pytest.mark.skipif(sys.version_info < (3, 5), reason="Async starts working in 3.5")
 @pytest.mark.parametrize('prefix', ['', 'async '])
 def test_with_and_funcdef_in_call(differ, prefix):
     code1 = prefix + dedent('''\
