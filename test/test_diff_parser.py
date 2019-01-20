@@ -1214,3 +1214,30 @@ def test_open_bracket(differ):
     differ.parse(code2, copies=1, parsers=1, expect_error_leaves=True)
     differ.parse(code3, copies=1, parsers=1, expect_error_leaves=True)
     differ.parse(code1, copies=1, parsers=1)
+
+
+def test_aaaaaaaaaa(differ):
+    code1 = dedent('''\
+        class C:
+            def f(self):
+                (
+                b
+                c
+
+            def g(self):
+                d
+        ''')
+    code2 = dedent('''\
+        class C:
+            def f(self):
+                (
+                b
+                c
+                self.
+
+            def g(self):
+                d
+        ''')
+    differ.initialize(code1)
+    differ.parse(code2, copies=1, parsers=2, expect_error_leaves=True)
+    differ.parse(code1, copies=2, parsers=0, expect_error_leaves=True)

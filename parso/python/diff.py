@@ -676,9 +676,7 @@ class _NodesTree(object):
                 # line, otherwise it's going to be missing. This happens e.g.
                 # if a bracket is around before that moves newlines to
                 # prefixes.
-                newline_index = max(p.rfind('\n'), p.rfind('\r'))
-                if newline_index > -1:
-                    new_prefix = p[:newline_index + 1]
+                new_prefix = split_lines(p, keepends=True)[0]
 
             if had_valid_suite_last:
                 last = new_nodes[-1]
