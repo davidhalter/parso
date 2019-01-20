@@ -103,7 +103,11 @@ class LineCopy:
 class FileModification:
     @classmethod
     def generate(cls, code_lines, change_count):
-        return cls(list(cls._generate_line_modifications(code_lines, change_count)))
+        return cls(
+            list(cls._generate_line_modifications(code_lines, change_count)),
+            # work with changed trees more than with normal ones.
+            check_original=random.random() > 0.8,
+        )
 
     @staticmethod
     def _generate_line_modifications(lines, change_count):
@@ -129,8 +133,8 @@ class FileModification:
                 line = lines[line_nr]
                 column = random.randint(0, len(line))
                 random_string = ''
-                for _ in range(random.randint(1, 7)):
-                    if rand == 3:
+                for _ in range(random.randint(1, 3)):
+                    if random.random() > 0.8:
                         # The lower characters cause way more issues.
                         unicode_range = 0x1f if random.randint(0, 1) else 0x3000
                         random_string += chr(random.randint(0, unicode_range))
@@ -140,12 +144,22 @@ class FileModification:
                         # could also be done with unicode insertions, but the
                         # fuzzer is just way more effective here.
                         random_string += random.choice(_random_python_fragments)
-                l = LineReplacement(line_nr, line[:column] + random_string + line[column:])
+                if random.random() > 0.5:
+                    # In this case we insert at a very random place that
+                    # probably breaks syntax.
+                    line = line[:column] + random_string + line[column:]
+                else:
+                    # Here we have better chances to not break syntax, because
+                    # we really replace the line with something that has
+                    # indentation.
+                    line = ' ' * random.randint(0, 12) + random_string + '\n'
+                l = LineReplacement(line_nr, line)
             l.apply(lines)
             yield l
 
-    def __init__(self, modification_list):
+    def __init__(self, modification_list, check_original):
         self._modification_list = modification_list
+        self._check_original = check_original
 
     def _apply(self, code_lines):
         changed_lines = list(code_lines)
@@ -159,19 +173,25 @@ class FileModification:
         modified_code = ''.join(modified_lines)
 
         if print_code:
-            print('Original:')
-            _print_copyable_lines(code_lines)
+            if self._check_original:
+                print('Original:')
+                _print_copyable_lines(code_lines)
+
             print('\nModified:')
             _print_copyable_lines(modified_lines)
             print()
 
-        m = grammar.parse(code, diff_cache=True)
-        start1 = _get_first_error_start_pos_or_none(m)
-        m = grammar.parse(modified_code, diff_cache=True)
-        # Also check if it's possible to "revert" the changes.
-        m = grammar.parse(code, diff_cache=True)
-        start2 = _get_first_error_start_pos_or_none(m)
-        assert start1 == start2, (start1, start2)
+        if self._check_original:
+            m = grammar.parse(code, diff_cache=True)
+            start1 = _get_first_error_start_pos_or_none(m)
+
+        grammar.parse(modified_code, diff_cache=True)
+
+        if self._check_original:
+            # Also check if it's possible to "revert" the changes.
+            m = grammar.parse(code, diff_cache=True)
+            start2 = _get_first_error_start_pos_or_none(m)
+            assert start1 == start2, (start1, start2)
 
 
 class FileTests:
