@@ -544,6 +544,17 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                     contstr = line[start:]
                     contline = line
                     break
+
+            # Check up to the first 3 chars of the token to see if
+            #  they're in the single_quoted set. If so, they start
+            #  a string.
+            # We're using the first 3, because we're looking for
+            #  "rb'" (for example) at the start of the token. If
+            #  we switch to longer prefixes, this needs to be
+            #  adjusted.
+            # Note that initial == token[:1].
+            # Also note that single quote checking must come after
+            #  triple quote checking (above).
             elif initial in single_quoted or \
                     token[:2] in single_quoted or \
                     token[:3] in single_quoted:
