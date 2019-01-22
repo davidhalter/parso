@@ -167,13 +167,13 @@ def _create_token_collection(version_info):
     FStringStart = group(*fstring_prefixes)
 
     # Tail end of ' string.
-    Single = r"[^'\\]*(?:\\.[^'\\]*)*'"
+    Single = r"(?:\\.|[^'\\])*'"
     # Tail end of " string.
-    Double = r'[^"\\]*(?:\\.[^"\\]*)*"'
+    Double = r'(?:\\.|[^"\\])*"'
     # Tail end of ''' string.
-    Single3 = r"[^'\\]*(?:(?:\\.|'(?!''))[^'\\]*)*'''"
+    Single3 = r"(?:\\.|'(?!'')|[^'\\])*'''"
     # Tail end of """ string.
-    Double3 = r'[^"\\]*(?:(?:\\.|"(?!""))[^"\\]*)*"""'
+    Double3 = r'(?:\\.|"(?!"")|[^"\\])*"""'
     Triple = group(StringPrefixWithF + "'''", StringPrefixWithF + '"""')
 
     # Because of leftmost-then-longest match semantics, be sure to put the
