@@ -258,6 +258,10 @@ def test_too_many_levels_of_indentation():
 @pytest.mark.parametrize(
     'code', [
         "f'{*args,}'",
+        r'f"\""',
+        r'f"\\\""',
+        r'fr"\""',
+        r'fr"\\\""',
     ]
 )
 def test_valid_fstrings(code):
@@ -267,6 +271,8 @@ def test_valid_fstrings(code):
 @pytest.mark.parametrize(
     ('code', 'message'), [
         ("f'{1+}'", ('invalid syntax')),
+        (r'f"\"', ('invalid syntax')),
+        (r'fr"\"', ('invalid syntax')),
     ]
 )
 def test_invalid_fstrings(code, message):

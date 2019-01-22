@@ -303,7 +303,7 @@ def _check_fstring_ending(fstring_stack, token, from_start=False):
     return fstring_index, fstring_end
 
 
-def _find_fstring_string(fstring_stack, line, lnum, pos):
+def _find_fstring_string(endpats, fstring_stack, line, lnum, pos):
     tos = fstring_stack[-1]
     if tos.is_in_expr():
         return '', pos
@@ -322,10 +322,9 @@ def _find_fstring_string(fstring_stack, line, lnum, pos):
 
             string = match.group(0)
             for fstring_stack_node in fstring_stack:
-                try:
-                    string = string[:string.index(fstring_stack_node.quote)]
-                except ValueError:
-                    pass  # The string was not found.
+                end_match = endpats[fstring_stack_node.quote].match(string)
+                if end_match is not None:
+                    string = match.group(0)[:-len(fstring_stack_node.quote)]
 
             new_pos += len(string)
             if allow_multiline and (string.endswith('\n') or string.endswith('\r')):
@@ -424,7 +423,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
 
         while pos < max:
             if fstring_stack:
-                string, pos = _find_fstring_string(fstring_stack, line, lnum, pos)
+                string, pos = _find_fstring_string(endpats, fstring_stack, line, lnum, pos)
                 if string:
                     yield PythonToken(
                         FSTRING_STRING, string,
@@ -559,6 +558,8 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                     token[:2] in single_quoted or \
                     token[:3] in single_quoted:
                 if token[-1] in '\r\n':                       # continued string
+                    # This means that a single quoted string ends with a
+                    # backslash and is continued.
                     contstr_start = lnum, start
                     endprog = (endpats.get(initial) or endpats.get(token[1])
                                or endpats.get(token[2]))

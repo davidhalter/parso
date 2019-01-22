@@ -23,11 +23,13 @@ OP = PythonTokenTypes.OP
 ENDMARKER = PythonTokenTypes.ENDMARKER
 ERROR_DEDENT = PythonTokenTypes.ERROR_DEDENT
 FSTRING_START = PythonTokenTypes.FSTRING_START
+FSTRING_STRING = PythonTokenTypes.FSTRING_STRING
+FSTRING_END = PythonTokenTypes.FSTRING_END
 
 
-def _get_token_list(string):
+def _get_token_list(string, version=None):
     # Load the current version.
-    version_info = parse_version_string()
+    version_info = parse_version_string(version)
     return list(tokenize.tokenize(string, version_info))
 
 
@@ -318,3 +320,17 @@ def test_backslash():
     code = '\\\n# 1 \n'
     endmarker, = _get_token_list(code)
     assert endmarker.prefix == code
+
+
+@pytest.mark.parametrize(
+    ('code', 'types'), [
+        ('f"', [FSTRING_START]),
+        ('f""', [FSTRING_START, FSTRING_END]),
+        ('f" {}"', [FSTRING_START, FSTRING_STRING, OP, OP, FSTRING_END]),
+        ('f" "{}', [FSTRING_START, FSTRING_STRING, FSTRING_END, OP, OP]),
+        (r'f"\""', [FSTRING_START, FSTRING_STRING, FSTRING_END]),
+    ]
+)
+def test_fstring(code, types, version_ge_py36):
+    actual_types = [t.type for t in _get_token_list(code, version_ge_py36)]
+    assert actual_types == types + [ENDMARKER]

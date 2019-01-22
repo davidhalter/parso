@@ -57,6 +57,8 @@ def pytest_generate_tests(metafunc):
         metafunc.parametrize('each_py2_version', VERSIONS_2)
     elif 'each_py3_version' in metafunc.fixturenames:
         metafunc.parametrize('each_py3_version', VERSIONS_3)
+    elif 'version_ge_py36' in metafunc.fixturenames:
+        metafunc.parametrize('version_ge_py36', ['3.6', '3.7'])
 
 
 class NormalizerIssueCase(object):
@@ -151,8 +153,5 @@ def works_ge_py3(each_version):
 
 @pytest.fixture
 def works_ge_py35(each_version):
-    """
-    Works only greater equal Python 3.3.
-    """
     version_info = parse_version_string(each_version)
     return Checker(each_version, version_info >= (3, 5))
