@@ -268,7 +268,7 @@ class String(Literal):
         return match.group(2)[:-len(match.group(1))]
 
 
-class FStringString(Leaf):
+class FStringString(PythonLeaf):
     """
     f-strings contain f-string expressions and normal python strings. These are
     the string parts of f-strings.
@@ -277,7 +277,7 @@ class FStringString(Leaf):
     __slots__ = ()
 
 
-class FStringStart(Leaf):
+class FStringStart(PythonLeaf):
     """
     f-strings contain f-string expressions and normal python strings. These are
     the string parts of f-strings.
@@ -286,7 +286,7 @@ class FStringStart(Leaf):
     __slots__ = ()
 
 
-class FStringEnd(Leaf):
+class FStringEnd(PythonLeaf):
     """
     f-strings contain f-string expressions and normal python strings. These are
     the string parts of f-strings.
