@@ -284,26 +284,20 @@ class FStringNode(object):
         return (self.parentheses_count - self.format_spec_count) > 0
 
 
-def _check_fstring_ending(fstring_stack, token, from_start=False):
-    fstring_end = float('inf')
-    fstring_index = None
-    for i, node in enumerate(fstring_stack):
-        if from_start:
-            if token.startswith(node.quote):
-                fstring_index = i
-                fstring_end = len(node.quote)
-            else:
-                continue
-        else:
-            try:
-                end = token.index(node.quote)
-            except ValueError:
-                pass
-            else:
-                if fstring_index is None or end < fstring_end:
-                    fstring_index = i
-                    fstring_end = end
-    return fstring_index, fstring_end
+def _close_fstring_if_necessary(fstring_stack, string, start_pos, additional_prefix):
+    for fstring_stack_index, node in enumerate(fstring_stack):
+        if string.startswith(node.quote):
+            token = PythonToken(
+                FSTRING_END,
+                node.quote,
+                start_pos,
+                prefix=additional_prefix,
+            )
+            additional_prefix = ''
+            assert not node.previous_lines
+            del fstring_stack[fstring_stack_index:]
+            return token, '', len(node.quote)
+    return None, additional_prefix, 0
 
 
 def _find_fstring_string(endpats, fstring_stack, line, lnum, pos):
@@ -425,6 +419,8 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                 tos = fstring_stack[-1]
                 if not tos.is_in_expr():
                     string, pos = _find_fstring_string(endpats, fstring_stack, line, lnum, pos)
+                    if pos == max:
+                        break
                     if string:
                         yield PythonToken(
                             FSTRING_STRING, string,
@@ -436,22 +432,16 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                         tos.previous_lines = ''
                         continue
 
-                if pos == max:
-                    break
-
                 rest = line[pos:]
-                fstring_index, end = _check_fstring_ending(fstring_stack, rest, from_start=True)
-
-                if fstring_index is not None:
-                    yield PythonToken(
-                        FSTRING_END,
-                        fstring_stack[fstring_index].quote,
-                        (lnum, pos),
-                        prefix=additional_prefix,
-                    )
-                    additional_prefix = ''
-                    del fstring_stack[fstring_index:]
-                    pos += end
+                fstring_end_token, additional_prefix, quote_length = _close_fstring_if_necessary(
+                    fstring_stack,
+                    rest,
+                    (lnum, pos),
+                    additional_prefix,
+                )
+                pos += quote_length
+                if fstring_end_token is not None:
+                    yield fstring_end_token
                     continue
 
             pseudomatch = pseudo_token.match(line, pos)
@@ -497,23 +487,6 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                         indents.append(indent_start)
                     for t in dedent_if_necessary(indent_start):
                         yield t
-
-            if fstring_stack:
-                fstring_index, end = _check_fstring_ending(fstring_stack, token)
-                if fstring_index is not None:
-                    if end != 0:
-                        yield PythonToken(ERRORTOKEN, token[:end], spos, prefix)
-                        prefix = ''
-
-                    yield PythonToken(
-                        FSTRING_END,
-                        fstring_stack[fstring_index].quote,
-                        (lnum, spos[1] + 1),
-                        prefix=prefix
-                    )
-                    del fstring_stack[fstring_index:]
-                    pos -= len(token) - end
-                    continue
 
             if (initial in numchars or                      # ordinary number
                     (initial == '.' and token != '.' and token != '...')):
