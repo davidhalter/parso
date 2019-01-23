@@ -22,6 +22,20 @@ DEBUG_DIFF_PARSER = False
 _INDENTATION_TOKENS = 'INDENT', 'ERROR_DEDENT', 'DEDENT'
 
 
+def _get_previous_leaf_if_indentation(leaf):
+    while leaf and leaf.type == 'error_leaf' \
+            and leaf.token_type in _INDENTATION_TOKENS:
+        leaf = leaf.get_previous_leaf()
+    return leaf
+
+
+def _get_next_leaf_if_indentation(leaf):
+    while leaf and leaf.type == 'error_leaf' \
+            and leaf.token_type in _INDENTATION_TOKENS:
+        leaf = leaf.get_previous_leaf()
+    return leaf
+
+
 def _assert_valid_graph(node):
     """
     Checks if the parent/children relationship is correct.
@@ -31,21 +45,15 @@ def _assert_valid_graph(node):
     try:
         children = node.children
     except AttributeError:
-        previous_leaf = node.get_previous_leaf()
-
         # Ignore INDENT is necessary, because indent/dedent tokens don't
         # contain value/prefix and are just around, because of the tokenizer.
         if node.type == 'error_leaf' and node.token_type in _INDENTATION_TOKENS:
             assert not node.value
             assert not node.prefix
             return
-        while previous_leaf and previous_leaf.type == 'error_leaf' \
-                and previous_leaf.token_type in _INDENTATION_TOKENS:
-            assert previous_leaf.end_pos <= node.start_pos, \
-                (previous_leaf, node)
-            previous_leaf = previous_leaf.get_previous_leaf()
 
         # Calculate the content between two start positions.
+        previous_leaf = _get_previous_leaf_if_indentation(node.get_previous_leaf())
         if previous_leaf is None:
             content = node.prefix
             previous_start_pos = 1, 0
@@ -430,11 +438,9 @@ class _NodesTreeNode(object):
     def finish(self):
         children = []
         for prefix, children_part, line_offset, last_line_offset_leaf in self._children_groups:
-            first_leaf = children_part[0].get_first_leaf()
-
-            while first_leaf.type == 'error_leaf' \
-                    and first_leaf.token_type in _INDENTATION_TOKENS:
-                first_leaf = first_leaf.get_next_leaf()
+            first_leaf = _get_next_leaf_if_indentation(
+                children_part[0].get_first_leaf()
+            )
 
             first_leaf.prefix = prefix + first_leaf.prefix
             if line_offset != 0:
@@ -465,10 +471,9 @@ class _NodesTreeNode(object):
         line = 0
         if self._children_groups:
             children_group = self._children_groups[-1]
-            last_leaf = children_group.last_line_offset_leaf
-            while last_leaf.type == 'error_leaf' \
-                    and last_leaf.token_type in _INDENTATION_TOKENS:
-                last_leaf = last_leaf.get_previous_leaf()
+            last_leaf = _get_previous_leaf_if_indentation(
+                children_group.last_line_offset_leaf
+            )
 
             line = last_leaf.end_pos[0] + children_group.line_offset
 

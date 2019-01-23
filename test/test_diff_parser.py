@@ -1202,7 +1202,7 @@ def test_some_other_indentation_issues(differ):
     differ.parse(code1, copies=2, parsers=2)
 
 
-def test_open_bracket(differ):
+def test_open_bracket_case1(differ):
     code1 = dedent('''\
         class C:
             1
@@ -1216,7 +1216,7 @@ def test_open_bracket(differ):
     differ.parse(code1, copies=1, parsers=1)
 
 
-def test_aaaaaaaaaa(differ):
+def test_open_bracket_case2(differ):
     code1 = dedent('''\
         class C:
             def f(self):
@@ -1241,3 +1241,29 @@ def test_aaaaaaaaaa(differ):
     differ.initialize(code1)
     differ.parse(code2, copies=1, parsers=2, expect_error_leaves=True)
     differ.parse(code1, copies=2, parsers=0, expect_error_leaves=True)
+
+
+def test_x(differ):
+    code1 = dedent('''\
+        class C:
+            1
+        ''')
+    code2 = dedent('''\
+        class C:
+            1
+            @property
+                A
+                    return
+            # x
+            omega
+        ''')
+    code3 = dedent('''\
+        class C:
+            1
+        ;
+            omega
+        ''')
+    differ.initialize(code1)
+    differ.parse(code2, copies=ANY, parsers=ANY, expect_error_leaves=True)
+    differ.parse(code3, copies=ANY, parsers=ANY, expect_error_leaves=True)
+    differ.parse(code1, copies=1)

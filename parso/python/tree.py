@@ -125,7 +125,7 @@ class PythonLeaf(PythonMixin, Leaf):
         #   indent error leafs somehow? No idea how, though.
         previous_leaf = self.get_previous_leaf()
         if previous_leaf is not None and previous_leaf.type == 'error_leaf' \
-                and previous_leaf.token_type in ('INDENT', 'ERROR_DEDENT'):
+                and previous_leaf.token_type in ('INDENT', 'DEDENT', 'ERROR_DEDENT'):
             previous_leaf = previous_leaf.get_previous_leaf()
 
         if previous_leaf is None:  # It's the first leaf.
