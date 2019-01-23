@@ -3,6 +3,14 @@
 Changelog
 ---------
 
+0.3.2 (2018-07-09)
++++++++++++++++++++
+
+- 20+ bugfixes in the diff parser and 3 in the tokenizer
+- A fuzzer for the diff parser, to give confidence that the diff parser is in a
+  good shape.
+- Some bugfixes for f-string
+
 0.3.1 (2018-07-09)
 +++++++++++++++++++
 
