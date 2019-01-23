@@ -578,12 +578,7 @@ class _NodesTree(object):
 
         Returns the number of tree nodes that were copied.
         """
-        i = 0
-        for i, n in enumerate(tree_nodes):
-            if tree_nodes[0].type not in ('INDENT', 'DEDENT'):
-                break
-
-        if tree_nodes[i].type in ('error_leaf', 'error_node'):
+        if tree_nodes[0].type in ('error_leaf', 'error_node'):
             # Avoid copying errors in the beginning. Can lead to a lot of
             # issues.
             return []
