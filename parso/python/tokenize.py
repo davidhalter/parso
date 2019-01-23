@@ -273,6 +273,9 @@ class FStringNode(object):
 
     def close_parentheses(self, character):
         self.parentheses_count -= 1
+        if self.parentheses_count == 0:
+            # No parentheses means that the format spec is also finished.
+            self.format_spec_count = 0
 
     def allow_multiline(self):
         return len(self.quote) == 3
@@ -305,35 +308,32 @@ def _check_fstring_ending(fstring_stack, token, from_start=False):
 
 def _find_fstring_string(endpats, fstring_stack, line, lnum, pos):
     tos = fstring_stack[-1]
-    if tos.is_in_expr():
-        return '', pos
+    allow_multiline = tos.allow_multiline()
+    if allow_multiline:
+        match = fstring_string_multi_line.match(line, pos)
     else:
-        new_pos = pos
-        allow_multiline = tos.allow_multiline()
-        if allow_multiline:
-            match = fstring_string_multi_line.match(line, pos)
-        else:
-            match = fstring_string_single_line.match(line, pos)
-        if match is None:
-            string = tos.previous_lines
-        else:
-            if not tos.previous_lines:
-                tos.last_string_start_pos = (lnum, pos)
+        match = fstring_string_single_line.match(line, pos)
+    if match is None:
+        return tos.previous_lines, pos
 
-            string = match.group(0)
-            for fstring_stack_node in fstring_stack:
-                end_match = endpats[fstring_stack_node.quote].match(string)
-                if end_match is not None:
-                    string = match.group(0)[:-len(fstring_stack_node.quote)]
+    if not tos.previous_lines:
+        tos.last_string_start_pos = (lnum, pos)
 
-            new_pos += len(string)
-            if allow_multiline and (string.endswith('\n') or string.endswith('\r')):
-                tos.previous_lines += string
-                string = ''
-            else:
-                string = tos.previous_lines + string
+    string = match.group(0)
+    for fstring_stack_node in fstring_stack:
+        end_match = endpats[fstring_stack_node.quote].match(string)
+        if end_match is not None:
+            string = end_match.group(0)[:-len(fstring_stack_node.quote)]
 
-        return string, new_pos
+    new_pos = pos
+    new_pos += len(string)
+    if allow_multiline and (string.endswith('\n') or string.endswith('\r')):
+        tos.previous_lines += string
+        string = ''
+    else:
+        string = tos.previous_lines + string
+
+    return string, new_pos
 
 
 def tokenize(code, version_info, start_pos=(1, 0)):
@@ -348,7 +348,6 @@ def _print_tokens(func):
     """
     def wrapper(*args, **kwargs):
         for token in func(*args, **kwargs):
-            print(token)
             yield token
 
     return wrapper
@@ -423,17 +422,19 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
 
         while pos < max:
             if fstring_stack:
-                string, pos = _find_fstring_string(endpats, fstring_stack, line, lnum, pos)
-                if string:
-                    yield PythonToken(
-                        FSTRING_STRING, string,
-                        fstring_stack[-1].last_string_start_pos,
-                        # Never has a prefix because it can start anywhere and
-                        # include whitespace.
-                        prefix=''
-                    )
-                    fstring_stack[-1].previous_lines = ''
-                    continue
+                tos = fstring_stack[-1]
+                if not tos.is_in_expr():
+                    string, pos = _find_fstring_string(endpats, fstring_stack, line, lnum, pos)
+                    if string:
+                        yield PythonToken(
+                            FSTRING_STRING, string,
+                            tos.last_string_start_pos,
+                            # Never has a prefix because it can start anywhere and
+                            # include whitespace.
+                            prefix=''
+                        )
+                        tos.previous_lines = ''
+                        continue
 
                 if pos == max:
                     break

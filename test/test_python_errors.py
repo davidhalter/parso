@@ -262,6 +262,7 @@ def test_too_many_levels_of_indentation():
         r'f"\\\""',
         r'fr"\""',
         r'fr"\\\""',
+        r"print(f'Some {x:.2f} and some {y}')",
     ]
 )
 def test_valid_fstrings(code):

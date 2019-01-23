@@ -329,8 +329,16 @@ def test_backslash():
         ('f" {}"', [FSTRING_START, FSTRING_STRING, OP, OP, FSTRING_END]),
         ('f" "{}', [FSTRING_START, FSTRING_STRING, FSTRING_END, OP, OP]),
         (r'f"\""', [FSTRING_START, FSTRING_STRING, FSTRING_END]),
+        (r'f"\""', [FSTRING_START, FSTRING_STRING, FSTRING_END]),
+        (r'f"Some {x:.2f}{y}"', [FSTRING_START, FSTRING_STRING, OP, NAME, OP,
+                                 FSTRING_STRING, OP, OP, NAME, OP, FSTRING_END]),
+        (r'print(f"Some {x:.2f}a{y}")', [
+            NAME, OP, FSTRING_START, FSTRING_STRING, OP, NAME, OP,
+            FSTRING_STRING, OP, FSTRING_STRING, OP, NAME, OP, FSTRING_END, OP
+        ]),
+
     ]
 )
 def test_fstring(code, types, version_ge_py36):
     actual_types = [t.type for t in _get_token_list(code, version_ge_py36)]
-    assert actual_types == types + [ENDMARKER]
+    assert types + [ENDMARKER] == actual_types
