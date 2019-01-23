@@ -3,7 +3,7 @@
 Changelog
 ---------
 
-0.3.2 (2018-07-09)
+0.3.2 (2018-01-24)
 +++++++++++++++++++
 
 - 20+ bugfixes in the diff parser and 3 in the tokenizer
