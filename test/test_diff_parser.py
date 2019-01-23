@@ -958,7 +958,7 @@ def test_wrong_backslash(differ):
                 continue
         ''')
 
-    code2 = insert_line_into_code(code1, 3, '\.whl$\n')
+    code2 = insert_line_into_code(code1, 3, '\\.whl$\n')
 
     differ.initialize(code1)
     differ.parse(code2, parsers=2, copies=2, expect_error_leaves=True)
