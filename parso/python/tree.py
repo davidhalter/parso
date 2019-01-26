@@ -969,7 +969,7 @@ class ImportName(Import):
 class KeywordStatement(PythonBaseNode):
     """
     For the following statements: `assert`, `del`, `global`, `nonlocal`,
-    `raise`, `return`, `yield`, `return`, `yield`.
+    `raise`, `return`, `yield`.
 
     `pass`, `continue` and `break` are not in there, because they are just
     simple keywords and the parser reduces it to a keyword.
