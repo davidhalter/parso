@@ -203,9 +203,6 @@ class FileTests:
         self._test_count = test_count
         self._code_lines = self._code_lines
         self._change_count = change_count
-
-        with open(file_path) as f:
-            code = f.read()
         self._file_modifications = []
 
     def _run(self, grammar, file_modifications, debugger, print_code=False):
