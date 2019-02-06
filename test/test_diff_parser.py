@@ -1243,7 +1243,7 @@ def test_open_bracket_case2(differ):
     differ.parse(code1, copies=2, parsers=0, expect_error_leaves=True)
 
 
-def test_x(differ):
+def test_some_weird_removals(differ):
     code1 = dedent('''\
         class C:
             1
@@ -1264,8 +1264,8 @@ def test_x(differ):
             omega
         ''')
     differ.initialize(code1)
-    differ.parse(code2, copies=ANY, parsers=ANY, expect_error_leaves=True)
-    differ.parse(code3, copies=ANY, parsers=ANY, expect_error_leaves=True)
+    differ.parse(code2, copies=1, parsers=1, expect_error_leaves=True)
+    differ.parse(code3, copies=1, parsers=2, expect_error_leaves=True)
     differ.parse(code1, copies=1)
 
 
