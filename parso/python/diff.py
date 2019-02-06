@@ -682,6 +682,8 @@ class _NodesTree(object):
                 last = new_nodes[-1]
                 if last.type == 'decorated':
                     last = last.children[-1]
+                if last.type in ('async_funcdef', 'async_stmt'):
+                    last = last.children[-1]
                 last_line_offset_leaf = last.children[-2].get_last_leaf()
                 assert last_line_offset_leaf == ':'
             else:
