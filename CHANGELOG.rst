@@ -3,6 +3,13 @@
 Changelog
 ---------
 
+0.3.3 (2018-02-06)
++++++++++++++++++++
+
+- Fix async errors in the diff parser
+- A fix in iter_errors
+- This is a very small bugfix release
+
 0.3.2 (2018-01-24)
 +++++++++++++++++++
 
