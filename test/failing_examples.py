@@ -285,6 +285,14 @@ if sys.version_info >= (3,):
         'b"ä"',
         # combining strings and unicode is allowed in Python 2.
         '"s" b""',
+        '"s" b"" ""',
+        'b"" "" b"" ""',
+    ]
+if sys.version_info >= (3, 6):
+    FAILING_EXAMPLES += [
+        # Same as above, but for f-strings.
+        'f"s" b""',
+        'b"s" f""',
     ]
 if sys.version_info >= (2, 7):
     # This is something that raises a different error in 2.6 than in the other

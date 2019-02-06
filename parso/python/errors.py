@@ -570,11 +570,14 @@ class _BytesAndStringMix(SyntaxRule):
     message = "cannot mix bytes and nonbytes literals"
 
     def _is_bytes_literal(self, string):
+        if string.type == 'fstring':
+            return False
         return 'b' in string.string_prefix.lower()
 
     def is_issue(self, node):
         first = node.children[0]
-        if first.type == 'string' and self._normalizer.version >= (3, 0):
+        # In Python 2 it's allowed to mix bytes and unicode.
+        if self._normalizer.version >= (3, 0):
             first_is_bytes = self._is_bytes_literal(first)
             for string in node.children[1:]:
                 if first_is_bytes != self._is_bytes_literal(string):
