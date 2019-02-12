@@ -419,8 +419,6 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                 tos = fstring_stack[-1]
                 if not tos.is_in_expr():
                     string, pos = _find_fstring_string(endpats, fstring_stack, line, lnum, pos)
-                    if pos == max:
-                        break
                     if string:
                         yield PythonToken(
                             FSTRING_STRING, string,
@@ -431,6 +429,8 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                         )
                         tos.previous_lines = ''
                         continue
+                    if pos == max:
+                        break
 
                 rest = line[pos:]
                 fstring_end_token, additional_prefix, quote_length = _close_fstring_if_necessary(

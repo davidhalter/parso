@@ -79,11 +79,17 @@ def test_tokenize_start_pos(code, positions):
     assert positions == [p.start_pos for p in tokens]
 
 
-def test_roundtrip(grammar):
-    code = dedent("""\
-        f'''s{
-           str.uppe
-        '''
-        """)
+@pytest.mark.parametrize(
+    'code', [
+        dedent("""\
+            f'''s{
+               str.uppe
+            '''
+            """),
+        'f"foo',
+        'f"""foo',
+    ]
+)
+def test_roundtrip(grammar, code):
     tree = grammar.parse(code)
     assert tree.get_code() == code
