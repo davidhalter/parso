@@ -1,4 +1,5 @@
 [run]
+source = parso
 
 [report]
 # Regexes for lines to exclude from consideration
