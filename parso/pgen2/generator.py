@@ -71,7 +71,7 @@ class DFAState(object):
     different nonterminals.
     """
     def __init__(self, from_rule, nfa_set, final):
-        assert isinstance(nfa_set, set)
+        assert isinstance(nfa_set, (set, list))
         assert isinstance(next(iter(nfa_set)), NFAState)
         assert isinstance(final, NFAState)
         self.from_rule = from_rule
@@ -174,12 +174,12 @@ def _make_dfas(start, finish):
         assert isinstance(nfa_state, NFAState)
         if nfa_state in base_nfa_set:
             return
-        base_nfa_set.add(nfa_state)
+        base_nfa_set.insert(0, nfa_state)
         for nfa_arc in nfa_state.arcs:
             if nfa_arc.nonterminal_or_string is None:
                 addclosure(nfa_arc.next, base_nfa_set)
 
-    base_nfa_set = set()
+    base_nfa_set = []
     addclosure(start, base_nfa_set)
     states = [DFAState(start.from_rule, base_nfa_set, finish)]
     for state in states:  # NB states grows while we're iterating
@@ -188,7 +188,7 @@ def _make_dfas(start, finish):
         for nfa_state in state.nfa_set:
             for nfa_arc in nfa_state.arcs:
                 if nfa_arc.nonterminal_or_string is not None:
-                    nfa_set = arcs.setdefault(nfa_arc.nonterminal_or_string, set())
+                    nfa_set = arcs.setdefault(nfa_arc.nonterminal_or_string, [])
                     addclosure(nfa_arc.next, nfa_set)
 
         # Now create the dfa's with no None's in arcs anymore. All Nones have
