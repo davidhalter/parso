@@ -45,6 +45,7 @@ we generate something similar.  See:
 http://docs.python.org/3/library/sys.html#sys.implementation
 """
 
+
 def _get_default_cache_path():
     if platform.system().lower() == 'windows':
         dir_ = os.path.join(os.getenv('LOCALAPPDATA') or '~', 'Parso', 'Parso')
@@ -53,6 +54,7 @@ def _get_default_cache_path():
     else:
         dir_ = os.path.join(os.getenv('XDG_CACHE_HOME') or '~/.cache', 'parso')
     return os.path.expanduser(dir_)
+
 
 _default_cache_path = _get_default_cache_path()
 """
