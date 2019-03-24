@@ -10,6 +10,7 @@ from parso.cache import _NodeCacheItem, save_module, load_module, \
     _get_hashed_path, parser_cache, _load_from_file_system, _save_to_file_system
 from parso import load_grammar
 from parso import cache
+from parso import file_io
 
 
 @pytest.fixture()
@@ -76,12 +77,13 @@ def test_modulepickling_simulate_deleted_cache(tmpdir):
     path = tmpdir.dirname + '/some_path'
     with open(path, 'w'):
         pass
+    io = file_io.FileIO(path)
 
-    save_module(grammar._hashed, path, module, [])
-    assert load_module(grammar._hashed, path) == module
+    save_module(grammar._hashed, io, module, lines=[])
+    assert load_module(grammar._hashed, io) == module
 
     unlink(_get_hashed_path(grammar._hashed, path))
     parser_cache.clear()
 
-    cached2 = load_module(grammar._hashed, path)
+    cached2 = load_module(grammar._hashed, io)
     assert cached2 is None
