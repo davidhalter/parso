@@ -105,7 +105,8 @@ class Grammar(object):
             if module_node is not None:
                 return module_node
 
-        code = file_io.read()
+        if code is None:
+            code = file_io.read()
         code = python_bytes_to_unicode(code)
 
         lines = split_lines(code, keepends=True)
