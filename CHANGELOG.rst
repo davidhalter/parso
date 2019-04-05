@@ -3,6 +3,12 @@
 Changelog
 ---------
 
+0.4.0 (2019-04-05)
+++++++++++++++++++
+
+- Python 3.8 support
+- FileIO support, it's now possible to use abstract file IO, support is alpha
+
 0.3.4 (2018-02-13)
 +++++++++++++++++++
 
