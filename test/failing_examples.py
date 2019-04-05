@@ -19,14 +19,6 @@ def build_nested(code, depth, base='def f():\n'):
 FAILING_EXAMPLES = [
     '1 +',
     '?',
-    # Python/compile.c
-    dedent('''\
-        for a in [1]:
-            try:
-                pass
-            finally:
-                continue
-        '''), # 'continue' not supported inside 'finally' clause"
     'continue',
     'break',
     'return',
@@ -318,4 +310,16 @@ if sys.version_info[:2] <= (3, 4):
     FAILING_EXAMPLES += [
         'a = *[1], 2',
         '(*[1], 2)',
+    ]
+
+if sys.version_info[:2] < (3, 8):
+    FAILING_EXAMPLES += [
+        # Python/compile.c
+        dedent('''\
+            for a in [1]:
+                try:
+                    pass
+                finally:
+                    continue
+            '''),  # 'continue' not supported inside 'finally' clause"
     ]
