@@ -41,6 +41,29 @@ def test_python_exception_matches(code):
     assert line_nr is None or line_nr == error.start_pos[0]
 
 
+def test_non_async_in_async():
+    """
+    This example doesn't work with FAILING_EXAMPLES, because the line numbers
+    are not always the same / incorrect in Python 3.8.
+    """
+    if sys.version_info[:2] < (3, 5):
+        pytest.skip()
+
+        # Raises multiple errors in previous versions.
+    code = 'async def foo():\n def nofoo():[x async for x in []]'
+    wanted, line_nr = _get_actual_exception(code)
+
+    errors = _get_error_list(code)
+    if errors:
+        error, = errors
+        actual = error.message
+    assert actual in wanted
+    if sys.version_info[:2] < (3, 8):
+        assert line_nr == error.start_pos[0]
+    else:
+        assert line_nr == 0  # For whatever reason this is zero in Python 3.8+
+
+
 @pytest.mark.parametrize(
     ('code', 'positions'), [
         ('1 +', [(1, 3)]),
@@ -103,7 +126,8 @@ def _get_actual_exception(code):
         # The python 3.5+ way, a bit nicer.
         wanted = 'SyntaxError: positional argument follows keyword argument'
     elif wanted == 'SyntaxError: assignment to keyword':
-        return [wanted, "SyntaxError: can't assign to keyword"], line_nr
+        return [wanted, "SyntaxError: can't assign to keyword",
+                'SyntaxError: cannot assign to __debug__'], line_nr
     elif wanted == 'SyntaxError: assignment to None':
         # Python 2.6 does has a slightly different error.
         wanted = 'SyntaxError: cannot assign to None'

@@ -251,10 +251,6 @@ GLOBAL_NONLOCAL_ERROR = [
 
 if sys.version_info >= (3, 6):
     FAILING_EXAMPLES += GLOBAL_NONLOCAL_ERROR
-    FAILING_EXAMPLES += [
-        # Raises multiple errors in previous versions.
-        'async def foo():\n def nofoo():[x async for x in []]',
-    ]
 if sys.version_info >= (3, 5):
     FAILING_EXAMPLES += [
         # Raises different errors so just ignore them for now.
