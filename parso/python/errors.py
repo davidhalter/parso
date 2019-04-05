@@ -757,7 +757,7 @@ class _ArglistRule(SyntaxRule):
     def is_issue(self, node):
         first_arg = node.children[0]
         if first_arg.type == 'argument' \
-                and first_arg.children[1].type == 'comp_for':
+                and first_arg.children[1].type in ('comp_for', 'sync_comp_for'):
             # e.g. foo(x for x in [], b)
             return len(node.children) >= 2
         else:
