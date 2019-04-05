@@ -6,7 +6,6 @@ from contextlib import contextmanager
 
 from parso.normalizer import Normalizer, NormalizerConfig, Issue, Rule
 from parso.python.tree import search_ancestor
-from parso.parser import ParserSyntaxError
 
 _BLOCK_STMTS = ('if_stmt', 'while_stmt', 'for_stmt', 'try_stmt', 'with_stmt')
 _STAR_EXPR_PARENTS = ('testlist_star_expr', 'testlist_comp', 'exprlist')
@@ -106,6 +105,7 @@ def _iter_definition_exprs_from_lists(exprlist):
                 continue
 
         yield child
+
 
 def _get_expr_stmt_definition_exprs(expr_stmt):
     exprs = []
@@ -273,12 +273,11 @@ class ErrorFinder(Normalizer):
     def visit(self, node):
         if node.type == 'error_node':
             with self.visit_node(node):
-               # Don't need to investigate the inners of an error node. We
-               # might find errors in there that should be ignored, because
-               # the error node itself already shows that there's an issue.
-               return ''
+                # Don't need to investigate the inners of an error node. We
+                # might find errors in there that should be ignored, because
+                # the error node itself already shows that there's an issue.
+                return ''
         return super(ErrorFinder, self).visit(node)
-
 
     @contextmanager
     def visit_node(self, node):
@@ -455,7 +454,7 @@ class _YieldFromCheck(SyntaxRule):
 
     def is_issue(self, leaf):
         return leaf.parent.type == 'yield_arg' \
-                and self._normalizer.context.is_async_funcdef()
+            and self._normalizer.context.is_async_funcdef()
 
 
 @ErrorFinder.register_rule(type='name')
@@ -618,7 +617,7 @@ class _FutureImportRule(SyntaxRule):
                     allowed_futures.append('generator_stop')
 
                 if name == 'braces':
-                    self.add_issue(node, message = "not a chance")
+                    self.add_issue(node, message="not a chance")
                 elif name == 'barry_as_FLUFL':
                     m = "Seriously I'm not implementing this :) ~ Dave"
                     self.add_issue(node, message=m)
@@ -715,8 +714,8 @@ class _AnnotatorRule(SyntaxRule):
             if not (lhs.type == 'name'
                     # subscript/attributes are allowed
                     or lhs.type in ('atom_expr', 'power')
-                        and trailer.type == 'trailer'
-                        and trailer.children[0] != '('):
+                    and trailer.type == 'trailer'
+                    and trailer.children[0] != '('):
                 return True
         else:
             # x, y: str
@@ -787,7 +786,8 @@ class _ArglistRule(SyntaxRule):
                         if first == '*':
                             if kw_unpacking_only:
                                 # foo(**kwargs, *args)
-                                message = "iterable argument unpacking follows keyword argument unpacking"
+                                message = "iterable argument unpacking " \
+                                          "follows keyword argument unpacking"
                                 self.add_issue(argument, message=message)
                         else:
                             kw_unpacking_only = True
@@ -808,6 +808,7 @@ class _ArglistRule(SyntaxRule):
                         # f(x=2, y)
                         message = "positional argument follows keyword argument"
                         self.add_issue(argument, message=message)
+
 
 @ErrorFinder.register_rule(type='parameters')
 @ErrorFinder.register_rule(type='lambdef')
@@ -929,7 +930,7 @@ class _CheckAssignmentRule(SyntaxRule):
         elif type_ in ('testlist_star_expr', 'exprlist', 'testlist'):
             for child in node.children[::2]:
                 self._check_assignment(child, is_deletion)
-        elif ('expr' in type_ and type_ != 'star_expr' # is a substring
+        elif ('expr' in type_ and type_ != 'star_expr'  # is a substring
               or '_test' in type_
               or type_ in ('term', 'factor')):
             error = 'operator'
