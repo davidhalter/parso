@@ -280,11 +280,40 @@ def test_left_recursion():
 
 
 def test_ambiguities():
-    with pytest.raises(ValueError, match='ambiguous'):
+    with pytest.raises(
+        ValueError,
+        match=r"foo is ambiguous.*given a TokenType\(NAME\).*bar or baz"
+    ):
         generate_grammar('foo: bar | baz\nbar: NAME\nbaz: NAME\n', tokenize.PythonTokenTypes)
 
-    with pytest.raises(ValueError, match='ambiguous'):
+    with pytest.raises(
+        ValueError,
+        match=r"foo is ambiguous.*given a ReservedString\(x\).*bar or baz"
+    ):
         generate_grammar('''foo: bar | baz\nbar: 'x'\nbaz: "x"\n''', tokenize.PythonTokenTypes)
 
-    with pytest.raises(ValueError, match='ambiguous'):
+    with pytest.raises(
+        ValueError,
+        match=r"foo is ambiguous.*given a ReservedString\(x\).*bar or foo"
+    ):
         generate_grammar('''foo: bar | 'x'\nbar: 'x'\n''', tokenize.PythonTokenTypes)
+
+    # an ambiguity with the second (not the first) child of a production
+    with pytest.raises(
+        ValueError,
+        match=r"outer is ambiguous.*given a ReservedString\(b\).*inner or outer"
+    ):
+        generate_grammar(
+            'outer: "a" [inner] "b" "c"\ninner: "b" "c" [inner]\n',
+            tokenize.PythonTokenTypes,
+        )
+
+    # an ambiguity hidden by a level of indirection (middle)
+    with pytest.raises(
+        ValueError,
+        match=r"outer is ambiguous.*given a ReservedString\(b\).*middle or outer"
+    ):
+        generate_grammar(
+            'outer: "a" [middle] "b" "c"\nmiddle: inner\ninner: "b" "c" [inner]\n',
+            tokenize.PythonTokenTypes,
+        )
