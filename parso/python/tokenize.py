@@ -131,10 +131,10 @@ def _create_token_collection(version_info):
     Name = r'\w+'
 
     if version_info >= (3, 6):
-        Hexnumber = r'0[xX](?:_?[0-9a-fA-F])+'
-        Binnumber = r'0[bB](?:_?[01])+'
-        Octnumber = r'0[oO](?:_?[0-7])+'
-        Decnumber = r'(?:0(?:_?0)*|[1-9](?:_?[0-9])*)'
+        Hexnumber = r'0[xX](?:_?[0-9a-fA-F])+[lL]?'
+        Binnumber = r'0[bB](?:_?[01])+[lL]?'
+        Octnumber = r'0[oO](?:_?[0-7])+[lL]?'
+        Decnumber = r'(?:0(?:_?0)*[lL]?|[1-9](?:_?[0-9])*[lL]?)'
         Intnumber = group(Hexnumber, Binnumber, Octnumber, Decnumber)
         Exponent = r'[eE][-+]?[0-9](?:_?[0-9])*'
         Pointfloat = group(r'[0-9](?:_?[0-9])*\.(?:[0-9](?:_?[0-9])*)?',
@@ -143,13 +143,13 @@ def _create_token_collection(version_info):
         Floatnumber = group(Pointfloat, Expfloat)
         Imagnumber = group(r'[0-9](?:_?[0-9])*[jJ]', Floatnumber + r'[jJ]')
     else:
-        Hexnumber = r'0[xX][0-9a-fA-F]+'
-        Binnumber = r'0[bB][01]+'
+        Hexnumber = r'0[xX][0-9a-fA-F]+[lL]?'
+        Binnumber = r'0[bB][01]+[lL]?'
         if version_info >= (3, 0):
-            Octnumber = r'0[oO][0-7]+'
+            Octnumber = r'0[oO][0-7]+[lL]?'
         else:
-            Octnumber = '0[oO]?[0-7]+'
-        Decnumber = r'(?:0+|[1-9][0-9]*)'
+            Octnumber = '0[oO]?[0-7]+[lL]?'
+        Decnumber = r'(?:0+[lL]?|[1-9][0-9]*[lL]?)'
         Intnumber = group(Hexnumber, Binnumber, Octnumber, Decnumber)
         Exponent = r'[eE][-+]?[0-9]+'
         Pointfloat = group(r'[0-9]+\.[0-9]*', r'\.[0-9]+') + maybe(Exponent)
