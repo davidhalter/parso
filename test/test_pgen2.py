@@ -190,17 +190,17 @@ def test_old_octal_notation(works_in_py2):
     works_in_py2.parse("07")
 
 
-def test_long_notation(each_version):
-    _parse("""0xFl""", each_version)
-    _parse("""0xFL""", each_version)
-    _parse("""0b1l""", each_version)
-    _parse("""0B1L""", each_version)
-    _parse("""0o7l""", each_version)
-    _parse("""0O7L""", each_version)
-    _parse("""0l""", each_version)
-    _parse("""0L""", each_version)
-    _parse("""10l""", each_version)
-    _parse("""10L""", each_version)
+def test_long_notation(works_in_py2):
+    works_in_py2.parse("0xFl")
+    works_in_py2.parse("0xFL")
+    works_in_py2.parse("0b1l")
+    works_in_py2.parse("0B1L")
+    works_in_py2.parse("0o7l")
+    works_in_py2.parse("0O7L")
+    works_in_py2.parse("0l")
+    works_in_py2.parse("0L")
+    works_in_py2.parse("10l")
+    works_in_py2.parse("10L")
 
 
 def test_new_binary_notation(each_version):
