@@ -466,6 +466,9 @@ class ClassOrFunc(Scope):
         :rtype: list of :class:`Decorator`
         """
         decorated = self.parent
+        if decorated.type == 'async_funcdef':
+            decorated = decorated.parent
+
         if decorated.type == 'decorated':
             if decorated.children[0].type == 'decorators':
                 return decorated.children[0].children
