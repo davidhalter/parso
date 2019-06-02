@@ -151,6 +151,8 @@ def _create_token_collection(version_info):
             Octnumber = '0[oO]?[0-7]+'
         Decnumber = r'(?:0+|[1-9][0-9]*)'
         Intnumber = group(Hexnumber, Binnumber, Octnumber, Decnumber)
+        if version_info[0] < 3:
+            Intnumber += '[lL]?'
         Exponent = r'[eE][-+]?[0-9]+'
         Pointfloat = group(r'[0-9]+\.[0-9]*', r'\.[0-9]+') + maybe(Exponent)
         Expfloat = r'[0-9]+' + Exponent

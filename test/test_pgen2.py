@@ -190,6 +190,19 @@ def test_old_octal_notation(works_in_py2):
     works_in_py2.parse("07")
 
 
+def test_long_notation(works_in_py2):
+    works_in_py2.parse("0xFl")
+    works_in_py2.parse("0xFL")
+    works_in_py2.parse("0b1l")
+    works_in_py2.parse("0B1L")
+    works_in_py2.parse("0o7l")
+    works_in_py2.parse("0O7L")
+    works_in_py2.parse("0l")
+    works_in_py2.parse("0L")
+    works_in_py2.parse("10l")
+    works_in_py2.parse("10L")
+
+
 def test_new_binary_notation(each_version):
     _parse("""0b101010""", each_version)
     _invalid_syntax("""0b0101021""", each_version)
