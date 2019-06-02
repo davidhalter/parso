@@ -3,6 +3,12 @@
 Changelog
 ---------
 
+0.4.1 (2019-06-05)
+++++++++++++++++++
+
+- Added .pyi stubs for a lot of the parso API
+- Small FileIO changes
+
 0.4.0 (2019-04-05)
 ++++++++++++++++++
 
