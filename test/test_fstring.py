@@ -7,7 +7,7 @@ from parso.python.tokenize import tokenize
 
 @pytest.fixture
 def grammar():
-    return load_grammar(version='3.6')
+    return load_grammar(version='3.8')
 
 
 @pytest.mark.parametrize(
@@ -31,6 +31,10 @@ def grammar():
         '{{{1}',
         '1{{2{{3',
         '}}',
+
+        # New Python 3.8 syntax f'{a=}'
+        '{a=}',
+        '{a()=}',
     ]
 )
 def test_valid(code, grammar):
