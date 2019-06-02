@@ -146,7 +146,7 @@ FAILING_EXAMPLES = [
     # Now nested parsing
     "f'{continue}'",
     "f'{1;1}'",
-    "f'{a*=3}'",
+    "f'{a;}'",
     "f'{b\"\" \"\"}'",
 ]
 
