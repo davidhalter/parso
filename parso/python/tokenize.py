@@ -190,9 +190,13 @@ def _create_token_collection(version_info):
 
     Bracket = '[][(){}]'
 
-    special_args = [r'\r\n?', r'\n', r'[:;.,@]']
+    special_args = [r'\r\n?', r'\n', r'[;.,@]']
     if version_info >= (3, 0):
         special_args.insert(0, r'\.\.\.')
+    if version_info >= (3, 8):
+        special_args.insert(0, ":=?")
+    else:
+        special_args.insert(0, ":")
     Special = group(*special_args)
 
     Funny = group(Operator, Bracket, Special)

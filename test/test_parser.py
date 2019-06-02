@@ -189,3 +189,7 @@ def test_no_error_nodes(each_version):
                 check(child)
 
     check(parse("if foo:\n bar", version=each_version))
+
+
+def test_named_expression(works_ge_py38):
+    works_ge_py38.parse("(a := 1, a + 1)")
