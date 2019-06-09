@@ -55,7 +55,7 @@ _FLOW_CONTAINERS = set(['if_stmt', 'while_stmt', 'for_stmt', 'try_stmt',
 _RETURN_STMT_CONTAINERS = set(['suite', 'simple_stmt']) | _FLOW_CONTAINERS
 _FUNC_CONTAINERS = set(['suite', 'simple_stmt', 'decorated']) | _FLOW_CONTAINERS
 _GET_DEFINITION_TYPES = set([
-    'expr_stmt', 'comp_for', 'with_stmt', 'for_stmt', 'import_name',
+    'expr_stmt', 'sync_comp_for', 'with_stmt', 'for_stmt', 'import_name',
     'import_from', 'param'
 ])
 _IMPORTS = set(['import_name', 'import_from'])
@@ -1192,8 +1192,8 @@ class Param(PythonBaseNode):
         return '<%s: %s>' % (type(self).__name__, str(self._tfpdef()) + default)
 
 
-class CompFor(PythonBaseNode):
-    type = 'comp_for'
+class SyncCompFor(PythonBaseNode):
+    type = 'sync_comp_for'
     __slots__ = ()
 
     def get_defined_names(self):
@@ -1201,4 +1201,4 @@ class CompFor(PythonBaseNode):
         Returns the a list of `Name` that the comprehension defines.
         """
         # allow async for
-        return _defined_names(self.children[self.children.index('for') + 1])
+        return _defined_names(self.children[1])

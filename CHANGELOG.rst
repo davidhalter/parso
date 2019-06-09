@@ -3,9 +3,11 @@
 Changelog
 ---------
 
-0.4.1 (2019-06-05)
+0.5.0 (2019-06-05)
 ++++++++++++++++++
 
+- **Breaking Change** comp_for is now called sync_comp_for for all Python
+  versions to be compatible with the Python 3.8 Grammar
 - Added .pyi stubs for a lot of the parso API
 - Small FileIO changes
 
