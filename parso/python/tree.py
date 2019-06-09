@@ -548,7 +548,8 @@ def _create_params(parent, argslist_list):
                     if param_children[0] == '*' \
                             and (len(param_children) == 1
                                  or param_children[1] == ',') \
-                            or check_python2_nested_param(param_children[0]):
+                            or check_python2_nested_param(param_children[0]) \
+                            or param_children[0] == '/':
                         for p in param_children:
                             p.parent = parent
                         new_children += param_children
@@ -1158,6 +1159,13 @@ class Param(PythonBaseNode):
             keyword_only_index = self.parent.children.index('*')
             if index > keyword_only_index:
                 # Skip the ` *, `
+                index -= 2
+        except ValueError:
+            pass
+        try:
+            keyword_only_index = self.parent.children.index('/')
+            if index > keyword_only_index:
+                # Skip the ` /, `
                 index -= 2
         except ValueError:
             pass
