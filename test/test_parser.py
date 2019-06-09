@@ -193,3 +193,18 @@ def test_no_error_nodes(each_version):
 
 def test_named_expression(works_ge_py38):
     works_ge_py38.parse("(a := 1, a + 1)")
+
+
+@pytest.mark.parametrize(
+    'param_code', [
+        'a=1, /',
+        'a, /',
+        'a=1, /, b=3',
+        'a, /, b',
+        'a, /, b',
+        'a, /, *, b',
+        'a, /, **kwargs',
+    ]
+)
+def test_positional_only_arguments(works_ge_py38, param_code):
+    works_ge_py38.parse("def x(%s): pass" % param_code)
