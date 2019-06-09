@@ -18,7 +18,7 @@ from parso._compatibility import FileNotFoundError
 LOG = logging.getLogger(__name__)
 
 
-_PICKLE_VERSION = 31
+_PICKLE_VERSION = 32
 """
 Version number (integer) for file system cache.
 
