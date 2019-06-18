@@ -43,6 +43,7 @@ Parser Tree Classes
 """
 
 import re
+from collections import Mapping
 
 from parso._compatibility import utf8_repr, unicode
 from parso.tree import Node, BaseNode, Leaf, ErrorNode, ErrorLeaf, \
@@ -442,7 +443,7 @@ class Module(Scope):
                         recurse(child)
 
             recurse(self)
-            self._used_names = dct
+            self._used_names = UsedNamesMapping(dct)
         return self._used_names
 
 
@@ -1210,3 +1211,27 @@ class SyncCompFor(PythonBaseNode):
         """
         # allow async for
         return _defined_names(self.children[1])
+
+
+class UsedNamesMapping(Mapping):
+    """
+    This class exists for the sole purpose of creating an immutable dict.
+    """
+    def __init__(self, dct):
+        self._dict = dct
+
+    def __getitem__(self, key):
+        return self._dict[key]
+
+    def __len__(self):
+        return len(self._dict)
+
+    def __iter__(self):
+        return iter(self._dict)
+
+    def __hash__(self):
+        return id(self)
+
+    def __eq__(self, other):
+        # Comparing these dicts does not make sense.
+        return self is other
