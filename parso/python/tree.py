@@ -1213,6 +1213,11 @@ class SyncCompFor(PythonBaseNode):
         return _defined_names(self.children[1])
 
 
+# This is simply here so an older Jedi version can work with this new parso
+# version. Can be deleted in the next release.
+CompFor = SyncCompFor
+
+
 class UsedNamesMapping(Mapping):
     """
     This class exists for the sole purpose of creating an immutable dict.
