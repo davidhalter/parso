@@ -3,7 +3,7 @@
 Changelog
 ---------
 
-0.5.0 (2019-06-05)
+0.5.0 (2019-06-20)
 ++++++++++++++++++
 
 - **Breaking Change** comp_for is now called sync_comp_for for all Python
