@@ -17,19 +17,19 @@ Changelog
 - Python 3.8 support
 - FileIO support, it's now possible to use abstract file IO, support is alpha
 
-0.3.4 (2018-02-13)
+0.3.4 (2019-02-13)
 +++++++++++++++++++
 
 - Fix an f-string tokenizer error
 
-0.3.3 (2018-02-06)
+0.3.3 (2019-02-06)
 +++++++++++++++++++
 
 - Fix async errors in the diff parser
 - A fix in iter_errors
 - This is a very small bugfix release
 
-0.3.2 (2018-01-24)
+0.3.2 (2019-01-24)
 +++++++++++++++++++
 
 - 20+ bugfixes in the diff parser and 3 in the tokenizer
