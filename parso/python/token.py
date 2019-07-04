@@ -22,6 +22,6 @@ class TokenTypes(object):
 PythonTokenTypes = TokenTypes((
     'STRING', 'NUMBER', 'NAME', 'ERRORTOKEN', 'NEWLINE', 'INDENT', 'DEDENT',
     'ERROR_DEDENT', 'FSTRING_STRING', 'FSTRING_START', 'FSTRING_END', 'OP',
-    'ENDMARKER'),
+    'ENDMARKER', 'ASYNC', 'TYPE_COMMENT', 'AWAIT'),
     contains_syntax=('NAME', 'OP'),
 )
