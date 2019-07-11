@@ -12,33 +12,57 @@ def grammar():
 
 @pytest.mark.parametrize(
     'code', [
-        '{1}',
-        '{1:}',
-        '',
-        '{1!a}',
-        '{1!a:1}',
-        '{1:1}',
-        '{1:1.{32}}',
-        '{1::>4}',
-        '{foo} {bar}',
-        '{x:{y}}',
-        '{x:{y:}}',
-        '{x:{y:1}}',
+        # simple cases
+        'f"{1}"',
+        'f"""{1}"""',
+        'f"{foo} {bar}"',
+
+        # empty string
+        'f""',
+        'f""""""',
+
+        # empty format specifier is okay
+        'f"{1:}"',
+
+        # use of conversion options
+        'f"{1!a}"',
+        'f"{1!a:1}"',
+
+        # format specifiers
+        'f"{1:1}"',
+        'f"{1:1.{32}}"',
+        'f"{1::>4}"',
+        'f"{x:{y}}"',
+        'f"{x:{y:}}"',
+        'f"{x:{y:1}}"',
 
         # Escapes
-        '{{}}',
-        '{{{1}}}',
-        '{{{1}',
-        '1{{2{{3',
-        '}}',
+        'f"{{}}"',
+        'f"{{{1}}}"',
+        'f"{{{1}"',
+        'f"1{{2{{3"',
+        'f"}}"',
 
         # New Python 3.8 syntax f'{a=}'
-        '{a=}',
-        '{a()=}',
+        'f"{a=}"',
+        'f"{a()=}"',
+
+        # multiline f-string
+        'f"""abc\ndef"""',
+        'f"""abc{\n123}def"""',
+
+        # a line continuation inside of an fstring_string
+        'f"abc\\\ndef"',
+        'f"\\\n{123}\\\n"',
+
+        # a line continuation inside of an fstring_expr
+        'f"{\\\n123}"',
+
+        # a line continuation inside of an format spec
+        'f"{123:.2\\\nf}"',
     ]
 )
 def test_valid(code, grammar):
-    code = 'f"""%s"""' % code
     module = grammar.parse(code, error_recovery=False)
     fstring = module.children[0]
     assert fstring.type == 'fstring'
@@ -47,23 +71,34 @@ def test_valid(code, grammar):
 
 @pytest.mark.parametrize(
     'code', [
-        '}',
-        '{',
-        '{1!{a}}',
-        '{!{a}}',
-        '{}',
-        '{:}',
-        '{:}}}',
-        '{:1}',
-        '{!:}',
-        '{!}',
-        '{!a}',
-        '{1:{}}',
-        '{1:{:}}',
+        # an f-string can't contain unmatched curly braces
+        'f"}"',
+        'f"{"',
+        'f"""}"""',
+        'f"""{"""',
+
+        # invalid conversion characters
+        'f"{1!{a}}"',
+        'f"{!{a}}"',
+
+        # The curly braces must contain an expression
+        'f"{}"',
+        'f"{:}"',
+        'f"{:}}}"',
+        'f"{:1}"',
+        'f"{!:}"',
+        'f"{!}"',
+        'f"{!a}"',
+
+        # invalid (empty) format specifiers
+        'f"{1:{}}"',
+        'f"{1:{:}}"',
+
+        # a newline without a line continuation inside a single-line string
+        'f"abc\ndef"',
     ]
 )
 def test_invalid(code, grammar):
-    code = 'f"""%s"""' % code
     with pytest.raises(ParserSyntaxError):
         grammar.parse(code, error_recovery=False)
 
@@ -95,6 +130,7 @@ def test_tokenize_start_pos(code, positions):
             """),
         'f"foo',
         'f"""foo',
+        'f"abc\ndef"',
     ]
 )
 def test_roundtrip(grammar, code):

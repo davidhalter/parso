@@ -118,9 +118,9 @@ def _get_token_collection(version_info):
         return result
 
 
-fstring_string_single_line = _compile(r'(?:[^{}\r\n]+|\{\{|\}\})+')
+fstring_string_single_line = _compile(r'(?:\{\{|\}\}|\\(?:\r\n?|\n)|[^{}\r\n])+')
 fstring_string_multi_line = _compile(r'(?:[^{}]+|\{\{|\}\})+')
-fstring_format_spec_single_line = _compile(r'[^{}\r\n]+')
+fstring_format_spec_single_line = _compile(r'(?:\\(?:\r\n?|\n)|[^{}\r\n])+')
 fstring_format_spec_multi_line = _compile(r'[^{}]+')
 
 
@@ -340,7 +340,9 @@ def _find_fstring_string(endpats, fstring_stack, line, lnum, pos):
 
     new_pos = pos
     new_pos += len(string)
-    if allow_multiline and (string.endswith('\n') or string.endswith('\r')):
+    # even if allow_multiline is False, we still need to check for trailing
+    # newlines, because a single-line f-string can contain line continuations
+    if string.endswith('\n') or string.endswith('\r'):
         tos.previous_lines += string
         string = ''
     else:
