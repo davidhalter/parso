@@ -16,6 +16,7 @@ from parso.python.tokenize import PythonToken
 NAME = PythonTokenTypes.NAME
 NEWLINE = PythonTokenTypes.NEWLINE
 STRING = PythonTokenTypes.STRING
+NUMBER = PythonTokenTypes.NUMBER
 INDENT = PythonTokenTypes.INDENT
 DEDENT = PythonTokenTypes.DEDENT
 ERRORTOKEN = PythonTokenTypes.ERRORTOKEN
@@ -330,13 +331,46 @@ def test_backslash():
         ('f" "{}', [FSTRING_START, FSTRING_STRING, FSTRING_END, OP, OP]),
         (r'f"\""', [FSTRING_START, FSTRING_STRING, FSTRING_END]),
         (r'f"\""', [FSTRING_START, FSTRING_STRING, FSTRING_END]),
+
+        # format spec
         (r'f"Some {x:.2f}{y}"', [FSTRING_START, FSTRING_STRING, OP, NAME, OP,
                                  FSTRING_STRING, OP, OP, NAME, OP, FSTRING_END]),
+
+        # multiline f-string
+        ('f"""abc\ndef"""', [FSTRING_START, FSTRING_STRING, FSTRING_END]),
+        ('f"""abc{\n123}def"""', [
+            FSTRING_START, FSTRING_STRING, OP, NUMBER, OP, FSTRING_STRING,
+            FSTRING_END
+        ]),
+
+        # a line continuation inside of an fstring_string
+        ('f"abc\\\ndef"', [
+            FSTRING_START, FSTRING_STRING, FSTRING_END
+        ]),
+        ('f"\\\n{123}\\\n"', [
+            FSTRING_START, FSTRING_STRING, OP, NUMBER, OP, FSTRING_STRING,
+            FSTRING_END
+        ]),
+
+        # a line continuation inside of an fstring_expr
+        ('f"{\\\n123}"', [FSTRING_START, OP, NUMBER, OP, FSTRING_END]),
+
+        # a line continuation inside of an format spec
+        ('f"{123:.2\\\nf}"', [
+            FSTRING_START, OP, NUMBER, OP, FSTRING_STRING, OP, FSTRING_END
+        ]),
+
+        # a newline without a line continuation inside a single-line string is
+        # wrong, and will generate an ERRORTOKEN
+        ('f"abc\ndef"', [
+            FSTRING_START, FSTRING_STRING, NEWLINE, NAME, ERRORTOKEN
+        ]),
+
+        # a more complex example
         (r'print(f"Some {x:.2f}a{y}")', [
             NAME, OP, FSTRING_START, FSTRING_STRING, OP, NAME, OP,
             FSTRING_STRING, OP, FSTRING_STRING, OP, NAME, OP, FSTRING_END, OP
         ]),
-
     ]
 )
 def test_fstring(code, types, version_ge_py36):
