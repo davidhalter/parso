@@ -1,5 +1,6 @@
 # -*- coding: utf-8    # This file contains Unicode characters.
 
+import sys
 from textwrap import dedent
 
 import pytest
@@ -14,6 +15,7 @@ from parso.python.tokenize import PythonToken
 
 # To make it easier to access some of the token types, just put them here.
 NAME = PythonTokenTypes.NAME
+NUMBER = PythonTokenTypes.NUMBER
 NEWLINE = PythonTokenTypes.NEWLINE
 STRING = PythonTokenTypes.STRING
 INDENT = PythonTokenTypes.INDENT
@@ -228,16 +230,29 @@ def test_endmarker_end_pos():
     check('a\\')
 
 
+xfail_py2 = dict(marks=[pytest.mark.xfail(sys.version_info[0] == 2, reason='Python 2')])
+
+
 @pytest.mark.parametrize(
     ('code', 'types'), [
+        # Indentation
         (' foo', [INDENT, NAME, DEDENT]),
         ('  foo\n bar', [INDENT, NAME, NEWLINE, ERROR_DEDENT, NAME, DEDENT]),
         ('  foo\n bar \n baz', [INDENT, NAME, NEWLINE, ERROR_DEDENT, NAME,
                                 NEWLINE, ERROR_DEDENT, NAME, DEDENT]),
         (' foo\nbar', [INDENT, NAME, NEWLINE, DEDENT, NAME]),
+
+        # Name stuff
+        ('1foo1', [NUMBER, NAME]),
+        pytest.param(
+            u'மெல்லினம்', [NAME],
+            **xfail_py2),
+        pytest.param(u'²', [ERRORTOKEN], **xfail_py2),
+        pytest.param(u'ä²ö', [NAME, ERRORTOKEN, NAME], **xfail_py2),
+        pytest.param(u'ää²¹öö', [NAME, ERRORTOKEN, NAME], **xfail_py2),
     ]
 )
-def test_indentation(code, types):
+def test_token_types(code, types):
     actual_types = [t.type for t in _get_token_list(code)]
     assert actual_types == types + [ENDMARKER]
 
