@@ -629,19 +629,19 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
 
 def _split_illegal_unicode_name(token, start_pos, prefix):
     def create_token():
-        return PythonToken(
-            ERRORTOKEN if is_illegal else NAME, found,
-            (start_pos[0], start_pos[1] + i), prefix
-        )
+        return PythonToken(ERRORTOKEN if is_illegal else NAME, found, pos, prefix)
 
     found = ''
     is_illegal = False
+    pos = start_pos
     for i, char in enumerate(token):
         if is_illegal:
             if is_identifier(char):
                 yield create_token()
                 found = char
                 is_illegal = False
+                prefix = ''
+                pos = start_pos[0], start_pos[1] + i
             else:
                 found += char
         else:
@@ -651,6 +651,8 @@ def _split_illegal_unicode_name(token, start_pos, prefix):
             else:
                 if found:
                     yield create_token()
+                    prefix = ''
+                    pos = start_pos[0], start_pos[1] + i
                 found = char
                 is_illegal = True
 
