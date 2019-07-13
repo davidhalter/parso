@@ -974,10 +974,12 @@ def test_random_unicode_characters(differ):
     Those issues were all found with the fuzzer.
     """
     differ.initialize('')
-    differ.parse(u'\x1dĔBϞɛˁşʑ˳˻ȣſéÎ\x90̕ȟòwʘ\x1dĔBϞɛˁşʑ˳˻ȣſéÎ', parsers=1, expect_error_leaves=True)
+    differ.parse(u'\x1dĔBϞɛˁşʑ˳˻ȣſéÎ\x90̕ȟòwʘ\x1dĔBϞɛˁşʑ˳˻ȣſéÎ', parsers=1,
+                 expect_error_leaves=True)
     differ.parse(u'\r\r', parsers=1)
     differ.parse(u"˟Ę\x05À\r   rúƣ@\x8a\x15r()\n", parsers=1, expect_error_leaves=True)
-    differ.parse(u'a\ntaǁ\rGĒōns__\n\nb', parsers=1)
+    differ.parse(u'a\ntaǁ\rGĒōns__\n\nb', parsers=1,
+                 expect_error_leaves=sys.version_info[0] == 2)
     s = '        if not (self, "_fi\x02\x0e\x08\n\nle"):'
     differ.parse(s, parsers=1, expect_error_leaves=True)
     differ.parse('')

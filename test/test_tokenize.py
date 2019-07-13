@@ -142,7 +142,7 @@ def test_identifier_contains_unicode():
     else:
         # Unicode tokens in Python 2 seem to be identified as operators.
         # They will be ignored in the parser, that's ok.
-        assert unicode_token[0] == OP
+        assert unicode_token[0] == ERRORTOKEN
 
 
 def test_quoted_strings():

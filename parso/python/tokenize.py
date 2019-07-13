@@ -54,8 +54,13 @@ if py_version >= 30:
     # Python 3 has str.isidentifier() to check if a char is a valid identifier
     is_identifier = str.isidentifier
 else:
-    namechars = string.ascii_letters + '_'
-    is_identifier = lambda s: s in namechars
+    # Python 2 doesn't, but it's not that important anymore and if you tokenize
+    # Python 2 code with this, it's still ok. It's just that parsing Python 3
+    # code with this function is not 100% correct.
+    # This just means that Python 2 code matches a few identifiers too much,
+    # but that doesn't really matter.
+    def is_identifier(s):
+        return True
 
 
 def group(*choices, **kwargs):
@@ -135,7 +140,11 @@ def _create_token_collection(version_info):
     Comment = r'#[^\r\n]*'
     # Python 2 is pretty much not working properly anymore, we just ignore
     # parsing unicode properly, which is fine, I guess.
-    if version_info[0] < 3 or sys.version_info[0] == 2:
+    if version_info[0] == 2:
+        Name = r'([A-Za-z_0-9]+)'
+    elif sys.version_info[0] == 2:
+        # Unfortunately the regex engine cannot deal with the regex below, so
+        # just use this one.
         Name = r'(\w+)'
     else:
         Name = u'([A-Za-z_0-9\u0080-' + MAX_UNICODE + ']+)'
