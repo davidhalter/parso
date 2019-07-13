@@ -3,6 +3,12 @@
 Changelog
 ---------
 
+0.5.1 (2019-07-13)
+++++++++++++++++++
+
+- Fix: Some unicode identifiers were not correctly tokenized
+- Fix: Line continuations in f-strings are now working
+
 0.5.0 (2019-06-20)
 ++++++++++++++++++
 
