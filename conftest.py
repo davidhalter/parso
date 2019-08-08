@@ -13,7 +13,7 @@ from parso.utils import parse_version_string
 
 collect_ignore = ["setup.py"]
 
-VERSIONS_2 = '2.7'
+VERSIONS_2 = '2.7',
 VERSIONS_3 = '3.4', '3.5', '3.6', '3.7', '3.8'
 
 
