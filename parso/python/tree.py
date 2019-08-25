@@ -210,15 +210,12 @@ class Name(_LeafWithoutNewlines):
         """
         Returns None if there's on definition for a name.
 
-        :param import_name_alway: Specifies if an import name is always a
+        :param import_name_always: Specifies if an import name is always a
             definition. Normally foo in `from foo import bar` is not a
             definition.
         """
         node = self.parent
         type_ = node.type
-        if type_ in ('power', 'atom_expr'):
-            # In `self.x = 3` self is not a definition, but x is.
-            return None
 
         if type_ in ('funcdef', 'classdef'):
             if self == node.name:
@@ -1037,6 +1034,14 @@ def _defined_names(current):
             trailer = current.children[-1]
             if trailer.children[0] == '.':
                 names.append(trailer.children[1])
+            elif trailer.children[0] == '[':
+                for node in current.children[-2::-1]:
+                    if node.type == 'trailer':
+                        names.append(node.children[1])
+                        break
+                    if node.type == 'name':
+                        names.append(node)
+                        break
     else:
         names.append(current)
     return names

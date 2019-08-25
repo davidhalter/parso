@@ -180,3 +180,42 @@ def top_function_three():
 
     r = get_raise_stmts(code, 2) #  Lists inside try-catch
     assert len(list(r)) == 2
+
+
+@pytest.mark.parametrize(
+    'code, name_index, is_definition', [
+        ('x = 3', 0, True),
+        ('x.y = 3', 0, False),
+        ('x.y = 3', 1, True),
+        ('x.y = u.v = z', 0, False),
+        ('x.y = u.v = z', 1, True),
+        ('x.y = u.v = z', 2, False),
+        ('x.y = u.v, w = z', 3, True),
+        ('x.y = u.v, w = z', 4, True),
+        ('x.y = u.v, w = z', 5, False),
+
+        ('x, y = z', 0, True),
+        ('x, y = z', 1, True),
+        ('x, y = z', 2, False),
+        ('x, y = z', 2, False),
+        ('x[0], y = z', 2, False),
+        ('x[0] = z', 0, True),
+        ('x[0], y = z', 0, True),
+        ('x: int = z', 0, True),
+        ('x: int = z', 1, False),
+        ('x: int = z', 2, False),
+        ('x: int', 0, True),
+        ('x: int', 1, False),
+    ]
+)
+def test_is_definition(code, name_index, is_definition):
+    module = parse(code, version='3.8')
+    name = module.get_first_leaf()
+    while True:
+        if name.type == 'name':
+            if name_index == 0:
+                break
+            name_index -= 1
+        name = name.get_next_leaf()
+
+    assert name.is_definition() == is_definition
