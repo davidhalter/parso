@@ -183,32 +183,35 @@ def top_function_three():
 
 
 @pytest.mark.parametrize(
-    'code, name_index, is_definition', [
-        ('x = 3', 0, True),
-        ('x.y = 3', 0, False),
-        ('x.y = 3', 1, True),
-        ('x.y = u.v = z', 0, False),
-        ('x.y = u.v = z', 1, True),
-        ('x.y = u.v = z', 2, False),
-        ('x.y = u.v, w = z', 3, True),
-        ('x.y = u.v, w = z', 4, True),
-        ('x.y = u.v, w = z', 5, False),
+    'code, name_index, is_definition, include_setitem', [
+        ('x = 3', 0, True, False),
+        ('x.y = 3', 0, False, False),
+        ('x.y = 3', 1, True, False),
+        ('x.y = u.v = z', 0, False, False),
+        ('x.y = u.v = z', 1, True, False),
+        ('x.y = u.v = z', 2, False, False),
+        ('x.y = u.v, w = z', 3, True, False),
+        ('x.y = u.v, w = z', 4, True, False),
+        ('x.y = u.v, w = z', 5, False, False),
 
-        ('x, y = z', 0, True),
-        ('x, y = z', 1, True),
-        ('x, y = z', 2, False),
-        ('x, y = z', 2, False),
-        ('x[0], y = z', 2, False),
-        ('x[0] = z', 0, True),
-        ('x[0], y = z', 0, True),
-        ('x: int = z', 0, True),
-        ('x: int = z', 1, False),
-        ('x: int = z', 2, False),
-        ('x: int', 0, True),
-        ('x: int', 1, False),
+        ('x, y = z', 0, True, False),
+        ('x, y = z', 1, True, False),
+        ('x, y = z', 2, False, False),
+        ('x, y = z', 2, False, False),
+        ('x[0], y = z', 2, False, False),
+        ('x[0] = z', 0, False, False),
+        ('x[0], y = z', 0, False, False),
+        ('x[0], y = z', 2, False, True),
+        ('x[0] = z', 0, True, True),
+        ('x[0], y = z', 0, True, True),
+        ('x: int = z', 0, True, False),
+        ('x: int = z', 1, False, False),
+        ('x: int = z', 2, False, False),
+        ('x: int', 0, True, False),
+        ('x: int', 1, False, False),
     ]
 )
-def test_is_definition(code, name_index, is_definition):
+def test_is_definition(code, name_index, is_definition, include_setitem):
     module = parse(code, version='3.8')
     name = module.get_first_leaf()
     while True:
@@ -218,4 +221,4 @@ def test_is_definition(code, name_index, is_definition):
             name_index -= 1
         name = name.get_next_leaf()
 
-    assert name.is_definition() == is_definition
+    assert name.is_definition(include_setitem=include_setitem) == is_definition
