@@ -208,7 +208,7 @@ class Name(_LeafWithoutNewlines):
 
     def get_definition(self, import_name_always=False, include_setitem=False):
         """
-        Returns None if there's on definition for a name.
+        Returns None if there's no definition for a name.
 
         :param import_name_always: Specifies if an import name is always a
             definition. Normally foo in `from foo import bar` is not a
