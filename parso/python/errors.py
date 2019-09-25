@@ -959,7 +959,6 @@ class _CompForRule(_CheckAssignmentRule):
 
     def is_issue(self, node):
         expr_list = node.children[1]
-        print(expr_list)
         if expr_list.type != 'expr_list':  # Already handled.
             self._check_assignment(expr_list)
 
