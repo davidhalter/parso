@@ -1070,14 +1070,26 @@ class _ComprehensionRule(SyntaxRule):
     #                    (comp_for | (',' (test | star_expr)) * [','])))
 
     def is_issue(self, node):
-        exprlist = None
+        exprlist = list()
+        namedexpr_list = list()
+
+        def process_comp(comp_for):
+            if comp_for.type in _COMP_FOR_TYPES:
+                if comp_for.type == 'sync_comp_for':
+                    comp = comp_for
+                elif comp_for.type == 'comp_for':
+                    comp = comp_for.children[1]
+                exprlist.extend(_get_for_stmt_definition_exprs(comp))
+
+                if len(comp.children) > 4:
+                    comp_iter = comp.children[4]
+                    process_comp(comp_iter)
+            else:
+                # skip assignment expressions in comp_for
+                namedexpr_list.extend(_get_namedexpr(comp_for))
+
         for child in node.children:
-            if child.type in _COMP_FOR_TYPES:
-                if child.type == 'sync_comp_for':
-                    exprlist = _get_for_stmt_definition_exprs(child)
-                elif child.type == 'comp_for':
-                    exprlist = _get_for_stmt_definition_exprs(child.children[1])
-                break
+            process_comp(child)
 
         # not a comprehension
         if exprlist is None:
@@ -1087,7 +1099,6 @@ class _ComprehensionRule(SyntaxRule):
         in_class = self._normalizer.context.node.type == 'classdef'
 
         namelist = [expr.value for expr in exprlist]
-        namedexpr_list = _get_namedexpr(node)
         for expr in namedexpr_list:
             if in_class:
                 # class Example:
