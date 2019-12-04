@@ -307,3 +307,15 @@ def test_invalid_fstrings(code, message):
     """
     error, = _get_error_list(code, version='3.6')
     assert message in error.message
+
+
+@pytest.mark.parametrize(
+    'code', [
+        "from foo import (\nbar,\n rab,\n)",
+        "from foo import (bar, rab, )",
+    ]
+)
+def test_trailing_comma(code):
+    errors = _get_error_list(code)
+    assert not errors
+
