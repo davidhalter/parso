@@ -586,7 +586,7 @@ class _TrailingImportComma(SyntaxRule):
     message = "trailing comma not allowed without surrounding parentheses"
 
     def is_issue(self, node):
-        if node.children[-1] == ',':
+        if node.children[-1] == ',' and node.parent.children[-1] != ')':
             return True
 
 
