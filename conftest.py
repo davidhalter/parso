@@ -58,7 +58,9 @@ def pytest_generate_tests(metafunc):
     elif 'each_py3_version' in metafunc.fixturenames:
         metafunc.parametrize('each_py3_version', VERSIONS_3)
     elif 'version_ge_py36' in metafunc.fixturenames:
-        metafunc.parametrize('version_ge_py36', ['3.6', '3.7'])
+        metafunc.parametrize('version_ge_py36', ['3.6', '3.7', '3.8'])
+    elif 'version_ge_py38' in metafunc.fixturenames:
+        metafunc.parametrize('version_ge_py38', ['3.8'])
 
 
 class NormalizerIssueCase(object):

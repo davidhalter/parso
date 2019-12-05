@@ -385,8 +385,32 @@ def test_backslash():
             NAME, OP, FSTRING_START, FSTRING_STRING, OP, NAME, OP,
             FSTRING_STRING, OP, FSTRING_STRING, OP, NAME, OP, FSTRING_END, OP
         ]),
+        # issue #86, a string-like in an f-string expression
+        ('f"{ ""}"', [
+            FSTRING_START, OP, FSTRING_END, STRING
+        ]),
+        ('f"{ f""}"', [
+            FSTRING_START, OP, NAME, FSTRING_END, STRING
+        ]),
     ]
 )
 def test_fstring(code, types, version_ge_py36):
     actual_types = [t.type for t in _get_token_list(code, version_ge_py36)]
+    assert types + [ENDMARKER] == actual_types
+
+
+@pytest.mark.parametrize(
+    ('code', 'types'), [
+        # issue #87, `:=` in the outest paratheses should be tokenized
+        # as a format spec marker and part of the format
+        ('f"{x:=10}"', [
+            FSTRING_START, OP, NAME, OP, FSTRING_STRING, OP, FSTRING_END
+        ]),
+        ('f"{(x:=10)}"', [
+            FSTRING_START, OP, OP, NAME, OP, NUMBER, OP, OP, FSTRING_END
+        ]),
+    ]
+)
+def test_fstring_assignment_expression(code, types, version_ge_py38):
+    actual_types = [t.type for t in _get_token_list(code, version_ge_py38)]
     assert types + [ENDMARKER] == actual_types
