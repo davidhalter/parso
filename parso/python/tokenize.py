@@ -314,9 +314,9 @@ class FStringNode(object):
 
 def _close_fstring_if_necessary(fstring_stack, string, start_pos, additional_prefix):
     for fstring_stack_index, node in enumerate(fstring_stack):
-        lstriped_string = string.lstrip()
-        len_lstrip = len(string) - len(lstriped_string)
-        if lstriped_string.startswith(node.quote):
+        lstripped_string = string.lstrip()
+        len_lstrip = len(string) - len(lstripped_string)
+        if lstripped_string.startswith(node.quote):
             token = PythonToken(
                 FSTRING_END,
                 node.quote,
