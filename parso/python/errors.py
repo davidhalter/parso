@@ -1041,6 +1041,46 @@ class _NamedExprRule(_CheckAssignmentRule):
 
     def is_issue(self, namedexpr_test):
         first = namedexpr_test.children[0]
+
+        # defined names
+        exprlist = list()
+
+        def process_comp_for(comp_for):
+            if comp_for.type == 'sync_comp_for':
+                comp = comp_for
+            elif comp_for.type == 'comp_for':
+                comp = comp_for.children[1]
+            exprlist.extend(_get_for_stmt_definition_exprs(comp))
+
+        def search_all_comp_ancestors(node):
+            ancestors = list()
+            while True:
+                node = node.parent
+                if node is None:
+                    return ancestors
+                if node.type in ['testlist_comp', 'dictorsetmaker']:
+                    for child in node.children:
+                        if child.type in _COMP_FOR_TYPES:
+                            process_comp_for(child)
+                            ancestors.append(node)
+                            break
+
+        # check assignment expressions in comprehensions
+        search_all = search_all_comp_ancestors(namedexpr_test)
+        if search_all:
+            if self._normalizer.context.node.type == 'classdef':
+                self.add_issue(
+                    namedexpr_test, message='assignment expression within a comprehension cannot be used in a class body')
+
+            namelist = [expr.value for expr in exprlist]
+            if first.type == 'name' and first.value in namelist:
+                # [i := 0 for i, j in range(5)]
+                # [[(i := i) for j in range(5)] for i in range(5)]
+                # [i for i, j in range(5) if True or (i := 1)]
+                # [False and (i := 0) for i, j in range(5)]
+                self.add_issue(
+                    namedexpr_test, message='assignment expression cannot rebind comprehension iteration variable %r' % first.value)
+
         if first.type == 'lambdef':
             # (lambda: x := 1)
             self.add_issue(namedexpr_test, message='cannot use named assignment with lambda')
@@ -1058,57 +1098,3 @@ class _NamedExprRule(_CheckAssignmentRule):
                         self.add_issue(namedexpr_test, message='cannot use named assignment with attribute')
         else:
             self._check_assignment(first, is_namedexpr=True)
-
-
-@ErrorFinder.register_rule(type='testlist_comp')
-@ErrorFinder.register_rule(type='dictorsetmaker')
-class _ComprehensionRule(SyntaxRule):
-    # testlist_comp: (namedexpr_test|star_expr) ( comp_for | (',' (namedexpr_test|star_expr))* [','] )
-    # dictorsetmaker: ( ((test ':' test | '**' expr)
-    #                    (comp_for | (',' (test ':' test | '**' expr)) * [','])) |
-    #                   ((test | star_expr)
-    #                    (comp_for | (',' (test | star_expr)) * [','])))
-
-    def is_issue(self, node):
-        exprlist = list()
-        namedexpr_list = list()
-
-        def process_comp(comp_for):
-            if comp_for.type in _COMP_FOR_TYPES:
-                if comp_for.type == 'sync_comp_for':
-                    comp = comp_for
-                elif comp_for.type == 'comp_for':
-                    comp = comp_for.children[1]
-                exprlist.extend(_get_for_stmt_definition_exprs(comp))
-
-                if len(comp.children) > 4:
-                    comp_iter = comp.children[4]
-                    process_comp(comp_iter)
-            else:
-                # skip assignment expressions in comp_for
-                namedexpr_list.extend(_get_namedexpr(comp_for))
-
-        for child in node.children:
-            process_comp(child)
-
-        # not a comprehension
-        if exprlist is None:
-            return
-
-        # in class body
-        in_class = self._normalizer.context.node.type == 'classdef'
-
-        namelist = [expr.value for expr in exprlist]
-        for expr in namedexpr_list:
-            if in_class:
-                # class Example:
-                #     [(j := i) for i in range(5)]
-                self.add_issue(expr, message='assignment expression within a comprehension cannot be used in a class body')
-
-            first = expr.children[0]
-            if first.type == 'name' and first.value in namelist:
-                # [i := 0 for i, j in range(5)]
-                # [[(i := i) for j in range(5)] for i in range(5)]
-                # [i for i, j in range(5) if True or (i := 1)]
-                # [False and (i := 0) for i, j in range(5)]
-                self.add_issue(expr, message='assignment expression cannot rebind comprehension iteration variable %r' % first.value)
