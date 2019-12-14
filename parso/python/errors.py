@@ -1095,5 +1095,9 @@ class _NamedExprRule(_CheckAssignmentRule):
                         # (a.b := c)
                         message = 'cannot use named assignment with attribute'
                         self.add_issue(namedexpr_test, message=message)
+                    elif first_child.value == '(':
+                        # (a[i] := x)
+                        message = 'cannot use named assignment with function call'
+                        self.add_issue(namedexpr_test, message=message)
         else:
             self._check_assignment(first, is_namedexpr=True)

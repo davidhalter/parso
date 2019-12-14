@@ -327,6 +327,7 @@ if sys.version_info[:2] >= (3, 8):
         '(lambda: x := 1)',
         # Case 3
         '(a[i] := x)',
+        '(a(i) := x)',
         # Case 4
         '(a.b := c)',
         # Case 5
