@@ -52,7 +52,7 @@ def _is_future_import(import_from):
     # It looks like a __future__ import that is relative is still a future
     # import. That feels kind of odd, but whatever.
     # if import_from.level != 0:
-        # return False
+    #     return False
     from_names = import_from.get_from_names()
     return [n.value for n in from_names] == ['__future__']
 
@@ -489,38 +489,38 @@ class _StringChecks(SyntaxRule):
     message = "bytes can only contain ASCII literal characters."
 
     def is_issue(self, leaf):
-            string_prefix = leaf.string_prefix.lower()
-            if 'b' in string_prefix \
-                    and self._normalizer.version >= (3, 0) \
-                    and any(c for c in leaf.value if ord(c) > 127):
-                # b'ä'
-                return True
+        string_prefix = leaf.string_prefix.lower()
+        if 'b' in string_prefix \
+                and self._normalizer.version >= (3, 0) \
+                and any(c for c in leaf.value if ord(c) > 127):
+            # b'ä'
+            return True
 
-            if 'r' not in string_prefix:
-                # Raw strings don't need to be checked if they have proper
-                # escaping.
-                is_bytes = self._normalizer.version < (3, 0)
-                if 'b' in string_prefix:
-                    is_bytes = True
-                if 'u' in string_prefix:
-                    is_bytes = False
+        if 'r' not in string_prefix:
+            # Raw strings don't need to be checked if they have proper
+            # escaping.
+            is_bytes = self._normalizer.version < (3, 0)
+            if 'b' in string_prefix:
+                is_bytes = True
+            if 'u' in string_prefix:
+                is_bytes = False
 
-                payload = leaf._get_payload()
-                if is_bytes:
-                    payload = payload.encode('utf-8')
-                    func = codecs.escape_decode
-                else:
-                    func = codecs.unicode_escape_decode
+            payload = leaf._get_payload()
+            if is_bytes:
+                payload = payload.encode('utf-8')
+                func = codecs.escape_decode
+            else:
+                func = codecs.unicode_escape_decode
 
-                try:
-                    with warnings.catch_warnings():
-                        # The warnings from parsing strings are not relevant.
-                        warnings.filterwarnings('ignore')
-                        func(payload)
-                except UnicodeDecodeError as e:
-                    self.add_issue(leaf, message='(unicode error) ' + str(e))
-                except ValueError as e:
-                    self.add_issue(leaf, message='(value error) ' + str(e))
+            try:
+                with warnings.catch_warnings():
+                    # The warnings from parsing strings are not relevant.
+                    warnings.filterwarnings('ignore')
+                    func(payload)
+            except UnicodeDecodeError as e:
+                self.add_issue(leaf, message='(unicode error) ' + str(e))
+            except ValueError as e:
+                self.add_issue(leaf, message='(value error) ' + str(e))
 
 
 @ErrorFinder.register_rule(value='*')
