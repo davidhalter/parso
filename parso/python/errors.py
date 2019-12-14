@@ -939,6 +939,10 @@ class _CheckAssignmentRule(SyntaxRule):
                 assert trailer.type == 'trailer'
                 if trailer.children[0] == '(':
                     error = 'function call'
+                elif is_namedexpr and trailer.children[0] == '[':
+                    error = 'subscript'
+                elif is_namedexpr and trailer.children[0] == '.':
+                    error = 'attribute'
         elif type_ in ('testlist_star_expr', 'exprlist', 'testlist'):
             for child in node.children[::2]:
                 self._check_assignment(child, is_deletion, is_namedexpr)
@@ -1078,26 +1082,4 @@ class _NamedExprRule(_CheckAssignmentRule):
                           'comprehension iteration variable %r' % first.value
                 self.add_issue(namedexpr_test, message=message)
 
-        if first.type == 'lambdef':
-            # (lambda: x := 1)
-            self.add_issue(namedexpr_test, message='cannot use named assignment with lambda')
-        elif first.type == 'atom_expr':
-            for child in first.children:
-                if child.type != 'trailer':
-                    continue
-                first_child = child.children[0]
-                if first_child.type == 'operator':
-                    if first_child.value == '[':
-                        # (a[i] := x)
-                        message = 'cannot use named assignment with subscript'
-                        self.add_issue(namedexpr_test, message=message)
-                    elif first_child.value == '.':
-                        # (a.b := c)
-                        message = 'cannot use named assignment with attribute'
-                        self.add_issue(namedexpr_test, message=message)
-                    elif first_child.value == '(':
-                        # (a[i] := x)
-                        message = 'cannot use named assignment with function call'
-                        self.add_issue(namedexpr_test, message=message)
-        else:
-            self._check_assignment(first, is_namedexpr=True)
+        self._check_assignment(first, is_namedexpr=True)

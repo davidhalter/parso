@@ -325,8 +325,10 @@ if sys.version_info[:2] >= (3, 8):
     FAILING_EXAMPLES += [
         # Case 2
         '(lambda: x := 1)',
+        '((lambda: x) := 1)',
         # Case 3
         '(a[i] := x)',
+        '((a[i]) := x)',
         '(a(i) := x)',
         # Case 4
         '(a.b := c)',
@@ -341,4 +343,7 @@ if sys.version_info[:2] >= (3, 8):
         '[i+1 for i in (lambda: (j:= range(5)))()]',
         # Case 7
         'class Example:\n [(j := i) for i in range(5)]',
+        # Not in that issue
+        '(await a := x)',
+        '((await a) := x)',
     ]
