@@ -8,6 +8,7 @@ Changelog
 
 - Add include_setitem to get_definition/is_definition and get_defined_names (#66)
 - Fix named expression error listing (#89, #90)
+- Fix some f-string tokenizer issues (#93)
 
 0.5.1 (2019-07-13)
 ++++++++++++++++++
