@@ -332,8 +332,12 @@ if sys.version_info[:2] >= (3, 8):
         '(a(i) := x)',
         # Case 4
         '(a.b := c)',
+        '[(i.i:= 0) for ((i), j) in range(5)]',
         # Case 5
         '[i:= 0 for i, j in range(5)]',
+        '[(i:= 0) for ((i), j) in range(5)]',
+        '[(i:= 0) for ((i), j), in range(5)]',
+        '[(i:= 0) for ((i), j.i), in range(5)]',
         '[[(i:= i) for j in range(5)] for i in range(5)]',
         '[i for i, j in range(5) if True or (i:= 1)]',
         '[False and (i:= 0) for i, j in range(5)]',

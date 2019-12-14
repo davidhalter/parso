@@ -94,18 +94,31 @@ def _is_future_import_first(import_from):
 
 
 def _iter_definition_exprs_from_lists(exprlist):
-    for child in exprlist.children[::2]:
-        if child.type == 'atom' and child.children[0] in ('(', '['):
-            testlist_comp = child.children[0]
-            if testlist_comp.type == 'testlist_comp':
-                for expr in _iter_definition_exprs_from_lists(testlist_comp):
-                    yield expr
-                continue
+    def check_expr(child):
+        if child.type == 'atom':
+            if child.children[0] == '(':
+                testlist_comp = child.children[1]
+                if testlist_comp.type == 'testlist_comp':
+                    for expr in _iter_definition_exprs_from_lists(testlist_comp):
+                        yield expr
+                    return
+                else:
+                    # It's a paren that doesn't do anything, like 1 + (1)
+                    for c in check_expr(testlist_comp):
+                        yield c
+                    return
             elif child.children[0] == '[':
                 yield testlist_comp
-                continue
-
+                return
         yield child
+
+    if exprlist.type in _STAR_EXPR_PARENTS:
+        for child in exprlist.children[::2]:
+            for c in check_expr(child):  # Python 2 sucks
+                yield c
+    else:
+        for c in check_expr(exprlist):  # Python 2 sucks
+            yield c
 
 
 def _get_expr_stmt_definition_exprs(expr_stmt):
@@ -120,8 +133,6 @@ def _get_expr_stmt_definition_exprs(expr_stmt):
 
 def _get_for_stmt_definition_exprs(for_stmt):
     exprlist = for_stmt.children[1]
-    if exprlist.type != 'exprlist':
-        return [exprlist]
     return list(_iter_definition_exprs_from_lists(exprlist))
 
 
@@ -1072,7 +1083,7 @@ class _NamedExprRule(_CheckAssignmentRule):
                           'cannot be used in a class body'
                 self.add_issue(namedexpr_test, message=message)
 
-            namelist = [expr.value for expr in exprlist]
+            namelist = [expr.value for expr in exprlist if expr.type == 'name']
             if first.type == 'name' and first.value in namelist:
                 # [i := 0 for i, j in range(5)]
                 # [[(i := i) for j in range(5)] for i in range(5)]
