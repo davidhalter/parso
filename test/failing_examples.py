@@ -319,3 +319,25 @@ if sys.version_info[:2] < (3, 8):
                     continue
             '''),  # 'continue' not supported inside 'finally' clause"
     ]
+
+if sys.version_info[:2] >= (3, 8):
+    # assignment expressions from issue#89
+    FAILING_EXAMPLES += [
+        # Case 2
+        '(lambda: x := 1)',
+        # Case 3
+        '(a[i] := x)',
+        # Case 4
+        '(a.b := c)',
+        # Case 5
+        '[i:= 0 for i, j in range(5)]',
+        '[[(i:= i) for j in range(5)] for i in range(5)]',
+        '[i for i, j in range(5) if True or (i:= 1)]',
+        '[False and (i:= 0) for i, j in range(5)]',
+        # Case 6
+        '[i+1 for i in (i:= range(5))]',
+        '[i+1 for i in (j:= range(5))]',
+        '[i+1 for i in (lambda: (j:= range(5)))()]',
+        # Case 7
+        'class Example:\n [(j := i) for i in range(5)]',
+    ]

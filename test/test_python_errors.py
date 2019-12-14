@@ -294,6 +294,19 @@ def test_valid_fstrings(code):
 
 
 @pytest.mark.parametrize(
+    'code', [
+        'a = (b := 1)',
+        '[x4 := x ** 5 for x in range(7)]',
+        '[total := total + v for v in range(10)]',
+        'while chunk := file.read(2):\n pass',
+        'numbers = [y := math.factorial(x), y**2, y**3]',
+    ]
+)
+def test_valid_namedexpr(code):
+    assert not _get_error_list(code, version='3.8')
+
+
+@pytest.mark.parametrize(
     ('code', 'message'), [
         ("f'{1+}'", ('invalid syntax')),
         (r'f"\"', ('invalid syntax')),

@@ -125,6 +125,7 @@ def _get_for_stmt_definition_exprs(for_stmt):
     return list(_iter_definition_exprs_from_lists(exprlist))
 
 
+
 class _Context(object):
     def __init__(self, node, add_syntax_error, parent_context=None):
         self.node = node
@@ -883,7 +884,7 @@ class _FStringRule(SyntaxRule):
 
 
 class _CheckAssignmentRule(SyntaxRule):
-    def _check_assignment(self, node, is_deletion=False):
+    def _check_assignment(self, node, is_deletion=False, is_namedexpr=False):
         error = None
         type_ = node.type
         if type_ == 'lambdef':
@@ -907,9 +908,9 @@ class _CheckAssignmentRule(SyntaxRule):
                         # This is not a comprehension, they were handled
                         # further above.
                         for child in second.children[::2]:
-                            self._check_assignment(child, is_deletion)
+                            self._check_assignment(child, is_deletion, is_namedexpr)
                     else:  # Everything handled, must be useless brackets.
-                        self._check_assignment(second, is_deletion)
+                        self._check_assignment(second, is_deletion, is_namedexpr)
         elif type_ == 'keyword':
             if self._normalizer.version < (3, 8):
                 error = 'keyword'
@@ -941,15 +942,18 @@ class _CheckAssignmentRule(SyntaxRule):
                     error = 'function call'
         elif type_ in ('testlist_star_expr', 'exprlist', 'testlist'):
             for child in node.children[::2]:
-                self._check_assignment(child, is_deletion)
+                self._check_assignment(child, is_deletion, is_namedexpr)
         elif ('expr' in type_ and type_ != 'star_expr'  # is a substring
               or '_test' in type_
               or type_ in ('term', 'factor')):
             error = 'operator'
 
         if error is not None:
-            cannot = "can't" if self._normalizer.version < (3, 8) else "cannot"
-            message = ' '.join([cannot, "delete" if is_deletion else "assign to", error])
+            if is_namedexpr:
+                message = 'cannot use named assignment with %s' % error
+            else:
+                cannot = "can't" if self._normalizer.version < (3, 8) else "cannot"
+                message = ' '.join([cannot, "delete" if is_deletion else "assign to", error])
             self.add_issue(node, message=message)
 
 
@@ -1008,3 +1012,84 @@ class _ForStmtRule(_CheckAssignmentRule):
         expr_list = for_stmt.children[1]
         if expr_list.type != 'expr_list':  # Already handled.
             self._check_assignment(expr_list)
+
+
+@ErrorFinder.register_rule(type='namedexpr_test')
+class _NamedExprRule(_CheckAssignmentRule):
+    # namedexpr_test: test [':=' test]
+
+    def is_issue(self, namedexpr_test):
+        # assigned name
+        first = namedexpr_test.children[0]
+
+        def search_namedexpr_in_comp_for(node):
+            while True:
+                parent = node.parent
+                if parent is None:
+                    return parent
+                if parent.type == 'sync_comp_for' and parent.children[3] == node:
+                    return parent
+                node = parent
+
+        if search_namedexpr_in_comp_for(namedexpr_test):
+            # [i+1 for i in (i := range(5))]
+            # [i+1 for i in (j := range(5))]
+            # [i+1 for i in (lambda: (j := range(5)))()]
+            self.add_issue(namedexpr_test, message='assignment expression cannot be used in a comprehension iterable expression')
+
+        # defined names
+        exprlist = list()
+
+        def process_comp_for(comp_for):
+            if comp_for.type == 'sync_comp_for':
+                comp = comp_for
+            elif comp_for.type == 'comp_for':
+                comp = comp_for.children[1]
+            exprlist.extend(_get_for_stmt_definition_exprs(comp))
+
+        def search_all_comp_ancestors(node):
+            ancestors = list()
+            while True:
+                node = node.parent
+                if node is None:
+                    return ancestors
+                if node.type in ['testlist_comp', 'dictorsetmaker']:
+                    for child in node.children:
+                        if child.type in _COMP_FOR_TYPES:
+                            process_comp_for(child)
+                            ancestors.append(node)
+                            break
+
+        # check assignment expressions in comprehensions
+        search_all = search_all_comp_ancestors(namedexpr_test)
+        if search_all:
+            if self._normalizer.context.node.type == 'classdef':
+                self.add_issue(
+                    namedexpr_test, message='assignment expression within a comprehension cannot be used in a class body')
+
+            namelist = [expr.value for expr in exprlist]
+            if first.type == 'name' and first.value in namelist:
+                # [i := 0 for i, j in range(5)]
+                # [[(i := i) for j in range(5)] for i in range(5)]
+                # [i for i, j in range(5) if True or (i := 1)]
+                # [False and (i := 0) for i, j in range(5)]
+                self.add_issue(
+                    namedexpr_test, message='assignment expression cannot rebind comprehension iteration variable %r' % first.value)
+
+        if first.type == 'lambdef':
+            # (lambda: x := 1)
+            self.add_issue(namedexpr_test, message='cannot use named assignment with lambda')
+        elif first.type == 'atom_expr':
+            for child in first.children:
+                if child.type != 'trailer':
+                    continue
+                first_child = child.children[0]
+                if first_child.type == 'operator':
+                    if first_child.value == '[':
+                        # (a[i] := x)
+                        self.add_issue(namedexpr_test, message='cannot use named assignment with subscript')
+                    elif first_child.value == '.':
+                        # (a.b := c)
+                        self.add_issue(namedexpr_test, message='cannot use named assignment with attribute')
+        else:
+            self._check_assignment(first, is_namedexpr=True)
