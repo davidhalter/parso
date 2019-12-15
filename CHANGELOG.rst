@@ -3,7 +3,7 @@
 Changelog
 ---------
 
-0.5.2 (2019-XX-XX)
+0.5.2 (2019-12-15)
 ++++++++++++++++++
 
 - Add include_setitem to get_definition/is_definition and get_defined_names (#66)
