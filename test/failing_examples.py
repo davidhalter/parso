@@ -350,4 +350,14 @@ if sys.version_info[:2] >= (3, 8):
         # Not in that issue
         '(await a := x)',
         '((await a) := x)',
+        # new discoveries
+        '((a, b) := (1, 2))',
+        '([a, b] := [1, 2])',
+        '({a, b} := {1, 2})',
+        '({a: b} := {1: 2})',
+        '(a + b := 1)',
+        '(True := 1)',
+        '(False := 1)',
+        '(None := 1)',
+        '(__debug__ := 1)',
     ]

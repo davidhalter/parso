@@ -895,6 +895,11 @@ class _FStringRule(SyntaxRule):
 
 class _CheckAssignmentRule(SyntaxRule):
     def _check_assignment(self, node, is_deletion=False, is_namedexpr=False):
+        # not __debug__ issue
+        not_debug = True
+        # keyword assignment issue
+        is_keyword = False
+
         error = None
         type_ = node.type
         if type_ == 'lambdef':
@@ -915,6 +920,14 @@ class _CheckAssignmentRule(SyntaxRule):
                     if second.type == 'yield_expr':
                         error = 'yield expression'
                     elif second.type == 'testlist_comp':
+                        # ([a, b] := [1, 2])
+                        # ((a, b) := [1, 2])
+                        if is_namedexpr:
+                            if first == '(':
+                                error = 'tuple'
+                            elif first == '[':
+                                error = 'list'
+
                         # This is not a comprehension, they were handled
                         # further above.
                         for child in second.children[::2]:
@@ -926,6 +939,7 @@ class _CheckAssignmentRule(SyntaxRule):
                 error = 'keyword'
             else:
                 error = str(node.value)
+            is_keyword = True
         elif type_ == 'operator':
             if node.value == '...':
                 error = 'Ellipsis'
@@ -961,12 +975,26 @@ class _CheckAssignmentRule(SyntaxRule):
               or '_test' in type_
               or type_ in ('term', 'factor')):
             error = 'operator'
+        elif type_ == 'name':
+            if node.value == '__debug__':  # should be a keyword for all versions
+                if (2, 7) < self._normalizer.version < (3, 8):
+                    error = 'keyword'
+                else:
+                    error = str(node.value)
+                not_debug = False
+                is_keyword = True
 
         if error is not None:
-            if is_namedexpr:
+            if is_namedexpr and not_debug:
+                # c.f. CPython bpo-39176, should be changed in next release
+                # message = 'cannot use assignment expressions with %s' % error
                 message = 'cannot use named assignment with %s' % error
             else:
-                cannot = "can't" if self._normalizer.version < (3, 8) else "cannot"
+                _version = self._normalizer.version
+                if _version[0] < 3:  # Python 2.*
+                    cannot = ("can not" if _version < (2, 7) else "cannot") if is_keyword else "can't"
+                else:  # Python 3.*
+                    cannot = "can't" if _version < (3, 8) else "cannot"
                 message = ' '.join([cannot, "delete" if is_deletion else "assign to", error])
             self.add_issue(node, message=message)
 
