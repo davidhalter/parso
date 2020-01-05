@@ -2,8 +2,9 @@ from collections import namedtuple
 import re
 import sys
 from ast import literal_eval
+from functools import total_ordering
 
-from parso._compatibility import unicode, total_ordering
+from parso._compatibility import unicode
 
 # The following is a list in Python that are line breaks in str.splitlines, but
 # not in Python. In Python only \r (Carriage Return, 0xD) and \n (Line Feed,
