@@ -989,7 +989,6 @@ def test_random_unicode_characters(differ):
     differ.parse('   a( # xx\ndef', parsers=2, expect_error_leaves=True)
 
 
-@pytest.mark.skipif(sys.version_info < (2, 7), reason="No set literals in Python 2.6")
 def test_dedent_end_positions(differ):
     code1 = dedent('''\
         if 1:

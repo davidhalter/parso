@@ -176,8 +176,7 @@ class _Context(object):
         self._analyze_names(self._global_names, 'global')
         self._analyze_names(self._nonlocal_names, 'nonlocal')
 
-        # Python2.6 doesn't have dict comprehensions.
-        global_name_strs = dict((n.value, n) for n in self._global_names)
+        global_name_strs = {n.value: n for n in self._global_names}
         for nonlocal_name in self._nonlocal_names:
             try:
                 global_name = global_name_strs[nonlocal_name.value]
