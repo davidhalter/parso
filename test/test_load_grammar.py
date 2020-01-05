@@ -28,4 +28,4 @@ def test_invalid_grammar_version(string):
 
 def test_grammar_int_version():
     with pytest.raises(TypeError):
-        load_grammar(version=3.2)
+        load_grammar(version=3.8)

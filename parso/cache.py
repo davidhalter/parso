@@ -55,7 +55,7 @@ _VERSION_TAG = '%s-%s%s-%s' % (
 """
 Short name for distinguish Python implementations and versions.
 
-It's like `sys.implementation.cache_tag` but for Python < 3.3
+It's like `sys.implementation.cache_tag` but for Python2
 we generate something similar.  See:
 http://docs.python.org/3/library/sys.html#sys.implementation
 """
