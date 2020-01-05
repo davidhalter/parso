@@ -37,7 +37,8 @@ def test_python_exception_matches(code):
         error, = errors
         actual = error.message
     assert actual in wanted
-    assert line_nr == error.start_pos[0]
+    # Somehow in Python2.7 the SyntaxError().lineno is sometimes None
+    assert line_nr is None or line_nr == error.start_pos[0]
 
 
 def test_non_async_in_async():
