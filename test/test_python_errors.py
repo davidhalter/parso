@@ -122,6 +122,16 @@ def _get_actual_exception(code):
     if sys.version_info[:2] == (2, 6) and wanted == 'SyntaxError: unexpected EOF while parsing':
         wanted = 'SyntaxError: invalid syntax'
 
+    # SyntaxError (_CheckAssignmentRule)
+    # Python 2 has inconsistent error messages, so normalise it
+    if sys.version_info[0] < 3:
+        if wanted == 'assignment to None':
+            wanted = "can't assign to None"
+        elif wanted.startswith('can not'):
+            wanted.replace('can not', "can't", 1)
+        elif wanted.startswith('cannot'):
+            wanted.replace('cannot', "can't", 1)
+
     if wanted == 'SyntaxError: non-keyword arg after keyword arg':
         # The python 3.5+ way, a bit nicer.
         wanted = 'SyntaxError: positional argument follows keyword argument'
@@ -331,4 +341,3 @@ def test_invalid_fstrings(code, message):
 def test_trailing_comma(code):
     errors = _get_error_list(code)
     assert not errors
-
