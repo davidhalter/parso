@@ -142,7 +142,7 @@ def test_yields(each_version):
 
 
 def test_yield_from():
-    y, = get_yield_exprs('def x(): (yield from 1)', '3.3')
+    y, = get_yield_exprs('def x(): (yield from 1)', '3.8')
     assert y.type == 'yield_expr'
 
 

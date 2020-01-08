@@ -37,7 +37,7 @@ def test_python_exception_matches(code):
         error, = errors
         actual = error.message
     assert actual in wanted
-    # Somehow in Python3.3 the SyntaxError().lineno is sometimes None
+    # Somehow in Python2.7 the SyntaxError().lineno is sometimes None
     assert line_nr is None or line_nr == error.start_pos[0]
 
 
@@ -118,32 +118,12 @@ def _get_actual_exception(code):
             assert False, "The piece of code should raise an exception."
 
     # SyntaxError
-    # Python 2.6 has a bit different error messages here, so skip it.
-    if sys.version_info[:2] == (2, 6) and wanted == 'SyntaxError: unexpected EOF while parsing':
-        wanted = 'SyntaxError: invalid syntax'
-
-    # SyntaxError (_CheckAssignmentRule)
-    # Python 2 has inconsistent error messages, so normalise it
-    if sys.version_info[0] < 3:
-        if wanted == 'assignment to None':
-            wanted = "can't assign to None"
-        elif wanted.startswith('can not'):
-            wanted.replace('can not', "can't", 1)
-        elif wanted.startswith('cannot'):
-            wanted.replace('cannot', "can't", 1)
-
     if wanted == 'SyntaxError: non-keyword arg after keyword arg':
         # The python 3.5+ way, a bit nicer.
         wanted = 'SyntaxError: positional argument follows keyword argument'
     elif wanted == 'SyntaxError: assignment to keyword':
         return [wanted, "SyntaxError: can't assign to keyword",
                 'SyntaxError: cannot assign to __debug__'], line_nr
-    elif wanted == 'SyntaxError: assignment to None':
-        # Python 2.6 does has a slightly different error.
-        wanted = 'SyntaxError: cannot assign to None'
-    elif wanted == 'SyntaxError: can not assign to __debug__':
-        # Python 2.6 does has a slightly different error.
-        wanted = 'SyntaxError: cannot assign to __debug__'
     elif wanted == 'SyntaxError: can use starred expression only as assignment target':
         # Python 3.4/3.4 have a bit of a different warning than 3.5/3.6 in
         # certain places. But in others this error makes sense.
