@@ -914,6 +914,14 @@ class _CheckAssignmentRule(SyntaxRule):
                     if second.type == 'yield_expr':
                         error = 'yield expression'
                     elif second.type == 'testlist_comp':
+                        # ([a, b] := [1, 2])
+                        # ((a, b) := [1, 2])
+                        if is_namedexpr:
+                            if first == '(':
+                                error = 'tuple'
+                            elif first == '[':
+                                error = 'list'
+
                         # This is not a comprehension, they were handled
                         # further above.
                         for child in second.children[::2]:
@@ -963,6 +971,8 @@ class _CheckAssignmentRule(SyntaxRule):
 
         if error is not None:
             if is_namedexpr:
+                # c.f. CPython bpo-39176, should be changed in next release
+                # message = 'cannot use assignment expressions with %s' % error
                 message = 'cannot use named assignment with %s' % error
             else:
                 cannot = "can't" if self._normalizer.version < (3, 8) else "cannot"

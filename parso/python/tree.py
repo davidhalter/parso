@@ -233,6 +233,8 @@ class Name(_LeafWithoutNewlines):
         while node is not None:
             if node.type == 'suite':
                 return None
+            if node.type == 'namedexpr_test':
+                return node.children[0]
             if node.type in _GET_DEFINITION_TYPES:
                 if self in node.get_defined_names(include_setitem):
                     return node

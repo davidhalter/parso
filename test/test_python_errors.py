@@ -321,4 +321,3 @@ def test_invalid_fstrings(code, message):
 def test_trailing_comma(code):
     errors = _get_error_list(code)
     assert not errors
-
