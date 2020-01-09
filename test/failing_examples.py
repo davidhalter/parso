@@ -281,6 +281,9 @@ if sys.version_info >= (3, 6):
         # Same as above, but for f-strings.
         'f"s" b""',
         'b"s" f""',
+
+        # f-string expression part cannot include a backslash
+        r'''f"{'\n'}"''',
     ]
 FAILING_EXAMPLES.append('[a, 1] += 3')
 
