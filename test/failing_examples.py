@@ -281,6 +281,9 @@ if sys.version_info >= (3, 6):
         # Same as above, but for f-strings.
         'f"s" b""',
         'b"s" f""',
+
+        # f-string expression part cannot include a backslash
+        r'''f"{'\n'}"''',
     ]
 if sys.version_info >= (2, 7):
     # This is something that raises a different error in 2.6 than in the other
