@@ -33,7 +33,7 @@ makes Jedi use ~500mb of memory. Since we might want a bit more than those few
 libraries, we just increase it a bit.
 """
 
-_PICKLE_VERSION = 32
+_PICKLE_VERSION = 33
 """
 Version number (integer) for file system cache.
 
