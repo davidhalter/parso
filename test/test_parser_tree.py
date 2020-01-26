@@ -222,3 +222,19 @@ def test_is_definition(code, name_index, is_definition, include_setitem):
         name = name.get_next_leaf()
 
     assert name.is_definition(include_setitem=include_setitem) == is_definition
+
+
+def test_iter_funcdefs():
+    code = dedent('''
+        def normal(): ...
+        async def asyn(): ...
+        @dec
+        def dec_normal(): ...
+        @dec1
+        @dec2
+        async def dec_async(): ...
+        def broken
+        ''')
+    module = parse(code, version='3.8')
+    func_names = [f.name.value for f in module.iter_funcdefs()]
+    assert func_names == ['normal', 'asyn', 'dec_normal', 'dec_async']

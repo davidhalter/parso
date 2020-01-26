@@ -57,7 +57,11 @@ from parso.utils import split_lines
 _FLOW_CONTAINERS = set(['if_stmt', 'while_stmt', 'for_stmt', 'try_stmt',
                         'with_stmt', 'async_stmt', 'suite'])
 _RETURN_STMT_CONTAINERS = set(['suite', 'simple_stmt']) | _FLOW_CONTAINERS
-_FUNC_CONTAINERS = set(['suite', 'simple_stmt', 'decorated']) | _FLOW_CONTAINERS
+
+_FUNC_CONTAINERS = set(
+    ['suite', 'simple_stmt', 'decorated', 'async_funcdef']
+) | _FLOW_CONTAINERS
+
 _GET_DEFINITION_TYPES = set([
     'expr_stmt', 'sync_comp_for', 'with_stmt', 'for_stmt', 'import_name',
     'import_from', 'param', 'del_stmt',
