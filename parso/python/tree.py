@@ -60,7 +60,7 @@ _RETURN_STMT_CONTAINERS = set(['suite', 'simple_stmt']) | _FLOW_CONTAINERS
 _FUNC_CONTAINERS = set(['suite', 'simple_stmt', 'decorated']) | _FLOW_CONTAINERS
 _GET_DEFINITION_TYPES = set([
     'expr_stmt', 'sync_comp_for', 'with_stmt', 'for_stmt', 'import_name',
-    'import_from', 'param'
+    'import_from', 'param', 'del_stmt',
 ])
 _IMPORTS = set(['import_name', 'import_from'])
 
@@ -994,6 +994,14 @@ class KeywordStatement(PythonBaseNode):
     @property
     def keyword(self):
         return self.children[0].value
+
+    def get_defined_names(self, include_setitem=False):
+        keyword = self.keyword
+        if keyword == 'del':
+            return _defined_names(self.children[1], include_setitem)
+        if keyword in ('global', 'nonlocal'):
+            return self.children[1::2]
+        return []
 
 
 class AssertStmt(KeywordStatement):
