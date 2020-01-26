@@ -3,10 +3,13 @@
 Changelog
 ---------
 
-0.6.0 (2020--)
+0.6.0 (2020-01-26)
 ++++++++++++++++++
 
 - Dropped Python 2.6/Python 3.3 support
+- del_stmt names are now considered as a definition
+  (for ``name.is_definition()``)
+- Bugfixes
 
 0.5.2 (2019-12-15)
 ++++++++++++++++++
