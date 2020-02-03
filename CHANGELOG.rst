@@ -3,6 +3,12 @@
 Changelog
 ---------
 
+0.6.1 (2020-01-26)
+++++++++++++++++++
+
+- Add ``parso.normalizer.Issue.end_pos`` to make it possible to know where an
+  issue ends
+
 0.6.0 (2020-01-26)
 ++++++++++++++++++
 
