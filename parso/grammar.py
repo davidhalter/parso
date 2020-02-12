@@ -13,6 +13,7 @@ from parso.python.parser import Parser as PythonParser
 from parso.python.errors import ErrorFinderConfig
 from parso.python import pep8
 from parso.file_io import FileIO, KnownContentFileIO
+from parso.normalizer import RefactoringNormalizer
 
 _loaded_grammars = {}
 
@@ -169,6 +170,9 @@ class Grammar(object):
             raise ValueError("No error normalizer specified for this grammar.")
 
         return self._get_normalizer_issues(node, self._error_normalizer_config)
+
+    def refactor(self, base_node, node_to_str_map):
+        return RefactoringNormalizer(node_to_str_map).walk(base_node)
 
     def _get_normalizer(self, normalizer_config):
         if normalizer_config is None:
