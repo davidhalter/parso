@@ -3,6 +3,12 @@
 Changelog
 ---------
 
+0.6.2 (2020-02-27)
+++++++++++++++++++
+
+- Bugfixes
+- Add Grammar.refactor (might still be subject to change until 0.7.0)
+
 0.6.1 (2020-02-03)
 ++++++++++++++++++
 
