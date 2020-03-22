@@ -39,6 +39,23 @@ def _check_error_leaves_nodes(node):
     return None
 
 
+def _assert_modules_are_equal(node1, node2):
+    try:
+        children1 = node1.children
+    except AttributeError:
+        assert not hasattr(node2, 'children'), (node1, node2)
+        assert node1.value == node2.value
+        return
+    else:
+        try:
+            children2 = node2.children
+        except AttributeError:
+            assert False, (node1, node2)
+    assert len(children1) == len(children2), (children1, children2)
+    for n1, n2 in zip(children1, children2):
+        _assert_modules_are_equal(n1, n2)
+
+
 class Differ(object):
     grammar = load_grammar()
 
@@ -68,6 +85,9 @@ class Differ(object):
         assert code == new_module.get_code()
 
         _assert_valid_graph(new_module)
+
+        without_diff_parser_module = parse(code)
+        #_assert_modules_are_equal(new_module, without_diff_parser_module)
 
         error_node = _check_error_leaves_nodes(new_module)
         assert expect_error_leaves == (error_node is not None), error_node
@@ -1129,7 +1149,7 @@ def test_dont_copy_dedents_in_beginning(differ):
         ''')
     differ.initialize(code1)
     differ.parse(code2, copies=1, parsers=1, expect_error_leaves=True)
-    differ.parse(code1, parsers=2)
+    differ.parse(code1, parsers=1, copies=1)
 
 
 def test_dont_copy_error_leaves(differ):
@@ -1199,8 +1219,8 @@ def test_some_other_indentation_issues(differ):
         a
         ''')
     differ.initialize(code1)
-    differ.parse(code2, copies=2, parsers=1, expect_error_leaves=True)
-    differ.parse(code1, copies=2, parsers=2)
+    differ.parse(code2, copies=0, parsers=1, expect_error_leaves=True)
+    differ.parse(code1, copies=2, parsers=1)
 
 
 def test_open_bracket_case1(differ):
