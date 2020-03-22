@@ -128,3 +128,22 @@ def test_dedent_issues2():
 
     assert suite.children[4].get_code(include_prefix=False) == 'end\n'
     assert suite.type == 'suite'
+
+
+def test_dedent_issues3():
+    code = dedent('''\
+        class C:
+          f
+         g
+        ''')
+    module = load_grammar(version='3.8').parse(code)
+    klass, endmarker = module.children
+    suite = klass.children[-1]
+    assert len(suite.children) == 4
+    assert suite.children[1].get_code() == '  f\n'
+    assert suite.children[1].type == 'simple_stmt'
+    assert suite.children[2].get_code() == ''
+    assert suite.children[2].type == 'error_leaf'
+    assert suite.children[2].token_type == 'ERROR_DEDENT'
+    assert suite.children[3].get_code() == ' g\n'
+    assert suite.children[3].type == 'simple_stmt'
