@@ -45,6 +45,9 @@ def _assert_modules_are_equal(node1, node2):
     except AttributeError:
         assert not hasattr(node2, 'children'), (node1, node2)
         assert node1.value == node2.value
+        assert node1.type == node2.type
+        assert node1.prefix == node2.prefix
+        assert node1.start_pos == node2.start_pos
         return
     else:
         try:
@@ -1122,7 +1125,7 @@ def test_all_sorts_of_indentation(differ):
         ''')
     differ.initialize(code1)
     differ.parse(code2, copies=1, parsers=4, expect_error_leaves=True)
-    differ.parse(code1, copies=1, parsers=3)
+    differ.parse(code1, copies=1, parsers=3, expect_error_leaves=True)
 
     code3 = dedent('''\
             if 1:

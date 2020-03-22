@@ -429,7 +429,7 @@ class DiffParser(object):
 class _NodesTreeNode(object):
     _ChildrenGroup = namedtuple(
         '_ChildrenGroup',
-        'prefix children line_offset last_line_offset_leaf add_error_dedent')
+        'prefix children line_offset last_line_offset_leaf add_error_leaf')
 
     def __init__(self, tree_node, parent=None):
         self.tree_node = tree_node
@@ -439,7 +439,7 @@ class _NodesTreeNode(object):
 
     def finish(self):
         children = []
-        for prefix, children_part, line_offset, last_line_offset_leaf, add_error_dedent \
+        for prefix, children_part, line_offset, last_line_offset_leaf, add_error_leaf \
                 in self._children_groups:
             first_leaf = _get_next_leaf_if_indentation(
                 children_part[0].get_first_leaf()
@@ -452,8 +452,8 @@ class _NodesTreeNode(object):
                         children_part, line_offset, last_line_offset_leaf)
                 except _PositionUpdatingFinished:
                     pass
-            if add_error_dedent:
-                children.append(PythonErrorLeaf('ERROR_DEDENT', '', children[-1].end_pos))
+            if add_error_leaf is not None:
+                children.append(PythonErrorLeaf(add_error_leaf, '', children[-1].end_pos))
             children += children_part
         self.tree_node.children = children
         # Reset the parents
@@ -467,11 +467,11 @@ class _NodesTreeNode(object):
         self._node_children.append(child_node)
 
     def add_tree_nodes(self, prefix, children, line_offset=0,
-                       last_line_offset_leaf=None, add_error_dedent=False):
+                       last_line_offset_leaf=None, add_error_leaf=None):
         if last_line_offset_leaf is None:
             last_line_offset_leaf = children[-1].get_last_leaf()
         group = self._ChildrenGroup(
-            prefix, children, line_offset, last_line_offset_leaf, add_error_dedent
+            prefix, children, line_offset, last_line_offset_leaf, add_error_leaf
         )
         self._children_groups.append(group)
 
@@ -514,7 +514,7 @@ class _NodesTree(object):
 
     def _get_insertion_node(self, indentation_node):
         indentation = indentation_node.start_pos[1]
-        need_error_dedent = False
+        add_error_leaf = None
 
         previous_node = None
         # find insertion node
@@ -527,7 +527,7 @@ class _NodesTree(object):
                 if indentation > node_indentation and previous_node is not None:
                     # This means that it was not dedented enough.
                     node = previous_node
-                    need_error_dedent = True
+                    add_error_leaf = 'ERROR_DEDENT'
                     break
                 if indentation >= node_indentation:  # Not a Dedent
                     # We might be at the most outer layer: modules. We
@@ -537,13 +537,13 @@ class _NodesTree(object):
             elif tree_node.type == 'file_input':
                 if indentation > 0 and previous_node is not None:
                     node = previous_node
-                    need_error_dedent = True
+                    add_error_leaf = 'ERROR_DEDENT'
                 break
             previous_node = node
 
         while True:
             if node == self._working_stack[-1]:
-                return need_error_dedent, node
+                return add_error_leaf, node
             self._working_stack.pop()
 
     def add_parsed_nodes(self, tree_nodes):
@@ -555,9 +555,9 @@ class _NodesTree(object):
 
         assert tree_nodes[0].type != 'newline'
 
-        need_error_dedent, node = self._get_insertion_node(tree_nodes[0])
+        add_error_leaf, node = self._get_insertion_node(tree_nodes[0])
         assert node.tree_node.type in ('suite', 'file_input')
-        node.add_tree_nodes(old_prefix, tree_nodes, add_error_dedent=need_error_dedent)
+        node.add_tree_nodes(old_prefix, tree_nodes, add_error_leaf=add_error_leaf)
         # tos = Top of stack
         self._update_tos(tree_nodes[-1])
 
