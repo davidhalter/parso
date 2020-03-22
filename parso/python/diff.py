@@ -507,23 +507,32 @@ class _NodesTree(object):
     def _get_insertion_node(self, indentation_node):
         indentation = indentation_node.start_pos[1]
 
+        previous_node = None
         # find insertion node
-        while True:
-            node = self._working_stack[-1]
+        for node in reversed(self._working_stack):
             tree_node = node.tree_node
             if tree_node.type == 'suite':
                 # A suite starts with NEWLINE, ...
                 node_indentation = tree_node.children[1].start_pos[1]
 
+                if indentation > node_indentation and previous_node is not None:
+                    # This means that it was not dedented enough.
+                    node = previous_node
+                    break
                 if indentation >= node_indentation:  # Not a Dedent
                     # We might be at the most outer layer: modules. We
                     # don't want to depend on the first statement
                     # having the right indentation.
-                    return node
-
+                    break
             elif tree_node.type == 'file_input':
-                return node
+                if indentation > 0 and previous_node is not None:
+                    node = previous_node
+                break
+            previous_node = node
 
+        while True:
+            if node == self._working_stack[-1]:
+                return node
             self._working_stack.pop()
 
     def add_parsed_nodes(self, tree_nodes):
