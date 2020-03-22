@@ -638,6 +638,7 @@ class _NodesTree(object):
         tos = working_stack[-1]
         last_node = new_nodes[-1]
         had_valid_suite_last = False
+        # Pop incomplete suites from the list
         if _func_or_class_has_suite(last_node):
             suite = last_node
             while suite.type != 'suite':
@@ -659,24 +660,36 @@ class _NodesTree(object):
                 working_stack = new_working_stack
                 had_valid_suite_last = True
 
+        # Pop error nodes at the end from the list
         if new_nodes:
-            last_node = new_nodes[-1]
-            if (last_node.type in ('error_leaf', 'error_node') or
-                    _is_flow_node(new_nodes[-1])):
-                # Error leafs/nodes don't have a defined start/end. Error
-                # nodes might not end with a newline (e.g. if there's an
-                # open `(`). Therefore ignore all of them unless they are
-                # succeeded with valid parser state.
-                # If we copy flows at the end, they might be continued
-                # after the copy limit (in the new parser).
-                # In this while loop we try to remove until we find a newline.
-                new_prefix = ''
-                new_nodes.pop()
-                while new_nodes:
-                    last_node = new_nodes[-1]
-                    if last_node.get_last_leaf().type == 'newline':
-                        break
+            while new_nodes:
+                last_node = new_nodes[-1]
+                if (last_node.type in ('error_leaf', 'error_node')
+                        or _is_flow_node(new_nodes[-1])):
+                    # Error leafs/nodes don't have a defined start/end. Error
+                    # nodes might not end with a newline (e.g. if there's an
+                    # open `(`). Therefore ignore all of them unless they are
+                    # succeeded with valid parser state.
+                    # If we copy flows at the end, they might be continued
+                    # after the copy limit (in the new parser).
+                    # In this while loop we try to remove until we find a newline.
+                    new_prefix = ''
                     new_nodes.pop()
+                    while new_nodes:
+                        last_node = new_nodes[-1]
+                        if last_node.get_last_leaf().type == 'newline':
+                            break
+                        new_nodes.pop()
+                    continue
+                if len(new_nodes) > 1 and new_nodes[-2].type == 'error_node':
+                    # The problem here is that Jedi error recovery sometimes
+                    # will mark  last node.
+                    # Since the new last node is an error node this will get
+                    # cleaned up in the next while iteration.
+                    new_nodes.pop()
+                    continue
+
+                break
 
         if new_nodes:
             if not _ends_with_newline(new_nodes[-1].get_last_leaf()) and not had_valid_suite_last:

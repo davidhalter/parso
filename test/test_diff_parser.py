@@ -1260,8 +1260,8 @@ def test_open_bracket_case2(differ):
                 d
         ''')
     differ.initialize(code1)
-    differ.parse(code2, copies=1, parsers=2, expect_error_leaves=True)
-    differ.parse(code1, copies=2, parsers=0, expect_error_leaves=True)
+    differ.parse(code2, copies=0, parsers=1, expect_error_leaves=True)
+    differ.parse(code1, copies=0, parsers=1, expect_error_leaves=True)
 
 
 def test_some_weird_removals(differ):
