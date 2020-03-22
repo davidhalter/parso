@@ -281,19 +281,10 @@ class DiffParser(object):
             else:
                 p_children = line_stmt.parent.children
                 index = p_children.index(line_stmt)
-                p_children = p_children[index:]
-                # There might be a random dedent where we have to stop copying.
-                # Invalid indents are ok, because the parser handled that
-                # properly before. An invalid dedent can happen, because a few
-                # lines above there was an invalid indent.
-                indentation = line_stmt.start_pos[1]
-                for i, c in enumerate(p_children):
-                    if c.start_pos[1] < indentation:
-                        p_children = p_children[:i]
 
                 from_ = self._nodes_tree.parsed_until_line + 1
                 copied_nodes = self._nodes_tree.copy_nodes(
-                    p_children,
+                    p_children[index:],
                     until_line_old,
                     line_offset
                 )
@@ -596,6 +587,15 @@ class _NodesTree(object):
             # Avoid copying errors in the beginning. Can lead to a lot of
             # issues.
             return []
+
+        # There might be a random dedent where we have to stop copying.
+        # Invalid indents are ok, because the parser handled that
+        # properly before. An invalid dedent can happen, because a few
+        # lines above there was an invalid indent.
+        indentation = tree_nodes[0].start_pos[1]
+        for i, c in enumerate(tree_nodes):
+            if c.start_pos[1] < indentation:
+                tree_nodes = tree_nodes[:i]
 
         self._get_insertion_node(tree_nodes[0])
 
