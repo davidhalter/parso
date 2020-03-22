@@ -845,8 +845,8 @@ def test_indentation_issues(differ):
 
     differ.initialize(code1)
     differ.parse(code2, parsers=2, copies=2, expect_error_leaves=True)
-    differ.parse(code1, copies=2)
-    differ.parse(code3, parsers=2, copies=1)
+    differ.parse(code1, copies=2, parsers=1)
+    differ.parse(code3, parsers=1, copies=1)
     differ.parse(code1, parsers=1, copies=2)
 
 
@@ -1305,3 +1305,29 @@ def test_async_copy(differ):
     differ.initialize(code1)
     differ.parse(code2, copies=1, parsers=1)
     differ.parse(code1, copies=1, parsers=1, expect_error_leaves=True)
+
+
+def test_parent_on_decorator(differ):
+    code1 = dedent('''\
+        class AClass:
+            @decorator()
+                def b_test(self):
+                print("Hello")
+                print("world")
+
+            def a_test(self):
+                pass''')
+    code2 = dedent('''\
+        class AClass:
+            @decorator()
+            def b_test(self):
+                print("Hello")
+                print("world")
+
+            def a_test(self):
+                pass''')
+    differ.initialize(code1)
+    module_node = differ.parse(code2, copies=2, parsers=1)
+    cls = module_node.children[0]
+    cls_suite = cls.children[-1]
+    assert len(cls_suite.children) == 3
