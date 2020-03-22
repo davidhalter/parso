@@ -87,7 +87,7 @@ class Differ(object):
         _assert_valid_graph(new_module)
 
         without_diff_parser_module = parse(code)
-        #_assert_modules_are_equal(new_module, without_diff_parser_module)
+        _assert_modules_are_equal(new_module, without_diff_parser_module)
 
         error_node = _check_error_leaves_nodes(new_module)
         assert expect_error_leaves == (error_node is not None), error_node
