@@ -284,10 +284,10 @@ def test_wrong_whitespace(differ):
     hello
     '''
     differ.initialize(code)
-    differ.parse(code + 'bar\n    ', parsers=3)
+    differ.parse(code + 'bar\n    ', parsers=3, expect_error_leaves=True)
 
     code += """abc(\npass\n    """
-    differ.parse(code, parsers=2, copies=1, expect_error_leaves=True)
+    differ.parse(code, parsers=3, expect_error_leaves=True)
 
 
 def test_issues_with_error_leaves(differ):

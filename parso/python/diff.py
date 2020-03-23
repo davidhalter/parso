@@ -503,6 +503,11 @@ class _NodesTreeNode(object):
             return max(line, self._node_children[-1].get_last_line(suffix))
         return line
 
+    def get_latest_indentation(self):
+        if not self._children_groups:
+            return 0
+        return self._children_groups[-1].children[0].start_pos[1]
+
 
 class _NodesTree(object):
     def __init__(self, module):
@@ -543,11 +548,12 @@ class _NodesTree(object):
                     break
             elif tree_node.type == 'file_input':
                 if indentation > 0:
-                    if previous_node is not None:
+                    if previous_node is None:
+                        if indentation != node.get_latest_indentation():
+                            add_error_leaf = 'INDENT'
+                    else:
                         node = previous_node
                         add_error_leaf = 'ERROR_DEDENT'
-                    else:
-                        add_error_leaf = 'INDENT'
                 break
             previous_node = node
 
