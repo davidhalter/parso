@@ -45,7 +45,7 @@ def _assert_nodes_are_equal(node1, node2):
     except AttributeError:
         assert not hasattr(node2, 'children'), (node1, node2)
         assert node1.value == node2.value
-        #assert node1.type == node2.type
+        assert node1.type == node2.type
         assert node1.prefix == node2.prefix
         assert node1.start_pos == node2.start_pos
         return
