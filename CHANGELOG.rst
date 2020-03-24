@@ -3,6 +3,14 @@
 Changelog
 ---------
 
+0.7.0 (2020-04-)
+++++++++++++++++
+
+- Fix a lot of annoying bugs in the diff parser
+- Small grammar change: suites can now contain newlines even after a newline.
+  This should really not matter if you don't use error recovery. It allows for
+  nicer error recovery.
+
 0.6.2 (2020-02-27)
 ++++++++++++++++++
 
