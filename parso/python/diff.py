@@ -547,10 +547,9 @@ class _NodesTree(object):
                     # having the right indentation.
                     break
             elif tree_node.type == 'file_input':
-                if indentation > 0:
+                if indentation > 0 and indentation != node.get_latest_indentation():
                     if previous_node is None:
-                        if indentation != node.get_latest_indentation():
-                            add_error_leaf = 'INDENT'
+                        add_error_leaf = 'INDENT'
                     else:
                         node = previous_node
                         add_error_leaf = 'ERROR_DEDENT'
@@ -633,6 +632,7 @@ class _NodesTree(object):
             if c.start_pos[1] < indentation:
                 tree_nodes = tree_nodes[:i]
 
+        old_working_stack = list(self._working_stack)
         add_error_leaf, _ = self._get_insertion_node(tree_nodes[0])
 
         new_nodes, self._working_stack, self.prefix = self._copy_nodes(
@@ -643,6 +643,8 @@ class _NodesTree(object):
             self.prefix,
             add_error_leaf=add_error_leaf,
         )
+        if not new_nodes:
+            self._working_stack = old_working_stack
         return new_nodes
 
     def _copy_nodes(self, working_stack, nodes, until_line, line_offset,
