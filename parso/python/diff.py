@@ -456,7 +456,7 @@ class _NodesTreeNode(object):
                 if add_error_leaf == 'INDENT':
                     pos = children_part[0].start_pos
                 else:
-                    pos = children[-1].end_pos
+                    pos = children_part[0].start_pos[0], 0
                 children.append(PythonErrorLeaf(add_error_leaf, '', pos))
             children += children_part
         self.tree_node.children = children
@@ -547,11 +547,13 @@ class _NodesTree(object):
                     # having the right indentation.
                     break
             elif tree_node.type == 'file_input':
-                if indentation > 0 and indentation != node.get_latest_indentation():
-                    if previous_node is None:
+                latest_indentation = node.get_latest_indentation()
+                if indentation > 0 and indentation != latest_indentation:
+                    if previous_node is None and indentation > latest_indentation:
                         add_error_leaf = 'INDENT'
                     else:
-                        node = previous_node
+                        if previous_node is not None:
+                            node = previous_node
                         add_error_leaf = 'ERROR_DEDENT'
                 break
             previous_node = node
