@@ -118,3 +118,16 @@ def test_carriage_return_at_end(code, types):
     assert tree.get_code() == code
     assert [c.type for c in tree.children] == types
     assert tree.end_pos == (len(code) + 1, 0)
+
+
+@pytest.mark.parametrize('code', [
+    ' ',
+    '    F"""',
+    '    F"""\n',
+    '    F""" \n',
+    '    F""" \n3',
+    '    f"""\n"""',
+    '    f"""\n"""\n',
+])
+def test_full_code_round_trip(code):
+    assert parse(code).get_code() == code

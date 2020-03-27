@@ -649,6 +649,17 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
         if contstr.endswith('\n') or contstr.endswith('\r'):
             new_line = True
 
+    if fstring_stack:
+        tos = fstring_stack[-1]
+        if tos.previous_lines:
+            yield PythonToken(
+                FSTRING_STRING, tos.previous_lines,
+                tos.last_string_start_pos,
+                # Never has a prefix because it can start anywhere and
+                # include whitespace.
+                prefix=''
+            )
+
     end_pos = lnum, max
     # As the last position we just take the maximally possible position. We
     # remove -1 for the last new line.
