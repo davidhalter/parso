@@ -534,27 +534,30 @@ class _NodesTree(object):
                 node_indentation = tree_node.children[1].start_pos[1]
 
                 if indentation > node_indentation:
-                    if previous_node is not None:
-                        # This means that it was not dedented enough.
-                        node = previous_node
-                        add_error_leaf = 'ERROR_DEDENT'
-                        break
-                    else:
-                        add_error_leaf = 'INDENT'
+                    latest_indentation = node.get_latest_indentation()
+                    if indentation != latest_indentation:
+                        if previous_node is None:
+                            add_error_leaf = 'INDENT'
+                        else:
+                            # This means that it was not dedented enough.
+                            node = previous_node
+                            add_error_leaf = 'ERROR_DEDENT'
+                            break
                 if indentation >= node_indentation:  # Not a Dedent
                     # We might be at the most outer layer: modules. We
                     # don't want to depend on the first statement
                     # having the right indentation.
                     break
             elif tree_node.type == 'file_input':
-                latest_indentation = node.get_latest_indentation()
-                if indentation > 0 and indentation != latest_indentation:
-                    if previous_node is None and indentation > latest_indentation:
-                        add_error_leaf = 'INDENT'
-                    else:
-                        if previous_node is not None:
-                            node = previous_node
-                        add_error_leaf = 'ERROR_DEDENT'
+                if indentation > 0:
+                    latest_indentation = node.get_latest_indentation()
+                    if indentation != latest_indentation:
+                        if previous_node is None and indentation > latest_indentation:
+                            add_error_leaf = 'INDENT'
+                        else:
+                            if previous_node is not None:
+                                node = previous_node
+                            add_error_leaf = 'ERROR_DEDENT'
                 break
             previous_node = node
 
@@ -635,6 +638,7 @@ class _NodesTree(object):
                 tree_nodes = tree_nodes[:i]
 
         old_working_stack = list(self._working_stack)
+        old_prefix = self.prefix
         add_error_leaf, _ = self._get_insertion_node(tree_nodes[0])
 
         new_nodes, self._working_stack, self.prefix = self._copy_nodes(
@@ -647,6 +651,7 @@ class _NodesTree(object):
         )
         if not new_nodes:
             self._working_stack = old_working_stack
+            self.prefix = old_prefix
         return new_nodes
 
     def _copy_nodes(self, working_stack, nodes, until_line, line_offset,

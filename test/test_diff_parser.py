@@ -54,7 +54,7 @@ def _assert_nodes_are_equal(node1, node2):
             children2 = node2.children
         except AttributeError:
             assert False, (node1, node2)
-    assert len(children1) == len(children2), (children1, children2)
+    assert len(children1) == len(children2)
     for n1, n2 in zip(children1, children2):
         _assert_nodes_are_equal(n1, n2)
 
@@ -1334,3 +1334,21 @@ def test_parent_on_decorator(differ):
     cls = module_node.children[0]
     cls_suite = cls.children[-1]
     assert len(cls_suite.children) == 3
+
+
+def test_wrong_indent_in_def(differ):
+    code1 = dedent('''\
+        def x():
+          a
+          b
+        ''')
+
+    code2 = dedent('''\
+        def x():
+         //
+          b
+          c
+        ''')
+    differ.initialize(code1)
+    differ.parse(code2, copies=1, parsers=2, expect_error_leaves=True)
+    differ.parse(code1, parsers=2)
