@@ -215,7 +215,7 @@ class PythonGrammar(Grammar):
         )
         self.version_info = version_info
 
-    def _tokenize_lines(self, lines, start_pos):
+    def _tokenize_lines(self, lines, start_pos=(1, 0)):
         return tokenize_lines(lines, self.version_info, start_pos=start_pos)
 
     def _tokenize(self, code):

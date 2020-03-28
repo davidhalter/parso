@@ -8,7 +8,7 @@ import pytest
 from parso.utils import split_lines
 from parso import cache
 from parso import load_grammar
-from parso.python.diff import DiffParser, _assert_valid_graph
+from parso.python.diff import DiffParser, _assert_valid_graph, _assert_nodes_are_equal
 from parso import parse
 
 ANY = object()
@@ -37,26 +37,6 @@ def _check_error_leaves_nodes(node):
             if x_node is not None:
                 return x_node
     return None
-
-
-def _assert_nodes_are_equal(node1, node2):
-    try:
-        children1 = node1.children
-    except AttributeError:
-        assert not hasattr(node2, 'children'), (node1, node2)
-        assert node1.value == node2.value
-        assert node1.type == node2.type
-        assert node1.prefix == node2.prefix
-        assert node1.start_pos == node2.start_pos
-        return
-    else:
-        try:
-            children2 = node2.children
-        except AttributeError:
-            assert False, (node1, node2)
-    assert len(children1) == len(children2)
-    for n1, n2 in zip(children1, children2):
-        _assert_nodes_are_equal(n1, n2)
 
 
 class Differ(object):

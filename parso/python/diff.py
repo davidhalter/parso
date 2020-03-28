@@ -78,6 +78,26 @@ def _assert_valid_graph(node):
             _assert_valid_graph(child)
 
 
+def _assert_nodes_are_equal(node1, node2):
+    try:
+        children1 = node1.children
+    except AttributeError:
+        assert not hasattr(node2, 'children'), (node1, node2)
+        assert node1.value == node2.value
+        assert node1.type == node2.type
+        assert node1.prefix == node2.prefix
+        assert node1.start_pos == node2.start_pos
+        return
+    else:
+        try:
+            children2 = node2.children
+        except AttributeError:
+            assert False, (node1, node2)
+    assert len(children1) == len(children2)
+    for n1, n2 in zip(children1, children2):
+        _assert_nodes_are_equal(n1, n2)
+
+
 def _get_debug_error_message(module, old_lines, new_lines):
     current_lines = split_lines(module.get_code(), keepends=True)
     current_diff = difflib.unified_diff(new_lines, current_lines)
@@ -249,8 +269,14 @@ class DiffParser(object):
             # If there is reasonable suspicion that the diff parser is not
             # behaving well, this should be enabled.
             try:
-                assert self._module.get_code() == ''.join(new_lines)
+                code = ''.join(new_lines)
+                assert self._module.get_code() == code
                 _assert_valid_graph(self._module)
+                without_diff_parser_module = Parser(
+                    self._pgen_grammar,
+                    error_recovery=True
+                ).parse(self._tokenizer(new_lines))
+                _assert_nodes_are_equal(self._module, without_diff_parser_module)
             except AssertionError:
                 print(_get_debug_error_message(self._module, old_lines, new_lines))
                 raise
