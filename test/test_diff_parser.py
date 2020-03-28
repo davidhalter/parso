@@ -1007,7 +1007,7 @@ def test_random_unicode_characters(differ):
     differ.parse(s, parsers=1, expect_error_leaves=True)
     differ.parse('')
     differ.parse(s + '\n', parsers=1, expect_error_leaves=True)
-    differ.parse(u'   result = (\r\f\x17\t\x11res)', parsers=2, expect_error_leaves=True)
+    differ.parse(u'   result = (\r\f\x17\t\x11res)', parsers=1, expect_error_leaves=True)
     differ.parse('')
     differ.parse('   a( # xx\ndef', parsers=2, expect_error_leaves=True)
 
@@ -1124,7 +1124,7 @@ def test_all_sorts_of_indentation(differ):
                 end
         ''')
     differ.initialize(code1)
-    differ.parse(code2, copies=1, parsers=4, expect_error_leaves=True)
+    differ.parse(code2, copies=1, parsers=1, expect_error_leaves=True)
     differ.parse(code1, copies=1, parsers=3, expect_error_leaves=True)
 
     code3 = dedent('''\

@@ -498,7 +498,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                 pseudomatch = pseudo_token.match(line, pos)
             if not pseudomatch:  # scan for tokens
                 match = whitespace.match(line, pos)
-                if pos == 0:
+                if pos == 0 and paren_level == 0:
                     for t in dedent_if_necessary(match.end()):
                         yield t
                 pos = match.end()
