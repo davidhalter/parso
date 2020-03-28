@@ -12,7 +12,6 @@ memory optimizations here.
 from __future__ import absolute_import
 
 import sys
-import string
 import re
 from collections import namedtuple
 import itertools as _itertools
@@ -218,10 +217,10 @@ def _create_token_collection(version_info):
     Funny = group(Operator, Bracket, Special)
 
     # First (or only) line of ' or " string.
-    ContStr = group(StringPrefix + r"'[^\r\n'\\]*(?:\\.[^\r\n'\\]*)*" +
-                    group("'", r'\\(?:\r\n?|\n)'),
-                    StringPrefix + r'"[^\r\n"\\]*(?:\\.[^\r\n"\\]*)*' +
-                    group('"', r'\\(?:\r\n?|\n)'))
+    ContStr = group(StringPrefix + r"'[^\r\n'\\]*(?:\\.[^\r\n'\\]*)*"
+                    + group("'", r'\\(?:\r\n?|\n)'),
+                    StringPrefix + r'"[^\r\n"\\]*(?:\\.[^\r\n"\\]*)*'
+                    + group('"', r'\\(?:\r\n?|\n)'))
     pseudo_extra_pool = [Comment, Triple]
     all_quotes = '"', "'", '"""', "'''"
     if fstring_prefixes:
