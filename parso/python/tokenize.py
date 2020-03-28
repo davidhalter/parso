@@ -310,7 +310,7 @@ class FStringNode(object):
         return not self.is_in_expr() and self.format_spec_count
 
 
-def _close_fstring_if_necessary(fstring_stack, string, start_pos, additional_prefix):
+def _close_fstring_if_necessary(fstring_stack, string, line_nr, column, additional_prefix):
     for fstring_stack_index, node in enumerate(fstring_stack):
         lstripped_string = string.lstrip()
         len_lstrip = len(string) - len(lstripped_string)
@@ -318,7 +318,7 @@ def _close_fstring_if_necessary(fstring_stack, string, start_pos, additional_pre
             token = PythonToken(
                 FSTRING_END,
                 node.quote,
-                start_pos,
+                (line_nr, column + len_lstrip),
                 prefix=additional_prefix+string[:len_lstrip],
             )
             additional_prefix = ''
@@ -474,7 +474,8 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                 fstring_end_token, additional_prefix, quote_length = _close_fstring_if_necessary(
                     fstring_stack,
                     rest,
-                    (lnum, pos),
+                    lnum,
+                    pos,
                     additional_prefix,
                 )
                 pos += quote_length

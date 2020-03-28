@@ -414,3 +414,13 @@ def test_fstring(code, types, version_ge_py36):
 def test_fstring_assignment_expression(code, types, version_ge_py38):
     actual_types = [t.type for t in _get_token_list(code, version_ge_py38)]
     assert types + [ENDMARKER] == actual_types
+
+
+def test_fstring_end_error_pos(version_ge_py38):
+    f_start, f_string, bracket, f_end, endmarker = \
+        _get_token_list('f" { "', version_ge_py38)
+    assert f_start.start_pos == (1, 0)
+    assert f_string.start_pos == (1, 2)
+    assert bracket.start_pos == (1, 3)
+    assert f_end.start_pos == (1, 5)
+    assert endmarker.start_pos == (1, 6)
