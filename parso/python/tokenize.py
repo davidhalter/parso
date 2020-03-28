@@ -496,33 +496,25 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                 pseudomatch = pseudo_token.match(string_line, pos)
             else:
                 pseudomatch = pseudo_token.match(line, pos)
-            if not pseudomatch:  # scan for tokens
-                match = whitespace.match(line, pos)
-                if pos == 0 and paren_level == 0:
-                    for t in dedent_if_necessary(match.end()):
-                        yield t
-                pos = match.end()
-                new_line = False
-                yield PythonToken(
-                    ERRORTOKEN, line[pos], (lnum, pos),
-                    additional_prefix + match.group(0)
-                )
-                additional_prefix = ''
-                pos += 1
-                continue
 
-            prefix = additional_prefix + pseudomatch.group(1)
-            additional_prefix = ''
-            start, pos = pseudomatch.span(2)
-            spos = (lnum, start)
-            token = pseudomatch.group(2)
-            if token == '':
-                assert prefix
-                additional_prefix = prefix
-                # This means that we have a line with whitespace/comments at
-                # the end, which just results in an endmarker.
-                break
-            initial = token[0]
+            if pseudomatch:
+                prefix = additional_prefix + pseudomatch.group(1)
+                additional_prefix = ''
+                start, pos = pseudomatch.span(2)
+                spos = (lnum, start)
+                token = pseudomatch.group(2)
+                if token == '':
+                    assert prefix
+                    additional_prefix = prefix
+                    # This means that we have a line with whitespace/comments at
+                    # the end, which just results in an endmarker.
+                    break
+                initial = token[0]
+            else:
+                match = whitespace.match(line, pos)
+                initial = line[match.end()]
+                start = match.end()
+                spos = (lnum, start)
 
             if new_line and initial not in '\r\n\\#':
                 new_line = False
@@ -539,8 +531,23 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                     for t in dedent_if_necessary(indent_start):
                         yield t
 
-            if (initial in numchars or                      # ordinary number
-                    (initial == '.' and token != '.' and token != '...')):
+            if not pseudomatch:  # scan for tokens
+                match = whitespace.match(line, pos)
+                if pos == 0 and paren_level == 0:
+                    for t in dedent_if_necessary(match.end()):
+                        yield t
+                pos = match.end()
+                new_line = False
+                yield PythonToken(
+                    ERRORTOKEN, line[pos], (lnum, pos),
+                    additional_prefix + match.group(0)
+                )
+                additional_prefix = ''
+                pos += 1
+                continue
+
+            if (initial in numchars                      # ordinary number
+                    or (initial == '.' and token != '.' and token != '...')):
                 yield PythonToken(NUMBER, token, spos, prefix)
             elif pseudomatch.group(3) is not None:            # ordinary name
                 if token in always_break_tokens:

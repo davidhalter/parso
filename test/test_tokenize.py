@@ -258,7 +258,7 @@ def test_token_types(code, types):
 
 
 def test_error_string():
-    t1, newline, endmarker = _get_token_list(' "\n')
+    indent, t1, newline, token, endmarker = _get_token_list(' "\n')
     assert t1.type == ERRORTOKEN
     assert t1.prefix == ' '
     assert t1.string == '"'
@@ -339,6 +339,8 @@ def test_backslash():
 
 @pytest.mark.parametrize(
     ('code', 'types'), [
+        (' \x00a', [INDENT, ERRORTOKEN, NAME, DEDENT]),
+        # f-strings
         ('f"', [FSTRING_START]),
         ('f""', [FSTRING_START, FSTRING_END]),
         ('f" {}"', [FSTRING_START, FSTRING_STRING, OP, OP, FSTRING_END]),
@@ -394,7 +396,7 @@ def test_backslash():
         ]),
     ]
 )
-def test_fstring(code, types, version_ge_py36):
+def test_token_types(code, types, version_ge_py36):
     actual_types = [t.type for t in _get_token_list(code, version_ge_py36)]
     assert types + [ENDMARKER] == actual_types
 
