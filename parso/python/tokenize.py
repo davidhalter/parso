@@ -397,7 +397,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
     def dedent_if_necessary(start):
         while start < indents[-1]:
             if start > indents[-2]:
-                yield PythonToken(ERROR_DEDENT, '', (lnum, 0), '')
+                yield PythonToken(ERROR_DEDENT, '', (lnum, start), '')
                 indents[-1] = start
                 break
             yield PythonToken(DEDENT, '', spos, '')

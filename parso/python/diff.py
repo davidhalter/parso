@@ -397,6 +397,8 @@ class DiffParser(object):
     def _diff_tokenize(self, lines, until_line, line_offset=0):
         is_first_token = True
         omitted_first_indent = False
+        was_newline = False
+        base_indentation = 0
         indents = []
         tokens = self._tokenizer(lines, (1, 0))
         stack = self._active_parser.stack
@@ -405,6 +407,7 @@ class DiffParser(object):
             if typ == PythonTokenTypes.INDENT:
                 indents.append(start_pos[1])
                 if is_first_token:
+                    base_indentation = start_pos[1]
                     omitted_first_indent = True
                     # We want to get rid of indents that are only here because
                     # we only parse part of the file. These indents would only
@@ -436,18 +439,18 @@ class DiffParser(object):
                     )
                     break
             elif typ == PythonTokenTypes.NEWLINE and start_pos[0] >= until_line:
-                yield PythonToken(typ, string, start_pos, prefix)
-                # Check if the parser is actually in a valid suite state.
-                if _suite_or_file_input_is_valid(self._pgen_grammar, stack):
-                    start_pos = start_pos[0] + 1, 0
-                    while len(indents) > int(omitted_first_indent):
-                        indents.pop()
-                        yield PythonToken(PythonTokenTypes.DEDENT, '', start_pos, '')
-
-                    yield PythonToken(PythonTokenTypes.ENDMARKER, '', start_pos, '')
-                    break
-                else:
-                    continue
+                was_newline = True
+            elif was_newline:
+                was_newline = False
+                if start_pos[1] <= base_indentation:
+                    # Check if the parser is actually in a valid suite state.
+                    if _suite_or_file_input_is_valid(self._pgen_grammar, stack):
+                        start_pos = start_pos[0] + 1, 0
+                        while len(indents) > int(omitted_first_indent):
+                            indents.pop()
+                            yield PythonToken(PythonTokenTypes.DEDENT, '', start_pos, '')
+                        yield PythonToken(PythonTokenTypes.ENDMARKER, '', start_pos, '')
+                        break
 
             yield PythonToken(typ, string, start_pos, prefix)
 
@@ -479,10 +482,7 @@ class _NodesTreeNode(object):
                 except _PositionUpdatingFinished:
                     pass
             if add_error_leaf is not None:
-                if add_error_leaf == 'INDENT':
-                    pos = children_part[0].start_pos
-                else:
-                    pos = children_part[0].start_pos[0], 0
+                pos = children_part[0].start_pos
                 children.append(PythonErrorLeaf(add_error_leaf, '', pos))
             children += children_part
         self.tree_node.children = children
