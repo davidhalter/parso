@@ -93,9 +93,9 @@ def _assert_nodes_are_equal(node1, node2):
             children2 = node2.children
         except AttributeError:
             assert False, (node1, node2)
-    assert len(children1) == len(children2)
     for n1, n2 in zip(children1, children2):
         _assert_nodes_are_equal(n1, n2)
+    assert len(children1) == len(children2)
 
 
 def _get_debug_error_message(module, old_lines, new_lines):

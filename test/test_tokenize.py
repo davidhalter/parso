@@ -4,7 +4,6 @@ import sys
 from textwrap import dedent
 
 import pytest
-import sys
 
 from parso.utils import split_lines, parse_version_string
 from parso.python.token import PythonTokenTypes
@@ -239,7 +238,7 @@ xfail_py2 = dict(marks=[pytest.mark.xfail(sys.version_info[0] == 2, reason='Pyth
         (' foo', [INDENT, NAME, DEDENT]),
         ('  foo\n bar', [INDENT, NAME, NEWLINE, ERROR_DEDENT, NAME, DEDENT]),
         ('  foo\n bar \n baz', [INDENT, NAME, NEWLINE, ERROR_DEDENT, NAME,
-                                NEWLINE, ERROR_DEDENT, NAME, DEDENT]),
+                                NEWLINE, NAME, DEDENT]),
         (' foo\nbar', [INDENT, NAME, NEWLINE, DEDENT, NAME]),
 
         # Name stuff
@@ -250,6 +249,17 @@ xfail_py2 = dict(marks=[pytest.mark.xfail(sys.version_info[0] == 2, reason='Pyth
         pytest.param(u'²', [ERRORTOKEN], **xfail_py2),
         pytest.param(u'ä²ö', [NAME, ERRORTOKEN, NAME], **xfail_py2),
         pytest.param(u'ää²¹öö', [NAME, ERRORTOKEN, NAME], **xfail_py2),
+        (' \x00a', [INDENT, ERRORTOKEN, NAME, DEDENT]),
+        (dedent('''\
+            class BaseCache:
+                    a
+                def
+                    b
+                def
+                    c
+            '''), [NAME, NAME, OP, NEWLINE, INDENT, NAME, NEWLINE,
+                   ERROR_DEDENT, NAME, NEWLINE, INDENT, NAME, NEWLINE, DEDENT,
+                   NAME, NEWLINE, INDENT, NAME, NEWLINE, DEDENT, DEDENT])
     ]
 )
 def test_token_types(code, types):
@@ -339,7 +349,6 @@ def test_backslash():
 
 @pytest.mark.parametrize(
     ('code', 'types'), [
-        (' \x00a', [INDENT, ERRORTOKEN, NAME, DEDENT]),
         # f-strings
         ('f"', [FSTRING_START]),
         ('f""', [FSTRING_START, FSTRING_END]),
@@ -396,7 +405,7 @@ def test_backslash():
         ]),
     ]
 )
-def test_token_types(code, types, version_ge_py36):
+def test_fstring_token_types(code, types, version_ge_py36):
     actual_types = [t.type for t in _get_token_list(code, version_ge_py36)]
     assert types + [ENDMARKER] == actual_types
 

@@ -398,6 +398,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
         while start < indents[-1]:
             if start > indents[-2]:
                 yield PythonToken(ERROR_DEDENT, '', (lnum, 0), '')
+                indents[-1] = start
                 break
             yield PythonToken(DEDENT, '', spos, '')
             indents.pop()
@@ -554,14 +555,10 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                     fstring_stack[:] = []
                     paren_level = 0
                     # We only want to dedent if the token is on a new line.
-                    if re.match(r'[ \f\t]*$', line[:start]):
-                        while True:
-                            indent = indents.pop()
-                            if indent > start:
-                                yield PythonToken(DEDENT, '', spos, '')
-                            else:
-                                indents.append(indent)
-                                break
+                    m = re.match(r'[ \f\t]*$', line[:start])
+                    if m is not None:
+                        for t in dedent_if_necessary(m.end()):
+                            yield t
                 if is_identifier(token):
                     yield PythonToken(NAME, token, spos, prefix)
                 else:

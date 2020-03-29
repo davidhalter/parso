@@ -827,7 +827,7 @@ def test_indentation_issues(differ):
         ''')
 
     differ.initialize(code1)
-    differ.parse(code2, parsers=2, copies=2, expect_error_leaves=True)
+    differ.parse(code2, parsers=3, copies=2, expect_error_leaves=True)
     differ.parse(code1, copies=2, parsers=2)
     differ.parse(code3, parsers=1, copies=1)
     differ.parse(code1, parsers=1, copies=2)
