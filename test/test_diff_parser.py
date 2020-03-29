@@ -1332,3 +1332,19 @@ def test_wrong_indent_in_def(differ):
     differ.initialize(code1)
     differ.parse(code2, parsers=1, expect_error_leaves=True)
     differ.parse(code1, parsers=1)
+
+
+def test_backslash_issue(differ):
+    code1 = dedent('''
+        pre = (
+            '')
+        after = 'instead'
+        ''')
+    code2 = dedent('''
+        pre = (
+            '')
+             \\if 
+        ''')
+    differ.initialize(code1)
+    differ.parse(code2, parsers=1, copies=1, expect_error_leaves=True)
+    differ.parse(code1, parsers=1, copies=1)

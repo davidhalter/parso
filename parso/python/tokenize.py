@@ -517,7 +517,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
                 start = match.end()
                 spos = (lnum, start)
 
-            if new_line and initial not in '\r\n\\#':
+            if new_line and initial not in '\r\n#' and (initial != '\\' or pseudomatch is None):
                 new_line = False
                 if paren_level == 0 and not fstring_stack:
                     i = 0
