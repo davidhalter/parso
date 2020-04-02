@@ -138,7 +138,7 @@ class Grammar(object):
                             cache_path=cache_path)
                 return new_node
 
-        tokens = self._tokenizer(lines, start_pos)
+        tokens = self._tokenizer(lines, start_pos=start_pos)
 
         p = self._parser(
             self._pgen_grammar,
@@ -215,8 +215,8 @@ class PythonGrammar(Grammar):
         )
         self.version_info = version_info
 
-    def _tokenize_lines(self, lines, start_pos=(1, 0)):
-        return tokenize_lines(lines, self.version_info, start_pos=start_pos)
+    def _tokenize_lines(self, lines, **kwargs):
+        return tokenize_lines(lines, self.version_info, **kwargs)
 
     def _tokenize(self, code):
         # Used by Jedi.

@@ -386,7 +386,7 @@ def _print_tokens(func):
 
 
 # @_print_tokens
-def tokenize_lines(lines, version_info, start_pos=(1, 0)):
+def tokenize_lines(lines, version_info, start_pos=(1, 0), base_indentation=0):
     """
     A heavily modified Python standard library tokenizer.
 
@@ -408,6 +408,8 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
         _get_token_collection(version_info)
     paren_level = 0  # count parentheses
     indents = [0]
+    if base_indentation:
+        indents.append(base_indentation)
     max = 0
     numchars = '0123456789'
     contstr = ''

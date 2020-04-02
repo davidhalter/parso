@@ -22,17 +22,19 @@ DEBUG_DIFF_PARSER = False
 _INDENTATION_TOKENS = 'INDENT', 'ERROR_DEDENT', 'DEDENT'
 
 
+def _is_indentation_error_leaf(node):
+    return node.type == 'error_leaf' and node.token_type in _INDENTATION_TOKENS
+
+
 def _get_previous_leaf_if_indentation(leaf):
-    while leaf and leaf.type == 'error_leaf' \
-            and leaf.token_type in _INDENTATION_TOKENS:
+    while leaf and _is_indentation_error_leaf(leaf):
         leaf = leaf.get_previous_leaf()
     return leaf
 
 
 def _get_next_leaf_if_indentation(leaf):
-    while leaf and leaf.type == 'error_leaf' \
-            and leaf.token_type in _INDENTATION_TOKENS:
-        leaf = leaf.get_previous_leaf()
+    while leaf and _is_indentation_error_leaf(leaf):
+        leaf = leaf.get_next_leaf()
     return leaf
 
 
@@ -83,10 +85,10 @@ def _assert_nodes_are_equal(node1, node2):
         children1 = node1.children
     except AttributeError:
         assert not hasattr(node2, 'children'), (node1, node2)
-        assert node1.value == node2.value
-        assert node1.type == node2.type
-        assert node1.prefix == node2.prefix
-        assert node1.start_pos == node2.start_pos
+        assert node1.value == node2.value, (node1, node2)
+        assert node1.type == node2.type, (node1, node2)
+        assert node1.prefix == node2.prefix, (node1, node2)
+        assert node1.start_pos == node2.start_pos, (node1, node2)
         return
     else:
         try:
@@ -398,16 +400,25 @@ class DiffParser(object):
         is_first_token = True
         omitted_first_indent = False
         was_newline = False
-        base_indentation = 0
         indents = []
-        tokens = self._tokenizer(lines, (1, 0))
+
+        first_token = next(self._tokenizer(lines))
+        base_indentation = self._nodes_tree.get_base_indentation(first_token.start_pos[1])
+        if base_indentation > 0:
+            omitted_first_indent = True
+            indents.append(base_indentation)
+
+        tokens = self._tokenizer(
+            lines,
+            start_pos=(1, 0),
+            base_indentation=base_indentation
+        )
         stack = self._active_parser.stack
         for typ, string, start_pos, prefix in tokens:
             start_pos = start_pos[0] + line_offset, start_pos[1]
             if typ == PythonTokenTypes.INDENT:
                 indents.append(start_pos[1])
-                if is_first_token:
-                    base_indentation = start_pos[1]
+                if is_first_token and base_indentation >= start_pos[1]:
                     omitted_first_indent = True
                     # We want to get rid of indents that are only here because
                     # we only parse part of the file. These indents would only
@@ -446,6 +457,8 @@ class DiffParser(object):
                     # Check if the parser is actually in a valid suite state.
                     if _suite_or_file_input_is_valid(self._pgen_grammar, stack):
                         start_pos = start_pos[0] + 1, 0
+                        if typ == PythonTokenTypes.INDENT:
+                            indents.pop()
                         while len(indents) > int(omitted_first_indent):
                             indents.pop()
                             yield PythonToken(PythonTokenTypes.DEDENT, '', start_pos, '')
@@ -534,6 +547,12 @@ class _NodesTreeNode(object):
             return 0
         return self._children_groups[-1].children[0].start_pos[1]
 
+    def get_first_indentation(self):
+        if self.tree_node.type == 'suite':
+            # The first node in a suite is always a newline.
+            return self._children_groups[0].children[1].start_pos[1]
+        return 0
+
 
 class _NodesTree(object):
     def __init__(self, module):
@@ -542,6 +561,12 @@ class _NodesTree(object):
         self._module = module
         self._prefix_remainder = ''
         self.prefix = ''
+
+    def get_base_indentation(self, indentation):
+        for node in reversed(self._working_stack):
+            first_indentation = node.get_first_indentation()
+            if indentation >= first_indentation:
+                return first_indentation
 
     @property
     def parsed_until_line(self):
@@ -561,7 +586,8 @@ class _NodesTree(object):
 
                 if indentation > node_indentation:
                     latest_indentation = node.get_latest_indentation()
-                    if indentation != latest_indentation:
+                    if indentation != latest_indentation \
+                            and not _is_indentation_error_leaf(indentation_node):
                         if previous_node is None:
                             add_error_leaf = 'INDENT'
                         else:
@@ -577,7 +603,8 @@ class _NodesTree(object):
             elif tree_node.type == 'file_input':
                 if indentation > 0:
                     latest_indentation = node.get_latest_indentation()
-                    if indentation != latest_indentation:
+                    if indentation != latest_indentation \
+                            and not _is_indentation_error_leaf(indentation_node):
                         if previous_node is None and indentation > latest_indentation:
                             add_error_leaf = 'INDENT'
                         else:
