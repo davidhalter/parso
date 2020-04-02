@@ -409,7 +409,8 @@ class DiffParser(object):
             indents=indents
         )
         stack = self._active_parser.stack
-        for typ, string, start_pos, prefix in tokens:
+        for token in tokens:
+            typ = token.type
             if typ == PythonTokenTypes.DEDENT:
                 if len(indents) < initial_indentation_count:
                     # We are done here, only thing that can come now is an
@@ -431,17 +432,17 @@ class DiffParser(object):
                         prefix
                     )
                     break
-            elif typ == PythonTokenTypes.NEWLINE and start_pos[0] >= until_line:
+            elif typ == PythonTokenTypes.NEWLINE and token.start_pos[0] >= until_line:
                 was_newline = True
             elif was_newline:
                 was_newline = False
                 if len(indents) == initial_indentation_count:
                     # Check if the parser is actually in a valid suite state.
                     if _suite_or_file_input_is_valid(self._pgen_grammar, stack):
-                        yield PythonToken(PythonTokenTypes.ENDMARKER, '', start_pos, '')
+                        yield PythonToken(PythonTokenTypes.ENDMARKER, '', token.start_pos, '')
                         break
 
-            yield PythonToken(typ, string, start_pos, prefix)
+            yield token
 
 
 class _NodesTreeNode(object):
