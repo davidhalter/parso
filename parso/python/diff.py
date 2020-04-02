@@ -405,13 +405,11 @@ class DiffParser(object):
 
         tokens = self._tokenizer(
             lines,
-            start_pos=(1, 0),
+            start_pos=(line_offset + 1, 0),
             indents=indents
         )
         stack = self._active_parser.stack
         for typ, string, start_pos, prefix in tokens:
-            start_pos = start_pos[0] + line_offset, start_pos[1]
-
             if typ == PythonTokenTypes.DEDENT:
                 if len(indents) < initial_indentation_count:
                     # We are done here, only thing that can come now is an
@@ -429,7 +427,7 @@ class DiffParser(object):
                             prefix = ''
                     yield PythonToken(
                         PythonTokenTypes.ENDMARKER, '',
-                        (start_pos[0] + line_offset, 0),
+                        start_pos,
                         prefix
                     )
                     break
