@@ -397,46 +397,30 @@ class DiffParser(object):
         return self._active_parser.parse(tokens=tokens)
 
     def _diff_tokenize(self, lines, until_line, line_offset=0):
-        is_first_token = True
-        omitted_first_indent = False
         was_newline = False
-        indents = []
 
         first_token = next(self._tokenizer(lines))
-        base_indentation = self._nodes_tree.get_base_indentation(first_token.start_pos[1])
-        if base_indentation > 0:
-            omitted_first_indent = True
-            indents.append(base_indentation)
+        indents = list(self._nodes_tree.get_indents(first_token.start_pos[1]))
+        initial_indentation_count = len(indents)
 
         tokens = self._tokenizer(
             lines,
             start_pos=(1, 0),
-            base_indentation=base_indentation
+            indents=indents
         )
         stack = self._active_parser.stack
         for typ, string, start_pos, prefix in tokens:
             start_pos = start_pos[0] + line_offset, start_pos[1]
-            if typ == PythonTokenTypes.INDENT:
-                indents.append(start_pos[1])
-                if is_first_token and base_indentation >= start_pos[1]:
-                    omitted_first_indent = True
-                    # We want to get rid of indents that are only here because
-                    # we only parse part of the file. These indents would only
-                    # get parsed as error leafs, which doesn't make any sense.
-                    is_first_token = False
-                    continue
-            is_first_token = False
 
-            # In case of omitted_first_indent, it might not be dedented fully.
-            # However this is a sign for us that a dedent happened.
-            if typ == PythonTokenTypes.DEDENT \
-                    or typ == PythonTokenTypes.ERROR_DEDENT \
-                    and omitted_first_indent and len(indents) == 1:
-                indents.pop()
-                if omitted_first_indent and not indents:
+            if typ == PythonTokenTypes.DEDENT:
+                if len(indents) < initial_indentation_count:
                     # We are done here, only thing that can come now is an
                     # endmarker or another dedented code block.
-                    typ, string, start_pos, prefix = next(tokens)
+                    while True:
+                        typ, string, start_pos, prefix = next(tokens)
+                        if typ != PythonTokenTypes.DEDENT:
+                            break
+
                     if '\n' in prefix or '\r' in prefix:
                         prefix = re.sub(r'[^\n\r]+\Z', '', prefix)
                     else:
@@ -453,15 +437,9 @@ class DiffParser(object):
                 was_newline = True
             elif was_newline:
                 was_newline = False
-                if start_pos[1] <= base_indentation:
+                if len(indents) == initial_indentation_count:
                     # Check if the parser is actually in a valid suite state.
                     if _suite_or_file_input_is_valid(self._pgen_grammar, stack):
-                        start_pos = start_pos[0] + 1, 0
-                        if typ == PythonTokenTypes.INDENT:
-                            indents.pop()
-                        while len(indents) > int(omitted_first_indent):
-                            indents.pop()
-                            yield PythonToken(PythonTokenTypes.DEDENT, '', start_pos, '')
                         yield PythonToken(PythonTokenTypes.ENDMARKER, '', start_pos, '')
                         break
 
@@ -562,11 +540,11 @@ class _NodesTree(object):
         self._prefix_remainder = ''
         self.prefix = ''
 
-    def get_base_indentation(self, indentation):
-        for node in reversed(self._working_stack):
+    def get_indents(self, indentation):
+        for node in self._working_stack:
             first_indentation = node.get_first_indentation()
             if indentation >= first_indentation:
-                return first_indentation
+                yield first_indentation
 
     @property
     def parsed_until_line(self):
