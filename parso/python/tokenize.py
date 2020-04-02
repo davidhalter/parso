@@ -380,6 +380,7 @@ def _print_tokens(func):
     """
     def wrapper(*args, **kwargs):
         for token in func(*args, **kwargs):
+            print(token)  # This print is intentional for debugging!
             yield token
 
     return wrapper
