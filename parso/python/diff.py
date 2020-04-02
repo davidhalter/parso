@@ -21,6 +21,10 @@ DEBUG_DIFF_PARSER = False
 
 _INDENTATION_TOKENS = 'INDENT', 'ERROR_DEDENT', 'DEDENT'
 
+NEWLINE = PythonTokenTypes.NEWLINE
+DEDENT = PythonTokenTypes.DEDENT
+ENDMARKER = PythonTokenTypes.ENDMARKER
+
 
 def _is_indentation_error_leaf(node):
     return node.type == 'error_leaf' and node.token_type in _INDENTATION_TOKENS
@@ -411,13 +415,13 @@ class DiffParser(object):
         stack = self._active_parser.stack
         for token in tokens:
             typ = token.type
-            if typ == PythonTokenTypes.DEDENT:
+            if typ == DEDENT:
                 if len(indents) < initial_indentation_count:
                     # We are done here, only thing that can come now is an
                     # endmarker or another dedented code block.
                     while True:
                         typ, string, start_pos, prefix = next(tokens)
-                        if typ != PythonTokenTypes.DEDENT:
+                        if typ != DEDENT:
                             break
 
                     if '\n' in prefix or '\r' in prefix:
@@ -427,19 +431,19 @@ class DiffParser(object):
                         if start_pos[1] - len(prefix) == 0:
                             prefix = ''
                     yield PythonToken(
-                        PythonTokenTypes.ENDMARKER, '',
+                        ENDMARKER, '',
                         start_pos,
                         prefix
                     )
                     break
-            elif typ == PythonTokenTypes.NEWLINE and token.start_pos[0] >= until_line:
+            elif typ == NEWLINE and token.start_pos[0] >= until_line:
                 was_newline = True
             elif was_newline:
                 was_newline = False
                 if len(indents) == initial_indentation_count:
                     # Check if the parser is actually in a valid suite state.
                     if _suite_or_file_input_is_valid(self._pgen_grammar, stack):
-                        yield PythonToken(PythonTokenTypes.ENDMARKER, '', token.start_pos, '')
+                        yield PythonToken(ENDMARKER, '', token.start_pos, '')
                         break
 
             yield token
