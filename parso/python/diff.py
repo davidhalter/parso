@@ -459,12 +459,11 @@ class _NodesTreeNode(object):
         '_ChildrenGroup',
         'prefix children line_offset last_line_offset_leaf add_error_leaf')
 
-    def __init__(self, tree_node, indents, parent=None):
+    def __init__(self, tree_node, parent=None):
         self.tree_node = tree_node
         self._children_groups = []
         self.parent = parent
         self._node_children = []
-        self.indents = indents
 
     def finish(self):
         children = []
@@ -546,7 +545,7 @@ class _NodesTreeNode(object):
 
 class _NodesTree(object):
     def __init__(self, module):
-        self._base_node = _NodesTreeNode(module, indents=[0])
+        self._base_node = _NodesTreeNode(module)
         self._working_stack = [self._base_node]
         self._module = module
         self._prefix_remainder = ''
@@ -627,9 +626,7 @@ class _NodesTree(object):
 
     def _update_parsed_node_tos(self, tree_node):
         if tree_node.type == 'suite':
-            indent = _get_suite_indentation(tree_node)
-
-            new_tos = _NodesTreeNode(tree_node, indents=[indent])
+            new_tos = _NodesTreeNode(tree_node)
             new_tos.add_tree_nodes('', list(tree_node.children))
 
             self._working_stack[-1].add_child_node(new_tos)
@@ -745,7 +742,7 @@ class _NodesTree(object):
 
             indent = _get_suite_indentation(suite)
             added_indents.append(indent)
-            suite_tos = _NodesTreeNode(suite, indents=[indent])
+            suite_tos = _NodesTreeNode(suite)
             # Don't need to pass line_offset here, it's already done by the
             # parent.
             suite_nodes, new_working_stack, new_prefix, ai = self._copy_nodes(
