@@ -536,12 +536,6 @@ class _NodesTreeNode(object):
             first = self._children_groups[-1].children[1]
         return first.start_pos[1]
 
-    def get_first_indentation(self):
-        if self.tree_node.type == 'suite':
-            # The first node in a suite is always a newline.
-            return self._children_groups[0].children[1].start_pos[1]
-        return 0
-
 
 class _NodesTree(object):
     def __init__(self, module):
