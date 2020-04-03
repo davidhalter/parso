@@ -369,7 +369,7 @@ class DiffParser(object):
             node = self._try_parse_part(until_line)
             nodes = node.children
 
-            self._nodes_tree.add_parsed_nodes(nodes)
+            self._nodes_tree.add_parsed_nodes(nodes, new_indents=self._diff_indents)
             LOG.debug(
                 'parse_part from %s to %s (to %s in part parser)',
                 nodes[0].get_start_pos_of_prefix()[0],
@@ -406,12 +406,8 @@ class DiffParser(object):
 
     def _diff_tokenize(self, lines, until_line, line_offset=0):
         was_newline = False
-
-        first_token = next(self._tokenizer(lines))
-        if first_token.type == ENDMARKER:
-            indents = [0]
-        else:
-            indents = list(self._nodes_tree.get_indents(first_token.start_pos[1]))
+        indents = self._nodes_tree.indents
+        self._diff_indents = indents
         initial_indentation_count = len(indents)
 
         tokens = self._tokenizer(
@@ -420,9 +416,9 @@ class DiffParser(object):
             indents=indents
         )
         stack = self._active_parser.stack
-        #print('start', line_offset, indents, first_token.start_pos[1], self._nodes_tree._working_stack)
+        #print('start', line_offset, indents)
         for token in tokens:
-            #print(token)
+            #print(token, indents)
             typ = token.type
             if typ == DEDENT:
                 if len(indents) < initial_indentation_count:
@@ -555,6 +551,7 @@ class _NodesTree(object):
         self._module = module
         self._prefix_remainder = ''
         self.prefix = ''
+        self.indents = [0]
 
     def get_indents(self, indentation):
         for node in self._working_stack:
@@ -603,12 +600,17 @@ class _NodesTree(object):
                 break
             previous_node = node
 
+        if indentation in self.indents:
+            # This is basically the normal case, if we're on a normal valid
+            # indent we break out.
+            add_error_leaf = None
+
         while True:
             if node == self._working_stack[-1]:
                 return add_error_leaf, node
             self._working_stack.pop()
 
-    def add_parsed_nodes(self, tree_nodes):
+    def add_parsed_nodes(self, tree_nodes, new_indents):
         old_prefix = self.prefix
         tree_nodes = self._remove_endmarker(tree_nodes)
         if not tree_nodes:
@@ -683,9 +685,11 @@ class _NodesTree(object):
 
         old_working_stack = list(self._working_stack)
         old_prefix = self.prefix
+        old_indents = self.indents
+        self.indents = [i for i in self.indents if i <= indentation]
         add_error_leaf, _ = self._get_insertion_node(tree_nodes[0])
 
-        new_nodes, self._working_stack, self.prefix = self._copy_nodes(
+        new_nodes, self._working_stack, self.prefix, added_indents = self._copy_nodes(
             list(self._working_stack),
             tree_nodes,
             until_line,
@@ -693,14 +697,18 @@ class _NodesTree(object):
             self.prefix,
             add_error_leaf=add_error_leaf,
         )
-        if not new_nodes:
+        if new_nodes:
+            self.indents += added_indents
+        else:
             self._working_stack = old_working_stack
             self.prefix = old_prefix
+            self.indents = old_indents
         return new_nodes
 
     def _copy_nodes(self, working_stack, nodes, until_line, line_offset,
                     prefix='', add_error_leaf=None):
         new_nodes = []
+        added_indents = []
 
         new_prefix = ''
         for node in nodes:
@@ -724,7 +732,7 @@ class _NodesTree(object):
             new_nodes.append(node)
 
         if not new_nodes:
-            return [], working_stack, prefix
+            return [], working_stack, prefix, added_indents
 
         tos = working_stack[-1]
         last_node = new_nodes[-1]
@@ -736,12 +744,14 @@ class _NodesTree(object):
                 suite = suite.children[-1]
 
             indent = _get_suite_indentation(suite)
+            added_indents.append(indent)
             suite_tos = _NodesTreeNode(suite, indents=[indent])
             # Don't need to pass line_offset here, it's already done by the
             # parent.
-            suite_nodes, new_working_stack, new_prefix = self._copy_nodes(
+            suite_nodes, new_working_stack, new_prefix, ai = self._copy_nodes(
                 working_stack + [suite_tos], suite.children, until_line, line_offset
             )
+            added_indents += ai
             if len(suite_nodes) < 2:
                 # A suite only with newline is not valid.
                 new_nodes.pop()
@@ -809,7 +819,7 @@ class _NodesTree(object):
             prefix = new_prefix
             self._prefix_remainder = ''
 
-        return new_nodes, working_stack, prefix
+        return new_nodes, working_stack, prefix, added_indents
 
     def close(self):
         self._base_node.finish()
