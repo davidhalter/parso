@@ -404,7 +404,10 @@ class DiffParser(object):
         was_newline = False
 
         first_token = next(self._tokenizer(lines))
-        indents = list(self._nodes_tree.get_indents(first_token.start_pos[1]))
+        if first_token.type == ENDMARKER:
+            indents = [0]
+        else:
+            indents = list(self._nodes_tree.get_indents(first_token.start_pos[1]))
         initial_indentation_count = len(indents)
 
         tokens = self._tokenizer(
@@ -413,7 +416,9 @@ class DiffParser(object):
             indents=indents
         )
         stack = self._active_parser.stack
+        #print('start', line_offset, indents, first_token.start_pos[1], self._nodes_tree._working_stack)
         for token in tokens:
+            #print(token)
             typ = token.type
             if typ == DEDENT:
                 if len(indents) < initial_indentation_count:
@@ -526,7 +531,10 @@ class _NodesTreeNode(object):
     def get_latest_indentation(self):
         if not self._children_groups:
             return 0
-        return self._children_groups[-1].children[0].start_pos[1]
+        first = self._children_groups[-1].children[0]
+        if first.type == 'newline':
+            first = self._children_groups[-1].children[1]
+        return first.start_pos[1]
 
     def get_first_indentation(self):
         if self.tree_node.type == 'suite':
@@ -546,8 +554,9 @@ class _NodesTree(object):
     def get_indents(self, indentation):
         for node in self._working_stack:
             first_indentation = node.get_first_indentation()
-            if indentation >= first_indentation:
-                yield first_indentation
+            yield first_indentation
+            if indentation <= first_indentation:
+                break
 
     @property
     def parsed_until_line(self):
@@ -562,21 +571,16 @@ class _NodesTree(object):
         for node in reversed(self._working_stack):
             tree_node = node.tree_node
             if tree_node.type == 'suite':
-                # A suite starts with NEWLINE, ...
-                node_indentation = tree_node.children[1].start_pos[1]
-
-                if indentation > node_indentation:
-                    latest_indentation = node.get_latest_indentation()
-                    if indentation != latest_indentation \
-                            and not _is_indentation_error_leaf(indentation_node):
-                        if previous_node is None:
-                            add_error_leaf = 'INDENT'
-                        else:
-                            # This means that it was not dedented enough.
-                            node = previous_node
-                            add_error_leaf = 'ERROR_DEDENT'
-                            break
-                if indentation >= node_indentation:  # Not a Dedent
+                latest_indentation = node.get_latest_indentation()
+                if indentation > latest_indentation:
+                    if previous_node is None:
+                        add_error_leaf = 'INDENT'
+                    else:
+                        # This means that it was not dedented enough.
+                        node = previous_node
+                        add_error_leaf = 'ERROR_DEDENT'
+                        break
+                if indentation >= latest_indentation:  # Not a Dedent
                     # We might be at the most outer layer: modules. We
                     # don't want to depend on the first statement
                     # having the right indentation.
@@ -584,8 +588,7 @@ class _NodesTree(object):
             elif tree_node.type == 'file_input':
                 if indentation > 0:
                     latest_indentation = node.get_latest_indentation()
-                    if indentation != latest_indentation \
-                            and not _is_indentation_error_leaf(indentation_node):
+                    if indentation != latest_indentation:
                         if previous_node is None and indentation > latest_indentation:
                             add_error_leaf = 'INDENT'
                         else:
@@ -611,7 +614,7 @@ class _NodesTree(object):
 
         add_error_leaf, node = self._get_insertion_node(tree_nodes[0])
         assert node.tree_node.type in ('suite', 'file_input')
-        node.add_tree_nodes(old_prefix, tree_nodes, add_error_leaf=add_error_leaf)
+        node.add_tree_nodes(old_prefix, tree_nodes)
         # tos = Top of stack
         self._update_tos(tree_nodes[-1])
 

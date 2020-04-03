@@ -1386,3 +1386,22 @@ def test_paren_with_indentation(differ):
     differ.initialize(code1)
     differ.parse(code2, parsers=ANY, copies=ANY, expect_error_leaves=True)
     differ.parse(code1, parsers=2, copies=1)
+
+
+def test_error_dedent_in_function(differ):
+    code1 = dedent('''\
+        def x():
+            a
+            b
+            c
+            d
+        ''')
+    code2 = dedent('''\
+        def x():
+            a
+            b
+           c
+            d
+        ''')
+    differ.initialize(code1)
+    differ.parse(code2, parsers=ANY, copies=ANY, expect_error_leaves=True)
