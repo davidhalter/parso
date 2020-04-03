@@ -410,7 +410,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0), indents=None):
     paren_level = 0  # count parentheses
     if indents is None:
         indents = [0]
-    max = 0
+    max_ = 0
     numchars = '0123456789'
     contstr = ''
     contline = None
@@ -427,17 +427,17 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0), indents=None):
     for line in lines:  # loop over lines in stream
         lnum += 1
         pos = 0
-        max = len(line)
+        max_ = len(line)
         if first:
             if line.startswith(BOM_UTF8_STRING):
                 additional_prefix = BOM_UTF8_STRING
                 line = line[1:]
-                max = len(line)
+                max_ = len(line)
 
             # Fake that the part before was already parsed.
             line = '^' * start_pos[1] + line
             pos = start_pos[1]
-            max += start_pos[1]
+            max_ += start_pos[1]
 
             first = False
 
@@ -455,7 +455,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0), indents=None):
                 contline = contline + line
                 continue
 
-        while pos < max:
+        while pos < max_:
             if fstring_stack:
                 tos = fstring_stack[-1]
                 if not tos.is_in_expr():
@@ -470,7 +470,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0), indents=None):
                         )
                         tos.previous_lines = ''
                         continue
-                    if pos == max:
+                    if pos == max_:
                         break
 
                 rest = line[pos:]
@@ -666,7 +666,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0), indents=None):
                 prefix=''
             )
 
-    end_pos = lnum, max
+    end_pos = lnum, max_
     # As the last position we just take the maximally possible position. We
     # remove -1 for the last new line.
     for indent in indents[1:]:
