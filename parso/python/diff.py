@@ -42,6 +42,10 @@ def _get_next_leaf_if_indentation(leaf):
     return leaf
 
 
+def _get_suite_indentation(tree_node):
+    return tree_node.children[1].start_pos[1]
+
+
 def _assert_valid_graph(node):
     """
     Checks if the parent/children relationship is correct.
@@ -459,11 +463,12 @@ class _NodesTreeNode(object):
         '_ChildrenGroup',
         'prefix children line_offset last_line_offset_leaf add_error_leaf')
 
-    def __init__(self, tree_node, parent=None):
+    def __init__(self, tree_node, indents, parent=None):
         self.tree_node = tree_node
         self._children_groups = []
         self.parent = parent
         self._node_children = []
+        self.indents = indents
 
     def finish(self):
         children = []
@@ -545,7 +550,7 @@ class _NodesTreeNode(object):
 
 class _NodesTree(object):
     def __init__(self, module):
-        self._base_node = _NodesTreeNode(module)
+        self._base_node = _NodesTreeNode(module, indents=[0])
         self._working_stack = [self._base_node]
         self._module = module
         self._prefix_remainder = ''
@@ -553,9 +558,9 @@ class _NodesTree(object):
 
     def get_indents(self, indentation):
         for node in self._working_stack:
-            first_indentation = node.get_first_indentation()
-            yield first_indentation
-            if indentation <= first_indentation:
+            for i in node.indents:
+                yield i
+            if indentation <= i:
                 break
 
     @property
@@ -616,19 +621,21 @@ class _NodesTree(object):
         assert node.tree_node.type in ('suite', 'file_input')
         node.add_tree_nodes(old_prefix, tree_nodes)
         # tos = Top of stack
-        self._update_tos(tree_nodes[-1])
+        self._update_parsed_node_tos(tree_nodes[-1])
 
-    def _update_tos(self, tree_node):
-        if tree_node.type in ('suite', 'file_input'):
-            new_tos = _NodesTreeNode(tree_node)
+    def _update_parsed_node_tos(self, tree_node):
+        if tree_node.type == 'suite':
+            indent = _get_suite_indentation(tree_node)
+
+            new_tos = _NodesTreeNode(tree_node, indents=[indent])
             new_tos.add_tree_nodes('', list(tree_node.children))
 
             self._working_stack[-1].add_child_node(new_tos)
             self._working_stack.append(new_tos)
 
-            self._update_tos(tree_node.children[-1])
+            self._update_parsed_node_tos(tree_node.children[-1])
         elif _func_or_class_has_suite(tree_node):
-            self._update_tos(tree_node.children[-1])
+            self._update_parsed_node_tos(tree_node.children[-1])
 
     def _remove_endmarker(self, tree_nodes):
         """
@@ -728,7 +735,8 @@ class _NodesTree(object):
             while suite.type != 'suite':
                 suite = suite.children[-1]
 
-            suite_tos = _NodesTreeNode(suite)
+            indent = _get_suite_indentation(suite)
+            suite_tos = _NodesTreeNode(suite, indents=[indent])
             # Don't need to pass line_offset here, it's already done by the
             # parent.
             suite_nodes, new_working_stack, new_prefix = self._copy_nodes(

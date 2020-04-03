@@ -259,7 +259,10 @@ xfail_py2 = dict(marks=[pytest.mark.xfail(sys.version_info[0] == 2, reason='Pyth
                     c
             '''), [NAME, NAME, OP, NEWLINE, INDENT, NAME, NEWLINE,
                    ERROR_DEDENT, NAME, NEWLINE, INDENT, NAME, NEWLINE, DEDENT,
-                   NAME, NEWLINE, INDENT, NAME, NEWLINE, DEDENT, DEDENT])
+                   NAME, NEWLINE, INDENT, NAME, NEWLINE, DEDENT, DEDENT]),
+        ('  )\n foo', [INDENT, OP, NEWLINE, ERROR_DEDENT, NAME, DEDENT]),
+        ('a\n b\n  )\n c', [NAME, NEWLINE, INDENT, NAME, NEWLINE, INDENT, OP,
+                            NEWLINE, DEDENT, NAME, DEDENT]),
     ]
 )
 def test_token_types(code, types):
