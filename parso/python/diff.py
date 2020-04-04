@@ -467,7 +467,7 @@ class DiffParser(object):
 class _NodesTreeNode(object):
     _ChildrenGroup = namedtuple(
         '_ChildrenGroup',
-        'prefix children line_offset last_line_offset_leaf add_error_leaf')
+        'prefix children line_offset last_line_offset_leaf')
 
     def __init__(self, tree_node, parent=None):
         self.tree_node = tree_node
@@ -483,8 +483,7 @@ class _NodesTreeNode(object):
 
     def finish(self):
         children = []
-        for prefix, children_part, line_offset, last_line_offset_leaf, add_error_leaf \
-                in self._children_groups:
+        for prefix, children_part, line_offset, last_line_offset_leaf in self._children_groups:
             first_leaf = _get_next_leaf_if_indentation(
                 children_part[0].get_first_leaf()
             )
@@ -496,9 +495,6 @@ class _NodesTreeNode(object):
                         children_part, line_offset, last_line_offset_leaf)
                 except _PositionUpdatingFinished:
                     pass
-            if add_error_leaf is not None:
-                pos = children_part[0].start_pos
-                children.append(PythonErrorLeaf(add_error_leaf, '', pos))
             children += children_part
         self.tree_node.children = children
         # Reset the parents
@@ -512,11 +508,11 @@ class _NodesTreeNode(object):
         self._node_children.append(child_node)
 
     def add_tree_nodes(self, prefix, children, line_offset=0,
-                       last_line_offset_leaf=None, add_error_leaf=None):
+                       last_line_offset_leaf=None):
         if last_line_offset_leaf is None:
             last_line_offset_leaf = children[-1].get_last_leaf()
         group = self._ChildrenGroup(
-            prefix, children, line_offset, last_line_offset_leaf, add_error_leaf
+            prefix, children, line_offset, last_line_offset_leaf
         )
         self._children_groups.append(group)
 
@@ -630,29 +626,22 @@ class _NodesTree(object):
             # issues.
             return []
 
-        # There might be a random dedent where we have to stop copying.
-        # Invalid indents are ok, because the parser handled that
-        # properly before. An invalid dedent can happen, because a few
-        # lines above there was an invalid indent.
         indentation = _get_indentation(tree_nodes[0])
-        for i, c in enumerate(tree_nodes):
-            if c.start_pos[1] != indentation:
-                tree_nodes = tree_nodes[:i]
-                break
-
         old_working_stack = list(self._working_stack)
         old_prefix = self.prefix
         old_indents = self.indents
         self.indents = [i for i in self.indents if i <= indentation]
+
+        # There might be a random dedent where we have to stop copying.
+        # Invalid indents are ok, because the parser handled that
+        # properly before. An invalid dedent can happen, because a few
+        # lines above there was an invalid indent.
+        for i, c in enumerate(tree_nodes):
+            if _get_indentation(c) not in self.indents:
+                tree_nodes = tree_nodes[:i]
+                break
+
         self._update_insertion_node(indentation)
-        if indentation < self.indents[-1]:
-            self.indents[-1] = indentation
-            add_error_leaf = 'ERROR_DEDENT'
-        elif indentation > self.indents[-1]:
-            self.indents.append(indentation)
-            add_error_leaf = 'INDENT'
-        else:
-            add_error_leaf = None
 
         new_nodes, self._working_stack, self.prefix, added_indents = self._copy_nodes(
             list(self._working_stack),
@@ -660,7 +649,6 @@ class _NodesTree(object):
             until_line,
             line_offset,
             self.prefix,
-            add_error_leaf=add_error_leaf,
         )
         if new_nodes:
             self.indents += added_indents
@@ -671,7 +659,7 @@ class _NodesTree(object):
         return new_nodes
 
     def _copy_nodes(self, working_stack, nodes, until_line, line_offset,
-                    prefix='', add_error_leaf=None):
+                    prefix=''):
         new_nodes = []
         added_indents = []
 
@@ -779,7 +767,6 @@ class _NodesTree(object):
                 last_line_offset_leaf = new_nodes[-1].get_last_leaf()
             tos.add_tree_nodes(
                 prefix, new_nodes, line_offset, last_line_offset_leaf,
-                add_error_leaf=add_error_leaf
             )
             prefix = new_prefix
             self._prefix_remainder = ''
