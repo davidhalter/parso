@@ -126,8 +126,8 @@ class Parser(BaseParser):
 
         if self._start_nonterminal == 'file_input' and \
                 (token.type == PythonTokenTypes.ENDMARKER
-                 or token.type == DEDENT and '\n' not in last_leaf.value
-                 and '\r' not in last_leaf.value):
+                 or token.type == DEDENT and not last_leaf.value.endswith('\n')
+                 and not last_leaf.value.endswith('\r')):
             # In Python statements need to end with a newline. But since it's
             # possible (and valid in Python) that there's no newline at the
             # end of a file, we have to recover even if the user doesn't want
