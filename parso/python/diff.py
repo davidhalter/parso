@@ -44,7 +44,11 @@ def _get_next_leaf_if_indentation(leaf):
 
 
 def _get_suite_indentation(tree_node):
-    return tree_node.children[1].start_pos[1]
+    return _get_indentation(tree_node.children[1])
+
+
+def _get_indentation(tree_node):
+    return tree_node.start_pos[1]
 
 
 def _assert_valid_graph(node):
@@ -106,7 +110,7 @@ def _assert_nodes_are_equal(node1, node2):
             assert False, (node1, node2)
     for n1, n2 in zip(children1, children2):
         _assert_nodes_are_equal(n1, n2)
-    assert len(children1) == len(children2)
+    assert len(children1) == len(children2), repr(children1) + '\n' + repr(children2)
 
 
 def _get_debug_error_message(module, old_lines, new_lines):
@@ -474,7 +478,8 @@ class _NodesTreeNode(object):
         if self.tree_node.type == 'file_input':
             self.indentation = 0
         else:
-            self.indentation = _get_suite_func_or_class_parent(self.tree_node).start_pos[1]
+            n = _get_suite_func_or_class_parent(self.tree_node)
+            self.indentation = _get_indentation(n)
 
     def finish(self):
         children = []
@@ -539,14 +544,6 @@ class _NodesTreeNode(object):
             return max(line, self._node_children[-1].get_last_line(suffix))
         return line
 
-    def get_latest_indentation(self):
-        if not self._children_groups:
-            return 0
-        first = self._children_groups[-1].children[0]
-        if first.type == 'newline':
-            first = self._children_groups[-1].children[1]
-        return first.start_pos[1]
-
     def __repr__(self):
         return '<%s: %s>' % (self.__class__.__name__, self.tree_node)
 
@@ -559,13 +556,6 @@ class _NodesTree(object):
         self._prefix_remainder = ''
         self.prefix = ''
         self.indents = [0]
-
-    def get_indents(self, indentation):
-        for node in self._working_stack:
-            for i in node.indents:
-                yield i
-            if indentation <= i:
-                break
 
     @property
     def parsed_until_line(self):
@@ -643,7 +633,7 @@ class _NodesTree(object):
         # Invalid indents are ok, because the parser handled that
         # properly before. An invalid dedent can happen, because a few
         # lines above there was an invalid indent.
-        indentation = tree_nodes[0].start_pos[1]
+        indentation = _get_indentation(tree_nodes[0])
         for i, c in enumerate(tree_nodes):
             if c.start_pos[1] < indentation:
                 tree_nodes = tree_nodes[:i]
