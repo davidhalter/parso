@@ -110,7 +110,7 @@ def _assert_nodes_are_equal(node1, node2):
             assert False, (node1, node2)
     for n1, n2 in zip(children1, children2):
         _assert_nodes_are_equal(n1, n2)
-    assert len(children1) == len(children2), repr(children1) + '\n' + repr(children2)
+    assert len(children1) == len(children2), '\n' + repr(children1) + '\n' + repr(children2)
 
 
 def _get_debug_error_message(module, old_lines, new_lines):
@@ -615,6 +615,19 @@ class _NodesTree(object):
             tree_nodes = tree_nodes[:-1]
         return tree_nodes
 
+    def _get_matching_indent_nodes(self, tree_nodes):
+        # There might be a random dedent where we have to stop copying.
+        # Invalid indents are ok, because the parser handled that
+        # properly before. An invalid dedent can happen, because a few
+        # lines above there was an invalid indent.
+        indent = _get_indentation(tree_nodes[0])
+        if indent not in self.indents:
+            return
+        for n in tree_nodes:
+            if _get_indentation(n) != indent:
+                return
+            yield n
+
     def copy_nodes(self, tree_nodes, until_line, line_offset):
         """
         Copies tree nodes from the old parser tree.
@@ -632,14 +645,7 @@ class _NodesTree(object):
         old_indents = self.indents
         self.indents = [i for i in self.indents if i <= indentation]
 
-        # There might be a random dedent where we have to stop copying.
-        # Invalid indents are ok, because the parser handled that
-        # properly before. An invalid dedent can happen, because a few
-        # lines above there was an invalid indent.
-        for i, c in enumerate(tree_nodes):
-            if _get_indentation(c) not in self.indents:
-                tree_nodes = tree_nodes[:i]
-                break
+        tree_nodes = list(self._get_matching_indent_nodes(tree_nodes))
 
         self._update_insertion_node(indentation)
 

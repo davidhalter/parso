@@ -1448,3 +1448,25 @@ def test_repeating_invalid_indent(differ):
         ''')
     differ.initialize(code1)
     differ.parse(code2, parsers=1, copies=1, expect_error_leaves=True)
+
+
+def test_another_random_indent(differ):
+    code1 = dedent('''\
+        def foo():
+            a
+        b
+            c
+            return
+        def foo():
+            d
+        ''')
+    code2 = dedent('''\
+        def foo():
+            a
+            c
+            return
+        def foo():
+            d
+        ''')
+    differ.initialize(code1)
+    differ.parse(code2, parsers=1, copies=3)
