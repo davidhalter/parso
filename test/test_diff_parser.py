@@ -1487,3 +1487,25 @@ def test_invalid_function(differ):
         ''')
     differ.initialize(code1)
     differ.parse(code2, parsers=1, copies=1, expect_error_leaves=True)
+
+
+def test_async_func2(differ):
+    code1 = dedent('''\
+        async def foo():
+            return ''
+        @bla
+        async def foo():
+            x
+        ''')
+    code2 = dedent('''\
+        async def foo():
+            return ''
+
+          {
+        @bla
+        async def foo():
+            x
+          y
+        ''')
+    differ.initialize(code1)
+    differ.parse(code2, parsers=2, copies=1, expect_error_leaves=True)

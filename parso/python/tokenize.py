@@ -258,6 +258,8 @@ def _create_token_collection(version_info):
 
     ALWAYS_BREAK_TOKENS = (';', 'import', 'class', 'def', 'try', 'except',
                            'finally', 'while', 'with', 'return')
+    if version_info >= (3, 5):
+        ALWAYS_BREAK_TOKENS += ('async',)
     pseudo_token_compiled = _compile(PseudoToken)
     return TokenCollection(
         pseudo_token_compiled, single_quoted, triple_quoted, endpats,
