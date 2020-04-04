@@ -636,8 +636,9 @@ class _NodesTree(object):
         # lines above there was an invalid indent.
         indentation = _get_indentation(tree_nodes[0])
         for i, c in enumerate(tree_nodes):
-            if c.start_pos[1] < indentation:
+            if c.start_pos[1] != indentation:
                 tree_nodes = tree_nodes[:i]
+                break
 
         old_working_stack = list(self._working_stack)
         old_prefix = self.prefix

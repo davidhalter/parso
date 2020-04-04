@@ -1408,7 +1408,7 @@ def test_error_dedent_in_function(differ):
     differ.parse(code2, parsers=ANY, copies=ANY, expect_error_leaves=True)
 
 
-def test_x(differ):
+def test_with_formfeed(differ):
     code1 = dedent('''\
         @bla
         async def foo():
@@ -1424,6 +1424,31 @@ def test_x(differ):
         \x0cimport 
             return
             return ''
+        ''')
+    differ.initialize(code1)
+    differ.parse(code2, parsers=ANY, copies=ANY, expect_error_leaves=True)
+
+
+def test_x(differ):
+    code1 = dedent('''\
+def foo():
+    return
+
+@bla
+    a
+def foo():
+    a
+    b
+    c
+        ''')
+    code2 = dedent('''\
+def foo():
+    return
+
+@bla
+    a
+    b
+    c
         ''')
     differ.initialize(code1)
     differ.parse(code2, parsers=ANY, copies=ANY, expect_error_leaves=True)
