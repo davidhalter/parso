@@ -593,7 +593,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0), indents=None):
                     token = line[start:pos]
                     yield PythonToken(STRING, token, spos, prefix)
                 else:
-                    contstr_start = (lnum, start)           # multiple lines
+                    contstr_start = spos                    # multiple lines
                     contstr = line[start:]
                     contline = line
                     break
