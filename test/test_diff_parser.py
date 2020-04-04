@@ -1000,7 +1000,7 @@ def test_dedent_end_positions(differ):
                 c = {
                      5}
         ''')
-    code2 = dedent('''\
+    code2 = dedent(u'''\
         if 1:
             if ⌟ഒᜈྡྷṭb:
                 2
