@@ -1400,8 +1400,9 @@ def test_error_dedent_in_function(differ):
         def x():
             a
             b
-           c
+          c
             d
+            e
         ''')
     differ.initialize(code1)
     differ.parse(code2, parsers=ANY, copies=ANY, expect_error_leaves=True)

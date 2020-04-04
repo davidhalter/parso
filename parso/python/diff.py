@@ -369,7 +369,7 @@ class DiffParser(object):
             node = self._try_parse_part(until_line)
             nodes = node.children
 
-            self._nodes_tree.add_parsed_nodes(nodes, new_indents=self._diff_indents)
+            self._nodes_tree.add_parsed_nodes(nodes)
             LOG.debug(
                 'parse_part from %s to %s (to %s in part parser)',
                 nodes[0].get_start_pos_of_prefix()[0],
@@ -407,7 +407,6 @@ class DiffParser(object):
     def _diff_tokenize(self, lines, until_line, line_offset=0):
         was_newline = False
         indents = self._nodes_tree.indents
-        self._diff_indents = indents
         initial_indentation_count = len(indents)
 
         tokens = self._tokenizer(
@@ -416,7 +415,7 @@ class DiffParser(object):
             indents=indents
         )
         stack = self._active_parser.stack
-        #print('start', line_offset, indents)
+        #print('start', line_offset + 1, indents)
         for token in tokens:
             #print(token, indents)
             typ = token.type
@@ -464,6 +463,11 @@ class _NodesTreeNode(object):
         self._children_groups = []
         self.parent = parent
         self._node_children = []
+
+        if self.tree_node.type == 'file_input':
+            self.indentation = 0
+        else:
+            self.indentation = self.tree_node.parent.start_pos[-1]
 
     def finish(self):
         children = []
@@ -536,6 +540,9 @@ class _NodesTreeNode(object):
             first = self._children_groups[-1].children[1]
         return first.start_pos[1]
 
+    def __repr__(self):
+        return '<%s: %s>' % (self.__class__.__name__, self.tree_node)
+
 
 class _NodesTree(object):
     def __init__(self, module):
@@ -557,53 +564,13 @@ class _NodesTree(object):
     def parsed_until_line(self):
         return self._working_stack[-1].get_last_line(self.prefix)
 
-    def _get_insertion_node(self, indentation_node):
-        indentation = indentation_node.start_pos[1]
-        add_error_leaf = None
-
-        previous_node = None
-        # find insertion node
-        for node in reversed(self._working_stack):
-            tree_node = node.tree_node
-            if tree_node.type == 'suite':
-                latest_indentation = node.get_latest_indentation()
-                if indentation > latest_indentation:
-                    if previous_node is None:
-                        add_error_leaf = 'INDENT'
-                    else:
-                        # This means that it was not dedented enough.
-                        node = previous_node
-                        add_error_leaf = 'ERROR_DEDENT'
-                        break
-                if indentation >= latest_indentation:  # Not a Dedent
-                    # We might be at the most outer layer: modules. We
-                    # don't want to depend on the first statement
-                    # having the right indentation.
-                    break
-            elif tree_node.type == 'file_input':
-                if indentation > 0:
-                    latest_indentation = node.get_latest_indentation()
-                    if indentation != latest_indentation:
-                        if previous_node is None and indentation > latest_indentation:
-                            add_error_leaf = 'INDENT'
-                        else:
-                            if previous_node is not None:
-                                node = previous_node
-                            add_error_leaf = 'ERROR_DEDENT'
-                break
-            previous_node = node
-
-        if indentation in self.indents:
-            # This is basically the normal case, if we're on a normal valid
-            # indent we break out.
-            add_error_leaf = None
-
-        while True:
-            if node == self._working_stack[-1]:
-                return add_error_leaf, node
+    def _update_insertion_node(self, indentation):
+        for node in reversed(list(self._working_stack)):
+            if node.indentation < indentation or node is self._working_stack[0]:
+                return node
             self._working_stack.pop()
 
-    def add_parsed_nodes(self, tree_nodes, new_indents):
+    def add_parsed_nodes(self, tree_nodes):
         old_prefix = self.prefix
         tree_nodes = self._remove_endmarker(tree_nodes)
         if not tree_nodes:
@@ -612,7 +579,7 @@ class _NodesTree(object):
 
         assert tree_nodes[0].type != 'newline'
 
-        add_error_leaf, node = self._get_insertion_node(tree_nodes[0])
+        node = self._update_insertion_node(tree_nodes[0].start_pos[1])
         assert node.tree_node.type in ('suite', 'file_input')
         node.add_tree_nodes(old_prefix, tree_nodes)
         # tos = Top of stack
@@ -678,7 +645,15 @@ class _NodesTree(object):
         old_prefix = self.prefix
         old_indents = self.indents
         self.indents = [i for i in self.indents if i <= indentation]
-        add_error_leaf, _ = self._get_insertion_node(tree_nodes[0])
+        self._update_insertion_node(indentation)
+        if indentation < self.indents[-1]:
+            self.indents[-1] = indentation
+            add_error_leaf = 'ERROR_DEDENT'
+        elif indentation > self.indents[-1]:
+            self.indents.append(indentation)
+            add_error_leaf = 'INDENT'
+        else:
+            add_error_leaf = None
 
         new_nodes, self._working_stack, self.prefix, added_indents = self._copy_nodes(
             list(self._working_stack),
