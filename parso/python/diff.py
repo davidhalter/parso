@@ -15,6 +15,7 @@ from parso.python.parser import Parser
 from parso.python.tree import EndMarker, PythonErrorLeaf
 from parso.python.tokenize import PythonToken
 from parso.python.token import PythonTokenTypes
+from parso.tree import search_ancestor
 
 LOG = logging.getLogger(__name__)
 DEBUG_DIFF_PARSER = False
@@ -162,6 +163,12 @@ def _func_or_class_has_suite(node):
     if node.type in ('async_funcdef', 'async_stmt'):
         node = node.children[-1]
     return node.type in ('classdef', 'funcdef') and node.children[-1].type == 'suite'
+
+
+def _get_suite_func_or_class_parent(node):
+    while node.parent.type in ('funcdef', 'classdef', 'async_stmt', 'async_funcdef', 'decorated'):
+        node = node.parent
+    return node
 
 
 def _suite_or_file_input_is_valid(pgen_grammar, stack):
@@ -467,7 +474,7 @@ class _NodesTreeNode(object):
         if self.tree_node.type == 'file_input':
             self.indentation = 0
         else:
-            self.indentation = self.tree_node.parent.start_pos[-1]
+            self.indentation = _get_suite_func_or_class_parent(self.tree_node).start_pos[1]
 
     def finish(self):
         children = []
