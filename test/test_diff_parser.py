@@ -1406,3 +1406,24 @@ def test_error_dedent_in_function(differ):
         ''')
     differ.initialize(code1)
     differ.parse(code2, parsers=ANY, copies=ANY, expect_error_leaves=True)
+
+
+def test_x(differ):
+    code1 = dedent('''\
+        @bla
+        async def foo():
+            1
+            yield from []
+            return
+            return ''
+        ''')
+    code2 = dedent('''\
+        @bla
+        async def foo():
+            1
+        \x0cimport 
+            return
+            return ''
+        ''')
+    differ.initialize(code1)
+    differ.parse(code2, parsers=ANY, copies=ANY, expect_error_leaves=True)

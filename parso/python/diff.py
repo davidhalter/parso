@@ -602,7 +602,8 @@ class _NodesTree(object):
         is_endmarker = last_leaf.type == 'endmarker'
         self._prefix_remainder = ''
         if is_endmarker:
-            separation = max(last_leaf.prefix.rfind('\n'), last_leaf.prefix.rfind('\r'))
+            prefix = last_leaf.prefix
+            separation = max(prefix.rfind('\n'), prefix.rfind('\r'))
             if separation > -1:
                 # Remove the whitespace part of the prefix after a newline.
                 # That is not relevant if parentheses were opened. Always parse

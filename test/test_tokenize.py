@@ -332,11 +332,13 @@ def test_brackets_no_indentation():
 
 
 def test_form_feed():
-    error_token, endmarker = _get_token_list(dedent('''\
+    indent, error_token, dedent_, endmarker = _get_token_list(dedent('''\
         \f"""'''))
     assert error_token.prefix == '\f'
     assert error_token.string == '"""'
     assert endmarker.prefix == ''
+    assert indent.type == INDENT
+    assert dedent_.type == DEDENT
 
 
 def test_carriage_return():

@@ -29,13 +29,17 @@ def _invalid_syntax(code, version=None, **kwargs):
         print(module.children)
 
 
-def test_formfeed(each_py2_version):
-    s = u"""print 1\n\x0Cprint 2\n"""
-    t = _parse(s, each_py2_version)
-    assert t.children[0].children[0].type == 'print_stmt'
-    assert t.children[1].children[0].type == 'print_stmt'
-    s = u"""1\n\x0C\x0C2\n"""
-    t = _parse(s, each_py2_version)
+def test_formfeed(each_version):
+    s = u"foo\n\x0c\nfoo\n"
+    t = _parse(s, each_version)
+    assert t.children[0].children[0].type == 'name'
+    assert t.children[1].children[0].type == 'name'
+    s = u"1\n\x0c\x0c\n2\n"
+    t = _parse(s, each_version)
+
+    with pytest.raises(ParserSyntaxError):
+        s = u"\n\x0c2\n"
+        _parse(s, each_version)
 
 
 def test_matrix_multiplication_operator(works_ge_py35):
