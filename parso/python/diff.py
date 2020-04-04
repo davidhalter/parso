@@ -690,6 +690,36 @@ class _NodesTree(object):
 
             new_nodes.append(node)
 
+        # Pop error nodes at the end from the list
+        if new_nodes:
+            while new_nodes:
+                last_node = new_nodes[-1]
+                if (last_node.type in ('error_leaf', 'error_node')
+                        or _is_flow_node(new_nodes[-1])):
+                    # Error leafs/nodes don't have a defined start/end. Error
+                    # nodes might not end with a newline (e.g. if there's an
+                    # open `(`). Therefore ignore all of them unless they are
+                    # succeeded with valid parser state.
+                    # If we copy flows at the end, they might be continued
+                    # after the copy limit (in the new parser).
+                    # In this while loop we try to remove until we find a newline.
+                    new_prefix = ''
+                    new_nodes.pop()
+                    while new_nodes:
+                        last_node = new_nodes[-1]
+                        if last_node.get_last_leaf().type == 'newline':
+                            break
+                        new_nodes.pop()
+                    continue
+                if len(new_nodes) > 1 and new_nodes[-2].type == 'error_node':
+                    # The problem here is that Parso error recovery sometimes
+                    # influences nodes before this node.
+                    # Since the new last node is an error node this will get
+                    # cleaned up in the next while iteration.
+                    new_nodes.pop()
+                    continue
+                break
+
         if not new_nodes:
             return [], working_stack, prefix, added_indents
 
@@ -720,37 +750,6 @@ class _NodesTree(object):
                 tos.add_child_node(suite_tos)
                 working_stack = new_working_stack
                 had_valid_suite_last = True
-
-        # Pop error nodes at the end from the list
-        if new_nodes:
-            while new_nodes:
-                last_node = new_nodes[-1]
-                if (last_node.type in ('error_leaf', 'error_node')
-                        or _is_flow_node(new_nodes[-1])):
-                    # Error leafs/nodes don't have a defined start/end. Error
-                    # nodes might not end with a newline (e.g. if there's an
-                    # open `(`). Therefore ignore all of them unless they are
-                    # succeeded with valid parser state.
-                    # If we copy flows at the end, they might be continued
-                    # after the copy limit (in the new parser).
-                    # In this while loop we try to remove until we find a newline.
-                    new_prefix = ''
-                    new_nodes.pop()
-                    while new_nodes:
-                        last_node = new_nodes[-1]
-                        if last_node.get_last_leaf().type == 'newline':
-                            break
-                        new_nodes.pop()
-                    continue
-                if len(new_nodes) > 1 and new_nodes[-2].type == 'error_node':
-                    # The problem here is that Jedi error recovery sometimes
-                    # will mark  last node.
-                    # Since the new last node is an error node this will get
-                    # cleaned up in the next while iteration.
-                    new_nodes.pop()
-                    continue
-
-                break
 
         if new_nodes:
             if not _ends_with_newline(new_nodes[-1].get_last_leaf()) and not had_valid_suite_last:

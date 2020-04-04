@@ -155,7 +155,7 @@ def test_func_with_for_and_comment(differ):
         # COMMENT
         a""")
     differ.initialize(src)
-    differ.parse('a\n' + src, copies=1, parsers=2)
+    differ.parse('a\n' + src, copies=1, parsers=3)
 
 
 def test_one_statement_func(differ):
@@ -302,7 +302,7 @@ def test_unfinished_nodes(differ):
     a(1)
     ''')
     differ.initialize(code)
-    differ.parse(code2, parsers=1, copies=2)
+    differ.parse(code2, parsers=2, copies=2)
 
 
 def test_nested_if_and_scopes(differ):
@@ -1447,7 +1447,7 @@ def test_repeating_invalid_indent(differ):
             c
         ''')
     differ.initialize(code1)
-    differ.parse(code2, parsers=1, copies=1, expect_error_leaves=True)
+    differ.parse(code2, parsers=2, copies=1, expect_error_leaves=True)
 
 
 def test_another_random_indent(differ):
@@ -1470,3 +1470,20 @@ def test_another_random_indent(differ):
         ''')
     differ.initialize(code1)
     differ.parse(code2, parsers=1, copies=3)
+
+
+def test_invalid_function(differ):
+    code1 = dedent('''\
+        a
+        def foo():
+        def foo():
+            b
+        ''')
+    code2 = dedent('''\
+        a
+        def foo():
+        def foo():
+            b
+        ''')
+    differ.initialize(code1)
+    differ.parse(code2, parsers=1, copies=1, expect_error_leaves=True)
