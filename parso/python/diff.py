@@ -615,15 +615,22 @@ class _NodesTree(object):
             tree_nodes = tree_nodes[:-1]
         return tree_nodes
 
-    def _get_matching_indent_nodes(self, tree_nodes):
+    def _get_matching_indent_nodes(self, tree_nodes, is_new_suite):
         # There might be a random dedent where we have to stop copying.
         # Invalid indents are ok, because the parser handled that
         # properly before. An invalid dedent can happen, because a few
         # lines above there was an invalid indent.
-        indent = _get_indentation(tree_nodes[0])
-        if indent not in self.indents:
+        node_iterator = iter(tree_nodes)
+        if is_new_suite:
+            yield next(node_iterator)
+
+        first_node = next(node_iterator)
+        indent = _get_indentation(first_node)
+        if not is_new_suite and indent not in self.indents:
             return
-        for n in tree_nodes:
+        yield first_node
+
+        for n in node_iterator:
             if _get_indentation(n) != indent:
                 return
             yield n
@@ -645,8 +652,6 @@ class _NodesTree(object):
         old_indents = self.indents
         self.indents = [i for i in self.indents if i <= indentation]
 
-        tree_nodes = list(self._get_matching_indent_nodes(tree_nodes))
-
         self._update_insertion_node(indentation)
 
         new_nodes, self._working_stack, self.prefix, added_indents = self._copy_nodes(
@@ -665,9 +670,14 @@ class _NodesTree(object):
         return new_nodes
 
     def _copy_nodes(self, working_stack, nodes, until_line, line_offset,
-                    prefix=''):
+                    prefix='', is_nested=False):
         new_nodes = []
         added_indents = []
+
+        nodes = list(self._get_matching_indent_nodes(
+            nodes,
+            is_new_suite=is_nested,
+        ))
 
         new_prefix = ''
         for node in nodes:
@@ -738,7 +748,8 @@ class _NodesTree(object):
             # Don't need to pass line_offset here, it's already done by the
             # parent.
             suite_nodes, new_working_stack, new_prefix, ai = self._copy_nodes(
-                working_stack + [suite_tos], suite.children, until_line, line_offset
+                working_stack + [suite_tos], suite.children, until_line, line_offset,
+                is_nested=True,
             )
             added_indents += ai
             if len(suite_nodes) < 2:

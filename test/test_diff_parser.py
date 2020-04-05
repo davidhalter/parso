@@ -1524,3 +1524,20 @@ def test_weird_ending(differ):
         y"""''')
     differ.initialize(code1)
     differ.parse(code2, parsers=1, copies=1, expect_error_leaves=True)
+
+
+def test_nested_class(differ):
+    code1 = dedent('''\
+def c():
+    a = 3
+        class X:
+            b
+        ''')
+    code2 = dedent('''\
+def c():
+    a = 3
+        class X:
+ elif
+        ''')
+    differ.initialize(code1)
+    differ.parse(code2, parsers=1, copies=1, expect_error_leaves=True)
