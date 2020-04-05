@@ -427,7 +427,8 @@ class DiffParser(object):
         tokens = self._tokenizer(
             lines,
             start_pos=(line_offset + 1, 0),
-            indents=indents
+            indents=indents,
+            is_first_token=line_offset == 0,
         )
         stack = self._active_parser.stack
         self._replace_tos_indent = None

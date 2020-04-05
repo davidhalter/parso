@@ -389,7 +389,7 @@ def _print_tokens(func):
 
 
 # @_print_tokens
-def tokenize_lines(lines, version_info, start_pos=(1, 0), indents=None):
+def tokenize_lines(lines, version_info, start_pos=(1, 0), indents=None, is_first_token=True):
     """
     A heavily modified Python standard library tokenizer.
 
@@ -423,14 +423,13 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0), indents=None):
     new_line = True
     prefix = ''  # Should never be required, but here for safety
     additional_prefix = ''
-    first = True
     lnum = start_pos[0] - 1
     fstring_stack = []
     for line in lines:  # loop over lines in stream
         lnum += 1
         pos = 0
         max_ = len(line)
-        if first:
+        if is_first_token:
             if line.startswith(BOM_UTF8_STRING):
                 additional_prefix = BOM_UTF8_STRING
                 line = line[1:]
@@ -441,7 +440,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0), indents=None):
             pos = start_pos[1]
             max_ += start_pos[1]
 
-            first = False
+            is_first_token = False
 
         if contstr:                                         # continued string
             endmatch = endprog.match(line)
