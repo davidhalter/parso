@@ -24,6 +24,7 @@ _INDENTATION_TOKENS = 'INDENT', 'ERROR_DEDENT', 'DEDENT'
 
 NEWLINE = PythonTokenTypes.NEWLINE
 DEDENT = PythonTokenTypes.DEDENT
+ERROR_DEDENT = PythonTokenTypes.ERROR_DEDENT
 ENDMARKER = PythonTokenTypes.ENDMARKER
 
 
@@ -381,6 +382,9 @@ class DiffParser(object):
             nodes = node.children
 
             self._nodes_tree.add_parsed_nodes(nodes)
+            if self._replace_tos_indent is not None:
+                self._nodes_tree.indents[-1] = self._replace_tos_indent
+
             LOG.debug(
                 'parse_part from %s to %s (to %s in part parser)',
                 nodes[0].get_start_pos_of_prefix()[0],
@@ -426,6 +430,7 @@ class DiffParser(object):
             indents=indents
         )
         stack = self._active_parser.stack
+        self._replace_tos_indent = None
         #print('start', line_offset + 1, indents)
         for token in tokens:
             #print(token, indents)
@@ -435,8 +440,15 @@ class DiffParser(object):
                     # We are done here, only thing that can come now is an
                     # endmarker or another dedented code block.
                     while True:
-                        typ, string, start_pos, prefix = next(tokens)
-                        if typ != DEDENT:
+                        typ, string, start_pos, prefix = token = next(tokens)
+                        if typ in (DEDENT, ERROR_DEDENT):
+                            if typ == ERROR_DEDENT:
+                                # We want to force an error dedent in the next
+                                # parser/pass. To make this possible we just
+                                # increase the location by one.
+                                self._replace_tos_indent = start_pos[1] + 1
+                                pass
+                        else:
                             break
 
                     if '\n' in prefix or '\r' in prefix:

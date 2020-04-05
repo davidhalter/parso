@@ -1541,3 +1541,27 @@ def c():
         ''')
     differ.initialize(code1)
     differ.parse(code2, parsers=1, copies=1, expect_error_leaves=True)
+
+
+def test_class_with_paren_breaker(differ):
+    code1 = dedent('''\
+class Grammar:
+    x
+    def parse():
+        y
+        parser(
+        )
+        z
+        ''')
+    code2 = dedent('''\
+class Grammar:
+    x
+    def parse():
+        y
+        parser(
+   finally ;
+        )
+        z
+        ''')
+    differ.initialize(code1)
+    differ.parse(code2, parsers=3, copies=1, expect_error_leaves=True)
