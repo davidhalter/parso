@@ -1585,3 +1585,27 @@ def test_byte_order_mark(differ):
         ''')
     differ.initialize('\n')
     differ.parse(code3, parsers=2, expect_error_leaves=True)
+
+
+def test_backslash_insertion(differ):
+    code1 = dedent('''
+        def f():
+            x
+            def g():
+                base = "" \\
+                       ""
+                return
+        ''')
+    code2 = dedent('''
+        def f():
+            x
+            def g():
+                base = "" \\
+        def h():
+                       ""
+                return
+        ''')
+
+    differ.initialize(code1)
+    differ.parse(code2, parsers=2, copies=1, expect_error_leaves=True)
+    differ.parse(code1, parsers=2, copies=1)

@@ -549,7 +549,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0), indents=None, is_first
                     or (initial == '.' and token != '.' and token != '...')):
                 yield PythonToken(NUMBER, token, spos, prefix)
             elif pseudomatch.group(3) is not None:            # ordinary name
-                if token in always_break_tokens:
+                if token in always_break_tokens and (fstring_stack or paren_level):
                     fstring_stack[:] = []
                     paren_level = 0
                     # We only want to dedent if the token is on a new line.

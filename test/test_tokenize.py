@@ -263,6 +263,7 @@ xfail_py2 = dict(marks=[pytest.mark.xfail(sys.version_info[0] == 2, reason='Pyth
         ('  )\n foo', [INDENT, OP, NEWLINE, ERROR_DEDENT, NAME, DEDENT]),
         ('a\n b\n  )\n c', [NAME, NEWLINE, INDENT, NAME, NEWLINE, INDENT, OP,
                             NEWLINE, DEDENT, NAME, DEDENT]),
+        (' 1 \\\ndef', [INDENT, NUMBER, NAME, DEDENT]),
     ]
 )
 def test_token_types(code, types):
@@ -343,7 +344,7 @@ def test_form_feed():
 
 def test_carriage_return():
     lst = _get_token_list(' =\\\rclass')
-    assert [t.type for t in lst] == [INDENT, OP, DEDENT, NAME, ENDMARKER]
+    assert [t.type for t in lst] == [INDENT, OP, NAME, DEDENT, ENDMARKER]
 
 
 def test_backslash():
