@@ -1587,6 +1587,12 @@ def test_byte_order_mark(differ):
     differ.parse(code3, parsers=2, expect_error_leaves=True)
 
 
+def test_byte_order_mark2(differ):
+    code = '\ufeff# foo'
+    differ.initialize(code)
+    differ.parse(code + 'x', parsers=1)
+
+
 def test_backslash_insertion(differ):
     code1 = dedent('''
         def f():

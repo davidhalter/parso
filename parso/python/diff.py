@@ -13,7 +13,7 @@ import logging
 from parso.utils import split_lines
 from parso.python.parser import Parser
 from parso.python.tree import EndMarker
-from parso.python.tokenize import PythonToken
+from parso.python.tokenize import PythonToken, BOM_UTF8_STRING
 from parso.python.token import PythonTokenTypes
 
 LOG = logging.getLogger(__name__)
@@ -85,6 +85,10 @@ def _assert_valid_graph(node):
             actual = line, len(splitted[-1])
         else:
             actual = previous_start_pos[0], previous_start_pos[1] + len(content)
+            if content.startswith(BOM_UTF8_STRING) \
+                    and node.get_start_pos_of_prefix() == (1, 0):
+                # Remove the byte order mark
+                actual = actual[0], actual[1] - 1
 
         assert node.start_pos == actual, (node.start_pos, actual)
     else:
@@ -815,6 +819,8 @@ class _NodesTree(object):
         lines = split_lines(self.prefix)
         assert len(lines) > 0
         if len(lines) == 1:
+            if lines[0].startswith(BOM_UTF8_STRING) and end_pos == [1, 0]:
+                end_pos[1] -= 1
             end_pos[1] += len(lines[0])
         else:
             end_pos[0] += len(lines) - 1
