@@ -532,7 +532,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0), indents=None, is_first
 
             if not pseudomatch:  # scan for tokens
                 match = whitespace.match(line, pos)
-                if pos == 0 and paren_level == 0:
+                if pos == 0 and paren_level == 0 and not fstring_stack:
                     for t in dedent_if_necessary(match.end()):
                         yield t
                 pos = match.end()

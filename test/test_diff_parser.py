@@ -1609,3 +1609,24 @@ def test_backslash_insertion(differ):
     differ.initialize(code1)
     differ.parse(code2, parsers=2, copies=1, expect_error_leaves=True)
     differ.parse(code1, parsers=2, copies=1)
+
+
+def test_fstring_with_error_leaf(differ):
+    code1 = dedent("""\
+        def f():
+            x
+        def g():
+            y
+        """)
+    code2 = dedent("""\
+        def f():
+            x
+            F'''
+        def g():
+            y
+            {a
+        \x01
+        """)
+
+    differ.initialize(code1)
+    differ.parse(code2, parsers=1, copies=1, expect_error_leaves=True)

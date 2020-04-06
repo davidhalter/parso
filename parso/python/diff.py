@@ -12,10 +12,9 @@ import logging
 
 from parso.utils import split_lines
 from parso.python.parser import Parser
-from parso.python.tree import EndMarker, PythonErrorLeaf
+from parso.python.tree import EndMarker
 from parso.python.tokenize import PythonToken
 from parso.python.token import PythonTokenTypes
-from parso.tree import search_ancestor
 
 LOG = logging.getLogger(__name__)
 DEBUG_DIFF_PARSER = False
@@ -432,9 +431,9 @@ class DiffParser(object):
         )
         stack = self._active_parser.stack
         self._replace_tos_indent = None
-        #print('start', line_offset + 1, indents)
+        # print('start', line_offset + 1, indents)
         for token in tokens:
-            #print(token, indents)
+            # print(token, indents)
             typ = token.type
             if typ == DEDENT:
                 if len(indents) < initial_indentation_count:
