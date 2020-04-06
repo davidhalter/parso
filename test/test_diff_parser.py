@@ -1422,7 +1422,7 @@ def test_with_formfeed(differ):
             return ''
         ''')
     differ.initialize(code1)
-    differ.parse(code2, parsers=2, copies=1, expect_error_leaves=True)
+    differ.parse(code2, parsers=ANY, copies=ANY, expect_error_leaves=True)
 
 
 def test_repeating_invalid_indent(differ):
@@ -1508,7 +1508,7 @@ def test_async_func2(differ):
           y
         ''')
     differ.initialize(code1)
-    differ.parse(code2, parsers=2, copies=1, expect_error_leaves=True)
+    differ.parse(code2, parsers=ANY, copies=ANY, expect_error_leaves=True)
 
 
 def test_weird_ending(differ):
