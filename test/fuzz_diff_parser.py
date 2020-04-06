@@ -197,7 +197,7 @@ class FileModification:
 class FileTests:
     def __init__(self, file_path, test_count, change_count):
         self._path = file_path
-        with open(file_path) as f:
+        with open(file_path, errors='replace') as f:
             code = f.read()
         self._code_lines = split_lines(code, keepends=True)
         self._test_count = test_count
