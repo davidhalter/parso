@@ -1636,3 +1636,28 @@ def test_fstring_with_error_leaf(differ):
 
     differ.initialize(code1)
     differ.parse(code2, parsers=1, copies=1, expect_error_leaves=True)
+
+
+def test_yet_another_backslash(differ):
+    code1 = dedent('''\
+        def f():
+            x
+            def g():
+                y
+                base = "" \\
+                       "" % to
+                return
+        ''')
+    code2 = dedent('''\
+        def f():
+            x
+            def g():
+                y
+                base = "" \\
+          \x0f
+                return
+        ''')
+
+    differ.initialize(code1)
+    differ.parse(code2, parsers=ANY, copies=ANY, expect_error_leaves=True)
+    differ.parse(code1, parsers=ANY, copies=ANY)
