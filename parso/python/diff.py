@@ -278,7 +278,7 @@ class DiffParser(object):
 
             if operation == 'equal':
                 line_offset = j1 - i1
-                self._copy_from_old_parser(line_offset, i2, j2)
+                self._copy_from_old_parser(line_offset, i1 + 1, i2, j2)
             elif operation == 'replace':
                 self._parse(until_line=j2)
             elif operation == 'insert':
@@ -319,7 +319,7 @@ class DiffParser(object):
         if self._module.get_code() != ''.join(lines_new):
             LOG.warning('parser issue:\n%s\n%s', ''.join(old_lines), ''.join(lines_new))
 
-    def _copy_from_old_parser(self, line_offset, until_line_old, until_line_new):
+    def _copy_from_old_parser(self, line_offset, start_line_old, until_line_old, until_line_new):
         last_until_line = -1
         while until_line_new > self._nodes_tree.parsed_until_line:
             parsed_until_line_old = self._nodes_tree.parsed_until_line - line_offset
@@ -333,12 +333,18 @@ class DiffParser(object):
                 p_children = line_stmt.parent.children
                 index = p_children.index(line_stmt)
 
-                from_ = self._nodes_tree.parsed_until_line + 1
-                copied_nodes = self._nodes_tree.copy_nodes(
-                    p_children[index:],
-                    until_line_old,
-                    line_offset
-                )
+                if start_line_old == 1 \
+                        and p_children[0].get_first_leaf().prefix.startswith(BOM_UTF8_STRING):
+                    # If there's a BOM in the beginning, just reparse. It's too
+                    # complicated to account for it otherwise.
+                    copied_nodes = []
+                else:
+                    from_ = self._nodes_tree.parsed_until_line + 1
+                    copied_nodes = self._nodes_tree.copy_nodes(
+                        p_children[index:],
+                        until_line_old,
+                        line_offset
+                    )
                 # Match all the nodes that are in the wanted range.
                 if copied_nodes:
                     self._copy_count += 1
