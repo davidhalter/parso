@@ -257,13 +257,14 @@ def _create_token_collection(version_info):
             fstring_pattern_map[t + quote] = quote
 
     ALWAYS_BREAK_TOKENS = (';', 'import', 'class', 'def', 'try', 'except',
-                           'finally', 'while', 'with', 'return')
+                           'finally', 'while', 'with', 'return', 'continue',
+                           'break', 'del', 'pass', 'global', 'assert')
     if version_info >= (3, 5):
-        ALWAYS_BREAK_TOKENS += ('async',)
+        ALWAYS_BREAK_TOKENS += ('async', 'nonlocal')
     pseudo_token_compiled = _compile(PseudoToken)
     return TokenCollection(
         pseudo_token_compiled, single_quoted, triple_quoted, endpats,
-        whitespace, fstring_pattern_map, ALWAYS_BREAK_TOKENS
+        whitespace, fstring_pattern_map, set(ALWAYS_BREAK_TOKENS)
     )
 
 
