@@ -1588,16 +1588,16 @@ def test_byte_order_mark(differ):
 
 
 def test_byte_order_mark2(differ):
-    code = '\ufeff# foo'
+    code = u'\ufeff# foo'
     differ.initialize(code)
-    differ.parse(code + 'x', parsers=1)
+    differ.parse(code + 'x', parsers=ANY)
 
 
 def test_byte_order_mark3(differ):
-    code1 = "\ufeff#\ny\n"
-    code2 = 'x\n\ufeff#\n\ufeff#\ny\n'
+    code1 = u"\ufeff#\ny\n"
+    code2 = u'x\n\ufeff#\n\ufeff#\ny\n'
     differ.initialize(code1)
-    differ.parse(code2, expect_error_leaves=True, parsers=3)
+    differ.parse(code2, expect_error_leaves=True, parsers=ANY, copies=ANY)
     differ.parse(code1, parsers=1)
 
 
