@@ -23,6 +23,7 @@ _INDENTATION_TOKENS = 'INDENT', 'ERROR_DEDENT', 'DEDENT'
 
 NEWLINE = PythonTokenTypes.NEWLINE
 DEDENT = PythonTokenTypes.DEDENT
+NAME = PythonTokenTypes.NAME
 ERROR_DEDENT = PythonTokenTypes.ERROR_DEDENT
 ENDMARKER = PythonTokenTypes.ENDMARKER
 
@@ -171,12 +172,6 @@ def _func_or_class_has_suite(node):
     if node.type in ('async_funcdef', 'async_stmt'):
         node = node.children[-1]
     return node.type in ('classdef', 'funcdef') and node.children[-1].type == 'suite'
-
-
-def _get_suite_func_or_class_parent(node):
-    while node.parent.type in ('funcdef', 'classdef', 'async_stmt', 'async_funcdef', 'decorated'):
-        node = node.parent
-    return node
 
 
 def _suite_or_file_input_is_valid(pgen_grammar, stack):
@@ -390,7 +385,7 @@ class DiffParser(object):
             node = self._try_parse_part(until_line)
             nodes = node.children
 
-            self._nodes_tree.add_parsed_nodes(nodes)
+            self._nodes_tree.add_parsed_nodes(nodes, self._keyword_token_indents)
             if self._replace_tos_indent is not None:
                 self._nodes_tree.indents[-1] = self._replace_tos_indent
 
@@ -441,6 +436,7 @@ class DiffParser(object):
         )
         stack = self._active_parser.stack
         self._replace_tos_indent = None
+        self._keyword_token_indents = {}
         # print('start', line_offset + 1, indents)
         for token in tokens:
             # print(token, indents)
@@ -483,6 +479,9 @@ class DiffParser(object):
                         yield PythonToken(ENDMARKER, '', token.start_pos, '')
                         break
 
+            if typ == NAME and token.string in ('class', 'def'):
+                self._keyword_token_indents[token.start_pos] = list(indents)
+
             yield token
 
 
@@ -491,17 +490,12 @@ class _NodesTreeNode(object):
         '_ChildrenGroup',
         'prefix children line_offset last_line_offset_leaf')
 
-    def __init__(self, tree_node, parent=None):
+    def __init__(self, tree_node, parent=None, indentation=0):
         self.tree_node = tree_node
         self._children_groups = []
         self.parent = parent
         self._node_children = []
-
-        if self.tree_node.type == 'file_input':
-            self.indentation = 0
-        else:
-            n = _get_suite_func_or_class_parent(self.tree_node)
-            self.indentation = _get_indentation(n)
+        self.indentation = indentation
 
     def finish(self):
         children = []
@@ -585,7 +579,7 @@ class _NodesTree(object):
                 return node
             self._working_stack.pop()
 
-    def add_parsed_nodes(self, tree_nodes):
+    def add_parsed_nodes(self, tree_nodes, keyword_token_indents):
         old_prefix = self.prefix
         tree_nodes = self._remove_endmarker(tree_nodes)
         if not tree_nodes:
@@ -598,19 +592,23 @@ class _NodesTree(object):
         assert node.tree_node.type in ('suite', 'file_input')
         node.add_tree_nodes(old_prefix, tree_nodes)
         # tos = Top of stack
-        self._update_parsed_node_tos(tree_nodes[-1])
+        self._update_parsed_node_tos(tree_nodes[-1], keyword_token_indents)
 
-    def _update_parsed_node_tos(self, tree_node):
+    def _update_parsed_node_tos(self, tree_node, keyword_token_indents):
         if tree_node.type == 'suite':
-            new_tos = _NodesTreeNode(tree_node)
+            def_leaf = tree_node.parent.children[0]
+            new_tos = _NodesTreeNode(
+                tree_node,
+                indentation=keyword_token_indents[def_leaf.start_pos][-1],
+            )
             new_tos.add_tree_nodes('', list(tree_node.children))
 
             self._working_stack[-1].add_child_node(new_tos)
             self._working_stack.append(new_tos)
 
-            self._update_parsed_node_tos(tree_node.children[-1])
+            self._update_parsed_node_tos(tree_node.children[-1], keyword_token_indents)
         elif _func_or_class_has_suite(tree_node):
-            self._update_parsed_node_tos(tree_node.children[-1])
+            self._update_parsed_node_tos(tree_node.children[-1], keyword_token_indents)
 
     def _remove_endmarker(self, tree_nodes):
         """
@@ -766,7 +764,8 @@ class _NodesTree(object):
 
             indent = _get_suite_indentation(suite)
             added_indents.append(indent)
-            suite_tos = _NodesTreeNode(suite)
+
+            suite_tos = _NodesTreeNode(suite, indentation=_get_indentation(last_node))
             # Don't need to pass line_offset here, it's already done by the
             # parent.
             suite_nodes, new_working_stack, new_prefix, ai = self._copy_nodes(

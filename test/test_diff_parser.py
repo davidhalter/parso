@@ -1671,12 +1671,7 @@ def test_yet_another_backslash(differ):
     differ.parse(code1, parsers=ANY, copies=ANY)
 
 
-@pytest.mark.xfail
-def test_very_weird_indentation(differ):
-    """
-    This test for now fails, because it's just hard to implement this, but it's
-    also not really important.
-    """
+def test_backslash_before_def(differ):
     code1 = dedent('''\
         def f():
             x
@@ -1696,4 +1691,4 @@ def test_very_weird_indentation(differ):
         ''')
 
     differ.initialize(code1)
-    differ.parse(code2, parsers=1, copies=1, expect_error_leaves=True)
+    differ.parse(code2, parsers=3, copies=1, expect_error_leaves=True)
