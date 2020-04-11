@@ -50,6 +50,11 @@ def find_python_files_in_tree(file_path):
         yield file_path
         return
     for root, dirnames, filenames in os.walk(file_path):
+        if 'chardet' in root:
+            # Stuff like chardet/langcyrillicmodel.py is just very slow to
+            # parse and machine generated, so ignore those.
+            continue
+
         for name in filenames:
             if name.endswith('.py'):
                 yield os.path.join(root, name)
