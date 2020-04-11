@@ -102,9 +102,17 @@ class LineCopy:
 
 class FileModification:
     @classmethod
-    def generate(cls, code_lines, change_count):
+    def generate(cls, code_lines, change_count, previous_file_modification=None):
+        if previous_file_modification is not None and random.random() > 0.5:
+            # We want to keep the previous modifications in some cases to make
+            # more complex parser issues visible.
+            code_lines = previous_file_modification.apply(code_lines)
+            added_modifications = previous_file_modification.modification_list
+        else:
+            added_modifications = []
         return cls(
-            list(cls._generate_line_modifications(code_lines, change_count)),
+            added_modifications
+            + list(cls._generate_line_modifications(code_lines, change_count)),
             # work with changed trees more than with normal ones.
             check_original=random.random() > 0.8,
         )
@@ -158,18 +166,18 @@ class FileModification:
             yield l
 
     def __init__(self, modification_list, check_original):
-        self._modification_list = modification_list
+        self.modification_list = modification_list
         self._check_original = check_original
 
-    def _apply(self, code_lines):
+    def apply(self, code_lines):
         changed_lines = list(code_lines)
-        for modification in self._modification_list:
+        for modification in self.modification_list:
             modification.apply(changed_lines)
         return changed_lines
 
     def run(self, grammar, code_lines, print_code):
         code = ''.join(code_lines)
-        modified_lines = self._apply(code_lines)
+        modified_lines = self.apply(code_lines)
         modified_code = ''.join(modified_lines)
 
         if print_code:
@@ -228,8 +236,12 @@ class FileTests:
 
     def run(self, grammar, debugger):
         def iterate():
+            fm = None
             for _ in range(self._test_count):
-                fm = FileModification.generate(self._code_lines, self._change_count)
+                fm = FileModification.generate(
+                    self._code_lines, self._change_count,
+                    previous_file_modification=fm
+                )
                 self._file_modifications.append(fm)
                 yield fm
 
