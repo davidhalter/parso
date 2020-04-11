@@ -135,6 +135,15 @@ def _get_last_line(node_or_leaf):
     if _ends_with_newline(last_leaf):
         return last_leaf.start_pos[0]
     else:
+        n = last_leaf.get_next_leaf()
+        if n.type == 'endmarker' and '\n' in n.prefix:
+            # This is a very special case and has to do with error recovery in
+            # Parso. The problem is basically that there's no newline leaf at
+            # the end sometimes (it's required in the grammar, but not needed
+            # actually before endmarker, CPython just adds a newline to make
+            # source code pass the parser, to account for that Parso error
+            # recovery allows small_stmt instead of simple_stmt).
+            return last_leaf.end_pos[0] + 1
         return last_leaf.end_pos[0]
 
 
