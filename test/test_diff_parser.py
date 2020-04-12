@@ -1706,3 +1706,25 @@ def test_backslash_with_imports(differ):
     differ.initialize(code1)
     differ.parse(code2, parsers=1)
     differ.parse(code1, parsers=1)
+
+
+def test_one_line_function_error_recovery(differ):
+    code1 = dedent('''\
+        class X:
+            x
+            def y(): word """
+                # a
+                # b
+                c(self)
+        ''')
+    code2 = dedent('''\
+        class X:
+            x
+            def y(): word """
+                # a
+                # b
+                c(\x01+self)
+        ''')
+
+    differ.initialize(code1)
+    differ.parse(code2, parsers=1, copies=1, expect_error_leaves=True)

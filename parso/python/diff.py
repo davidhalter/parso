@@ -726,6 +726,17 @@ class _NodesTree(object):
                 if _func_or_class_has_suite(node):
                     new_nodes.append(node)
                 break
+            try:
+                c = node.children
+            except AttributeError:
+                pass
+            else:
+                # This case basically appears with error recovery of one line
+                # suites like `def foo(): bar.-`. In this case we might not
+                # include a newline in the statement and we need to take care
+                # of that.
+                if c[-1].type in ('error_leaf', 'error_node'):
+                    break
 
             new_nodes.append(node)
 
