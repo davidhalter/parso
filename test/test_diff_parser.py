@@ -1728,3 +1728,23 @@ def test_one_line_function_error_recovery(differ):
 
     differ.initialize(code1)
     differ.parse(code2, parsers=1, copies=1, expect_error_leaves=True)
+
+
+def test_one_line_property_error_recovery(differ):
+    code1 = dedent('''\
+        class X:
+            x
+            @property
+            def encoding(self): True -
+                return 1
+        ''')
+    code2 = dedent('''\
+        class X:
+            x
+            @property
+            def encoding(self): True -
+                return 1
+        ''')
+
+    differ.initialize(code1)
+    differ.parse(code2, parsers=2, copies=1, expect_error_leaves=True)

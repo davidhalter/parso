@@ -735,7 +735,17 @@ class _NodesTree(object):
                 # suites like `def foo(): bar.-`. In this case we might not
                 # include a newline in the statement and we need to take care
                 # of that.
-                if c[-1].type in ('error_leaf', 'error_node'):
+                n = node
+                if n.type == 'decorated':
+                    n = n.children[-1]
+                if n.type in ('async_funcdef', 'async_stmt'):
+                    n = n.children[-1]
+                if n.type in ('classdef', 'funcdef'):
+                    suite_node = n.children[-1]
+                else:
+                    suite_node = c[-1]
+
+                if suite_node.type in ('error_leaf', 'error_node'):
                     break
 
             new_nodes.append(node)
