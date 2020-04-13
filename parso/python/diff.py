@@ -1,9 +1,29 @@
 """
-Basically a contains parser that is faster, because it tries to parse only
-parts and if anything changes, it only reparses the changed parts.
+The diff parser is trying to be a faster version of the normal parser by trying
+to reuse the nodes of a previous pass over the same file. This is also called
+incremental parsing in parser literature. The difference is mostly that with
+incremental parsing you get a range that needs to be reparsed. Here we
+calculate that range ourselves by using difflib. After that it's essentially
+incremental parsing.
 
-It works with a simple diff in the beginning and will try to reuse old parser
-fragments.
+The biggest issue of this approach is that we reuse nodes in a mutable way. The
+intial design and idea is quite problematic for this parser, but it is also
+pretty fast. Measurements showed that just copying nodes in Python is simply
+quite a bit slower (especially for big files >3 kLOC). Therefore we did not
+want to get rid of the mutable nodes, since this is usually not an issue.
+
+This is by far the hardest software I ever wrote, exactly because the initial
+design is crappy. When you have to account for a lot of mutable state, it
+creates a ton of issues that you would otherwise not have. This file took
+probably 3-6 months to write, which is insane for a parser.
+
+There is a fuzzer in that helps test this whole thing. Please use it if you
+make changes here. If you run the fuzzer like::
+
+    test/fuzz_diff_parser.py random -n 100000
+
+you can be pretty sure that everything is still fine. I sometimes run the
+fuzzer up to 24h to make sure everything is still ok.
 """
 import re
 import difflib
