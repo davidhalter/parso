@@ -3,10 +3,11 @@
 Changelog
 ---------
 
-0.7.0 (2020-04-)
-++++++++++++++++
+0.7.0 (2020-04-13)
+++++++++++++++++++
 
-- Fix a lot of annoying bugs in the diff parser
+- Fix a lot of annoying bugs in the diff parser. The fuzzer did not find
+  issues anymore even after running it for more than 24 hours (500k tests).
 - Small grammar change: suites can now contain newlines even after a newline.
   This should really not matter if you don't use error recovery. It allows for
   nicer error recovery.
