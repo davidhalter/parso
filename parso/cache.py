@@ -63,7 +63,8 @@ http://docs.python.org/3/library/sys.html#sys.implementation
 
 def _get_default_cache_path():
     if platform.system().lower() == 'windows':
-        dir_ = os.path.join(os.getenv('LOCALAPPDATA') or '~', 'Parso', 'Parso')
+        dir_ = os.path.join(os.getenv('LOCALAPPDATA')
+                            or os.path.expanduser('~'), 'Parso', 'Parso')
     elif platform.system().lower() == 'darwin':
         dir_ = os.path.join('~', 'Library', 'Caches', 'Parso')
     else:
