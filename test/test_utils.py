@@ -63,3 +63,17 @@ def test_utf8_bom():
     expr_stmt = module.children[0]
     assert expr_stmt.type == 'expr_stmt'
     assert unicode_bom == expr_stmt.get_first_leaf().prefix
+
+
+@pytest.mark.parametrize(
+    ('code', 'errors'), [
+        (b'# coding: wtf-12\nfoo', 'strict'),
+        (b'# coding: wtf-12\nfoo', 'replace'),
+    ]
+)
+def test_bytes_to_unicode_failing_encoding(code, errors):
+    if errors == 'strict':
+        with pytest.raises(LookupError):
+            python_bytes_to_unicode(code, errors=errors)
+    else:
+        python_bytes_to_unicode(code, errors=errors)
