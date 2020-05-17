@@ -252,7 +252,7 @@ def load_grammar(**kwargs):
                     grammar = PythonGrammar(version_info, bnf_text)
                     return _loaded_grammars.setdefault(path, grammar)
                 except FileNotFoundError:
-                    message = "Python version %s is currently not supported." % version
+                    message = "Python version %s.%s is currently not supported." % (version_info.major, version_info.minor)
                     raise NotImplementedError(message)
         else:
             raise NotImplementedError("No support for language %s." % language)
