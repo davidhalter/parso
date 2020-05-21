@@ -684,7 +684,10 @@ class _StarExprParentRule(SyntaxRule):
                 args = [c for c in node.children if c != ',']
                 starred = [c for c in args if c.type == 'star_expr']
                 if len(starred) > 1:
-                    message = "two starred expressions in assignment"
+                    if self._normalizer.version < (3, 9):
+                        message = "two starred expressions in assignment"
+                    else:
+                        message = "multiple starred expressions in assignment"
                     self.add_issue(starred[1], message=message)
                 elif starred:
                     count = args.index(starred[0])
