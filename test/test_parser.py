@@ -208,3 +208,13 @@ def test_named_expression(works_ge_py38):
 )
 def test_positional_only_arguments(works_ge_py38, param_code):
     works_ge_py38.parse("def x(%s): pass" % param_code)
+
+@pytest.mark.parametrize(
+    'expression', [
+        'a + a',
+        'lambda x: x',
+        'a := lambda x: x'
+    ]
+)
+def test_decorator_expression(works_ge_py39, expression):
+    works_ge_py39.parse("@%s\ndef x(): pass" % expression)
