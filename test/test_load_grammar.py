@@ -20,7 +20,7 @@ def test_parse_version(string, result):
     assert utils._parse_version(string) == result
 
 
-@pytest.mark.parametrize('string', ['1.', 'a', '#', '1.3.4.5', '1.12'])
+@pytest.mark.parametrize('string', ['1.', 'a', '#', '1.3.4.5'])
 def test_invalid_grammar_version(string):
     with pytest.raises(ValueError):
         load_grammar(version=string)
