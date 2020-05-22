@@ -7,6 +7,8 @@ import warnings
 import pytest
 
 import parso
+
+from textwrap import dedent
 from parso._compatibility import is_pypy
 from .failing_examples import FAILING_EXAMPLES, indent, build_nested
 
@@ -324,3 +326,16 @@ def test_invalid_fstrings(code, message):
 def test_trailing_comma(code):
     errors = _get_error_list(code)
     assert not errors
+
+def test_continue_in_finally():
+    code = dedent('''\
+        for a in [1]:
+            try:
+                pass
+            finally:
+                continue
+        ''')
+    assert not _get_error_list(code, version="3.8")
+    assert _get_error_list(code, version="3.7")
+
+    
