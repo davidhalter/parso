@@ -12,13 +12,6 @@ from .__future__ import absolute_import
 ''r''u''
 b'' BR''
 
-for x in [1]:
-    try:
-        continue  # Only the other continue and pass is an error.
-    finally:
-        #: E901
-        continue
-
 
 for x in [1]:
     break

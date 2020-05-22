@@ -5,7 +5,7 @@ import re
 from contextlib import contextmanager
 
 from parso.normalizer import Normalizer, NormalizerConfig, Issue, Rule
-from parso.python.tree import search_ancestor
+from parso.python.tree import Keyword, search_ancestor
 
 _BLOCK_STMTS = ('if_stmt', 'while_stmt', 'for_stmt', 'try_stmt', 'with_stmt')
 _STAR_EXPR_PARENTS = ('testlist_star_expr', 'testlist_comp', 'exprlist')
@@ -643,6 +643,9 @@ class _StarExprRule(SyntaxRule):
     message = "starred assignment target must be in a list or tuple"
     message_iterable_unpacking = "iterable unpacking cannot be used in comprehension"
     message_assignment = "can use starred expression only as assignment target"
+    message_cannot_assign = "cannot assign to {target}"
+
+    _FORBIDDEN = frozenset(("True", "False", "None"))
 
     def is_issue(self, node):
         if node.parent.type not in _STAR_EXPR_PARENTS:
@@ -651,19 +654,29 @@ class _StarExprRule(SyntaxRule):
             # [*[] for a in [1]]
             if node.parent.children[1].type in _COMP_FOR_TYPES:
                 self.add_issue(node, message=self.message_iterable_unpacking)
-        if self._normalizer.version <= (3, 4):
-            n = search_ancestor(node, 'for_stmt', 'expr_stmt')
-            found_definition = False
-            if n is not None:
-                if n.type == 'expr_stmt':
-                    exprs = _get_expr_stmt_definition_exprs(n)
-                else:
-                    exprs = _get_for_stmt_definition_exprs(n)
-                if node in exprs:
-                    found_definition = True
 
-            if not found_definition:
-                self.add_issue(node, message=self.message_assignment)
+        assignment_ancestor = search_ancestor(node, 'for_stmt', 'expr_stmt')
+        found_definition = False
+        if assignment_ancestor is not None:
+            if assignment_ancestor.type == 'expr_stmt':
+                exprs = _get_expr_stmt_definition_exprs(assignment_ancestor)
+            else:
+                exprs = _get_for_stmt_definition_exprs(assignment_ancestor)
+            if node in exprs:
+                found_definition = True
+
+        if found_definition:
+            for child in node.children:
+                if isinstance(child, Keyword) and child.value in self._FORBIDDEN:
+                    self.add_issue(
+                        node,
+                        message=self.message_cannot_assign.format(
+                            target=child.value
+                        ),
+                    )
+
+        if self._normalizer.version <= (3, 4) and not found_definition:
+            self.add_issue(node, message=self.message_assignment)
 
 
 @ErrorFinder.register_rule(types=_STAR_EXPR_PARENTS)
