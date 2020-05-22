@@ -185,12 +185,13 @@ def test_statically_nested_blocks():
 
 
 def test_future_import_first():
-    def is_issue(code, *args):
+    def is_issue(code, *args, **kwargs):
         code = code % args
-        return bool(_get_error_list(code))
+        return bool(_get_error_list(code, **kwargs))
 
     i1 = 'from __future__ import division'
     i2 = 'from __future__ import absolute_import'
+    i3 = 'from __future__ import annotations'
     assert not is_issue(i1)
     assert not is_issue(i1 + ';' + i2)
     assert not is_issue(i1 + '\n' + i2)
@@ -201,6 +202,8 @@ def test_future_import_first():
     assert not is_issue('""\n%s;%s', i1, i2)
     assert not is_issue('"";%s;%s ', i1, i2)
     assert not is_issue('"";%s\n%s ', i1, i2)
+    assert not is_issue(i3, version="3.7")
+    assert is_issue(i3, version="3.6")
     assert is_issue('1;' + i1)
     assert is_issue('1\n' + i1)
     assert is_issue('"";1\n' + i1)

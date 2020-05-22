@@ -13,8 +13,8 @@ _STAR_EXPR_PARENTS = ('testlist_star_expr', 'testlist_comp', 'exprlist')
 _MAX_BLOCK_SIZE = 20
 _MAX_INDENT_COUNT = 100
 ALLOWED_FUTURES = (
-    'all_feature_names', 'nested_scopes', 'generators', 'division',
-    'absolute_import', 'with_statement', 'print_function', 'unicode_literals',
+    'nested_scopes', 'generators', 'division', 'absolute_import',
+    'with_statement', 'print_function', 'unicode_literals',
 )
 _COMP_FOR_TYPES = ('comp_for', 'sync_comp_for')
 
@@ -622,13 +622,14 @@ class _FutureImportRule(SyntaxRule):
                 allowed_futures = list(ALLOWED_FUTURES)
                 if self._normalizer.version >= (3, 5):
                     allowed_futures.append('generator_stop')
-
+                if self._normalizer.version >= (3, 7):
+                    allowed_futures.append('annotations')
                 if name == 'braces':
                     self.add_issue(node, message="not a chance")
                 elif name == 'barry_as_FLUFL':
                     m = "Seriously I'm not implementing this :) ~ Dave"
                     self.add_issue(node, message=m)
-                elif name not in ALLOWED_FUTURES:
+                elif name not in allowed_futures:
                     message = "future feature %s is not defined" % name
                     self.add_issue(node, message=message)
 
