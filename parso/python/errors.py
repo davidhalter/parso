@@ -779,62 +779,59 @@ class _ArglistRule(SyntaxRule):
             return "Generator expression must be parenthesized"
 
     def is_issue(self, node):
-        first_arg = node.children[0]
-        if first_arg.type == 'argument' \
-                and first_arg.children[1].type in _COMP_FOR_TYPES:
-            # e.g. foo(x for x in [], b)
-            return len(node.children) >= 2
-        else:
-            arg_set = set()
-            kw_only = False
-            kw_unpacking_only = False
-            is_old_starred = False
-            # In python 3 this would be a bit easier (stars are part of
-            # argument), but we have to understand both.
-            for argument in node.children:
-                if argument == ',':
-                    continue
+        arg_set = set()
+        kw_only = False
+        kw_unpacking_only = False
+        is_old_starred = False
+        # In python 3 this would be a bit easier (stars are part of
+        # argument), but we have to understand both.
+        for argument in node.children:
+            if argument == ',':
+                continue
 
-                if argument in ('*', '**'):
-                    # Python < 3.5 has the order engraved in the grammar
-                    # file.  No need to do anything here.
-                    is_old_starred = True
-                    continue
-                if is_old_starred:
-                    is_old_starred = False
-                    continue
+            if argument in ('*', '**'):
+                # Python < 3.5 has the order engraved in the grammar
+                # file.  No need to do anything here.
+                is_old_starred = True
+                continue
+            if is_old_starred:
+                is_old_starred = False
+                continue
 
-                if argument.type == 'argument':
-                    first = argument.children[0]
-                    if first in ('*', '**'):
-                        if first == '*':
-                            if kw_unpacking_only:
-                                # foo(**kwargs, *args)
-                                message = "iterable argument unpacking " \
-                                          "follows keyword argument unpacking"
-                                self.add_issue(argument, message=message)
+            if argument.type == 'argument':
+                first = argument.children[0]
+                if argument.children[1].type in _COMP_FOR_TYPES and len(node.children) >= 2:
+                    # a(a, b for b in c)
+                    return True
+                if first in ('*', '**'):
+                    if first == '*':
+                        if kw_unpacking_only:
+                            # foo(**kwargs, *args)
+                            message = "iterable argument unpacking " \
+                                      "follows keyword argument unpacking"
+                            self.add_issue(argument, message=message)
+                    else:
+                        kw_unpacking_only = True
+                else:  # Is a keyword argument.
+                    kw_only = True
+                    if first.type == 'name':
+                        if first.value in arg_set:
+                            # f(x=1, x=2)
+                            message = "keyword argument repeated"
+                            if self._normalizer.version >= (3, 9):
+                                message += ": {}".format(first.value)
+                            self.add_issue(first, message=message)
                         else:
-                            kw_unpacking_only = True
-                    else:  # Is a keyword argument.
-                        kw_only = True
-                        if first.type == 'name':
-                            if first.value in arg_set:
-                                # f(x=1, x=2)
-                                message = "keyword argument repeated"
-                                if self._normalizer.version >= (3, 9):
-                                    message += ": {}".format(first.value)
-                                self.add_issue(first, message=message)
-                            else:
-                                arg_set.add(first.value)
-                else:
-                    if kw_unpacking_only:
-                        # f(**x, y)
-                        message = "positional argument follows keyword argument unpacking"
-                        self.add_issue(argument, message=message)
-                    elif kw_only:
-                        # f(x=2, y)
-                        message = "positional argument follows keyword argument"
-                        self.add_issue(argument, message=message)
+                            arg_set.add(first.value)
+            else:
+                if kw_unpacking_only:
+                    # f(**x, y)
+                    message = "positional argument follows keyword argument unpacking"
+                    self.add_issue(argument, message=message)
+                elif kw_only:
+                    # f(x=2, y)
+                    message = "positional argument follows keyword argument"
+                    self.add_issue(argument, message=message)
 
 
 @ErrorFinder.register_rule(type='parameters')

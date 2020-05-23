@@ -375,3 +375,19 @@ def test_repeated_kwarg():
         _get_error_list("f(q=1, q=2)", version="3.9")[0].message
         == "SyntaxError: keyword argument repeated: q"
     )
+
+
+@pytest.mark.parametrize(
+    ('source', 'no_errors'), [
+        ('a(a for a in b,)', False),
+        ('a(a for a in b, a)', False),
+        ('a(a, a for a in b)', False),
+        ('a(a, b, a for a in b, c, d)', False),
+        ('a(a for a in b)', True),
+        ('a((a for a in b), c)', True),
+        ('a(c, (a for a in b))', True),
+        ('a(a, b, (a for a in b), c, d)', True),
+    ]
+)
+def test_unparenthesized_genexp(source, no_errors):
+    assert bool(_get_error_list(source)) ^ no_errors
