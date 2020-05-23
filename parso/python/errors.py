@@ -981,6 +981,8 @@ class _CheckAssignmentRule(SyntaxRule):
               or '_test' in type_
               or type_ in ('term', 'factor')):
             error = 'operator'
+        elif type_ == "star_expr":
+            self._check_assignment(node.children[1])
 
         if error is not None:
             if is_namedexpr:

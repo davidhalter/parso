@@ -339,3 +339,26 @@ def test_continue_in_finally():
     assert _get_error_list(code, version="3.7")
 
     
+@pytest.mark.parametrize(
+    'template', [
+        "a, b, {target}, c = d",
+        "a, b, *{target}, c = d",
+        "(a, *{target}), c = d",
+        "for x, {target} in y: pass",
+        "for x, q, {target} in y: pass",
+        "for x, q, *{target} in y: pass",
+        "for (x, *{target}), q in y: pass",
+    ]
+)
+@pytest.mark.parametrize(
+    'target', [
+        "True",
+        "False",
+        "None",
+        "__debug__"
+    ]
+)
+def test_forbidden_name(template, target):
+    assert _get_error_list(template.format(target=target), version="3")[0].message
+
+
