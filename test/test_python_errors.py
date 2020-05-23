@@ -273,6 +273,9 @@ def test_too_many_levels_of_indentation():
     assert not _get_error_list(build_nested('pass', 49, base=base))
     assert _get_error_list(build_nested('pass', 50, base=base))
 
+def test_paren_kwarg():
+    assert _get_error_list("print((sep)=seperator)", version="3.8")
+    assert not _get_error_list("print((sep)=seperator)", version="3.7")
 
 @pytest.mark.parametrize(
     'code', [
