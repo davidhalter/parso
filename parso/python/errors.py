@@ -800,9 +800,18 @@ class _ArglistRule(SyntaxRule):
 
             if argument.type == 'argument':
                 first = argument.children[0]
-                if argument.children[1].type in _COMP_FOR_TYPES and len(node.children) >= 2:
-                    # a(a, b for b in c)
-                    return True
+                if (
+                    argument.children[1].type in _COMP_FOR_TYPES
+                    and len(node.children) >= 2
+                ):
+                    if self._normalizer.version >= (3, 7):
+                        return True
+                    elif len(node.children) == 2 and node.children[1] == ",":
+                        # trailing comma allowed until 3.7
+                        pass
+                    else:
+                        return True
+
                 if first in ('*', '**'):
                     if first == '*':
                         if kw_unpacking_only:

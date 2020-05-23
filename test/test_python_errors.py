@@ -378,12 +378,17 @@ def test_repeated_kwarg():
 
 
 @pytest.mark.parametrize(
-    'source', [
-        'a(a for a in b,)'
-        'a(a for a in b, a)',
-        'a(a, a for a in b)',
-        'a(a, b, a for a in b, c, d)',
+    ('source', 'no_errors', 'version'), [
+        ('a(a for a in b,)', True, '3.6'),
+        ('a(a for a in b,)', False, '3.7'),
+        ('a(a for a in b, a)', False, None),
+        ('a(a, a for a in b)', False, None),
+        ('a(a, b, a for a in b, c, d)', False, None),
+        ('a(a for a in b)', True, None),
+        ('a((a for a in b), c)', True, None),
+        ('a(c, (a for a in b))', True, None),
+        ('a(a, (a for a in b), c)', True, None),
     ]
 )
-def test_unparenthesized_genexp(source):
-    assert _get_error_list(source)
+def test_unparenthesized_genexp(source, no_errors, version):
+    assert bool(_get_error_list(source, version=version)) ^ no_errors
