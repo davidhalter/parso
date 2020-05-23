@@ -742,6 +742,9 @@ class _AnnotatorRule(SyntaxRule):
 class _ArgumentRule(SyntaxRule):
     def is_issue(self, node):
         first = node.children[0]
+        if self._normalizer.version < (3, 8):
+            # a((b)=c) is valid in <3.8
+            first = _remove_parens(first)
         if node.children[1] == '=' and first.type != 'name':
             if first.type == 'lambdef':
                 # f(lambda: 1=1)
