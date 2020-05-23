@@ -817,7 +817,10 @@ class _ArglistRule(SyntaxRule):
                         if first.type == 'name':
                             if first.value in arg_set:
                                 # f(x=1, x=2)
-                                self.add_issue(first, message="keyword argument repeated")
+                                message = "keyword argument repeated"
+                                if self._normalizer.version >= (3, 9):
+                                    message += ": {}".format(first.value)
+                                self.add_issue(first, message=message)
                             else:
                                 arg_set.add(first.value)
                 else:
