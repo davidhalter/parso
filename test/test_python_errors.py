@@ -362,6 +362,16 @@ def test_continue_in_finally():
     ]
 )
 def test_forbidden_name(template, target):
-    assert _get_error_list(template.format(target=target), version="3")[0].message
+    assert _get_error_list(template.format(target=target), version="3")
 
 
+def test_repeated_kwarg():
+    # python 3.9+ shows which argument is repeated
+    assert (
+        _get_error_list("f(q=1, q=2)", version="3.8")[0].message
+        == "SyntaxError: keyword argument repeated"
+    )
+    assert (
+        _get_error_list("f(q=1, q=2)", version="3.9")[0].message
+        == "SyntaxError: keyword argument repeated: q"
+    )
