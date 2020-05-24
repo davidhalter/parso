@@ -2,13 +2,19 @@
 Test all things related to the ``jedi.cache`` module.
 """
 
-from os import unlink
+import os
+import os.path
 
 import pytest
 import time
 
-from parso.cache import _NodeCacheItem, save_module, load_module, \
-    _get_hashed_path, parser_cache, _load_from_file_system, _save_to_file_system
+from parso.cache import (_CACHED_FILE_MAXIMUM_SURVIVAL, _VERSION_TAG,
+                         _get_cache_clear_lock, _get_hashed_path,
+                         _load_from_file_system, _NodeCacheItem,
+                         _remove_cache_and_update_lock, _save_to_file_system,
+                         clear_inactive_cache, load_module, parser_cache,
+                         save_module)
+from parso._compatibility import is_pypy
 from parso import load_grammar
 from parso import cache
 from parso import file_io
@@ -16,15 +22,13 @@ from parso import parse
 
 
 @pytest.fixture()
-def isolated_jedi_cache(monkeypatch, tmpdir):
-    """
-    Set `jedi.settings.cache_directory` to a temporary directory during test.
-
-    Same as `clean_jedi_cache`, but create the temporary directory for
-    each test case (scope='function').
-    """
-    monkeypatch.setattr(cache, '_default_cache_path', str(tmpdir))
-
+def isolated_parso_cache(monkeypatch, tmpdir):
+    """Set `parso.cache._default_cache_path` to a temporary directory
+    during the test. """
+    cache_path = str(os.path.join(str(tmpdir), "__parso_cache"))
+    monkeypatch.setattr(cache, '_default_cache_path', cache_path)
+    monkeypatch.setattr(cache, '_get_default_cache_path', lambda *args, **kwargs: cache_path)
+    return cache_path
 
 def test_modulepickling_change_cache_dir(tmpdir):
     """
@@ -57,7 +61,7 @@ def load_stored_item(hashed_grammar, path, item, cache_path):
     return item
 
 
-@pytest.mark.usefixtures("isolated_jedi_cache")
+@pytest.mark.usefixtures("isolated_parso_cache")
 def test_modulepickling_simulate_deleted_cache(tmpdir):
     """
     Tests loading from a cache file after it is deleted.
@@ -84,7 +88,7 @@ def test_modulepickling_simulate_deleted_cache(tmpdir):
     save_module(grammar._hashed, io, module, lines=[])
     assert load_module(grammar._hashed, io) == module
 
-    unlink(_get_hashed_path(grammar._hashed, path))
+    os.unlink(_get_hashed_path(grammar._hashed, path))
     parser_cache.clear()
 
     cached2 = load_module(grammar._hashed, io)
@@ -139,3 +143,32 @@ def test_cache_last_used_update(diff_cache, use_file_io):
 
     node_cache_item = next(iter(parser_cache.values()))[p]
     assert now < node_cache_item.last_used < time.time()
+
+@pytest.mark.skipif(
+    is_pypy, 
+    reason="pickling in pypy is slow, since we don't pickle,"
+           "we never go into path of auto-collecting garbage"
+)
+def test_inactive_cache(tmpdir, isolated_parso_cache):
+    parser_cache.clear()
+    test_subjects = "abcdef"
+    for path in test_subjects:
+        parse('somecode', cache=True, path=os.path.join(str(tmpdir), path))
+    raw_cache_path = os.path.join(isolated_parso_cache, _VERSION_TAG)
+    assert os.path.exists(raw_cache_path)
+    paths = os.listdir(raw_cache_path)
+    a_while_ago = time.time() - _CACHED_FILE_MAXIMUM_SURVIVAL
+    old_paths = set()
+    for path in paths[:len(test_subjects) // 2]: # make certain number of paths old
+        os.utime(os.path.join(raw_cache_path, path), (a_while_ago, a_while_ago))
+        old_paths.add(path)
+    # nothing should be cleared while the lock is on
+    assert os.path.exists(_get_cache_clear_lock().path)
+    _remove_cache_and_update_lock() # it shouldn't clear anything
+    assert len(os.listdir(raw_cache_path)) == len(test_subjects)
+    assert old_paths.issubset(os.listdir(raw_cache_path))
+
+    os.utime(_get_cache_clear_lock().path, (a_while_ago, a_while_ago))
+    _remove_cache_and_update_lock()
+    assert len(os.listdir(raw_cache_path)) == len(test_subjects) // 2
+    assert not old_paths.intersection(os.listdir(raw_cache_path))

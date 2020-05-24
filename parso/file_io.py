@@ -1,4 +1,5 @@
 import os
+from parso._compatibility import FileNotFoundError
 
 
 class FileIO(object):
@@ -21,6 +22,13 @@ class FileIO(object):
         except OSError:
             # Might raise FileNotFoundError, OSError for Python 2
             return None
+
+    def _touch(self):
+        try:
+            os.utime(self.path, None)
+        except FileNotFoundError:
+            file = open(self.path, 'a')
+            file.close()
 
     def __repr__(self):
         return '%s(%s)' % (self.__class__.__name__, self.path)
