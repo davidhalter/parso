@@ -100,8 +100,7 @@ def _get_cache_clear_lock(cache_path = None):
     collection once a day (can be configured in _CACHE_CLEAR_THRESHOLD).
     """
     cache_path = cache_path or _get_default_cache_path()
-
-    return FileIO(os.path.join(cache_path, "{}-cache-lock".format(_VERSION_TAG)))
+    return FileIO(os.path.join(cache_path, "PARSO-CACHE-LOCK"))
 
 
 parser_cache = {}
@@ -214,7 +213,8 @@ def clear_inactive_cache(
     cache_path=None,
     inactivity_threshold=_CACHED_FILE_MAXIMUM_SURVIVAL,
 ):
-    cache_path = _get_default_cache_path()
+    if cache_path is None:
+        cache_path = _get_default_cache_path()
     if not os.path.exists(cache_path):
         return False
     for version_path in os.listdir(cache_path):
@@ -226,7 +226,10 @@ def clear_inactive_cache(
                 file.stat().st_atime + _CACHED_FILE_MAXIMUM_SURVIVAL
                 <= time.time()
             ):
-                os.remove(file.path)
+                try:
+                    os.remove(file.path)
+                except OSError: # silently ignore all failures
+                    continue
     else:
         return True
 
@@ -238,8 +241,13 @@ def _remove_cache_and_update_lock(cache_path = None):
         clear_lock_time is None # first time
         or clear_lock_time + _CACHE_CLEAR_THRESHOLD <= time.time()
     ):
-        if clear_inactive_cache(cache_path = cache_path):
-            lock._touch()
+        if not lock._touch():
+            # First make sure that as few as possible other cleanup jobs also
+            # get started. There is still a race condition but it's probably
+            # not a big problem.
+            return False
+
+        clear_inactive_cache(cache_path = cache_path)
 
 def _get_hashed_path(hashed_grammar, path, cache_path=None):
     directory = _get_cache_directory_path(cache_path=cache_path)

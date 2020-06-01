@@ -27,8 +27,12 @@ class FileIO(object):
         try:
             os.utime(self.path, None)
         except FileNotFoundError:
-            file = open(self.path, 'a')
-            file.close()
+            try:
+                file = open(self.path, 'a')
+                file.close()
+            except (OSError, IOError):  # TODO Maybe log this?
+                return False
+        return True
 
     def __repr__(self):
         return '%s(%s)' % (self.__class__.__name__, self.path)
