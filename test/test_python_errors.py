@@ -413,4 +413,11 @@ def test_unparenthesized_genexp(source, no_errors):
     ]
 )
 def test_starred_expr(source, no_errors):
-    assert bool(_get_error_list(source)) ^ no_errors
+    assert (
+        any(
+            "starred assignment target must be in a list or tuple"
+            in error.message
+            for error in _get_error_list(source)
+        )
+        ^ no_errors
+    )
