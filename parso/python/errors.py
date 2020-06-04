@@ -713,13 +713,10 @@ class _FutureImportRule(SyntaxRule):
 
 @ErrorFinder.register_rule(type='star_expr')
 class _StarExprRule(SyntaxRule):
-    message = "starred assignment target must be in a list or tuple"
     message_iterable_unpacking = "iterable unpacking cannot be used in comprehension"
     message_assignment = "can use starred expression only as assignment target"
 
     def is_issue(self, node):
-        if node.parent.type not in _STAR_EXPR_PARENTS:
-            return True
         if node.parent.type == 'testlist_comp':
             # [*[] for a in [1]]
             if node.parent.children[1].type in _COMP_FOR_TYPES:
@@ -1075,6 +1072,9 @@ class _CheckAssignmentRule(SyntaxRule):
               or type_ in ('term', 'factor')):
             error = 'operator'
         elif type_ == "star_expr":
+            if not search_ancestor(node, *_STAR_EXPR_PARENTS):
+                self.add_issue(node, message="starred assignment target must be in a list or tuple")
+
             self._check_assignment(node.children[1])
 
         if error is not None:
