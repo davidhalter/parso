@@ -979,7 +979,7 @@ class _FStringRule(SyntaxRule):
 
 
 class _CheckAssignmentRule(SyntaxRule):
-    def _check_assignment(self, node, is_deletion=False, is_namedexpr=False):
+    def _check_assignment(self, node, is_deletion=False, is_namedexpr=False, is_aug_assign=False):
         error = None
         type_ = node.type
         if type_ == 'lambdef':
@@ -1021,9 +1021,9 @@ class _CheckAssignmentRule(SyntaxRule):
                         # This is not a comprehension, they were handled
                         # further above.
                         for child in second.children[::2]:
-                            self._check_assignment(child, is_deletion, is_namedexpr)
+                            self._check_assignment(child, is_deletion, is_namedexpr, is_aug_assign)
                     else:  # Everything handled, must be useless brackets.
-                        self._check_assignment(second, is_deletion, is_namedexpr)
+                        self._check_assignment(second, is_deletion, is_namedexpr, is_aug_assign)
         elif type_ == 'keyword':
             if node.value == "yield":
                 error = "yield expression"
@@ -1066,13 +1066,13 @@ class _CheckAssignmentRule(SyntaxRule):
                 error = "f-string expression"
         elif type_ in ('testlist_star_expr', 'exprlist', 'testlist'):
             for child in node.children[::2]:
-                self._check_assignment(child, is_deletion, is_namedexpr)
+                self._check_assignment(child, is_deletion, is_namedexpr, is_aug_assign)
         elif ('expr' in type_ and type_ != 'star_expr'  # is a substring
               or '_test' in type_
               or type_ in ('term', 'factor')):
             error = 'operator'
         elif type_ == "star_expr":
-            if not search_ancestor(node, *_STAR_EXPR_PARENTS):
+            if not search_ancestor(node, *_STAR_EXPR_PARENTS) and not is_aug_assign:
                 self.add_issue(node, message="starred assignment target must be in a list or tuple")
 
             self._check_assignment(node.children[1])
@@ -1109,7 +1109,7 @@ class _ExprStmtRule(_CheckAssignmentRule):
 
         if self._normalizer.version <= (3, 8) or not is_aug_assign:
             for before_equal in node.children[:-2:2]:
-                self._check_assignment(before_equal)
+                self._check_assignment(before_equal, is_aug_assign=is_aug_assign)
 
         if is_aug_assign:
             target = _remove_parens(node.children[0])
