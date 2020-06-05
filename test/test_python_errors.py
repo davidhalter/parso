@@ -391,3 +391,26 @@ def test_repeated_kwarg():
 )
 def test_unparenthesized_genexp(source, no_errors):
     assert bool(_get_error_list(source)) ^ no_errors
+
+@pytest.mark.parametrize(
+    ('source', 'no_errors'), [
+        ('*x = 2', False),
+        ('(*y) = 1', False),
+        ('((*z)) = 1', False),
+        ('a, *b = 1', True),
+        ('a, *b, c = 1', True),
+        ('a, (*b), c = 1', True),
+        ('a, ((*b)), c = 1', True),
+        ('a, (*b, c), d = 1', True),
+        ('[*(1,2,3)]', True),
+        ('{*(1,2,3)}', True),
+        ('[*(1,2,3),]', True),
+        ('[*(1,2,3), *(4,5,6)]', True),
+        ('[0, *(1,2,3)]', True),
+        ('{*(1,2,3),}', True),
+        ('{*(1,2,3), *(4,5,6)}', True),
+        ('{0, *(4,5,6)}', True)
+    ]
+)
+def test_starred_expr(source, no_errors):
+    assert bool(_get_error_list(source, version="3")) ^ no_errors
