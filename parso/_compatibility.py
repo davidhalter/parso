@@ -50,6 +50,12 @@ try:
 except NameError:
     # Python 2.7 (both IOError + OSError)
     FileNotFoundError = EnvironmentError
+try:
+    # Python 2.7
+    PermissionError = PermissionError
+except NameError:
+    # Python 3.3+
+    PermissionError = EnvironmentError
 
 
 def utf8_repr(func):
@@ -68,6 +74,7 @@ def utf8_repr(func):
         return func
     else:
         return wrapper
+
 
 if sys.version_info < (3, 5):
     """
