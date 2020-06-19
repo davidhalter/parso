@@ -51,10 +51,10 @@ except NameError:
     # Python 2.7 (both IOError + OSError)
     FileNotFoundError = EnvironmentError
 try:
-    # Python 2.7
+    # Python 3.3+
     PermissionError = PermissionError
 except NameError:
-    # Python 3.3+
+    # Python 2.7 (both IOError + OSError)
     PermissionError = EnvironmentError
 
 
