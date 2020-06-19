@@ -7,13 +7,14 @@ import shutil
 import platform
 import errno
 import logging
+import warnings
 
 try:
     import cPickle as pickle
 except:
     import pickle
 
-from parso._compatibility import FileNotFoundError, scandir
+from parso._compatibility import FileNotFoundError, PermissionError, scandir
 from parso.file_io import FileIO
 
 LOG = logging.getLogger(__name__)
@@ -182,7 +183,7 @@ def _set_cache_item(hashed_grammar, path, module_cache_item):
     parser_cache.setdefault(hashed_grammar, {})[path] = module_cache_item
 
 
-def save_module(hashed_grammar, file_io, module, lines, pickling=True, cache_path=None):
+def try_to_save_module(hashed_grammar, file_io, module, lines, pickling=True, cache_path=None):
     path = file_io.path
     try:
         p_time = None if path is None else file_io.get_last_modified()
@@ -193,8 +194,18 @@ def save_module(hashed_grammar, file_io, module, lines, pickling=True, cache_pat
     item = _NodeCacheItem(module, lines, p_time)
     _set_cache_item(hashed_grammar, path, item)
     if pickling and path is not None:
-        _save_to_file_system(hashed_grammar, path, item, cache_path=cache_path)
-        _remove_cache_and_update_lock(cache_path = cache_path)
+        try:
+            _save_to_file_system(hashed_grammar, path, item, cache_path=cache_path)
+        except PermissionError:
+            # It's not really a big issue if the cache cannot be saved to the
+            # file system. It's still in RAM in that case. However we should
+            # still warn the user that this is happening.
+            warnings.warn(
+                'Tried to save a file to %s, but got permission denied.',
+                Warning
+            )
+        else:
+            _remove_cache_and_update_lock(cache_path=cache_path)
 
 
 def _save_to_file_system(hashed_grammar, path, item, cache_path=None):

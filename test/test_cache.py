@@ -12,13 +12,18 @@ from parso.cache import (_CACHED_FILE_MAXIMUM_SURVIVAL, _VERSION_TAG,
                          _get_cache_clear_lock, _get_hashed_path,
                          _load_from_file_system, _NodeCacheItem,
                          _remove_cache_and_update_lock, _save_to_file_system,
-                         clear_inactive_cache, load_module, parser_cache,
-                         save_module)
-from parso._compatibility import is_pypy
+                         load_module, parser_cache, try_to_save_module)
+from parso._compatibility import is_pypy, PermissionError
 from parso import load_grammar
 from parso import cache
 from parso import file_io
 from parso import parse
+
+skip_pypy = pytest.mark.skipif(
+    is_pypy,
+    reason="pickling in pypy is slow, since we don't pickle,"
+           "we never go into path of auto-collecting garbage"
+)
 
 
 @pytest.fixture()
@@ -29,6 +34,7 @@ def isolated_parso_cache(monkeypatch, tmpdir):
     monkeypatch.setattr(cache, '_default_cache_path', cache_path)
     monkeypatch.setattr(cache, '_get_default_cache_path', lambda *args, **kwargs: cache_path)
     return cache_path
+
 
 def test_modulepickling_change_cache_dir(tmpdir):
     """
@@ -85,7 +91,7 @@ def test_modulepickling_simulate_deleted_cache(tmpdir):
         pass
     io = file_io.FileIO(path)
 
-    save_module(grammar._hashed, io, module, lines=[])
+    try_to_save_module(grammar._hashed, io, module, lines=[])
     assert load_module(grammar._hashed, io) == module
 
     os.unlink(_get_hashed_path(grammar._hashed, path))
@@ -144,11 +150,8 @@ def test_cache_last_used_update(diff_cache, use_file_io):
     node_cache_item = next(iter(parser_cache.values()))[p]
     assert now < node_cache_item.last_used < time.time()
 
-@pytest.mark.skipif(
-    is_pypy, 
-    reason="pickling in pypy is slow, since we don't pickle,"
-           "we never go into path of auto-collecting garbage"
-)
+
+@skip_pypy
 def test_inactive_cache(tmpdir, isolated_parso_cache):
     parser_cache.clear()
     test_subjects = "abcdef"
@@ -159,12 +162,12 @@ def test_inactive_cache(tmpdir, isolated_parso_cache):
     paths = os.listdir(raw_cache_path)
     a_while_ago = time.time() - _CACHED_FILE_MAXIMUM_SURVIVAL
     old_paths = set()
-    for path in paths[:len(test_subjects) // 2]: # make certain number of paths old
+    for path in paths[:len(test_subjects) // 2]:  # make certain number of paths old
         os.utime(os.path.join(raw_cache_path, path), (a_while_ago, a_while_ago))
         old_paths.add(path)
     # nothing should be cleared while the lock is on
     assert os.path.exists(_get_cache_clear_lock().path)
-    _remove_cache_and_update_lock() # it shouldn't clear anything
+    _remove_cache_and_update_lock()  # it shouldn't clear anything
     assert len(os.listdir(raw_cache_path)) == len(test_subjects)
     assert old_paths.issubset(os.listdir(raw_cache_path))
 
@@ -172,3 +175,17 @@ def test_inactive_cache(tmpdir, isolated_parso_cache):
     _remove_cache_and_update_lock()
     assert len(os.listdir(raw_cache_path)) == len(test_subjects) // 2
     assert not old_paths.intersection(os.listdir(raw_cache_path))
+
+
+@skip_pypy
+def test_permission_error(monkeypatch):
+    def save(*args, **kwargs):
+        was_called[0] = True  # Python 2... Use nonlocal instead
+        raise PermissionError
+
+    was_called = [False]
+
+    monkeypatch.setattr(cache, '_save_to_file_system', save)
+    with pytest.warns(Warning):
+        parse(path=__file__, cache=True, diff_cache=True)
+    assert was_called[0]
