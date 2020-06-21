@@ -740,7 +740,10 @@ class _StarExprRule(SyntaxRule):
 class _StarExprParentRule(SyntaxRule):
     def is_issue(self, node):
         if node.parent.type == 'del_stmt':
-            self.add_issue(node.parent, message="can't use starred expression here")
+            if self._normalizer.version >= (3, 9):
+                self.add_issue(node.parent, message="cannot delete starred")
+            else:
+                self.add_issue(node.parent, message="can't use starred expression here")
         else:
             def is_definition(node, ancestor):
                 if ancestor is None:
@@ -1072,7 +1075,12 @@ class _CheckAssignmentRule(SyntaxRule):
               or type_ in ('term', 'factor')):
             error = 'operator'
         elif type_ == "star_expr":
-            if not search_ancestor(node, *_STAR_EXPR_PARENTS) and not is_aug_assign:
+            if is_deletion:
+                if self._normalizer.version >= (3, 9):
+                    error = "starred"
+                else:
+                    self.add_issue(node, message="can't use starred expression here")
+            elif not search_ancestor(node, *_STAR_EXPR_PARENTS) and not is_aug_assign:
                 self.add_issue(node, message="starred assignment target must be in a list or tuple")
 
             self._check_assignment(node.children[1])
