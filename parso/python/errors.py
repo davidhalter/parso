@@ -6,6 +6,7 @@ from contextlib import contextmanager
 
 from parso.normalizer import Normalizer, NormalizerConfig, Issue, Rule
 from parso.python.tree import search_ancestor
+from parso.python.tokenize import _get_token_collection
 
 _BLOCK_STMTS = ('if_stmt', 'while_stmt', 'for_stmt', 'try_stmt', 'with_stmt')
 _STAR_EXPR_PARENTS = ('testlist_star_expr', 'testlist_comp', 'exprlist')
@@ -416,6 +417,11 @@ class ErrorFinder(Normalizer):
                     match = re.match('\\w{,2}("{1,3}|\'{1,3})', leaf.value)
                     if match is None:
                         message = 'invalid syntax'
+                        if (
+                            self.version >= (3, 9)
+                            and leaf.value in _get_token_collection(self.version).always_break_tokens
+                        ):
+                            message = "f-string: " + message
                     else:
                         if len(match.group(1)) == 1:
                             message = 'EOL while scanning string literal'
@@ -481,7 +487,7 @@ class SyntaxRule(Rule):
 
     def _get_message(self, message, node):
         message = super(SyntaxRule, self)._get_message(message, node)
-        if "f-string: " not in message and _any_fstring_error(self._normalizer.version, node):
+        if "f-string" not in message and _any_fstring_error(self._normalizer.version, node):
             message = "f-string: " + message
         return "SyntaxError: " + message
 
