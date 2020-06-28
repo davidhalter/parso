@@ -444,8 +444,8 @@ class ErrorFinder(Normalizer):
 class IndentationRule(Rule):
     code = 903
 
-    def _get_message(self, message):
-        message = super(IndentationRule, self)._get_message(message)
+    def _get_message(self, message, node):
+        message = super(IndentationRule, self)._get_message(message, node)
         return "IndentationError: " + message
 
 
@@ -469,8 +469,10 @@ class ErrorFinderConfig(NormalizerConfig):
 class SyntaxRule(Rule):
     code = 901
 
-    def _get_message(self, message):
-        message = super(SyntaxRule, self)._get_message(message)
+    def _get_message(self, message, node):
+        message = super(SyntaxRule, self)._get_message(message, node)
+        if search_ancestor(node, "fstring") and self._normalizer.version >= (3, 9):
+            message = "f-string: " + message
         return "SyntaxError: " + message
 
 
