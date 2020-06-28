@@ -208,6 +208,16 @@ def _get_for_stmt_definition_exprs(for_stmt):
     exprlist = for_stmt.children[1]
     return list(_iter_definition_exprs_from_lists(exprlist))
 
+def _any_fstring_error(version, node):
+    if version < (3, 9) or node is None:
+        return False
+    if node.type == "error_node":
+        return any(child.type == "fstring_start" for child in node.children)
+    elif node.type == "fstring":
+        return True
+    else:
+        return search_ancestor(node, "fstring")
+
 
 class _Context(object):
     def __init__(self, node, add_syntax_error, parent_context=None):
@@ -471,11 +481,7 @@ class SyntaxRule(Rule):
 
     def _get_message(self, message, node):
         message = super(SyntaxRule, self)._get_message(message, node)
-        if (
-            search_ancestor(node, "fstring")
-            and self._normalizer.version >= (3, 9)
-            and "f-string" not in message
-        ):
+        if "f-string: " not in message and _any_fstring_error(self._normalizer.version, node):
             message = "f-string: " + message
         return "SyntaxError: " + message
 
@@ -492,8 +498,7 @@ class _InvalidSyntaxRule(SyntaxRule):
         error = node.get_next_leaf().type != 'error_leaf'
         if (
             error
-            and self._normalizer.version >= (3, 9)
-            and any(item.type == "fstring_start" for item in node.children)
+            and _any_fstring_error(self._normalizer.version, node)
         ):
             self.add_issue(node, message=self.fstring_message)
 
