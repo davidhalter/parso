@@ -6,6 +6,7 @@ from contextlib import contextmanager
 
 from parso.normalizer import Normalizer, NormalizerConfig, Issue, Rule
 from parso.python.tree import search_ancestor
+from parso.python.tokenize import _get_token_collection
 
 _BLOCK_STMTS = ('if_stmt', 'while_stmt', 'for_stmt', 'try_stmt', 'with_stmt')
 _STAR_EXPR_PARENTS = ('testlist_star_expr', 'testlist_comp', 'exprlist')
@@ -208,6 +209,16 @@ def _get_for_stmt_definition_exprs(for_stmt):
     exprlist = for_stmt.children[1]
     return list(_iter_definition_exprs_from_lists(exprlist))
 
+def _any_fstring_error(version, node):
+    if version < (3, 9) or node is None:
+        return False
+    if node.type == "error_node":
+        return any(child.type == "fstring_start" for child in node.children)
+    elif node.type == "fstring":
+        return True
+    else:
+        return search_ancestor(node, "fstring")
+
 
 class _Context(object):
     def __init__(self, node, add_syntax_error, parent_context=None):
@@ -406,6 +417,11 @@ class ErrorFinder(Normalizer):
                     match = re.match('\\w{,2}("{1,3}|\'{1,3})', leaf.value)
                     if match is None:
                         message = 'invalid syntax'
+                        if (
+                            self.version >= (3, 9)
+                            and leaf.value in _get_token_collection(self.version).always_break_tokens
+                        ):
+                            message = "f-string: " + message
                     else:
                         if len(match.group(1)) == 1:
                             message = 'EOL while scanning string literal'
@@ -444,8 +460,8 @@ class ErrorFinder(Normalizer):
 class IndentationRule(Rule):
     code = 903
 
-    def _get_message(self, message):
-        message = super(IndentationRule, self)._get_message(message)
+    def _get_message(self, message, node):
+        message = super(IndentationRule, self)._get_message(message, node)
         return "IndentationError: " + message
 
 
@@ -469,21 +485,34 @@ class ErrorFinderConfig(NormalizerConfig):
 class SyntaxRule(Rule):
     code = 901
 
-    def _get_message(self, message):
-        message = super(SyntaxRule, self)._get_message(message)
+    def _get_message(self, message, node):
+        message = super(SyntaxRule, self)._get_message(message, node)
+        if (
+            "f-string" not in message
+            and _any_fstring_error(self._normalizer.version, node)
+        ):
+            message = "f-string: " + message
         return "SyntaxError: " + message
 
 
 @ErrorFinder.register_rule(type='error_node')
 class _InvalidSyntaxRule(SyntaxRule):
     message = "invalid syntax"
+    fstring_message = "f-string: invalid syntax"
 
     def get_node(self, node):
         return node.get_next_leaf()
 
     def is_issue(self, node):
-        # Error leafs will be added later as an error.
-        return node.get_next_leaf().type != 'error_leaf'
+        error = node.get_next_leaf().type != 'error_leaf'
+        if (
+            error
+            and _any_fstring_error(self._normalizer.version, node)
+        ):
+            self.add_issue(node, message=self.fstring_message)
+        else:
+            # Error leafs will be added later as an error.
+            return error
 
 
 @ErrorFinder.register_rule(value='await')
