@@ -471,7 +471,11 @@ class SyntaxRule(Rule):
 
     def _get_message(self, message, node):
         message = super(SyntaxRule, self)._get_message(message, node)
-        if search_ancestor(node, "fstring") and self._normalizer.version >= (3, 9):
+        if (
+            search_ancestor(node, "fstring")
+            and self._normalizer.version >= (3, 9)
+            and "f-string" not in message
+        ):
             message = "f-string: " + message
         return "SyntaxError: " + message
 
@@ -479,13 +483,22 @@ class SyntaxRule(Rule):
 @ErrorFinder.register_rule(type='error_node')
 class _InvalidSyntaxRule(SyntaxRule):
     message = "invalid syntax"
+    fstring_message = "f-string: invalid syntax"
 
     def get_node(self, node):
         return node.get_next_leaf()
 
     def is_issue(self, node):
+        error = node.get_next_leaf().type != 'error_leaf'
+        if (
+            error
+            and self._normalizer.version >= (3, 9)
+            and any(item.type == "fstring_start" for item in node.children)
+        ):
+            self.add_issue(node, message=self.fstring_message)
+
         # Error leafs will be added later as an error.
-        return node.get_next_leaf().type != 'error_leaf'
+        return error
 
 
 @ErrorFinder.register_rule(value='await')
