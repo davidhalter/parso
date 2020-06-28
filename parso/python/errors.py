@@ -487,7 +487,10 @@ class SyntaxRule(Rule):
 
     def _get_message(self, message, node):
         message = super(SyntaxRule, self)._get_message(message, node)
-        if "f-string" not in message and _any_fstring_error(self._normalizer.version, node):
+        if (
+            "f-string" not in message
+            and _any_fstring_error(self._normalizer.version, node)
+        ):
             message = "f-string: " + message
         return "SyntaxError: " + message
 
@@ -507,9 +510,9 @@ class _InvalidSyntaxRule(SyntaxRule):
             and _any_fstring_error(self._normalizer.version, node)
         ):
             self.add_issue(node, message=self.fstring_message)
-
-        # Error leafs will be added later as an error.
-        return error
+        else:
+            # Error leafs will be added later as an error.
+            return error
 
 
 @ErrorFinder.register_rule(value='await')
