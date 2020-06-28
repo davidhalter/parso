@@ -158,6 +158,10 @@ def works_ge_py35(each_version):
     version_info = parse_version_string(each_version)
     return Checker(each_version, version_info >= (3, 5))
 
+@pytest.fixture
+def works_ge_py36(each_version):
+    version_info = parse_version_string(each_version)
+    return Checker(each_version, version_info >= (3, 6))
 
 @pytest.fixture
 def works_ge_py38(each_version):
