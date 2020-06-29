@@ -87,6 +87,39 @@ def test_async_for(works_ge_py35):
     works_ge_py35.parse("async def foo():\n async for a in b: pass")
 
 
+@pytest.mark.parametrize("body", [
+    """[1 async for a in b
+    ]""",
+    """[1 async
+    for a in b
+    ]""",
+    """[
+    1
+    async for a in b
+    ]""",
+    """[
+    1
+    async for a
+    in b
+    ]""",
+    """[
+    1
+    async
+    for
+    a
+    in
+    b
+    ]""",
+    """  [
+    1 async for a in b
+  ]""",
+])
+def test_async_for_comprehension_newline(works_ge_py36, body):
+    # Issue #139
+    works_ge_py36.parse("""async def foo():
+    {}""".format(body))
+
+
 def test_async_with(works_ge_py35):
     works_ge_py35.parse("async def foo():\n async with a: pass")
 
