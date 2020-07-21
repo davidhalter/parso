@@ -25,7 +25,7 @@ setup(name='parso',
       keywords='python parser parsing',
       long_description=readme,
       packages=find_packages(exclude=['test']),
-      package_data={'parso': ['python/grammar*.txt']},
+      package_data={'parso': ['python/grammar*.txt', 'py.typed', '*.pyi', '**/*.pyi']},
       platforms=['any'],
       python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*',
       classifiers=[
@@ -44,6 +44,7 @@ setup(name='parso',
           'Topic :: Software Development :: Libraries :: Python Modules',
           'Topic :: Text Editors :: Integrated Development Environments (IDE)',
           'Topic :: Utilities',
+          'Typing :: Typed',
       ],
       extras_require={
           'testing': [
