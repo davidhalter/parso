@@ -13,7 +13,7 @@ from parso.cache import (_CACHED_FILE_MAXIMUM_SURVIVAL, _VERSION_TAG,
                          _load_from_file_system, _NodeCacheItem,
                          _remove_cache_and_update_lock, _save_to_file_system,
                          load_module, parser_cache, try_to_save_module)
-from parso._compatibility import is_pypy, PermissionError
+from parso._compatibility import is_pypy
 from parso import load_grammar
 from parso import cache
 from parso import file_io

@@ -14,7 +14,7 @@ try:
 except:
     import pickle
 
-from parso._compatibility import FileNotFoundError, PermissionError, scandir
+from parso._compatibility import scandir
 from parso.file_io import FileIO
 
 LOG = logging.getLogger(__name__)

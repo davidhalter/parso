@@ -44,20 +44,6 @@ def u(string):
     return string
 
 
-try:
-    # Python 3.3+
-    FileNotFoundError = FileNotFoundError
-except NameError:
-    # Python 2.7 (both IOError + OSError)
-    FileNotFoundError = EnvironmentError
-try:
-    # Python 3.3+
-    PermissionError = PermissionError
-except NameError:
-    # Python 2.7 (both IOError + OSError)
-    PermissionError = EnvironmentError
-
-
 def utf8_repr(func):
     """
     ``__repr__`` methods in Python 2 don't allow unicode objects to be

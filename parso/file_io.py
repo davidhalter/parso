@@ -1,5 +1,4 @@
 import os
-from parso._compatibility import FileNotFoundError
 
 
 class FileIO(object):
@@ -19,8 +18,7 @@ class FileIO(object):
         """
         try:
             return os.path.getmtime(self.path)
-        except OSError:
-            # Might raise FileNotFoundError, OSError for Python 2
+        except FileNotFoundError:
             return None
 
     def _touch(self):
