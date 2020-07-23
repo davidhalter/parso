@@ -10,12 +10,12 @@ def get_python_files(path):
                 yield os.path.join(dir_path, file_name)
 
 
-def test_on_itself(each_version):
+def test_on_itself(each_py3_version):
     """
     There are obviously no syntax erros in the Python code of parso. However
     parso should output the same for all versions.
     """
-    grammar = parso.load_grammar(version=each_version)
+    grammar = parso.load_grammar(version=each_py3_version)
     path = os.path.dirname(os.path.dirname(__file__)) + '/parso'
     for file in get_python_files(path):
         tree = grammar.parse(path=file)
