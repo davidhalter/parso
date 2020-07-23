@@ -48,7 +48,7 @@ try:
 except ImportError:
     from collections import Mapping
 
-from parso._compatibility import utf8_repr, unicode
+from parso._compatibility import unicode
 from parso.tree import Node, BaseNode, Leaf, ErrorNode, ErrorLeaf, \
     search_ancestor
 from parso.python.prefix import split_prefix
@@ -175,7 +175,6 @@ class EndMarker(_LeafWithoutNewlines):
     __slots__ = ()
     type = 'endmarker'
 
-    @utf8_repr
     def __repr__(self):
         return "<%s: prefix=%s end_pos=%s>" % (
             type(self).__name__, repr(self.prefix), self.end_pos
@@ -187,7 +186,6 @@ class Newline(PythonLeaf):
     __slots__ = ()
     type = 'newline'
 
-    @utf8_repr
     def __repr__(self):
         return "<%s: %s>" % (type(self).__name__, repr(self.value))
 

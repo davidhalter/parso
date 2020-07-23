@@ -44,24 +44,6 @@ def u(string):
     return string
 
 
-def utf8_repr(func):
-    """
-    ``__repr__`` methods in Python 2 don't allow unicode objects to be
-    returned. Therefore cast them to utf-8 bytes in this decorator.
-    """
-    def wrapper(self):
-        result = func(self)
-        if isinstance(result, unicode):
-            return result.encode('utf-8')
-        else:
-            return result
-
-    if sys.version_info.major >= 3:
-        return func
-    else:
-        return wrapper
-
-
 if sys.version_info < (3, 5):
     """
     A super-minimal shim around listdir that behave like

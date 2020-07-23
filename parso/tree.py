@@ -1,7 +1,7 @@
 import sys
 from abc import abstractmethod, abstractproperty
 
-from parso._compatibility import utf8_repr, encoding
+from parso._compatibility import encoding
 from parso.utils import split_lines
 
 
@@ -238,7 +238,6 @@ class Leaf(NodeOrLeaf):
             end_pos_column = len(lines[-1])
         return end_pos_line, end_pos_column
 
-    @utf8_repr
     def __repr__(self):
         value = self.value
         if not value:
@@ -333,7 +332,6 @@ class BaseNode(NodeOrLeaf):
     def get_last_leaf(self):
         return self.children[-1].get_last_leaf()
 
-    @utf8_repr
     def __repr__(self):
         code = self.get_code().replace('\n', ' ').replace('\r', ' ').strip()
         if not sys.version_info.major >= 3:
