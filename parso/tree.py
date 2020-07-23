@@ -1,7 +1,6 @@
 import sys
 from abc import abstractmethod, abstractproperty
 
-from parso._compatibility import encoding
 from parso.utils import split_lines
 
 
@@ -334,8 +333,6 @@ class BaseNode(NodeOrLeaf):
 
     def __repr__(self):
         code = self.get_code().replace('\n', ' ').replace('\r', ' ').strip()
-        if not sys.version_info.major >= 3:
-            code = code.encode(encoding, 'replace')
         return "<%s: %s@%s,%s>" % \
             (type(self).__name__, code, self.start_pos[0], self.start_pos[1])
 

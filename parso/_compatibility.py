@@ -14,14 +14,6 @@ except NameError:
 is_pypy = platform.python_implementation() == 'PyPy'
 
 
-try:
-    encoding = sys.stdout.encoding
-    if encoding is None:
-        encoding = 'utf-8'
-except AttributeError:
-    encoding = 'ascii'
-
-
 def u(string):
     """Cast to unicode DAMMIT!
     Written because Python2 repr always implicitly casts to a string, so we
