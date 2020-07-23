@@ -10,15 +10,15 @@ from parso._compatibility import unicode
 # not in Python. In Python only \r (Carriage Return, 0xD) and \n (Line Feed,
 # 0xA) are allowed to split lines.
 _NON_LINE_BREAKS = (
-    u'\v',  # Vertical Tabulation 0xB
-    u'\f',  # Form Feed 0xC
-    u'\x1C',  # File Separator
-    u'\x1D',  # Group Separator
-    u'\x1E',  # Record Separator
-    u'\x85',  # Next Line (NEL - Equivalent to CR+LF.
-              # Used to mark end-of-line on some IBM mainframes.)
-    u'\u2028',  # Line Separator
-    u'\u2029',  # Paragraph Separator
+    '\v',  # Vertical Tabulation 0xB
+    '\f',  # Form Feed 0xC
+    '\x1C',  # File Separator
+    '\x1D',  # Group Separator
+    '\x1E',  # Record Separator
+    '\x85',  # Next Line (NEL - Equivalent to CR+LF.
+             # Used to mark end-of-line on some IBM mainframes.)
+    '\u2028',  # Line Separator
+    '\u2029',  # Paragraph Separator
 )
 
 Version = namedtuple('Version', 'major, minor, micro')

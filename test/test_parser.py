@@ -3,7 +3,6 @@ from textwrap import dedent
 
 import pytest
 
-from parso._compatibility import u
 from parso import parse
 from parso.python import tree
 from parso.utils import split_lines
@@ -126,7 +125,7 @@ def test_param_splitting(each_version):
 
 
 def test_unicode_string():
-    s = tree.String(None, u('bö'), (0, 0))
+    s = tree.String(None, 'bö', (0, 0))
     assert repr(s)  # Should not raise an Error!
 
 
@@ -135,7 +134,7 @@ def test_backslash_dos_style(each_version):
 
 
 def test_started_lambda_stmt(each_version):
-    m = parse(u'lambda a, b: a i', version=each_version)
+    m = parse('lambda a, b: a i', version=each_version)
     assert m.children[0].type == 'error_node'
 
 

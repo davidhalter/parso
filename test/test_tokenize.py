@@ -244,11 +244,11 @@ xfail_py2 = dict(marks=[pytest.mark.xfail(sys.version_info[0] == 2, reason='Pyth
         # Name stuff
         ('1foo1', [NUMBER, NAME]),
         pytest.param(
-            u'மெல்லினம்', [NAME],
+            'மெல்லினம்', [NAME],
             **xfail_py2),
-        pytest.param(u'²', [ERRORTOKEN], **xfail_py2),
-        pytest.param(u'ä²ö', [NAME, ERRORTOKEN, NAME], **xfail_py2),
-        pytest.param(u'ää²¹öö', [NAME, ERRORTOKEN, NAME], **xfail_py2),
+        pytest.param('²', [ERRORTOKEN], **xfail_py2),
+        pytest.param('ä²ö', [NAME, ERRORTOKEN, NAME], **xfail_py2),
+        pytest.param('ää²¹öö', [NAME, ERRORTOKEN, NAME], **xfail_py2),
         (' \x00a', [INDENT, ERRORTOKEN, NAME, DEDENT]),
         (dedent('''\
             class BaseCache:

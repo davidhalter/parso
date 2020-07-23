@@ -30,15 +30,15 @@ def _invalid_syntax(code, version=None, **kwargs):
 
 
 def test_formfeed(each_version):
-    s = u"foo\n\x0c\nfoo\n"
+    s = "foo\n\x0c\nfoo\n"
     t = _parse(s, each_version)
     assert t.children[0].children[0].type == 'name'
     assert t.children[1].children[0].type == 'name'
-    s = u"1\n\x0c\x0c\n2\n"
+    s = "1\n\x0c\x0c\n2\n"
     t = _parse(s, each_version)
 
     with pytest.raises(ParserSyntaxError):
-        s = u"\n\x0c2\n"
+        s = "\n\x0c2\n"
         _parse(s, each_version)
 
 
@@ -266,7 +266,7 @@ def test_multiline_bytes_literals(each_version):
     It's not possible to get the same result when using \xaa in Python 2/3,
     because it's treated differently.
     """
-    s = u"""
+    s = """
         md5test(b"\xaa" * 80,
                 (b"Test Using Larger Than Block-Size Key "
                  b"and Larger Than One Block-Size Data"),
@@ -295,7 +295,7 @@ def test_dict_unpacking(works_ge_py35):
 
 
 def test_multiline_str_literals(each_version):
-    s = u"""
+    s = """
         md5test("\xaa" * 80,
                 ("Test Using Larger Than Block-Size Key "
                  "and Larger Than One Block-Size Data"),

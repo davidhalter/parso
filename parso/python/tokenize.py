@@ -145,7 +145,7 @@ def _create_token_collection(version_info):
         # just use this one.
         Name = r'(\w+)'
     else:
-        Name = u'([A-Za-z_0-9\u0080-' + MAX_UNICODE + ']+)'
+        Name = '([A-Za-z_0-9\u0080-' + MAX_UNICODE + ']+)'
 
     if version_info >= (3, 6):
         Hexnumber = r'0[xX](?:_?[0-9a-fA-F])+'
