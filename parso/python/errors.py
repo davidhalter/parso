@@ -209,6 +209,11 @@ def _get_for_stmt_definition_exprs(for_stmt):
     exprlist = for_stmt.children[1]
     return list(_iter_definition_exprs_from_lists(exprlist))
 
+
+def _is_argument_comprehension(argument):
+    return argument.children[1].type in _COMP_FOR_TYPES
+
+
 def _any_fstring_error(version, node):
     if version < (3, 9) or node is None:
         return False
@@ -862,6 +867,9 @@ class _ArgumentRule(SyntaxRule):
                     message = 'expression cannot contain assignment, perhaps you meant "=="?'
             self.add_issue(first, message=message)
 
+        if _is_argument_comprehension(node) and node.parent.type == 'classdef':
+            self.add_issue(node, message='invalid syntax')
+
 
 @ErrorFinder.register_rule(type='nonlocal_stmt')
 class _NonlocalModuleLevelRule(SyntaxRule):
@@ -902,9 +910,10 @@ class _ArglistRule(SyntaxRule):
 
             if argument.type == 'argument':
                 first = argument.children[0]
-                if argument.children[1].type in _COMP_FOR_TYPES and len(node.children) >= 2:
+                if _is_argument_comprehension(argument) and len(node.children) >= 2:
                     # a(a, b for b in c)
                     return True
+
                 if first in ('*', '**'):
                     if first == '*':
                         if kw_unpacking_only:

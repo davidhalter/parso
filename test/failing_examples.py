@@ -76,6 +76,7 @@ FAILING_EXAMPLES = [
     '(yield) += 1',
     '(yield from x) += 1',
     '(x if x else y) += 1',
+    'class X(base for base in bases): pass',
     'a() += 1',
     'a + b += 1',
     '+a += 1',
