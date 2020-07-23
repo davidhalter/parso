@@ -2,7 +2,6 @@
 To ensure compatibility from Python ``2.7`` - ``3.3``, a module has been
 created. Clearly there is huge need to use conforming syntax.
 """
-import os
 import sys
 import platform
 
@@ -42,28 +41,3 @@ def u(string):
     if not isinstance(string, unicode):
         return unicode(str(string), 'UTF-8')
     return string
-
-
-if sys.version_info < (3, 5):
-    """
-    A super-minimal shim around listdir that behave like
-    scandir for the information we need.
-    """
-    class _DirEntry:
-
-        def __init__(self, name, basepath):
-            self.name = name
-            self.basepath = basepath
-
-        @property
-        def path(self):
-            return os.path.join(self.basepath, self.name)
-
-        def stat(self):
-            # won't follow symlinks
-            return os.lstat(os.path.join(self.basepath, self.name))
-
-    def scandir(dir):
-        return [_DirEntry(name, dir) for name in os.listdir(dir)]
-else:
-    from os import scandir

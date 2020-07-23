@@ -14,7 +14,6 @@ try:
 except:
     import pickle
 
-from parso._compatibility import scandir
 from parso.file_io import FileIO
 
 LOG = logging.getLogger(__name__)
@@ -232,7 +231,7 @@ def clear_inactive_cache(
         version_path = os.path.join(cache_path, version_path)
         if not os.path.isdir(version_path):
             continue
-        for file in scandir(version_path):
+        for file in os.scandir(version_path):
             if (
                 file.stat().st_atime + _CACHED_FILE_MAXIMUM_SURVIVAL
                 <= time.time()
