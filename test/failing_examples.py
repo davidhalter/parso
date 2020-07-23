@@ -76,7 +76,6 @@ FAILING_EXAMPLES = [
     '(yield) += 1',
     '(yield from x) += 1',
     '(x if x else y) += 1',
-    'class X(base for base in bases): pass',
     'a() += 1',
     'a + b += 1',
     '+a += 1',
@@ -335,6 +334,12 @@ if sys.version_info[:2] <= (3, 4):
     FAILING_EXAMPLES += [
         'a = *[1], 2',
         '(*[1], 2)',
+    ]
+
+if sys.version_info[:2] >= (3, 7):
+    # This is somehow ok in previous versions.
+    FAILING_EXAMPLES += [
+        'class X(base for base in bases): pass',
     ]
 
 if sys.version_info[:2] < (3, 8):
