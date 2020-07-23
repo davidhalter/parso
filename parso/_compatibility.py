@@ -14,13 +14,6 @@ except NameError:
 is_pypy = platform.python_implementation() == 'PyPy'
 
 
-def use_metaclass(meta, *bases):
-    """ Create a class with a metaclass. """
-    if not bases:
-        bases = (object,)
-    return meta("HackClass", bases, {})
-
-
 try:
     encoding = sys.stdout.encoding
     if encoding is None:

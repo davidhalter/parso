@@ -1,7 +1,5 @@
 from contextlib import contextmanager
 
-from parso._compatibility import use_metaclass
-
 
 class _NormalizerMeta(type):
     def __new__(cls, name, bases, dct):
@@ -11,7 +9,7 @@ class _NormalizerMeta(type):
         return new_cls
 
 
-class Normalizer(use_metaclass(_NormalizerMeta)):
+class Normalizer(metaclass=_NormalizerMeta):
     _rule_type_instances = {}
     _rule_value_instances = {}
 
