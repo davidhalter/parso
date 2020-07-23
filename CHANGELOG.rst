@@ -3,6 +3,14 @@
 Changelog
 ---------
 
+0.7.1 (2020-07-24)
+++++++++++++++++++
+
+- Fixed a couple of smaller bugs (mostly syntax error detection in
+  ``Grammar.iter_errors``)
+
+This is going to be the last release that supports Python 2.7, 3.4 and 3.5.
+
 0.7.0 (2020-04-13)
 ++++++++++++++++++
 
