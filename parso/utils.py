@@ -4,8 +4,6 @@ import sys
 from ast import literal_eval
 from functools import total_ordering
 
-from parso._compatibility import unicode
-
 # The following is a list in Python that are line breaks in str.splitlines, but
 # not in Python. In Python only \r (Carriage Return, 0xD) and \n (Line Feed,
 # 0xA) are allowed to split lines.
@@ -97,24 +95,24 @@ def python_bytes_to_unicode(source, encoding='utf-8', errors='strict'):
             # the default if nothing else has been set -> PEP 263
             return encoding
 
-    if isinstance(source, unicode):
+    if isinstance(source, str):
         # only cast str/bytes
         return source
 
     encoding = detect_encoding()
-    if not isinstance(encoding, unicode):
-        encoding = unicode(encoding, 'utf-8', 'replace')
+    if not isinstance(encoding, str):
+        encoding = str(encoding, 'utf-8', 'replace')
 
     try:
         # Cast to unicode
-        return unicode(source, encoding, errors)
+        return str(source, encoding, errors)
     except LookupError:
         if errors == 'replace':
             # This is a weird case that can happen if the given encoding is not
             # a valid encoding. This usually shouldn't happen with provided
             # encodings, but can happen if somebody uses encoding declarations
             # like `# coding: foo-8`.
-            return unicode(source, 'utf-8', errors)
+            return str(source, 'utf-8', errors)
         raise
 
 
@@ -179,7 +177,7 @@ def parse_version_string(version=None):
     """
     if version is None:
         version = '%s.%s' % sys.version_info[:2]
-    if not isinstance(version, (unicode, str)):
+    if not isinstance(version, str):
         raise TypeError('version must be a string like "3.8"')
 
     return _parse_version(version)

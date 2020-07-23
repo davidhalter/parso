@@ -1,4 +1,3 @@
-import sys
 from abc import abstractmethod, abstractproperty
 
 from parso.utils import split_lines
@@ -312,7 +311,6 @@ class BaseNode(NodeOrLeaf):
                     return element.get_leaf_for_position(position, include_prefixes)
                 except AttributeError:
                     return element
-
 
             index = int((lower + upper) / 2)
             element = self.children[index]

@@ -48,7 +48,6 @@ try:
 except ImportError:
     from collections import Mapping
 
-from parso._compatibility import unicode
 from parso.tree import Node, BaseNode, Leaf, ErrorNode, ErrorLeaf, \
     search_ancestor
 from parso.python.prefix import split_prefix
@@ -306,7 +305,7 @@ class _StringComparisonMixin(object):
         Make comparisons with strings easy.
         Improves the readability of the parser.
         """
-        if isinstance(other, (str, unicode)):
+        if isinstance(other, str):
             return self.value == other
 
         return self is other

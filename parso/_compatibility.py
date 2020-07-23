@@ -4,10 +4,4 @@ created. Clearly there is huge need to use conforming syntax.
 """
 import platform
 
-# unicode function
-try:
-    unicode = unicode
-except NameError:
-    unicode = str
-
 is_pypy = platform.python_implementation() == 'PyPy'
