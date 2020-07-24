@@ -173,13 +173,11 @@ def _iter_definition_exprs_from_lists(exprlist):
             if child.children[0] == '(':
                 testlist_comp = child.children[1]
                 if testlist_comp.type == 'testlist_comp':
-                    for expr in _iter_definition_exprs_from_lists(testlist_comp):
-                        yield expr
+                    yield from _iter_definition_exprs_from_lists(testlist_comp)
                     return
                 else:
                     # It's a paren that doesn't do anything, like 1 + (1)
-                    for c in check_expr(testlist_comp):
-                        yield c
+                    yield from check_expr(testlist_comp)
                     return
             elif child.children[0] == '[':
                 yield testlist_comp
@@ -188,11 +186,9 @@ def _iter_definition_exprs_from_lists(exprlist):
 
     if exprlist.type in _STAR_EXPR_PARENTS:
         for child in exprlist.children[::2]:
-            for c in check_expr(child):  # Python 2 sucks
-                yield c
+            yield from check_expr(child)
     else:
-        for c in check_expr(exprlist):  # Python 2 sucks
-            yield c
+        yield from check_expr(exprlist)
 
 
 def _get_expr_stmt_definition_exprs(expr_stmt):

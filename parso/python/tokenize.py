@@ -528,14 +528,12 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0), indents=None, is_first
                     if indent_start > indents[-1]:
                         yield PythonToken(INDENT, '', spos, '')
                         indents.append(indent_start)
-                    for t in dedent_if_necessary(indent_start):
-                        yield t
+                    yield from dedent_if_necessary(indent_start)
 
             if not pseudomatch:  # scan for tokens
                 match = whitespace.match(line, pos)
                 if new_line and paren_level == 0 and not fstring_stack:
-                    for t in dedent_if_necessary(match.end()):
-                        yield t
+                    yield from dedent_if_necessary(match.end())
                 pos = match.end()
                 new_line = False
                 yield PythonToken(
@@ -556,13 +554,11 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0), indents=None, is_first
                     # We only want to dedent if the token is on a new line.
                     m = re.match(r'[ \f\t]*$', line[:start])
                     if m is not None:
-                        for t in dedent_if_necessary(m.end()):
-                            yield t
+                        yield from dedent_if_necessary(m.end())
                 if is_identifier(token):
                     yield PythonToken(NAME, token, spos, prefix)
                 else:
-                    for t in _split_illegal_unicode_name(token, spos, prefix):
-                        yield t  # yield from Python 2
+                    yield from _split_illegal_unicode_name(token, spos, prefix)
             elif initial in '\r\n':
                 if any(not f.allow_multiline() for f in fstring_stack):
                     # Would use fstring_stack.clear, but that's not available

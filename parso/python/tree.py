@@ -363,8 +363,7 @@ class Scope(PythonBaseNode, DocstringMixin):
                 if element.type in names:
                     yield element
                 if element.type in _FUNC_CONTAINERS:
-                    for e in scan(element.children):
-                        yield e
+                    yield from scan(element.children)
 
         return scan(self.children)
 
@@ -615,8 +614,7 @@ class Function(ClassOrFunc):
                         else:
                             yield element
                 else:
-                    for result in scan(nested_children):
-                        yield result
+                    yield from scan(nested_children)
 
         return scan(self.children)
 
@@ -630,8 +628,7 @@ class Function(ClassOrFunc):
                         or element.type == 'keyword' and element.value == 'return':
                     yield element
                 if element.type in _RETURN_STMT_CONTAINERS:
-                    for e in scan(element.children):
-                        yield e
+                    yield from scan(element.children)
 
         return scan(self.children)
 
@@ -645,8 +642,7 @@ class Function(ClassOrFunc):
                         or element.type == 'keyword' and element.value == 'raise':
                     yield element
                 if element.type in _RETURN_STMT_CONTAINERS:
-                    for e in scan(element.children):
-                        yield e
+                    yield from scan(element.children)
 
         return scan(self.children)
 
@@ -1098,8 +1094,7 @@ class ExprStmt(PythonBaseNode, DocstringMixin):
             first = first.children[2]
         yield first
 
-        for operator in self.children[3::2]:
-            yield operator
+        yield from self.children[3::2]
 
 
 class Param(PythonBaseNode):
