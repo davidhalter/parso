@@ -86,7 +86,7 @@ class StackNode(object):
 
 def _token_to_transition(grammar, type_, value):
     # Map from token to label
-    if type_.contains_syntax:
+    if type_.value.contains_syntax:
         # Check for reserved words (keywords)
         try:
             return grammar.reserved_syntax_strings[value]
