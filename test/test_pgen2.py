@@ -167,23 +167,30 @@ def test_raise_3x_style_invalid_4(each_version):
 def test_annotation_1(works_in_py):
     works_in_py.parse("""def f(x) -> list: pass""")
 
+
 def test_annotation_2(works_in_py):
     works_in_py.parse("""def f(x:int): pass""")
+
 
 def test_annotation_3(works_in_py):
     works_in_py.parse("""def f(*x:str): pass""")
 
+
 def test_annotation_4(works_in_py):
     works_in_py.parse("""def f(**x:float): pass""")
+
 
 def test_annotation_5(works_in_py):
     works_in_py.parse("""def f(x, y:1+2): pass""")
 
+
 def test_annotation_6(each_version):
     _invalid_syntax("""def f(a, (b:1, c:2, d)): pass""", each_version)
 
+
 def test_annotation_7(each_version):
     _invalid_syntax("""def f(a, (b:1, c:2, d), e:3=4, f=5, *g:6): pass""", each_version)
+
 
 def test_annotation_8(each_version):
     s = """def f(a, (b:1, c:2, d), e:3=4, f=5,
@@ -199,6 +206,7 @@ def test_except_new(each_version):
             y""")
     _parse(s, each_version)
 
+
 def test_except_old(works_not_in_py):
     s = dedent("""
         try:
@@ -212,11 +220,14 @@ def test_except_old(works_not_in_py):
 def test_set_literal_1(works_in_py):
     works_in_py.parse("""x = {'one'}""")
 
+
 def test_set_literal_2(works_in_py):
     works_in_py.parse("""x = {'one', 1,}""")
 
+
 def test_set_literal_3(works_in_py):
     works_in_py.parse("""x = {'one', 'two', 'three'}""")
+
 
 def test_set_literal_4(works_in_py):
     works_in_py.parse("""x = {2, 3, 4,}""")
