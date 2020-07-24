@@ -141,16 +141,9 @@ def load_module(hashed_grammar, file_io, cache_path=None):
 def _load_from_file_system(hashed_grammar, path, p_time, cache_path=None):
     cache_path = _get_hashed_path(hashed_grammar, path, cache_path=cache_path)
     try:
-        try:
-            if p_time > os.path.getmtime(cache_path):
-                # Cache is outdated
-                return None
-        except OSError as e:
-            if e.errno == errno.ENOENT:
-                # In Python 2 instead of an IOError here we get an OSError.
-                raise FileNotFoundError
-            else:
-                raise
+        if p_time > os.path.getmtime(cache_path):
+            # Cache is outdated
+            return None
 
         with open(cache_path, 'rb') as f:
             gc.disable()

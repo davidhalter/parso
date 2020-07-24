@@ -310,10 +310,6 @@ class _StringComparisonMixin(object):
 
         return self is other
 
-    def __ne__(self, other):
-        """Python 2 compatibility."""
-        return not self.__eq__(other)
-
     def __hash__(self):
         return hash(self.value)
 

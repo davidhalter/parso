@@ -29,10 +29,10 @@ To run the tests for all supported Python versions::
 
     tox
 
-If you want to test only a specific Python version (e.g. Python 2.7), it's as
+If you want to test only a specific Python version (e.g. Python 3.9), it's as
 easy as::
 
-    tox -e py27
+    tox -e py39
 
 Tests are also run automatically on `Travis CI
 <https://travis-ci.org/davidhalter/parso/>`_.
