@@ -229,9 +229,6 @@ def test_endmarker_end_pos():
     check('a\\')
 
 
-xfail_py2 = dict(marks=[pytest.mark.xfail(sys.version_info[0] == 2, reason='Python 2')])
-
-
 @pytest.mark.parametrize(
     ('code', 'types'), [
         # Indentation
@@ -243,12 +240,10 @@ xfail_py2 = dict(marks=[pytest.mark.xfail(sys.version_info[0] == 2, reason='Pyth
 
         # Name stuff
         ('1foo1', [NUMBER, NAME]),
-        pytest.param(
-            'மெல்லினம்', [NAME],
-            **xfail_py2),
-        pytest.param('²', [ERRORTOKEN], **xfail_py2),
-        pytest.param('ä²ö', [NAME, ERRORTOKEN, NAME], **xfail_py2),
-        pytest.param('ää²¹öö', [NAME, ERRORTOKEN, NAME], **xfail_py2),
+        ('மெல்லினம்', [NAME]),
+        ('²', [ERRORTOKEN]),
+        ('ä²ö', [NAME, ERRORTOKEN, NAME]),
+        ('ää²¹öö', [NAME, ERRORTOKEN, NAME]),
         (' \x00a', [INDENT, ERRORTOKEN, NAME, DEDENT]),
         (dedent('''\
             class BaseCache:

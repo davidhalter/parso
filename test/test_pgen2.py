@@ -75,11 +75,15 @@ def test_await_expr(works_in_py):
     """)
 
 
-@pytest.mark.xfail(reason="acting like python 3.7")
-def test_async_var():
-    _parse("""async = 1""", "3.6")
-    _parse("""await = 1""", "3.6")
-    _parse("""def async(): pass""", "3.6")
+@pytest.mark.parametrize(
+    'code', [
+        "async = 1",
+        "await = 1",
+        "def async(): pass",
+    ]
+)
+def test_async_var(works_not_in_py, code):
+    works_not_in_py.parse(code)
 
 
 def test_async_for(works_in_py):
