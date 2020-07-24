@@ -63,19 +63,17 @@ def maybe(*choices):
 
 
 # Return the empty string, plus all of the valid string prefixes.
-def _all_string_prefixes(version_info, include_fstring=False, only_fstring=False):
+def _all_string_prefixes(*, include_fstring=False, only_fstring=False):
     def different_case_versions(prefix):
         for s in _itertools.product(*[(c, c.upper()) for c in prefix]):
             yield ''.join(s)
     # The valid string prefixes. Only contain the lower case versions,
     #  and don't contain any permuations (include 'fr', but not
     #  'rf'). The various permutations will be generated.
-    valid_string_prefixes = ['b', 'r', 'u']
-    if version_info.major >= 3:
-        valid_string_prefixes.append('br')
+    valid_string_prefixes = ['b', 'r', 'u', 'br']
 
-    result = set([''])
-    if version_info >= (3, 6) and include_fstring:
+    result = {''}
+    if include_fstring:
         f = ['f', 'fr']
         if only_fstring:
             valid_string_prefixes = f
@@ -91,10 +89,6 @@ def _all_string_prefixes(version_info, include_fstring=False, only_fstring=False
             # create a list with upper and lower versions of each
             #  character
             result.update(different_case_versions(t))
-    if version_info.major == 2:
-        # In Python 2 the order cannot just be random.
-        result.update(different_case_versions('ur'))
-        result.update(different_case_versions('br'))
     return result
 
 
@@ -123,53 +117,27 @@ def _create_token_collection(version_info):
     Whitespace = r'[ \f\t]*'
     whitespace = _compile(Whitespace)
     Comment = r'#[^\r\n]*'
-    # Python 2 is pretty much not working properly anymore, we just ignore
-    # parsing unicode properly, which is fine, I guess.
-    if version_info[0] == 2:
-        Name = r'([A-Za-z_0-9]+)'
-    elif sys.version_info[0] == 2:
-        # Unfortunately the regex engine cannot deal with the regex below, so
-        # just use this one.
-        Name = r'(\w+)'
-    else:
-        Name = '([A-Za-z_0-9\u0080-' + MAX_UNICODE + ']+)'
+    Name = '([A-Za-z_0-9\u0080-' + MAX_UNICODE + ']+)'
 
-    if version_info >= (3, 6):
-        Hexnumber = r'0[xX](?:_?[0-9a-fA-F])+'
-        Binnumber = r'0[bB](?:_?[01])+'
-        Octnumber = r'0[oO](?:_?[0-7])+'
-        Decnumber = r'(?:0(?:_?0)*|[1-9](?:_?[0-9])*)'
-        Intnumber = group(Hexnumber, Binnumber, Octnumber, Decnumber)
-        Exponent = r'[eE][-+]?[0-9](?:_?[0-9])*'
-        Pointfloat = group(r'[0-9](?:_?[0-9])*\.(?:[0-9](?:_?[0-9])*)?',
-                           r'\.[0-9](?:_?[0-9])*') + maybe(Exponent)
-        Expfloat = r'[0-9](?:_?[0-9])*' + Exponent
-        Floatnumber = group(Pointfloat, Expfloat)
-        Imagnumber = group(r'[0-9](?:_?[0-9])*[jJ]', Floatnumber + r'[jJ]')
-    else:
-        Hexnumber = r'0[xX][0-9a-fA-F]+'
-        Binnumber = r'0[bB][01]+'
-        if version_info.major >= 3:
-            Octnumber = r'0[oO][0-7]+'
-        else:
-            Octnumber = '0[oO]?[0-7]+'
-        Decnumber = r'(?:0+|[1-9][0-9]*)'
-        Intnumber = group(Hexnumber, Binnumber, Octnumber, Decnumber)
-        if version_info[0] < 3:
-            Intnumber += '[lL]?'
-        Exponent = r'[eE][-+]?[0-9]+'
-        Pointfloat = group(r'[0-9]+\.[0-9]*', r'\.[0-9]+') + maybe(Exponent)
-        Expfloat = r'[0-9]+' + Exponent
-        Floatnumber = group(Pointfloat, Expfloat)
-        Imagnumber = group(r'[0-9]+[jJ]', Floatnumber + r'[jJ]')
+    Hexnumber = r'0[xX](?:_?[0-9a-fA-F])+'
+    Binnumber = r'0[bB](?:_?[01])+'
+    Octnumber = r'0[oO](?:_?[0-7])+'
+    Decnumber = r'(?:0(?:_?0)*|[1-9](?:_?[0-9])*)'
+    Intnumber = group(Hexnumber, Binnumber, Octnumber, Decnumber)
+    Exponent = r'[eE][-+]?[0-9](?:_?[0-9])*'
+    Pointfloat = group(r'[0-9](?:_?[0-9])*\.(?:[0-9](?:_?[0-9])*)?',
+                       r'\.[0-9](?:_?[0-9])*') + maybe(Exponent)
+    Expfloat = r'[0-9](?:_?[0-9])*' + Exponent
+    Floatnumber = group(Pointfloat, Expfloat)
+    Imagnumber = group(r'[0-9](?:_?[0-9])*[jJ]', Floatnumber + r'[jJ]')
     Number = group(Imagnumber, Floatnumber, Intnumber)
 
     # Note that since _all_string_prefixes includes the empty string,
     #  StringPrefix can be the empty string (making it optional).
-    possible_prefixes = _all_string_prefixes(version_info)
+    possible_prefixes = _all_string_prefixes()
     StringPrefix = group(*possible_prefixes)
-    StringPrefixWithF = group(*_all_string_prefixes(version_info, include_fstring=True))
-    fstring_prefixes = _all_string_prefixes(version_info, include_fstring=True, only_fstring=True)
+    StringPrefixWithF = group(*_all_string_prefixes(include_fstring=True))
+    fstring_prefixes = _all_string_prefixes(include_fstring=True, only_fstring=True)
     FStringStart = group(*fstring_prefixes)
 
     # Tail end of ' string.
@@ -192,9 +160,7 @@ def _create_token_collection(version_info):
 
     Bracket = '[][(){}]'
 
-    special_args = [r'\r\n?', r'\n', r'[;.,@]']
-    if version_info >= (3, 0):
-        special_args.insert(0, r'\.\.\.')
+    special_args = [r'\.\.\.', r'\r\n?', r'\n', r'[;.,@]']
     if version_info >= (3, 8):
         special_args.insert(0, ":=?")
     else:
@@ -245,9 +211,7 @@ def _create_token_collection(version_info):
 
     ALWAYS_BREAK_TOKENS = (';', 'import', 'class', 'def', 'try', 'except',
                            'finally', 'while', 'with', 'return', 'continue',
-                           'break', 'del', 'pass', 'global', 'assert')
-    if version_info >= (3, 5):
-        ALWAYS_BREAK_TOKENS += ('nonlocal', )
+                           'break', 'del', 'pass', 'global', 'assert', 'nonlocal')
     pseudo_token_compiled = _compile(PseudoToken)
     return TokenCollection(
         pseudo_token_compiled, single_quoted, triple_quoted, endpats,
@@ -689,12 +653,9 @@ def _split_illegal_unicode_name(token, start_pos, prefix):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) >= 2:
-        path = sys.argv[1]
-        with open(path) as f:
-            code = f.read()
-    else:
-        code = sys.stdin.read()
+    path = sys.argv[1]
+    with open(path) as f:
+        code = f.read()
 
     from parso.utils import python_bytes_to_unicode, parse_version_string
 
