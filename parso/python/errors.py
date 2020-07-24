@@ -15,7 +15,7 @@ _MAX_BLOCK_SIZE = 20
 _MAX_INDENT_COUNT = 100
 ALLOWED_FUTURES = (
     'nested_scopes', 'generators', 'division', 'absolute_import',
-    'with_statement', 'print_function', 'unicode_literals',
+    'with_statement', 'print_function', 'unicode_literals', 'generator_stop',
 )
 _COMP_FOR_TYPES = ('comp_for', 'sync_comp_for')
 
@@ -588,9 +588,6 @@ class _NameChecks(SyntaxRule):
 
         if leaf.value == '__debug__' and leaf.is_definition():
             return True
-        if leaf.value == 'None' and self._normalizer.version < (3, 0) \
-                and leaf.is_definition():
-            self.add_issue(leaf, message=self.message_none)
 
 
 @ErrorFinder.register_rule(type='string')
@@ -600,7 +597,6 @@ class _StringChecks(SyntaxRule):
     def is_issue(self, leaf):
         string_prefix = leaf.string_prefix.lower()
         if 'b' in string_prefix \
-                and self._normalizer.version >= (3, 0) \
                 and any(c for c in leaf.value if ord(c) > 127):
             # b'ä'
             return True
@@ -608,14 +604,9 @@ class _StringChecks(SyntaxRule):
         if 'r' not in string_prefix:
             # Raw strings don't need to be checked if they have proper
             # escaping.
-            is_bytes = self._normalizer.version < (3, 0)
-            if 'b' in string_prefix:
-                is_bytes = True
-            if 'u' in string_prefix:
-                is_bytes = False
 
             payload = leaf._get_payload()
-            if is_bytes:
+            if 'b' in string_prefix:
                 payload = payload.encode('utf-8')
                 func = codecs.escape_decode
             else:
@@ -674,10 +665,6 @@ class _ReturnAndYieldChecks(SyntaxRule):
                 and any(self._normalizer.context.node.iter_yield_exprs()):
             if leaf.value == 'return' and leaf.parent.type == 'return_stmt':
                 return True
-            elif leaf.value == 'yield' \
-                    and leaf.get_next_leaf() != 'from' \
-                    and self._normalizer.version == (3, 5):
-                self.add_issue(self.get_node(leaf), message=self.message_async_yield)
 
 
 @ErrorFinder.register_rule(type='strings')
@@ -692,12 +679,10 @@ class _BytesAndStringMix(SyntaxRule):
 
     def is_issue(self, node):
         first = node.children[0]
-        # In Python 2 it's allowed to mix bytes and unicode.
-        if self._normalizer.version >= (3, 0):
-            first_is_bytes = self._is_bytes_literal(first)
-            for string in node.children[1:]:
-                if first_is_bytes != self._is_bytes_literal(string):
-                    return True
+        first_is_bytes = self._is_bytes_literal(first)
+        for string in node.children[1:]:
+            if first_is_bytes != self._is_bytes_literal(string):
+                return True
 
 
 @ErrorFinder.register_rule(type='import_as_names')
@@ -730,8 +715,6 @@ class _FutureImportRule(SyntaxRule):
             for from_name, future_name in node.get_paths():
                 name = future_name.value
                 allowed_futures = list(ALLOWED_FUTURES)
-                if self._normalizer.version >= (3, 5):
-                    allowed_futures.append('generator_stop')
                 if self._normalizer.version >= (3, 7):
                     allowed_futures.append('annotations')
                 if name == 'braces':
@@ -754,19 +737,6 @@ class _StarExprRule(SyntaxRule):
             # [*[] for a in [1]]
             if node.parent.children[1].type in _COMP_FOR_TYPES:
                 self.add_issue(node, message=self.message_iterable_unpacking)
-        if self._normalizer.version <= (3, 4):
-            n = search_ancestor(node, 'for_stmt', 'expr_stmt')
-            found_definition = False
-            if n is not None:
-                if n.type == 'expr_stmt':
-                    exprs = _get_expr_stmt_definition_exprs(n)
-                else:
-                    exprs = _get_for_stmt_definition_exprs(n)
-                if node in exprs:
-                    found_definition = True
-
-            if not found_definition:
-                self.add_issue(node, message=self.message_assignment)
 
 
 @ErrorFinder.register_rule(types=_STAR_EXPR_PARENTS)
