@@ -10,14 +10,15 @@ matrix:
     - python: nightly
   include:
     - python: 3.8
-      env: TOXENV=py38-coverage
+      script:
+        - 'pip install coverage'
+        - 'coverage run -m pytest'
+        - 'coverage report'
+      after_script:
+          - |
+            pip install --quiet coveralls
+            coveralls
 install:
-    - pip install --quiet tox-travis
+    - pip install .[testing]
 script:
-    - tox
-after_script:
-    - |
-      if [ "${TOXENV%-coverage}" == "$TOXENV" ]; then
-        pip install --quiet coveralls;
-        coveralls;
-      fi
+    - pytest
