@@ -542,7 +542,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0), indents=None, is_first
                     m = re.match(r'[ \f\t]*$', line[:start])
                     if m is not None:
                         yield from dedent_if_necessary(m.end())
-                if token.is_identifier():
+                if token.isidentifier():
                     yield PythonToken(NAME, token, spos, prefix)
                 else:
                     yield from _split_illegal_unicode_name(token, spos, prefix)
@@ -664,7 +664,7 @@ def _split_illegal_unicode_name(token, start_pos, prefix):
     pos = start_pos
     for i, char in enumerate(token):
         if is_illegal:
-            if is_identifier(char):
+            if char.isidentifier():
                 yield create_token()
                 found = char
                 is_illegal = False
@@ -674,7 +674,7 @@ def _split_illegal_unicode_name(token, start_pos, prefix):
                 found += char
         else:
             new_found = found + char
-            if is_identifier(new_found):
+            if new_found.isidentifier():
                 found = new_found
             else:
                 if found:
