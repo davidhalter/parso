@@ -512,9 +512,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0), indents=None, is_first
                     yield from _split_illegal_unicode_name(token, spos, prefix)
             elif initial in '\r\n':
                 if any(not f.allow_multiline() for f in fstring_stack):
-                    # Would use fstring_stack.clear, but that's not available
-                    # in Python 2.
-                    fstring_stack[:] = []
+                    fstring_stack.clear()
 
                 if not new_line and paren_level == 0 and not fstring_stack:
                     yield PythonToken(NEWLINE, token, spos, prefix)

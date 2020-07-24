@@ -1,5 +1,5 @@
 """
-This is the syntax tree for Python syntaxes (2 & 3).  The classes represent
+This is the syntax tree for Python 3 syntaxes. The classes represent
 syntax elements like functions and imports.
 
 All of the nodes can be traced back to the `Python grammar file
@@ -224,9 +224,6 @@ class Name(_LeafWithoutNewlines):
             return None
 
         if type_ == 'except_clause':
-            # TODO in Python 2 this doesn't work correctly. See grammar file.
-            #      I think we'll just let it be. Python 2 will be gone in a few
-            #      years.
             if self.get_previous_sibling() == 'as':
                 return node.parent  # The try_stmt.
             return None
@@ -512,24 +509,13 @@ def _create_params(parent, argslist_list):
     You could also say that this function replaces the argslist node with a
     list of Param objects.
     """
-    def check_python2_nested_param(node):
-        """
-        Python 2 allows params to look like ``def x(a, (b, c))``, which is
-        basically a way of unpacking tuples in params. Python 3 has ditched
-        this behavior. Jedi currently just ignores those constructs.
-        """
-        return node.type == 'fpdef' and node.children[0] == '('
-
     try:
         first = argslist_list[0]
     except IndexError:
         return []
 
     if first.type in ('name', 'fpdef'):
-        if check_python2_nested_param(first):
-            return [first]
-        else:
-            return [Param([first], parent)]
+        return [Param([first], parent)]
     elif first == '*':
         return [first]
     else:  # argslist is a `typedargslist` or a `varargslist`.
@@ -547,7 +533,6 @@ def _create_params(parent, argslist_list):
                     if param_children[0] == '*' \
                             and (len(param_children) == 1
                                  or param_children[1] == ',') \
-                            or check_python2_nested_param(param_children[0]) \
                             or param_children[0] == '/':
                         for p in param_children:
                             p.parent = parent
