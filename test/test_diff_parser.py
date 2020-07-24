@@ -934,7 +934,6 @@ def test_many_nested_ifs(differ):
     differ.parse(code1, parsers=1, copies=1)
 
 
-@pytest.mark.skipif(sys.version_info < (3, 5), reason="Async starts working in 3.5")
 @pytest.mark.parametrize('prefix', ['', 'async '])
 def test_with_and_funcdef_in_call(differ, prefix):
     code1 = prefix + dedent('''\
@@ -977,8 +976,7 @@ def test_random_unicode_characters(differ):
                  expect_error_leaves=True)
     differ.parse('\r\r', parsers=1)
     differ.parse("˟Ę\x05À\r   rúƣ@\x8a\x15r()\n", parsers=1, expect_error_leaves=True)
-    differ.parse('a\ntaǁ\rGĒōns__\n\nb', parsers=1,
-                 expect_error_leaves=sys.version_info[0] == 2)
+    differ.parse('a\ntaǁ\rGĒōns__\n\nb', parsers=1)
     s = '        if not (self, "_fi\x02\x0e\x08\n\nle"):'
     differ.parse(s, parsers=1, expect_error_leaves=True)
     differ.parse('')

@@ -1,6 +1,5 @@
 # -*- coding: utf-8    # This file contains Unicode characters.
 
-import sys
 from textwrap import dedent
 
 import pytest
@@ -179,19 +178,17 @@ def test_ur_literals():
             assert typ == NAME
 
     check('u""')
-    check('ur""', is_literal=not sys.version_info.major >= 3)
-    check('Ur""', is_literal=not sys.version_info.major >= 3)
-    check('UR""', is_literal=not sys.version_info.major >= 3)
+    check('ur""', is_literal=False)
+    check('Ur""', is_literal=False)
+    check('UR""', is_literal=False)
     check('bR""')
-    # Starting with Python 3.3 this ordering is also possible.
-    if sys.version_info.major >= 3:
-        check('Rb""')
+    check('Rb""')
 
     # Starting with Python 3.6 format strings where introduced.
-    check('fr""', is_literal=sys.version_info >= (3, 6))
-    check('rF""', is_literal=sys.version_info >= (3, 6))
-    check('f""', is_literal=sys.version_info >= (3, 6))
-    check('F""', is_literal=sys.version_info >= (3, 6))
+    check('fr""')
+    check('rF""')
+    check('f""')
+    check('F""')
 
 
 def test_error_literal():

@@ -48,10 +48,7 @@ def test_non_async_in_async():
     This example doesn't work with FAILING_EXAMPLES, because the line numbers
     are not always the same / incorrect in Python 3.8.
     """
-    if sys.version_info[:2] < (3, 5):
-        pytest.skip()
-
-        # Raises multiple errors in previous versions.
+    # Raises multiple errors in previous versions.
     code = 'async def foo():\n def nofoo():[x async for x in []]'
     wanted, line_nr = _get_actual_exception(code)
 
@@ -259,10 +256,7 @@ def test_escape_decode_literals(each_version):
 
     # Finally bytes.
     error, = _get_error_list(r'b"\x"', version=each_version)
-    wanted = r'SyntaxError: (value error) invalid \x escape'
-    if sys.version_info >= (3, 0):
-        # The positioning information is only available in Python 3.
-        wanted += ' at position 0'
+    wanted = r'SyntaxError: (value error) invalid \x escape at position 0'
     assert error.message == wanted
 
 

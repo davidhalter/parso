@@ -171,7 +171,7 @@ class PythonVersionInfo(namedtuple('Version', 'major, minor')):
 
 def parse_version_string(version=None):
     """
-    Checks for a valid version number (e.g. `3.8` or `2.7.1` or `3`) and
+    Checks for a valid version number (e.g. `3.8` or `3.10.1` or `3`) and
     returns a corresponding version info that is always two characters long in
     decimal.
     """
