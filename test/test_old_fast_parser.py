@@ -135,7 +135,7 @@ def test_wrong_indentation():
          b
         a
     """)
-    #check_p(src, 1)
+    check_p(src, 1)
 
     src = dedent("""\
     def complex():

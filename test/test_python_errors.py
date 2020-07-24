@@ -273,9 +273,11 @@ def test_too_many_levels_of_indentation():
     assert not _get_error_list(build_nested('pass', 49, base=base))
     assert _get_error_list(build_nested('pass', 50, base=base))
 
+
 def test_paren_kwarg():
     assert _get_error_list("print((sep)=seperator)", version="3.8")
     assert not _get_error_list("print((sep)=seperator)", version="3.7")
+
 
 @pytest.mark.parametrize(
     'code', [
@@ -330,6 +332,7 @@ def test_trailing_comma(code):
     errors = _get_error_list(code)
     assert not errors
 
+
 def test_continue_in_finally():
     code = dedent('''\
         for a in [1]:
@@ -341,7 +344,7 @@ def test_continue_in_finally():
     assert not _get_error_list(code, version="3.8")
     assert _get_error_list(code, version="3.7")
 
-    
+
 @pytest.mark.parametrize(
     'template', [
         "a, b, {target}, c = d",
@@ -391,6 +394,7 @@ def test_repeated_kwarg():
 )
 def test_unparenthesized_genexp(source, no_errors):
     assert bool(_get_error_list(source)) ^ no_errors
+
 
 @pytest.mark.parametrize(
     ('source', 'no_errors'), [

@@ -149,7 +149,6 @@ def _simplify_dfas(dfas):
             for j in range(i + 1, len(dfas)):
                 state_j = dfas[j]
                 if state_i == state_j:
-                    #print "  unify", i, j
                     del dfas[j]
                     for state in dfas:
                         state.unifystate(state_j, state_i)
@@ -245,14 +244,14 @@ def generate_grammar(bnf_grammar, token_namespace):
     rule_to_dfas = {}
     start_nonterminal = None
     for nfa_a, nfa_z in GrammarParser(bnf_grammar).parse():
-        #_dump_nfa(nfa_a, nfa_z)
+        # _dump_nfa(nfa_a, nfa_z)
         dfas = _make_dfas(nfa_a, nfa_z)
-        #_dump_dfas(dfas)
+        # _dump_dfas(dfas)
         # oldlen = len(dfas)
         _simplify_dfas(dfas)
         # newlen = len(dfas)
         rule_to_dfas[nfa_a.from_rule] = dfas
-        #print(nfa_a.from_rule, oldlen, newlen)
+        # print(nfa_a.from_rule, oldlen, newlen)
 
         if start_nonterminal is None:
             start_nonterminal = nfa_a.from_rule

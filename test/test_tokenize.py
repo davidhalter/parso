@@ -108,7 +108,7 @@ def test_tokenize_multiline_I():
     fundef = '''""""\n'''
     token_list = _get_token_list(fundef)
     assert token_list == [PythonToken(ERRORTOKEN, '""""\n', (1, 0), ''),
-                          PythonToken(ENDMARKER ,       '', (2, 0), '')]
+                          PythonToken(ENDMARKER, '', (2, 0), '')]
 
 
 def test_tokenize_multiline_II():
@@ -117,7 +117,7 @@ def test_tokenize_multiline_II():
     fundef = '''""""'''
     token_list = _get_token_list(fundef)
     assert token_list == [PythonToken(ERRORTOKEN, '""""', (1, 0), ''),
-                          PythonToken(ENDMARKER,      '', (1, 4), '')]
+                          PythonToken(ENDMARKER, '', (1, 4), '')]
 
 
 def test_tokenize_multiline_III():
@@ -126,7 +126,7 @@ def test_tokenize_multiline_III():
     fundef = '''""""\n\n'''
     token_list = _get_token_list(fundef)
     assert token_list == [PythonToken(ERRORTOKEN, '""""\n\n', (1, 0), ''),
-                          PythonToken(ENDMARKER,          '', (3, 0), '')]
+                          PythonToken(ENDMARKER, '', (3, 0), '')]
 
 
 def test_identifier_contains_unicode():

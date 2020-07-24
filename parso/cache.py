@@ -5,7 +5,6 @@ import hashlib
 import gc
 import shutil
 import platform
-import errno
 import logging
 import warnings
 
@@ -92,7 +91,8 @@ On Linux, if environment variable ``$XDG_CACHE_HOME`` is set,
 
 _CACHE_CLEAR_THRESHOLD = 60 * 60 * 24
 
-def _get_cache_clear_lock(cache_path = None):
+
+def _get_cache_clear_lock(cache_path=None):
     """
     The path where the cache lock is stored.
 
@@ -231,17 +231,17 @@ def clear_inactive_cache(
             ):
                 try:
                     os.remove(file.path)
-                except OSError: # silently ignore all failures
+                except OSError:  # silently ignore all failures
                     continue
     else:
         return True
 
 
-def _remove_cache_and_update_lock(cache_path = None):
+def _remove_cache_and_update_lock(cache_path=None):
     lock = _get_cache_clear_lock(cache_path=cache_path)
     clear_lock_time = lock.get_last_modified()
     if (
-        clear_lock_time is None # first time
+        clear_lock_time is None  # first time
         or clear_lock_time + _CACHE_CLEAR_THRESHOLD <= time.time()
     ):
         if not lock._touch():
@@ -250,7 +250,8 @@ def _remove_cache_and_update_lock(cache_path = None):
             # not a big problem.
             return False
 
-        clear_inactive_cache(cache_path = cache_path)
+        clear_inactive_cache(cache_path=cache_path)
+
 
 def _get_hashed_path(hashed_grammar, path, cache_path=None):
     directory = _get_cache_directory_path(cache_path=cache_path)

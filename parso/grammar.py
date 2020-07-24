@@ -23,8 +23,9 @@ class Grammar(object):
     :py:func:`parso.load_grammar` returns instances of this class.
 
     Creating custom none-python grammars by calling this is not supported, yet.
+
+    :param text: A BNF representation of your grammar.
     """
-    #:param text: A BNF representation of your grammar.
     _error_normalizer_config = None
     _token_namespace = None
     _default_normalizer_config = pep8.PEP8NormalizerConfig()
@@ -133,9 +134,9 @@ class Grammar(object):
                     new_lines=lines
                 )
                 try_to_save_module(self._hashed, file_io, new_node, lines,
-                            # Never pickle in pypy, it's slow as hell.
-                            pickling=cache and not is_pypy,
-                            cache_path=cache_path)
+                                   # Never pickle in pypy, it's slow as hell.
+                                   pickling=cache and not is_pypy,
+                                   cache_path=cache_path)
                 return new_node
 
         tokens = self._tokenizer(lines, start_pos=start_pos)
@@ -149,9 +150,9 @@ class Grammar(object):
 
         if cache or diff_cache:
             try_to_save_module(self._hashed, file_io, root_node, lines,
-                        # Never pickle in pypy, it's slow as hell.
-                        pickling=cache and not is_pypy,
-                        cache_path=cache_path)
+                               # Never pickle in pypy, it's slow as hell.
+                               pickling=cache and not is_pypy,
+                               cache_path=cache_path)
         return root_node
 
     def _get_token_namespace(self):
@@ -252,7 +253,9 @@ def load_grammar(**kwargs):
                     grammar = PythonGrammar(version_info, bnf_text)
                     return _loaded_grammars.setdefault(path, grammar)
                 except FileNotFoundError:
-                    message = "Python version %s.%s is currently not supported." % (version_info.major, version_info.minor)
+                    message = "Python version %s.%s is currently not supported." % (
+                        version_info.major, version_info.minor
+                    )
                     raise NotImplementedError(message)
         else:
             raise NotImplementedError("No support for language %s." % language)

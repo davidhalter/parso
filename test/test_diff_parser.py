@@ -1340,7 +1340,7 @@ def test_backslash_issue(differ):
         pre = (
             '')
              \\if 
-        ''')
+        ''')  # noqa
     differ.initialize(code1)
     differ.parse(code2, parsers=1, copies=1, expect_error_leaves=True)
     differ.parse(code1, parsers=1, copies=1)
@@ -1420,7 +1420,7 @@ def test_with_formfeed(differ):
         \x0cimport 
             return
             return ''
-        ''')
+        ''')  # noqa
     differ.initialize(code1)
     differ.parse(code2, parsers=ANY, copies=ANY, expect_error_leaves=True)
 

@@ -71,7 +71,7 @@ def split_prefix(leaf, start_pos):
     value = spacing = ''
     bom = False
     while start != len(leaf.prefix):
-        match =_regex.match(leaf.prefix, start)
+        match = _regex.match(leaf.prefix, start)
         spacing = match.group(1)
         value = match.group(2)
         if not value:

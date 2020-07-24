@@ -395,12 +395,12 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0), indents=None, is_first
             is_first_token = False
 
         if contstr:                                         # continued string
-            endmatch = endprog.match(line)
+            endmatch = endprog.match(line)  # noqa: F821
             if endmatch:
                 pos = endmatch.end(0)
                 yield PythonToken(
                     STRING, contstr + line[:pos],
-                    contstr_start, prefix)
+                    contstr_start, prefix)  # noqa: F821
                 contstr = ''
                 contline = None
             else:

@@ -163,13 +163,13 @@ def top_function_three():
     raise Exception
     """
 
-    r = get_raise_stmts(code, 0) #  Lists in a simple Function
+    r = get_raise_stmts(code, 0)  # Lists in a simple Function
     assert len(list(r)) == 1
 
-    r = get_raise_stmts(code, 1) #  Doesn't Exceptions list in closures
+    r = get_raise_stmts(code, 1)  # Doesn't Exceptions list in closures
     assert len(list(r)) == 1
 
-    r = get_raise_stmts(code, 2) #  Lists inside try-catch
+    r = get_raise_stmts(code, 2)  # Lists inside try-catch
     assert len(list(r)) == 2
 
 

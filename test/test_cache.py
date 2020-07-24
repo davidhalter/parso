@@ -81,7 +81,7 @@ def test_modulepickling_simulate_deleted_cache(tmpdir):
     way.
 
     __ https://developer.apple.com/library/content/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html
-    """
+    """  # noqa
     grammar = load_grammar()
     module = 'fake parser'
 

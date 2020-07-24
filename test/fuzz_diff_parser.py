@@ -135,11 +135,11 @@ class FileModification:
                     # We cannot delete every line, that doesn't make sense to
                     # fuzz and it would be annoying to rewrite everything here.
                     continue
-                l = LineDeletion(random_line())
+                ld = LineDeletion(random_line())
             elif rand == 2:
                 # Copy / Insertion
                 # Make it possible to insert into the first and the last line
-                l = LineCopy(random_line(), random_line(include_end=True))
+                ld = LineCopy(random_line(), random_line(include_end=True))
             elif rand in (3, 4):
                 # Modify a line in some weird random ways.
                 line_nr = random_line()
@@ -166,9 +166,9 @@ class FileModification:
                     # we really replace the line with something that has
                     # indentation.
                     line = ' ' * random.randint(0, 12) + random_string + '\n'
-                l = LineReplacement(line_nr, line)
-            l.apply(lines)
-            yield l
+                ld = LineReplacement(line_nr, line)
+            ld.apply(lines)
+            yield ld
 
     def __init__(self, modification_list, check_original):
         self.modification_list = modification_list

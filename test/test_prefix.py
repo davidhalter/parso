@@ -44,7 +44,7 @@ def test_simple_prefix_splitting(string, tokens):
         else:
             end_pos = start_pos[0], start_pos[1] + len(expected) + len(pt.spacing)
 
-        #assert start_pos == pt.start_pos
+        # assert start_pos == pt.start_pos
         assert end_pos == pt.end_pos
         start_pos = end_pos
 

@@ -19,6 +19,7 @@ ALLOWED_FUTURES = (
 )
 _COMP_FOR_TYPES = ('comp_for', 'sync_comp_for')
 
+
 def _get_rhs_name(node, version):
     type_ = node.type
     if type_ == "lambdef":
@@ -39,7 +40,7 @@ def _get_rhs_name(node, version):
         elif (
             first == "("
             and (second == ")"
-            or (len(node.children) == 3 and node.children[1].type == "testlist_comp"))
+                 or (len(node.children) == 3 and node.children[1].type == "testlist_comp"))
         ):
             return "tuple"
         elif first == "(":
@@ -79,8 +80,7 @@ def _get_rhs_name(node, version):
             elif trailer.children[0] == ".":
                 return "attribute"
     elif (
-        ("expr" in type_
-        and "star_expr" not in type_)  # is a substring
+        ("expr" in type_ and "star_expr" not in type_)  # is a substring
         or "_test" in type_
         or type_ in ("term", "factor")
     ):
@@ -91,7 +91,8 @@ def _get_rhs_name(node, version):
         return "tuple"
     elif type_ == "fstring":
         return "f-string expression"
-    return type_ # shouldn't reach here
+    return type_  # shouldn't reach here
+
 
 def _iter_stmts(scope):
     """
@@ -420,7 +421,9 @@ class ErrorFinder(Normalizer):
                         message = 'invalid syntax'
                         if (
                             self.version >= (3, 9)
-                            and leaf.value in _get_token_collection(self.version).always_break_tokens
+                            and leaf.value in _get_token_collection(
+                                self.version
+                            ).always_break_tokens
                         ):
                             message = "f-string: " + message
                     else:
@@ -1145,6 +1148,7 @@ class _CompForRule(_CheckAssignmentRule):
 class _ExprStmtRule(_CheckAssignmentRule):
     message = "illegal expression for augmented assignment"
     extended_message = "'{target}' is an " + message
+
     def is_issue(self, node):
         augassign = node.children[1]
         is_aug_assign = augassign != '=' and augassign.type != 'annassign'
@@ -1173,6 +1177,7 @@ class _ExprStmtRule(_CheckAssignmentRule):
                         target=_get_rhs_name(node.children[0], self._normalizer.version)
                     ),
                 )
+
 
 @ErrorFinder.register_rule(type='with_item')
 class _WithItemRule(_CheckAssignmentRule):

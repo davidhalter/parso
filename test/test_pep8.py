@@ -33,6 +33,7 @@ def test_eof_blankline():
     assert_issue('# foobar\n\n')
     assert_issue('\n\n')
 
+
 def test_shebang():
     assert not issues('#!\n')
     assert not issues('#!/foo\n')

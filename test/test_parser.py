@@ -193,9 +193,11 @@ def test_no_error_nodes(each_version):
 def test_named_expression(works_ge_py38):
     works_ge_py38.parse("(a := 1, a + 1)")
 
+
 def test_extended_rhs_annassign(works_ge_py38):
     works_ge_py38.parse("x: y = z,")
     works_ge_py38.parse("x: Tuple[int, ...] = z, *q, w")
+
 
 @pytest.mark.parametrize(
     'param_code', [
@@ -210,6 +212,7 @@ def test_extended_rhs_annassign(works_ge_py38):
 )
 def test_positional_only_arguments(works_ge_py38, param_code):
     works_ge_py38.parse("def x(%s): pass" % param_code)
+
 
 @pytest.mark.parametrize(
     'expression', [
