@@ -411,8 +411,8 @@ def test_backslash():
         ]),
     ]
 )
-def test_fstring_token_types(code, types, version_ge_py36):
-    actual_types = [t.type for t in _get_token_list(code, version_ge_py36)]
+def test_fstring_token_types(code, types, each_version):
+    actual_types = [t.type for t in _get_token_list(code, each_version)]
     assert types + [ENDMARKER] == actual_types
 
 
