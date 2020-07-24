@@ -56,6 +56,7 @@ FAILING_EXAMPLES = [
     'a, b += 3',
     '(a, b) += 3',
     '[a, b] += 3',
+    '[a, 1] += 3',
     'f() += 1',
     'lambda x:None+=1',
     '{} += 1',
@@ -130,6 +131,8 @@ FAILING_EXAMPLES = [
     r"u'\N{foo}'",
     r'b"\x"',
     r'b"\"',
+    'b"ä"',
+
     '*a, *b = 3, 3',
     'async def foo(): yield from []',
     'yield from []',
@@ -138,6 +141,16 @@ FAILING_EXAMPLES = [
     'def x(*): pass',
     '(%s *d) = x' % ('a,' * 256),
     '{**{} for a in [1]}',
+    '(True,) = x',
+    '([False], a) = x',
+    'def x(): from math import *',
+
+    # str/bytes combinations
+    '"s" b""',
+    '"s" b"" ""',
+    'b"" "" b"" ""',
+    'f"s" b""',
+    'b"s" f""',
 
     # Parser/tokenize.c
     r'"""',
@@ -176,9 +189,17 @@ FAILING_EXAMPLES = [
     "f'{1;1}'",
     "f'{a;}'",
     "f'{b\"\" \"\"}'",
-]
+    # f-string expression part cannot include a backslash
+    r'''f"{'\n'}"''',
 
-GLOBAL_NONLOCAL_ERROR = [
+    'async def foo():\n yield x\n return 1',
+    'async def foo():\n yield x\n return 1',
+
+    '[*[] for a in [1]]',
+    'async def bla():\n def x():  await bla()',
+    'del None',
+
+    # Errors of global / nonlocal
     dedent('''
         def glob():
             x = 3
@@ -276,65 +297,6 @@ GLOBAL_NONLOCAL_ERROR = [
                     nonlocal a
         '''),
 ]
-
-if sys.version_info >= (3, 6):
-    FAILING_EXAMPLES += GLOBAL_NONLOCAL_ERROR
-if sys.version_info >= (3, 5):
-    FAILING_EXAMPLES += [
-        # Raises different errors so just ignore them for now.
-        '[*[] for a in [1]]',
-        # Raises multiple errors in previous versions.
-        'async def bla():\n def x():  await bla()',
-    ]
-if sys.version_info >= (3, 4):
-    # Before that del None works like del list, it gives a NameError.
-    FAILING_EXAMPLES.append('del None')
-if sys.version_info >= (3,):
-    FAILING_EXAMPLES += [
-        # Unfortunately assigning to False and True do not raise an error in
-        # 2.x.
-        '(True,) = x',
-        '([False], a) = x',
-        # A symtable error that raises only a SyntaxWarning in Python 2.
-        'def x(): from math import *',
-        # unicode chars in bytes are allowed in python 2
-        'b"ä"',
-        # combining strings and unicode is allowed in Python 2.
-        '"s" b""',
-        '"s" b"" ""',
-        'b"" "" b"" ""',
-    ]
-if sys.version_info >= (3, 6):
-    FAILING_EXAMPLES += [
-        # Same as above, but for f-strings.
-        'f"s" b""',
-        'b"s" f""',
-
-        # f-string expression part cannot include a backslash
-        r'''f"{'\n'}"''',
-    ]
-FAILING_EXAMPLES.append('[a, 1] += 3')
-
-if sys.version_info[:2] == (3, 5):
-    # yields are not allowed in 3.5 async functions. Therefore test them
-    # separately, here.
-    FAILING_EXAMPLES += [
-        'async def foo():\n yield x',
-        'async def foo():\n yield x',
-    ]
-else:
-    FAILING_EXAMPLES += [
-        'async def foo():\n yield x\n return 1',
-        'async def foo():\n yield x\n return 1',
-    ]
-
-
-if sys.version_info[:2] <= (3, 4):
-    # Python > 3.4 this is valid code.
-    FAILING_EXAMPLES += [
-        'a = *[1], 2',
-        '(*[1], 2)',
-    ]
 
 if sys.version_info[:2] >= (3, 7):
     # This is somehow ok in previous versions.
