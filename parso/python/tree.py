@@ -405,18 +405,6 @@ class Module(Scope):
                     if len(names) == 2 and names[0] == '__future__':
                         yield names[1]
 
-    def _has_explicit_absolute_import(self):
-        """
-        Checks if imports in this module are explicitly absolute, i.e. there
-        is a ``__future__`` import.
-        Currently not public, might be in the future.
-        :return bool:
-        """
-        for name in self._iter_future_import_names():
-            if name == 'absolute_import':
-                return True
-        return False
-
     def get_used_names(self):
         """
         Returns all the :class:`Name` leafs that exist in this module. This
