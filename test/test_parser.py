@@ -109,16 +109,8 @@ def test_param_splitting(each_version):
     but Jedi does this to simplify argument parsing.
     """
     def check(src, result):
-        # Python 2 tuple params should be ignored for now.
         m = parse(src, version=each_version)
-        if each_version.startswith('2'):
-            # We don't want b and c to be a part of the param enumeration. Just
-            # ignore them, because it's not what we want to support in the
-            # future.
-            func = next(m.iter_funcdefs())
-            assert [param.name.value for param in func.get_params()] == result
-        else:
-            assert not list(m.iter_funcdefs())
+        assert not list(m.iter_funcdefs())
 
     check('def x(a, (b, c)):\n pass', ['a'])
     check('def x((b, c)):\n pass', [])
@@ -136,15 +128,6 @@ def test_backslash_dos_style(each_version):
 def test_started_lambda_stmt(each_version):
     m = parse('lambda a, b: a i', version=each_version)
     assert m.children[0].type == 'error_node'
-
-
-def test_python2_octal(each_version):
-    module = parse('0660', version=each_version)
-    first = module.children[0]
-    if each_version.startswith('2'):
-        assert first.type == 'number'
-    else:
-        assert first.type == 'error_node'
 
 
 @pytest.mark.parametrize('code', ['foo "', 'foo """\n', 'foo """\nbar'])

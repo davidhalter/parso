@@ -180,12 +180,13 @@ def test_inactive_cache(tmpdir, isolated_parso_cache):
 @skip_pypy
 def test_permission_error(monkeypatch):
     def save(*args, **kwargs):
-        was_called[0] = True  # Python 2... Use nonlocal instead
+        nonlocal was_called
+        was_called = True
         raise PermissionError
 
-    was_called = [False]
+    was_called = False
 
     monkeypatch.setattr(cache, '_save_to_file_system', save)
     with pytest.warns(Warning):
         parse(path=__file__, cache=True, diff_cache=True)
-    assert was_called[0]
+    assert was_called

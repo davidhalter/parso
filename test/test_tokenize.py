@@ -136,12 +136,7 @@ def test_identifier_contains_unicode():
     ''')
     token_list = _get_token_list(fundef)
     unicode_token = token_list[1]
-    if sys.version_info.major >= 3:
-        assert unicode_token[0] == NAME
-    else:
-        # Unicode tokens in Python 2 seem to be identified as operators.
-        # They will be ignored in the parser, that's ok.
-        assert unicode_token[0] == ERRORTOKEN
+    assert unicode_token[0] == NAME
 
 
 def test_quoted_strings():

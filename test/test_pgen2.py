@@ -1,11 +1,3 @@
-"""Test suite for 2to3's parser and grammar files.
-
-This is the place to add tests for changes to 2to3's grammar, such as those
-merging the grammars for Python 2 and 3. In addition to specific tests for
-parts of the grammar we've changed, we also make sure we can parse the
-test_grammar.py files from both Python 2 and Python 3.
-"""
-
 from textwrap import dedent
 
 import pytest
@@ -281,10 +273,6 @@ def test_parser_idempotency_extended_unpacking(works_in_py):
 
 
 def test_multiline_bytes_literals(each_version):
-    """
-    It's not possible to get the same result when using \xaa in Python 2/3,
-    because it's treated differently.
-    """
     s = """
         md5test(b"\xaa" * 80,
                 (b"Test Using Larger Than Block-Size Key "
