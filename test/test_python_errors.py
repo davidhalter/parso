@@ -117,10 +117,7 @@ def _get_actual_exception(code):
             assert False, "The piece of code should raise an exception."
 
     # SyntaxError
-    if wanted == 'SyntaxError: non-keyword arg after keyword arg':
-        # The python 3.5+ way, a bit nicer.
-        wanted = 'SyntaxError: positional argument follows keyword argument'
-    elif wanted == 'SyntaxError: assignment to keyword':
+    if wanted == 'SyntaxError: assignment to keyword':
         return [wanted, "SyntaxError: can't assign to keyword",
                 'SyntaxError: cannot assign to __debug__'], line_nr
     elif wanted == 'SyntaxError: f-string: unterminated string':
