@@ -40,7 +40,9 @@ class Grammar(object):
         self._diff_parser = diff_parser
         self._hashed = hashlib.sha256(text.encode("utf-8")).hexdigest()
 
-    def parse(self, code=None, **kwargs):
+    def parse(self, code=None, *, error_recovery=True, path=None,
+              start_symbol=None, cache=False, diff_cache=False,
+              cache_path=None, file_io=None):
         """
         If you want to parse a Python file you want to start here, most likely.
 
@@ -74,19 +76,6 @@ class Grammar(object):
 
         :return: A subclass of :py:class:`parso.tree.NodeOrLeaf`. Typically a
             :py:class:`parso.python.tree.Module`.
-        """
-        if 'start_pos' in kwargs:
-            raise TypeError("parse() got an unexpected keyword argument.")
-        return self._parse(code=code, **kwargs)
-
-    def _parse(self, code=None, error_recovery=True, path=None,
-               start_symbol=None, cache=False, diff_cache=False,
-               cache_path=None, file_io=None, start_pos=(1, 0)):
-        """
-        Wanted python3.5 * operator and keyword only arguments. Therefore just
-        wrap it all.
-        start_pos here is just a parameter internally used. Might be public
-        sometime in the future.
         """
         if code is None and path is None and file_io is None:
             raise TypeError("Please provide either code or a path.")
@@ -139,7 +128,7 @@ class Grammar(object):
                                    cache_path=cache_path)
                 return new_node
 
-        tokens = self._tokenizer(lines, start_pos=start_pos)
+        tokens = self._tokenizer(lines)
 
         p = self._parser(
             self._pgen_grammar,
@@ -224,7 +213,7 @@ class PythonGrammar(Grammar):
         return tokenize(code, self.version_info)
 
 
-def load_grammar(**kwargs):
+def load_grammar(*, language='python', version=None, path=None):
     """
     Loads a :py:class:`parso.Grammar`. The default version is the current Python
     version.
@@ -232,32 +221,29 @@ def load_grammar(**kwargs):
     :param str version: A python version string, e.g. ``version='3.8'``.
     :param str path: A path to a grammar file
     """
-    def load_grammar(language='python', version=None, path=None):
-        if language == 'python':
-            version_info = parse_version_string(version)
+    if language == 'python':
+        version_info = parse_version_string(version)
 
-            file = path or os.path.join(
-                'python',
-                'grammar%s%s.txt' % (version_info.major, version_info.minor)
-            )
+        file = path or os.path.join(
+            'python',
+            'grammar%s%s.txt' % (version_info.major, version_info.minor)
+        )
 
-            global _loaded_grammars
-            path = os.path.join(os.path.dirname(__file__), file)
+        global _loaded_grammars
+        path = os.path.join(os.path.dirname(__file__), file)
+        try:
+            return _loaded_grammars[path]
+        except KeyError:
             try:
-                return _loaded_grammars[path]
-            except KeyError:
-                try:
-                    with open(path) as f:
-                        bnf_text = f.read()
+                with open(path) as f:
+                    bnf_text = f.read()
 
-                    grammar = PythonGrammar(version_info, bnf_text)
-                    return _loaded_grammars.setdefault(path, grammar)
-                except FileNotFoundError:
-                    message = "Python version %s.%s is currently not supported." % (
-                        version_info.major, version_info.minor
-                    )
-                    raise NotImplementedError(message)
-        else:
-            raise NotImplementedError("No support for language %s." % language)
-
-    return load_grammar(**kwargs)
+                grammar = PythonGrammar(version_info, bnf_text)
+                return _loaded_grammars.setdefault(path, grammar)
+            except FileNotFoundError:
+                message = "Python version %s.%s is currently not supported." % (
+                    version_info.major, version_info.minor
+                )
+                raise NotImplementedError(message)
+    else:
+        raise NotImplementedError("No support for language %s." % language)
