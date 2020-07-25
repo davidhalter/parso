@@ -96,7 +96,10 @@ def python_bytes_to_unicode(
         possible_encoding = re.search(br"coding[=:]\s*([-\w.]+)",
                                       first_two_lines)
         if possible_encoding:
-            return possible_encoding.group(1)
+            e = possible_encoding.group(1)
+            if not isinstance(e, str):
+                e = str(e, 'ascii', 'replace')
+            return e
         else:
             # the default if nothing else has been set -> PEP 263
             return encoding
