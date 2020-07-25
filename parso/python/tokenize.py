@@ -230,6 +230,7 @@ class Token(NamedTuple):
     string: str
     start_pos: Tuple[int, int]
     prefix: str
+
     @property
     def end_pos(self) -> Tuple[int, int]:
         lines = split_lines(self.string)
