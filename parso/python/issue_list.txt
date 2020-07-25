@@ -24,7 +24,6 @@ A list of syntax/indentation errors I've encountered in CPython.
 
     # Just ignore this one, newer versions will not be affected anymore and
     # it's a limit of 2^16 - 1.
-    "too many annotations" # Only python 3.0 - 3.5, 3.6 is not affected.
 
 # Python/ast.c
     # used with_item exprlist expr_stmt
@@ -54,8 +53,8 @@ A list of syntax/indentation errors I've encountered in CPython.
     "iterable unpacking cannot be used in comprehension"  # [*[] for a in [1]]
     "dict unpacking cannot be used in dict comprehension"  # {**{} for a in [1]}
     "Generator expression must be parenthesized if not sole argument"  # foo(x for x in [], b)
-    "positional argument follows keyword argument unpacking" # f(**x, y) >= 3.5
-    "positional argument follows keyword argument"  # f(x=2, y) >= 3.5
+    "positional argument follows keyword argument unpacking" # f(**x, y)
+    "positional argument follows keyword argument"  # f(x=2, y)
     "iterable argument unpacking follows keyword argument unpacking" # foo(**kwargs, *args)
     "lambda cannot contain assignment"  # f(lambda: 1=1)
     "keyword can't be an expression" # f(+x=1)
@@ -167,10 +166,3 @@ A list of syntax/indentation errors I've encountered in CPython.
     E_OVERFLOW: "expression too long"
     E_DECODE: "unknown decode error"
     E_BADSINGLE: "multiple statements found while compiling a single statement"
-
-
-Version specific:
-Python 3.5:
-    'yield' inside async function
-Python 3.4:
-    can use starred expression only as assignment target

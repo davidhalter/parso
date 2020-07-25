@@ -123,10 +123,6 @@ def _get_actual_exception(code):
     elif wanted == 'SyntaxError: assignment to keyword':
         return [wanted, "SyntaxError: can't assign to keyword",
                 'SyntaxError: cannot assign to __debug__'], line_nr
-    elif wanted == 'SyntaxError: can use starred expression only as assignment target':
-        # Python 3.4/3.4 have a bit of a different warning than 3.5/3.6 in
-        # certain places. But in others this error makes sense.
-        return [wanted, "SyntaxError: can't use starred expression here"], line_nr
     elif wanted == 'SyntaxError: f-string: unterminated string':
         wanted = 'SyntaxError: EOL while scanning string literal'
     elif wanted == 'SyntaxError: f-string expression part cannot include a backslash':

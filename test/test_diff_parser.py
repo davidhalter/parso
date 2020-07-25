@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from textwrap import dedent
 import logging
-import sys
 
 import pytest
 
@@ -1267,7 +1266,6 @@ def test_some_weird_removals(differ):
     differ.parse(code1, copies=1)
 
 
-@pytest.mark.skipif(sys.version_info < (3, 5), reason="Async starts working in 3.5")
 def test_async_copy(differ):
     code1 = dedent('''\
         async def main():
