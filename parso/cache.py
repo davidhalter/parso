@@ -7,11 +7,7 @@ import shutil
 import platform
 import logging
 import warnings
-
-try:
-    import cPickle as pickle
-except:
-    import pickle
+import pickle
 
 from parso.file_io import FileIO
 

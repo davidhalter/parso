@@ -149,8 +149,8 @@ class Issue(object):
 
 
 class Rule(object):
-    code = None
-    message = None
+    code: int
+    message: str
 
     def __init__(self, normalizer):
         self._normalizer = normalizer

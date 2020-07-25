@@ -23,7 +23,7 @@ class NodeOrLeaf(object):
     The base class for nodes and leaves.
     """
     __slots__ = ()
-    type = None
+    type: str
     '''
     The type is a string that typically matches the types of the grammar file.
     '''
@@ -257,7 +257,6 @@ class BaseNode(NodeOrLeaf):
     A node has children, a type and possibly a parent node.
     """
     __slots__ = ('children', 'parent')
-    type = None
 
     def __init__(self, children):
         self.children = children
