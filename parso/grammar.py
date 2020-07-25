@@ -1,6 +1,7 @@
 import hashlib
 import os
 from typing import Generic, TypeVar, Union, Dict, Optional, Any
+from pathlib import Path
 
 from parso._compatibility import is_pypy
 from parso.pgen2 import generate_grammar
@@ -49,11 +50,11 @@ class Grammar(Generic[_NodeT]):
               code: Union[str, bytes] = None,
               *,
               error_recovery=True,
-              path: str = None,
+              path: Union[os.PathLike, str] = None,
               start_symbol: str = None,
               cache=False,
               diff_cache=False,
-              cache_path: str = None,
+              cache_path: Union[os.PathLike, str] = None,
               file_io: FileIO = None) -> _NodeT:
         """
         If you want to parse a Python file you want to start here, most likely.
@@ -92,6 +93,11 @@ class Grammar(Generic[_NodeT]):
         if code is None and path is None and file_io is None:
             raise TypeError("Please provide either code or a path.")
 
+        if isinstance(path, str):
+            path = Path(path)
+        if isinstance(cache_path, str):
+            cache_path = Path(cache_path)
+
         if start_symbol is None:
             start_symbol = self._start_nonterminal
 
@@ -100,7 +106,7 @@ class Grammar(Generic[_NodeT]):
 
         if file_io is None:
             if code is None:
-                file_io = FileIO(path)
+                file_io = FileIO(path)  # type: ignore
             else:
                 file_io = KnownContentFileIO(path, code)
 

@@ -1,8 +1,12 @@
 import os
+from pathlib import Path
+from typing import Union
 
 
 class FileIO:
-    def __init__(self, path):
+    def __init__(self, path: Union[os.PathLike, str]):
+        if isinstance(path, str):
+            path = Path(path)
         self.path = path
 
     def read(self):  # Returns bytes/str
@@ -20,17 +24,6 @@ class FileIO:
             return os.path.getmtime(self.path)
         except FileNotFoundError:
             return None
-
-    def _touch(self):
-        try:
-            os.utime(self.path, None)
-        except FileNotFoundError:
-            try:
-                file = open(self.path, 'a')
-                file.close()
-            except (OSError, IOError):  # TODO Maybe log this?
-                return False
-        return True
 
     def __repr__(self):
         return '%s(%s)' % (self.__class__.__name__, self.path)
