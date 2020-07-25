@@ -30,7 +30,7 @@ class Grammar(object):
     _token_namespace = None
     _default_normalizer_config = pep8.PEP8NormalizerConfig()
 
-    def __init__(self, text, tokenizer, parser=BaseParser, diff_parser=None):
+    def __init__(self, text, *, tokenizer, parser=BaseParser, diff_parser=None):
         self._pgen_grammar = generate_grammar(
             text,
             token_namespace=self._get_token_namespace()
