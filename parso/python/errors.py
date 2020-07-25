@@ -350,7 +350,7 @@ class ErrorFinder(Normalizer):
     Searches for errors in the syntax tree.
     """
     def __init__(self, *args, **kwargs):
-        super(ErrorFinder, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._error_dict = {}
         self.version = self.grammar.version_info
 
@@ -374,7 +374,7 @@ class ErrorFinder(Normalizer):
                 # might find errors in there that should be ignored, because
                 # the error node itself already shows that there's an issue.
                 return ''
-        return super(ErrorFinder, self).visit(node)
+        return super().visit(node)
 
     @contextmanager
     def visit_node(self, node):
@@ -439,7 +439,7 @@ class ErrorFinder(Normalizer):
                 self.context = self.context.add_context(parent)
 
         # The rest is rule based.
-        return super(ErrorFinder, self).visit_leaf(leaf)
+        return super().visit_leaf(leaf)
 
     def _add_indentation_error(self, spacing, message):
         self.add_issue(spacing, 903, "IndentationError: " + message)
@@ -465,7 +465,7 @@ class IndentationRule(Rule):
     code = 903
 
     def _get_message(self, message, node):
-        message = super(IndentationRule, self)._get_message(message, node)
+        message = super()._get_message(message, node)
         return "IndentationError: " + message
 
 
@@ -490,7 +490,7 @@ class SyntaxRule(Rule):
     code = 901
 
     def _get_message(self, message, node):
-        message = super(SyntaxRule, self)._get_message(message, node)
+        message = super()._get_message(message, node)
         if (
             "f-string" not in message
             and _any_fstring_error(self._normalizer.version, node)

@@ -189,10 +189,10 @@ class RefactoringNormalizer(Normalizer):
         try:
             return self._node_to_str_map[node]
         except KeyError:
-            return super(RefactoringNormalizer, self).visit(node)
+            return super().visit(node)
 
     def visit_leaf(self, leaf):
         try:
             return self._node_to_str_map[leaf]
         except KeyError:
-            return super(RefactoringNormalizer, self).visit_leaf(leaf)
+            return super().visit_leaf(leaf)

@@ -330,7 +330,7 @@ class Scope(PythonBaseNode, DocstringMixin):
     __slots__ = ()
 
     def __init__(self, children):
-        super(Scope, self).__init__(children)
+        super().__init__(children)
 
     def iter_funcdefs(self):
         """
@@ -386,7 +386,7 @@ class Module(Scope):
     type = 'file_input'
 
     def __init__(self, children):
-        super(Module, self).__init__(children)
+        super().__init__(children)
         self._used_names = None
 
     def _iter_future_import_names(self):
@@ -470,7 +470,7 @@ class Class(ClassOrFunc):
     __slots__ = ()
 
     def __init__(self, children):
-        super(Class, self).__init__(children)
+        super().__init__(children)
 
     def get_super_arglist(self):
         """
@@ -548,7 +548,7 @@ class Function(ClassOrFunc):
     type = 'funcdef'
 
     def __init__(self, children):
-        super(Function, self).__init__(children)
+        super().__init__(children)
         parameters = self.children[2]  # After `def foo`
         parameters.children[1:-1] = _create_params(parameters, parameters.children[1:-1])
 
@@ -1075,7 +1075,7 @@ class Param(PythonBaseNode):
     type = 'param'
 
     def __init__(self, children, parent):
-        super(Param, self).__init__(children)
+        super().__init__(children)
         self.parent = parent
         for child in children:
             child.parent = self
@@ -1175,7 +1175,7 @@ class Param(PythonBaseNode):
         :param include_comma bool: If enabled includes the comma in the string output.
         """
         if include_comma:
-            return super(Param, self).get_code(include_prefix)
+            return super().get_code(include_prefix)
 
         children = self.children
         if children[-1] == ',':

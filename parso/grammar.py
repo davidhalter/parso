@@ -209,7 +209,7 @@ class PythonGrammar(Grammar):
     _start_nonterminal = 'file_input'
 
     def __init__(self, version_info: PythonVersionInfo, bnf_text: str):
-        super(PythonGrammar, self).__init__(
+        super().__init__(
             bnf_text,
             tokenizer=self._tokenize_lines,
             parser=PythonParser,

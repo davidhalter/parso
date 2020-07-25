@@ -144,7 +144,7 @@ class PythonVersionInfo(_PythonVersionInfo):
             if len(other) != 2:
                 raise ValueError("Can only compare to tuples of length 2.")
             return (self.major, self.minor) > other
-        super(PythonVersionInfo, self).__gt__(other)
+        super().__gt__(other)
 
         return (self.major, self.minor)
 
@@ -153,7 +153,7 @@ class PythonVersionInfo(_PythonVersionInfo):
             if len(other) != 2:
                 raise ValueError("Can only compare to tuples of length 2.")
             return (self.major, self.minor) == other
-        super(PythonVersionInfo, self).__eq__(other)
+        super().__eq__(other)
 
     def __ne__(self, other):
         return not self.__eq__(other)

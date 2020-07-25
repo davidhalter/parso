@@ -61,8 +61,8 @@ class Parser(BaseParser):
     }
 
     def __init__(self, pgen_grammar, error_recovery=True, start_nonterminal='file_input'):
-        super(Parser, self).__init__(pgen_grammar, start_nonterminal,
-                                     error_recovery=error_recovery)
+        super().__init__(pgen_grammar, start_nonterminal,
+                         error_recovery=error_recovery)
 
         self.syntax_errors = []
         self._omit_dedent_list = []
@@ -75,7 +75,7 @@ class Parser(BaseParser):
 
             tokens = self._recovery_tokenize(tokens)
 
-        return super(Parser, self).parse(tokens)
+        return super().parse(tokens)
 
     def convert_node(self, nonterminal, children):
         """
@@ -138,7 +138,7 @@ class Parser(BaseParser):
                         return
 
         if not self._error_recovery:
-            return super(Parser, self).error_recovery(token)
+            return super().error_recovery(token)
 
         def current_suite(stack):
             # For now just discard everything that is not a suite or

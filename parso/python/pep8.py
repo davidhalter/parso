@@ -112,7 +112,7 @@ class ImplicitNode(BracketNode):
     annotations and dict values.
     """
     def __init__(self, config, leaf, parent):
-        super(ImplicitNode, self).__init__(config, leaf, parent)
+        super().__init__(config, leaf, parent)
         self.type = IndentationTypes.IMPLICIT
 
         next_leaf = leaf.get_next_leaf()
@@ -151,7 +151,7 @@ def _is_magic_name(name):
 
 class PEP8Normalizer(ErrorFinder):
     def __init__(self, *args, **kwargs):
-        super(PEP8Normalizer, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._previous_part = None
         self._previous_leaf = None
         self._on_newline = True
@@ -174,7 +174,7 @@ class PEP8Normalizer(ErrorFinder):
 
     @contextmanager
     def visit_node(self, node):
-        with super(PEP8Normalizer, self).visit_node(node):
+        with super().visit_node(node):
             with self._visit_node(node):
                 yield
 
@@ -342,7 +342,7 @@ class PEP8Normalizer(ErrorFinder):
         self._newline_count = 0
 
     def visit_leaf(self, leaf):
-        super(PEP8Normalizer, self).visit_leaf(leaf)
+        super().visit_leaf(leaf)
         for part in leaf._split_prefix():
             if part.type == 'spacing':
                 # This part is used for the part call after for.
@@ -732,7 +732,7 @@ class PEP8Normalizer(ErrorFinder):
             return
         if code in (901, 903):
             # 901 and 903 are raised by the ErrorFinder.
-            super(PEP8Normalizer, self).add_issue(node, code, message)
+            super().add_issue(node, code, message)
         else:
             # Skip ErrorFinder here, because it has custom behavior.
             super(ErrorFinder, self).add_issue(node, code, message)

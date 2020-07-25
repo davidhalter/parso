@@ -38,7 +38,7 @@ class FileIO:
 
 class KnownContentFileIO(FileIO):
     def __init__(self, path, content):
-        super(KnownContentFileIO, self).__init__(path)
+        super().__init__(path)
         self._content = content
 
     def read(self):

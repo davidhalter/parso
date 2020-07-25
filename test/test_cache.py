@@ -124,7 +124,7 @@ def test_cache_limit():
 
 class _FixedTimeFileIO(file_io.KnownContentFileIO):
     def __init__(self, path, content, last_modified):
-        super(_FixedTimeFileIO, self).__init__(path, content)
+        super().__init__(path, content)
         self._last_modified = last_modified
 
     def get_last_modified(self):

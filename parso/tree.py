@@ -247,7 +247,7 @@ class TypedLeaf(Leaf):
     __slots__ = ('type',)
 
     def __init__(self, type, value, start_pos, prefix=''):
-        super(TypedLeaf, self).__init__(value, start_pos, prefix)
+        super().__init__(value, start_pos, prefix)
         self.type = type
 
 
@@ -339,7 +339,7 @@ class Node(BaseNode):
     __slots__ = ('type',)
 
     def __init__(self, type, children):
-        super(Node, self).__init__(children)
+        super().__init__(children)
         self.type = type
 
     def __repr__(self):
@@ -365,7 +365,7 @@ class ErrorLeaf(Leaf):
     type = 'error_leaf'
 
     def __init__(self, token_type, value, start_pos, prefix=''):
-        super(ErrorLeaf, self).__init__(value, start_pos, prefix)
+        super().__init__(value, start_pos, prefix)
         self.token_type = token_type
 
     def __repr__(self):
