@@ -861,20 +861,8 @@ class _ArglistRule(SyntaxRule):
         arg_set = set()
         kw_only = False
         kw_unpacking_only = False
-        is_old_starred = False
-        # In python 3 this would be a bit easier (stars are part of
-        # argument), but we have to understand both.
         for argument in node.children:
             if argument == ',':
-                continue
-
-            if argument in ('*', '**'):
-                # Python < 3.5 has the order engraved in the grammar
-                # file.  No need to do anything here.
-                is_old_starred = True
-                continue
-            if is_old_starred:
-                is_old_starred = False
                 continue
 
             if argument.type == 'argument':
