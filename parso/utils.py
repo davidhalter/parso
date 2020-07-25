@@ -1,8 +1,8 @@
-from collections import namedtuple
 import re
 import sys
 from ast import literal_eval
 from functools import total_ordering
+from typing import NamedTuple, Sequence, Union
 
 # The following is a list in Python that are line breaks in str.splitlines, but
 # not in Python. In Python only \r (Carriage Return, 0xD) and \n (Line Feed,
@@ -19,10 +19,14 @@ _NON_LINE_BREAKS = (
     '\u2029',  # Paragraph Separator
 )
 
-Version = namedtuple('Version', 'major, minor, micro')
+
+class Version(NamedTuple):
+    major: int
+    minor: int
+    micro: int
 
 
-def split_lines(string, keepends=False):
+def split_lines(string: str, keepends: bool = False) -> Sequence[str]:
     r"""
     Intended for Python code. In contrast to Python's :py:meth:`str.splitlines`,
     looks at form feeds and other special characters as normal text. Just
@@ -66,7 +70,9 @@ def split_lines(string, keepends=False):
         return re.split(r'\n|\r\n|\r', string)
 
 
-def python_bytes_to_unicode(source, encoding='utf-8', errors='strict'):
+def python_bytes_to_unicode(
+    source: Union[str, bytes], encoding: str = 'utf-8', errors: str = 'strict'
+) -> str:
     """
     Checks for unicode BOMs and PEP 263 encoding declarations. Then returns a
     unicode object like in :py:meth:`bytes.decode`.
@@ -116,7 +122,7 @@ def python_bytes_to_unicode(source, encoding='utf-8', errors='strict'):
         raise
 
 
-def version_info():
+def version_info() -> Version:
     """
     Returns a namedtuple of parso's version, similar to Python's
     ``sys.version_info``.
@@ -148,7 +154,10 @@ def _parse_version(version):
 
 
 @total_ordering
-class PythonVersionInfo(namedtuple('Version', 'major, minor')):
+class PythonVersionInfo(NamedTuple):
+    major: int
+    minor: int
+
     def __gt__(self, other):
         if isinstance(other, tuple):
             if len(other) != 2:
@@ -169,7 +178,7 @@ class PythonVersionInfo(namedtuple('Version', 'major, minor')):
         return not self.__eq__(other)
 
 
-def parse_version_string(version=None):
+def parse_version_string(version: str = None) -> PythonVersionInfo:
     """
     Checks for a valid version number (e.g. `3.8` or `3.10.1` or `3`) and
     returns a corresponding version info that is always two characters long in
