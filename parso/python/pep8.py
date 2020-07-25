@@ -1,5 +1,6 @@
 import re
 from contextlib import contextmanager
+from typing import Tuple
 
 from parso.python.errors import ErrorFinder, ErrorFinderConfig
 from parso.normalizer import Rule
@@ -15,10 +16,11 @@ _CLOSING_BRACKETS = ')', ']', '}'
 _FACTOR = '+', '-', '~'
 _ALLOW_SPACE = '*', '+', '-', '**', '/', '//', '@'
 _BITWISE_OPERATOR = '<<', '>>', '|', '&', '^'
-_NEEDS_SPACE = ('=', '%', '->',
-                '<', '>', '==', '>=', '<=', '<>', '!=',
-                '+=', '-=', '*=', '@=', '/=', '%=', '&=', '|=', '^=', '<<=',
-                '>>=', '**=', '//=')
+_NEEDS_SPACE: Tuple[str, ...] = (
+    '=', '%', '->',
+    '<', '>', '==', '>=', '<=', '<>', '!=',
+    '+=', '-=', '*=', '@=', '/=', '%=', '&=', '|=', '^=', '<<=',
+    '>>=', '**=', '//=')
 _NEEDS_SPACE += _BITWISE_OPERATOR
 _IMPLICIT_INDENTATION_TYPES = ('dictorsetmaker', 'argument')
 _POSSIBLE_SLICE_PARENTS = ('subscript', 'subscriptlist', 'sliceop')

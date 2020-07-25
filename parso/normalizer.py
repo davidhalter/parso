@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+from typing import Dict, List
 
 
 class _NormalizerMeta(type):
@@ -10,8 +11,8 @@ class _NormalizerMeta(type):
 
 
 class Normalizer(metaclass=_NormalizerMeta):
-    _rule_type_instances = {}
-    _rule_value_instances = {}
+    _rule_type_instances: Dict[str, List[type]] = {}
+    _rule_value_instances: Dict[str, List[type]] = {}
 
     def __init__(self, grammar, config):
         self.grammar = grammar
@@ -75,7 +76,7 @@ class Normalizer(metaclass=_NormalizerMeta):
         return True
 
     @classmethod
-    def register_rule(cls, **kwargs):
+    def register_rule(cls, *, value=None, values=(), type=None, types=()):
         """
         Use it as a class decorator::
 
@@ -84,10 +85,6 @@ class Normalizer(metaclass=_NormalizerMeta):
             class MyRule(Rule):
                 error_code = 42
         """
-        return cls._register_rule(**kwargs)
-
-    @classmethod
-    def _register_rule(cls, value=None, values=(), type=None, types=()):
         values = list(values)
         types = list(types)
         if value is not None:

@@ -8,6 +8,7 @@ import platform
 import logging
 import warnings
 import pickle
+from typing import Dict, Any
 
 from parso.file_io import FileIO
 
@@ -98,7 +99,7 @@ def _get_cache_clear_lock(cache_path=None):
     return FileIO(os.path.join(cache_path, "PARSO-CACHE-LOCK"))
 
 
-parser_cache = {}
+parser_cache: Dict[str, Any] = {}
 
 
 class _NodeCacheItem(object):
