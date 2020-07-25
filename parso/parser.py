@@ -23,7 +23,7 @@ within the statement. This lowers memory usage and cpu time and reduces the
 complexity of the ``Parser`` (there's another parser sitting inside
 ``Statement``, which produces ``Array`` and ``Call``).
 """
-from typing import Dict, Generic, TypeVar
+from typing import Dict
 
 from parso import tree
 from parso.pgen2.generator import ReservedString

@@ -1,6 +1,5 @@
 import hashlib
 import os
-from enum import Enum
 from typing import Generic, TypeVar, Union, Dict, Optional, Any
 
 from parso._compatibility import is_pypy
