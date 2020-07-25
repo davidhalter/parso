@@ -118,8 +118,6 @@ class DFAState(Generic[_TokenTypeT]):
                 return False
         return True
 
-    __hash__ = None  # For Py3 compatibility.
-
     def __repr__(self):
         return '<%s: %s is_final=%s>' % (
             self.__class__.__name__, self.from_rule, self.is_final
@@ -263,7 +261,7 @@ def generate_grammar(bnf_grammar: str, token_namespace) -> Grammar:
         if start_nonterminal is None:
             start_nonterminal = nfa_a.from_rule
 
-    reserved_strings = {}
+    reserved_strings: Mapping[str, ReservedString] = {}
     for nonterminal, dfas in rule_to_dfas.items():
         for dfa_state in dfas:
             for terminal_or_nonterminal, next_dfa in dfa_state.arcs.items():
@@ -278,7 +276,7 @@ def generate_grammar(bnf_grammar: str, token_namespace) -> Grammar:
                     dfa_state.transitions[transition] = DFAPlan(next_dfa)
 
     _calculate_tree_traversal(rule_to_dfas)
-    return Grammar(start_nonterminal, rule_to_dfas, reserved_strings)
+    return Grammar(start_nonterminal, rule_to_dfas, reserved_strings)  # type: ignore
 
 
 def _make_transition(token_namespace, reserved_syntax_strings, label):
