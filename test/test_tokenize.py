@@ -30,7 +30,7 @@ FSTRING_END = PythonTokenTypes.FSTRING_END
 def _get_token_list(string, version=None):
     # Load the current version.
     version_info = parse_version_string(version)
-    return list(tokenize.tokenize(string, version_info))
+    return list(tokenize.tokenize(string, version_info=version_info))
 
 
 def test_end_pos_one_line():

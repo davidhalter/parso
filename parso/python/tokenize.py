@@ -13,12 +13,13 @@ from __future__ import absolute_import
 
 import sys
 import re
-from collections import namedtuple
 import itertools as _itertools
 from codecs import BOM_UTF8
+from typing import NamedTuple, Tuple, Iterator, Iterable, List, Dict, \
+    Pattern, Set
 
-from parso.python.token import PythonTokenTypes
-from parso.utils import split_lines
+from parso.python.token import PythonTokenTypes, TokenType
+from parso.utils import split_lines, PythonVersionInfo, parse_version_string
 
 
 # Maximum code point of Unicode 6.0: 0x10ffff (1,114,111)
@@ -38,15 +39,20 @@ FSTRING_START = PythonTokenTypes.FSTRING_START
 FSTRING_STRING = PythonTokenTypes.FSTRING_STRING
 FSTRING_END = PythonTokenTypes.FSTRING_END
 
-TokenCollection = namedtuple(
-    'TokenCollection',
-    'pseudo_token single_quoted triple_quoted endpats whitespace '
-    'fstring_pattern_map always_break_tokens',
-)
+
+class TokenCollection(NamedTuple):
+    pseudo_token: Pattern
+    single_quoted: Set[str]
+    triple_quoted: Set[str]
+    endpats: Dict[str, Pattern]
+    whitespace: Pattern
+    fstring_pattern_map: Dict[str, str]
+    always_break_tokens: Tuple[str]
+
 
 BOM_UTF8_STRING = BOM_UTF8.decode('utf-8')
 
-_token_collection_cache = {}
+_token_collection_cache: Dict[PythonVersionInfo, TokenCollection] = {}
 
 
 def group(*choices, capture=False, **kwargs):
@@ -219,9 +225,13 @@ def _create_token_collection(version_info):
     )
 
 
-class Token(namedtuple('Token', ['type', 'string', 'start_pos', 'prefix'])):
+class Token(NamedTuple):
+    type: TokenType
+    string: str
+    start_pos: Tuple[int, int]
+    prefix: str
     @property
-    def end_pos(self):
+    def end_pos(self) -> Tuple[int, int]:
         lines = split_lines(self.string)
         if len(lines) > 1:
             return self.start_pos[0] + len(lines) - 1, 0
@@ -322,10 +332,12 @@ def _find_fstring_string(endpats, fstring_stack, line, lnum, pos):
     return string, new_pos
 
 
-def tokenize(code, version_info, start_pos=(1, 0)):
+def tokenize(
+    code: str, *, version_info: PythonVersionInfo, start_pos: Tuple[int, int] = (1, 0)
+) -> Iterator[PythonToken]:
     """Generate tokens from a the source code (string)."""
     lines = split_lines(code, keepends=True)
-    return tokenize_lines(lines, version_info, start_pos=start_pos)
+    return tokenize_lines(lines, version_info=version_info, start_pos=start_pos)
 
 
 def _print_tokens(func):
@@ -341,7 +353,14 @@ def _print_tokens(func):
 
 
 # @_print_tokens
-def tokenize_lines(lines, version_info, start_pos=(1, 0), indents=None, is_first_token=True):
+def tokenize_lines(
+    lines: Iterable[str],
+    *,
+    version_info: PythonVersionInfo,
+    indents: List[int] = None,
+    start_pos: Tuple[int, int] = (1, 0),
+    is_first_token=True,
+) -> Iterator[PythonToken]:
     """
     A heavily modified Python standard library tokenizer.
 
@@ -367,7 +386,9 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0), indents=None, is_first
     max_ = 0
     numchars = '0123456789'
     contstr = ''
-    contline = None
+    contline: str
+    contstr_start: Tuple[int, int]
+    endprog: Pattern
     # We start with a newline. This makes indent at the first position
     # possible. It's not valid Python, but still better than an INDENT in the
     # second line (and not in the first). This makes quite a few things in
@@ -376,7 +397,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0), indents=None, is_first
     prefix = ''  # Should never be required, but here for safety
     additional_prefix = ''
     lnum = start_pos[0] - 1
-    fstring_stack = []
+    fstring_stack: List[FStringNode] = []
     for line in lines:  # loop over lines in stream
         lnum += 1
         pos = 0
@@ -402,7 +423,7 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0), indents=None, is_first
                     STRING, contstr + line[:pos],
                     contstr_start, prefix)  # noqa: F821
                 contstr = ''
-                contline = None
+                contline = ''
             else:
                 contstr = contstr + line
                 contline = contline + line
@@ -655,10 +676,5 @@ if __name__ == "__main__":
     with open(path) as f:
         code = f.read()
 
-    from parso.utils import python_bytes_to_unicode, parse_version_string
-
-    if isinstance(code, bytes):
-        code = python_bytes_to_unicode(code)
-
-    for token in tokenize(code, parse_version_string()):
+    for token in tokenize(code, version_info=parse_version_string('3.10')):
         print(token)
