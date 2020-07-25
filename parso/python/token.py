@@ -4,7 +4,10 @@ from enum import Enum
 
 
 class TokenType(object):
-    def __init__(self, name, contains_syntax=False):
+    name: str
+    contains_syntax: bool
+
+    def __init__(self, name: str, contains_syntax: bool = False):
         self.name = name
         self.contains_syntax = contains_syntax
 
