@@ -106,9 +106,6 @@ def python_bytes_to_unicode(
         return source
 
     encoding = detect_encoding()
-    if not isinstance(encoding, str):
-        encoding = str(encoding, 'utf-8', 'replace')
-
     try:
         # Cast to unicode
         return str(source, encoding, errors)
@@ -132,32 +129,13 @@ def version_info() -> Version:
     return Version(*[x if i == 3 else int(x) for i, x in enumerate(tupl)])
 
 
-def _parse_version(version):
-    match = re.match(r'(\d+)(?:\.(\d{1,2})(?:\.\d+)?)?((a|b|rc)\d)?$', version)
-    if match is None:
-        raise ValueError('The given version is not in the right format. '
-                         'Use something like "3.8" or "3".')
-
-    major = int(match.group(1))
-    minor = match.group(2)
-    if minor is None:
-        # Use the latest Python in case it's not exactly defined, because the
-        # grammars are typically backwards compatible?
-        if major == 2:
-            minor = "7"
-        elif major == 3:
-            minor = "6"
-        else:
-            raise NotImplementedError("Sorry, no support yet for those fancy new/old versions.")
-    minor = int(minor)
-    return PythonVersionInfo(major, minor)
-
-
-@total_ordering
-class PythonVersionInfo(NamedTuple):
+class _PythonVersionInfo(NamedTuple):
     major: int
     minor: int
 
+
+@total_ordering
+class PythonVersionInfo(_PythonVersionInfo):
     def __gt__(self, other):
         if isinstance(other, tuple):
             if len(other) != 2:
@@ -176,6 +154,27 @@ class PythonVersionInfo(NamedTuple):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+
+def _parse_version(version) -> PythonVersionInfo:
+    match = re.match(r'(\d+)(?:\.(\d{1,2})(?:\.\d+)?)?((a|b|rc)\d)?$', version)
+    if match is None:
+        raise ValueError('The given version is not in the right format. '
+                         'Use something like "3.8" or "3".')
+
+    major = int(match.group(1))
+    minor = match.group(2)
+    if minor is None:
+        # Use the latest Python in case it's not exactly defined, because the
+        # grammars are typically backwards compatible?
+        if major == 2:
+            minor = "7"
+        elif major == 3:
+            minor = "6"
+        else:
+            raise NotImplementedError("Sorry, no support yet for those fancy new/old versions.")
+    minor = int(minor)
+    return PythonVersionInfo(major, minor)
 
 
 def parse_version_string(version: str = None) -> PythonVersionInfo:

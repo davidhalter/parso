@@ -1,9 +1,12 @@
 import hashlib
 import os
+from enum import Enum
+from typing import Generic, TypeVar, Union, Dict, Optional, Any
 
 from parso._compatibility import is_pypy
 from parso.pgen2 import generate_grammar
-from parso.utils import split_lines, python_bytes_to_unicode, parse_version_string
+from parso.utils import split_lines, python_bytes_to_unicode, \
+    PythonVersionInfo, parse_version_string
 from parso.python.diff import DiffParser
 from parso.python.tokenize import tokenize_lines, tokenize
 from parso.python.token import PythonTokenTypes
@@ -13,12 +16,14 @@ from parso.python.parser import Parser as PythonParser
 from parso.python.errors import ErrorFinderConfig
 from parso.python import pep8
 from parso.file_io import FileIO, KnownContentFileIO
-from parso.normalizer import RefactoringNormalizer
+from parso.normalizer import RefactoringNormalizer, NormalizerConfig
 
-_loaded_grammars = {}
+_loaded_grammars: Dict[str, 'Grammar'] = {}
+
+_NodeT = TypeVar("_NodeT")
 
 
-class Grammar(object):
+class Grammar(Generic[_NodeT]):
     """
     :py:func:`parso.load_grammar` returns instances of this class.
 
@@ -26,11 +31,12 @@ class Grammar(object):
 
     :param text: A BNF representation of your grammar.
     """
-    _error_normalizer_config = None
-    _token_namespace = None
-    _default_normalizer_config = pep8.PEP8NormalizerConfig()
+    _start_nonterminal: str
+    _error_normalizer_config: Optional[ErrorFinderConfig] = None
+    _token_namespace: Any = None
+    _default_normalizer_config: NormalizerConfig = pep8.PEP8NormalizerConfig()
 
-    def __init__(self, text, *, tokenizer, parser=BaseParser, diff_parser=None):
+    def __init__(self, text: str, *, tokenizer, parser=BaseParser, diff_parser=None):
         self._pgen_grammar = generate_grammar(
             text,
             token_namespace=self._get_token_namespace()
@@ -40,9 +46,16 @@ class Grammar(object):
         self._diff_parser = diff_parser
         self._hashed = hashlib.sha256(text.encode("utf-8")).hexdigest()
 
-    def parse(self, code=None, *, error_recovery=True, path=None,
-              start_symbol=None, cache=False, diff_cache=False,
-              cache_path=None, file_io=None):
+    def parse(self,
+              code: Union[str, bytes] = None,
+              *,
+              error_recovery=True,
+              path: str = None,
+              start_symbol: str = None,
+              cache=False,
+              diff_cache=False,
+              cache_path: str = None,
+              file_io: FileIO = None) -> _NodeT:
         """
         If you want to parse a Python file you want to start here, most likely.
 
@@ -95,7 +108,7 @@ class Grammar(object):
         if cache and file_io.path is not None:
             module_node = load_module(self._hashed, file_io, cache_path=cache_path)
             if module_node is not None:
-                return module_node
+                return module_node  # type: ignore
 
         if code is None:
             code = file_io.read()
@@ -114,7 +127,7 @@ class Grammar(object):
                 module_node = module_cache_item.node
                 old_lines = module_cache_item.lines
                 if old_lines == lines:
-                    return module_node
+                    return module_node  # type: ignore
 
                 new_node = self._diff_parser(
                     self._pgen_grammar, self._tokenizer, module_node
@@ -126,7 +139,7 @@ class Grammar(object):
                                    # Never pickle in pypy, it's slow as hell.
                                    pickling=cache and not is_pypy,
                                    cache_path=cache_path)
-                return new_node
+                return new_node  # type: ignore
 
         tokens = self._tokenizer(lines)
 
@@ -142,7 +155,7 @@ class Grammar(object):
                                # Never pickle in pypy, it's slow as hell.
                                pickling=cache and not is_pypy,
                                cache_path=cache_path)
-        return root_node
+        return root_node  # type: ignore
 
     def _get_token_namespace(self):
         ns = self._token_namespace
@@ -196,7 +209,7 @@ class PythonGrammar(Grammar):
     _token_namespace = PythonTokenTypes
     _start_nonterminal = 'file_input'
 
-    def __init__(self, version_info, bnf_text):
+    def __init__(self, version_info: PythonVersionInfo, bnf_text: str):
         super(PythonGrammar, self).__init__(
             bnf_text,
             tokenizer=self._tokenize_lines,
@@ -213,7 +226,7 @@ class PythonGrammar(Grammar):
         return tokenize(code, version_info=self.version_info)
 
 
-def load_grammar(*, language='python', version=None, path=None):
+def load_grammar(*, language: str = 'python', version: str = None, path: str = None):
     """
     Loads a :py:class:`parso.Grammar`. The default version is the current Python
     version.

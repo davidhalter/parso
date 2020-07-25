@@ -18,7 +18,7 @@ from codecs import BOM_UTF8
 from typing import NamedTuple, Tuple, Iterator, Iterable, List, Dict, \
     Pattern, Set
 
-from parso.python.token import PythonTokenTypes, TokenType
+from parso.python.token import PythonTokenTypes
 from parso.utils import split_lines, PythonVersionInfo, parse_version_string
 
 
@@ -226,7 +226,7 @@ def _create_token_collection(version_info):
 
 
 class Token(NamedTuple):
-    type: TokenType
+    type: PythonTokenTypes
     string: str
     start_pos: Tuple[int, int]
     prefix: str
