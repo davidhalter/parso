@@ -18,7 +18,7 @@ class GrammarParser():
         self._bnf_grammar = bnf_grammar
         self.generator = tokenize(
             bnf_grammar,
-            version_info=parse_version_string('3.6')
+            version_info=parse_version_string('3.9')
         )
         self._gettoken()  # Initialize lookahead
 

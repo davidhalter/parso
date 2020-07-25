@@ -13,7 +13,7 @@ Parso consists of a small API to parse Python and analyse the syntax tree.
 A simple example:
 
 >>> import parso
->>> module = parso.parse('hello + 1', version="3.6")
+>>> module = parso.parse('hello + 1', version="3.9")
 >>> expr = module.children[0]
 >>> expr
 PythonNode(arith_expr, [<Name: hello@1,0>, <Operator: +>, <Number: 1>])

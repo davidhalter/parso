@@ -34,7 +34,7 @@ FAILING_EXAMPLES = [
     'lambda x=3, y: x',
     '__debug__ = 1',
     'with x() as __debug__: pass',
-    # Mostly 3.6 relevant
+
     '[]: int',
     '[a, b]: int',
     '(): int',

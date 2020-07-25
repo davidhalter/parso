@@ -184,7 +184,6 @@ def test_ur_literals():
     check('bR""')
     check('Rb""')
 
-    # Starting with Python 3.6 format strings where introduced.
     check('fr""')
     check('rF""')
     check('f""')
