@@ -222,7 +222,7 @@ def _any_fstring_error(version, node):
         return search_ancestor(node, "fstring")
 
 
-class _Context(object):
+class _Context:
     def __init__(self, node, add_syntax_error, parent_context=None):
         self.node = node
         self.blocks = []

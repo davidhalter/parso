@@ -18,7 +18,7 @@ def search_ancestor(node, *node_types):
             return node
 
 
-class NodeOrLeaf(object):
+class NodeOrLeaf:
     """
     The base class for nodes and leaves.
     """

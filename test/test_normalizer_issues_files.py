@@ -12,7 +12,7 @@ from parso.utils import python_bytes_to_unicode
 
 
 @total_ordering
-class WantedIssue(object):
+class WantedIssue:
     def __init__(self, code, line, column):
         self.code = code
         self._line = line

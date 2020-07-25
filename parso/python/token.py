@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from enum import Enum
 
 
-class TokenType(object):
+class TokenType:
     name: str
     contains_syntax: bool
 

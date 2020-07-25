@@ -56,7 +56,7 @@ def pytest_generate_tests(metafunc):
         metafunc.parametrize('version_ge_py38', sorted(ge38))
 
 
-class NormalizerIssueCase(object):
+class NormalizerIssueCase:
     """
     Static Analysis cases lie in the static_analysis folder.
     The tests also start with `#!`, like the goto_definition tests.
@@ -88,7 +88,7 @@ def pytest_configure(config):
         #root.addHandler(ch)
 
 
-class Checker():
+class Checker:
     def __init__(self, version, is_passing):
         self.version = version
         self._is_passing = is_passing

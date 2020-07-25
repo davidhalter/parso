@@ -102,7 +102,7 @@ def _get_cache_clear_lock(cache_path=None):
 parser_cache: Dict[str, Any] = {}
 
 
-class _NodeCacheItem(object):
+class _NodeCacheItem:
     def __init__(self, node, lines, change_time=None):
         self.node = node
         self.lines = lines

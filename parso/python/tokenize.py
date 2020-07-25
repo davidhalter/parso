@@ -246,7 +246,7 @@ class PythonToken(Token):
                 self._replace(type=self.type.name))
 
 
-class FStringNode(object):
+class FStringNode:
     def __init__(self, quote):
         self.quote = quote
         self.parentheses_count = 0

@@ -1,7 +1,7 @@
 import os
 
 
-class FileIO(object):
+class FileIO:
     def __init__(self, path):
         self.path = path
 

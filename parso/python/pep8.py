@@ -26,7 +26,7 @@ _IMPLICIT_INDENTATION_TYPES = ('dictorsetmaker', 'argument')
 _POSSIBLE_SLICE_PARENTS = ('subscript', 'subscriptlist', 'sliceop')
 
 
-class IndentationTypes(object):
+class IndentationTypes:
     VERTICAL_BRACKET = object()
     HANGING_BRACKET = object()
     BACKSLASH = object()

@@ -8,7 +8,7 @@ from parso import parse
 from parso.python import tree
 
 
-class TestsFunctionAndLambdaParsing(object):
+class TestsFunctionAndLambdaParsing:
 
     FIXTURES = [
         ('def my_function(x, y, z) -> str:\n    return x + y * z\n', {

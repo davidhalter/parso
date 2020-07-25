@@ -38,7 +38,7 @@ def _check_error_leaves_nodes(node):
     return None
 
 
-class Differ(object):
+class Differ:
     grammar = load_grammar()
 
     def initialize(self, code):

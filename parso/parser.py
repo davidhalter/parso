@@ -73,7 +73,7 @@ class Stack(list):
         return list(iterate())
 
 
-class StackNode(object):
+class StackNode:
     def __init__(self, dfa):
         self.dfa = dfa
         self.nodes = []
@@ -98,7 +98,7 @@ def _token_to_transition(grammar, type_, value):
     return type_
 
 
-class BaseParser(object):
+class BaseParser:
     """Parser engine.
 
     A Parser instance contains state pertaining to the current token

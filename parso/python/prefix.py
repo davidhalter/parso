@@ -6,7 +6,7 @@ from parso.python.tokenize import group
 unicode_bom = BOM_UTF8.decode('utf-8')
 
 
-class PrefixPart(object):
+class PrefixPart:
     def __init__(self, leaf, typ, value, spacing='', start_pos=None):
         assert start_pos is not None
         self.parent = leaf

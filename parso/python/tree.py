@@ -68,7 +68,7 @@ _GET_DEFINITION_TYPES = set([
 _IMPORTS = set(['import_name', 'import_from'])
 
 
-class DocstringMixin(object):
+class DocstringMixin:
     __slots__ = ()
 
     def get_doc_node(self):
@@ -96,7 +96,7 @@ class DocstringMixin(object):
         return None
 
 
-class PythonMixin(object):
+class PythonMixin:
     """
     Some Python specific utilities.
     """
@@ -296,7 +296,7 @@ class FStringEnd(PythonLeaf):
     __slots__ = ()
 
 
-class _StringComparisonMixin(object):
+class _StringComparisonMixin:
     def __eq__(self, other):
         """
         Make comparisons with strings easy.

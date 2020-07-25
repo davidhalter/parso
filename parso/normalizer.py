@@ -105,7 +105,7 @@ class Normalizer(metaclass=_NormalizerMeta):
         return decorator
 
 
-class NormalizerConfig(object):
+class NormalizerConfig:
     normalizer_class = Normalizer
 
     def create_normalizer(self, grammar):
@@ -115,7 +115,7 @@ class NormalizerConfig(object):
         return self.normalizer_class(grammar, self)
 
 
-class Issue(object):
+class Issue:
     def __init__(self, node, code, message):
         self.code = code
         """
@@ -145,7 +145,7 @@ class Issue(object):
         return '<%s: %s>' % (self.__class__.__name__, self.code)
 
 
-class Rule(object):
+class Rule:
     code: int
     message: str
 
