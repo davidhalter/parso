@@ -43,10 +43,8 @@ class Parser(BaseParser):
         # Not sure if this is the best idea, but IMO it's the easiest way to
         # avoid extreme amounts of work around the subtle difference of 2/3
         # grammar in list comoprehensions.
-        'list_for': tree.SyncCompFor,
         'decorator': tree.Decorator,
         'lambdef': tree.Lambda,
-        'old_lambdef': tree.Lambda,
         'lambdef_nocond': tree.Lambda,
     }
     default_node = tree.PythonNode
@@ -96,12 +94,6 @@ class Parser(BaseParser):
                 # ones and therefore have pseudo start/end positions and no
                 # prefixes. Just ignore them.
                 children = [children[0]] + children[2:-1]
-            elif nonterminal == 'list_if':
-                # Make transitioning from 2 to 3 easier.
-                nonterminal = 'comp_if'
-            elif nonterminal == 'listmaker':
-                # Same as list_if above.
-                nonterminal = 'testlist_comp'
             node = self.default_node(nonterminal, children)
         for c in children:
             c.parent = node
