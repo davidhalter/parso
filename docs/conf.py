@@ -43,8 +43,8 @@ source_encoding = 'utf-8'
 master_doc = 'index'
 
 # General information about the project.
-project = u'parso'
-copyright = u'parso contributors'
+project = 'parso'
+copyright = 'parso contributors'
 
 import parso
 from parso.utils import version_info
@@ -200,8 +200,8 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-    ('index', 'parso.tex', u'parso documentation',
-     u'parso contributors', 'manual'),
+    ('index', 'parso.tex', 'parso documentation',
+     'parso contributors', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -230,8 +230,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'parso', u'parso Documentation',
-     [u'parso contributors'], 1)
+    ('index', 'parso', 'parso Documentation',
+     ['parso contributors'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -244,8 +244,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    ('index', 'parso', u'parso documentation',
-     u'parso contributors', 'parso', 'Awesome Python autocompletion library.',
+    ('index', 'parso', 'parso documentation',
+     'parso contributors', 'parso', 'Awesome Python autocompletion library.',
      'Miscellaneous'),
 ]
 
@@ -273,7 +273,7 @@ autodoc_default_flags = []
 # -- Options for intersphinx module --------------------------------------------
 
 intersphinx_mapping = {
-    'http://docs.python.org/': ('https://docs.python.org/3.6', None),
+    'http://docs.python.org/': ('https://docs.python.org/3', None),
 }
 
 

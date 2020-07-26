@@ -1,9 +1,4 @@
-try:
-    from itertools import zip_longest
-except ImportError:
-    # Python 2
-    from itertools import izip_longest as zip_longest
-
+from itertools import zip_longest
 from codecs import BOM_UTF8
 
 import pytest
@@ -44,7 +39,7 @@ def test_simple_prefix_splitting(string, tokens):
         else:
             end_pos = start_pos[0], start_pos[1] + len(expected) + len(pt.spacing)
 
-        #assert start_pos == pt.start_pos
+        # assert start_pos == pt.start_pos
         assert end_pos == pt.end_pos
         start_pos = end_pos
 

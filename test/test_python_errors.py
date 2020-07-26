@@ -48,10 +48,7 @@ def test_non_async_in_async():
     This example doesn't work with FAILING_EXAMPLES, because the line numbers
     are not always the same / incorrect in Python 3.8.
     """
-    if sys.version_info[:2] < (3, 5):
-        pytest.skip()
-
-        # Raises multiple errors in previous versions.
+    # Raises multiple errors in previous versions.
     code = 'async def foo():\n def nofoo():[x async for x in []]'
     wanted, line_nr = _get_actual_exception(code)
 
@@ -120,16 +117,9 @@ def _get_actual_exception(code):
             assert False, "The piece of code should raise an exception."
 
     # SyntaxError
-    if wanted == 'SyntaxError: non-keyword arg after keyword arg':
-        # The python 3.5+ way, a bit nicer.
-        wanted = 'SyntaxError: positional argument follows keyword argument'
-    elif wanted == 'SyntaxError: assignment to keyword':
+    if wanted == 'SyntaxError: assignment to keyword':
         return [wanted, "SyntaxError: can't assign to keyword",
                 'SyntaxError: cannot assign to __debug__'], line_nr
-    elif wanted == 'SyntaxError: can use starred expression only as assignment target':
-        # Python 3.4/3.4 have a bit of a different warning than 3.5/3.6 in
-        # certain places. But in others this error makes sense.
-        return [wanted, "SyntaxError: can't use starred expression here"], line_nr
     elif wanted == 'SyntaxError: f-string: unterminated string':
         wanted = 'SyntaxError: EOL while scanning string literal'
     elif wanted == 'SyntaxError: f-string expression part cannot include a backslash':
@@ -259,10 +249,7 @@ def test_escape_decode_literals(each_version):
 
     # Finally bytes.
     error, = _get_error_list(r'b"\x"', version=each_version)
-    wanted = r'SyntaxError: (value error) invalid \x escape'
-    if sys.version_info >= (3, 0):
-        # The positioning information is only available in Python 3.
-        wanted += ' at position 0'
+    wanted = r'SyntaxError: (value error) invalid \x escape at position 0'
     assert error.message == wanted
 
 
@@ -273,9 +260,11 @@ def test_too_many_levels_of_indentation():
     assert not _get_error_list(build_nested('pass', 49, base=base))
     assert _get_error_list(build_nested('pass', 50, base=base))
 
+
 def test_paren_kwarg():
     assert _get_error_list("print((sep)=seperator)", version="3.8")
     assert not _get_error_list("print((sep)=seperator)", version="3.7")
+
 
 @pytest.mark.parametrize(
     'code', [
@@ -330,6 +319,7 @@ def test_trailing_comma(code):
     errors = _get_error_list(code)
     assert not errors
 
+
 def test_continue_in_finally():
     code = dedent('''\
         for a in [1]:
@@ -341,7 +331,7 @@ def test_continue_in_finally():
     assert not _get_error_list(code, version="3.8")
     assert _get_error_list(code, version="3.7")
 
-    
+
 @pytest.mark.parametrize(
     'template', [
         "a, b, {target}, c = d",
@@ -391,6 +381,7 @@ def test_repeated_kwarg():
 )
 def test_unparenthesized_genexp(source, no_errors):
     assert bool(_get_error_list(source)) ^ no_errors
+
 
 @pytest.mark.parametrize(
     ('source', 'no_errors'), [

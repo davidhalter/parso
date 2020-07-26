@@ -74,7 +74,7 @@ def test_invalid_token():
 
 
 def test_invalid_token_in_fstr():
-    module = load_grammar(version='3.6').parse('f"{a + ? + b}"')
+    module = load_grammar(version='3.9').parse('f"{a + ? + b}"')
     error_node, q, plus_b, error1, error2, endmarker = module.children
     assert error_node.get_code() == 'f"{a +'
     assert q.value == '?'

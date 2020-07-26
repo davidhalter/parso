@@ -83,6 +83,7 @@ def test_bytes_to_unicode_failing_encoding(code, errors):
     else:
         python_bytes_to_unicode(code, errors=errors)
 
+
 @pytest.mark.parametrize(
     ('version_str', 'version'), [
         ('3', (3,)),

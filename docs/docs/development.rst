@@ -21,18 +21,18 @@ The deprecation process is as follows:
 Testing
 -------
 
-The test suite depends on ``tox`` and ``pytest``::
+The test suite depends on ``pytest``::
 
-    pip install tox pytest
+    pip install pytest
 
-To run the tests for all supported Python versions::
+To run the tests use the following::
 
-    tox
+    pytest
 
-If you want to test only a specific Python version (e.g. Python 2.7), it's as
+If you want to test only a specific Python version (e.g. Python 3.9), it's as
 easy as::
 
-    tox -e py27
+    python3.9 -m pytest
 
 Tests are also run automatically on `Travis CI
 <https://travis-ci.org/davidhalter/parso/>`_.

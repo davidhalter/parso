@@ -23,7 +23,7 @@ cd $PROJECT_NAME
 git checkout $BRANCH
 
 # Test first.
-tox
+pytest
 
 # Create tag
 tag=v$(python3 -c "import $PROJECT_NAME; print($PROJECT_NAME.__version__)")

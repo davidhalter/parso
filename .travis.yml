@@ -1,28 +1,31 @@
 dist: xenial
 language: python
 python:
-  - 2.7
-  - 3.4
-  - 3.5
   - 3.6
   - 3.7
   - 3.8.2
   - nightly
-  - pypy2.7-6.0
-  - pypy3.5-6.0
 matrix:
   allow_failures:
     - python: nightly
   include:
-    - python: 3.5
-      env: TOXENV=py35-coverage
+    - python: 3.8
+      install:
+        - 'pip install .[qa]'
+      script:
+        # Ignore F401, which are unused imports. flake8 is a primitive tool and is sometimes wrong.
+        - 'flake8 --extend-ignore F401 parso test/*.py setup.py scripts/'
+        - mypy parso
+    - python: 3.8.2
+      script:
+        - 'pip install coverage'
+        - 'coverage run -m pytest'
+        - 'coverage report'
+      after_script:
+          - |
+            pip install --quiet coveralls
+            coveralls
 install:
-    - pip install --quiet tox-travis
+    - pip install .[testing]
 script:
-    - tox
-after_script:
-    - |
-      if [ "${TOXENV%-coverage}" == "$TOXENV" ]; then
-        pip install --quiet coveralls;
-        coveralls;
-      fi
+    - pytest

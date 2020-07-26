@@ -1,7 +1,6 @@
 *~
 *.sw?
 *.pyc
-.tox
 .coveralls.yml
 .coverage
 /build/

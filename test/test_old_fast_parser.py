@@ -8,12 +8,11 @@ However the tests might still be relevant for the parser.
 
 from textwrap import dedent
 
-from parso._compatibility import u
 from parso import parse
 
 
 def test_carriage_return_splitting():
-    source = u(dedent('''
+    source = dedent('''
 
 
 
@@ -21,7 +20,7 @@ def test_carriage_return_splitting():
 
         class Foo():
             pass
-        '''))
+        ''')
     source = source.replace('\n', '\r\n')
     module = parse(source)
     assert [n.value for lst in module.get_used_names().values() for n in lst] == ['Foo']
@@ -136,7 +135,7 @@ def test_wrong_indentation():
          b
         a
     """)
-    #check_p(src, 1)
+    check_p(src, 1)
 
     src = dedent("""\
     def complex():

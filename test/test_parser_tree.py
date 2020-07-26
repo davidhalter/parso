@@ -8,7 +8,7 @@ from parso import parse
 from parso.python import tree
 
 
-class TestsFunctionAndLambdaParsing(object):
+class TestsFunctionAndLambdaParsing:
 
     FIXTURES = [
         ('def my_function(x, y, z) -> str:\n    return x + y * z\n', {
@@ -26,7 +26,7 @@ class TestsFunctionAndLambdaParsing(object):
 
     @pytest.fixture(params=FIXTURES)
     def node(self, request):
-        parsed = parse(dedent(request.param[0]), version='3.5')
+        parsed = parse(dedent(request.param[0]), version='3.10')
         request.keywords['expected'] = request.param[1]
         child = parsed.children[0]
         if child.type == 'simple_stmt':
@@ -79,16 +79,16 @@ def test_default_param(each_version):
     assert not param.star_count
 
 
-def test_annotation_param(each_py3_version):
-    func = parse('def x(foo: 3): pass', version=each_py3_version).children[0]
+def test_annotation_param(each_version):
+    func = parse('def x(foo: 3): pass', version=each_version).children[0]
     param, = func.get_params()
     assert param.default is None
     assert param.annotation.value == '3'
     assert not param.star_count
 
 
-def test_annotation_params(each_py3_version):
-    func = parse('def x(foo: 3, bar: 4): pass', version=each_py3_version).children[0]
+def test_annotation_params(each_version):
+    func = parse('def x(foo: 3, bar: 4): pass', version=each_version).children[0]
     param1, param2 = func.get_params()
 
     assert param1.default is None
@@ -100,21 +100,12 @@ def test_annotation_params(each_py3_version):
     assert not param2.star_count
 
 
-def test_default_and_annotation_param(each_py3_version):
-    func = parse('def x(foo:3=42): pass', version=each_py3_version).children[0]
+def test_default_and_annotation_param(each_version):
+    func = parse('def x(foo:3=42): pass', version=each_version).children[0]
     param, = func.get_params()
     assert param.default.value == '42'
     assert param.annotation.value == '3'
     assert not param.star_count
-
-
-def test_ellipsis_py2(each_py2_version):
-    module = parse('[0][...]', version=each_py2_version, error_recovery=False)
-    expr = module.children[0]
-    trailer = expr.children[-1]
-    subscript = trailer.children[1]
-    assert subscript.type == 'subscript'
-    assert [leaf.value for leaf in subscript.children] == ['.', '.', '.']
 
 
 def get_yield_exprs(code, version):
@@ -172,13 +163,13 @@ def top_function_three():
     raise Exception
     """
 
-    r = get_raise_stmts(code, 0) #  Lists in a simple Function
+    r = get_raise_stmts(code, 0)  # Lists in a simple Function
     assert len(list(r)) == 1
 
-    r = get_raise_stmts(code, 1) #  Doesn't Exceptions list in closures
+    r = get_raise_stmts(code, 1)  # Doesn't Exceptions list in closures
     assert len(list(r)) == 1
 
-    r = get_raise_stmts(code, 2) #  Lists inside try-catch
+    r = get_raise_stmts(code, 2)  # Lists inside try-catch
     assert len(list(r)) == 2
 
 

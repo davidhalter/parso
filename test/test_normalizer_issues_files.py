@@ -12,7 +12,7 @@ from parso.utils import python_bytes_to_unicode
 
 
 @total_ordering
-class WantedIssue(object):
+class WantedIssue:
     def __init__(self, code, line, column):
         self.code = code
         self._line = line
@@ -42,9 +42,9 @@ def collect_errors(code):
                 column = int(add_indent or len(match.group(1)))
 
                 code, _, add_line = code.partition('+')
-                l = line_nr + 1 + int(add_line or 0)
+                ln = line_nr + 1 + int(add_line or 0)
 
-                yield WantedIssue(code[1:], l, column)
+                yield WantedIssue(code[1:], ln, column)
 
 
 def test_normalizer_issue(normalizer_issue_case):

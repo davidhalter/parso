@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from textwrap import dedent
 import logging
-import sys
 
 import pytest
 
@@ -39,7 +38,7 @@ def _check_error_leaves_nodes(node):
     return None
 
 
-class Differ(object):
+class Differ:
     grammar = load_grammar()
 
     def initialize(self, code):
@@ -934,7 +933,6 @@ def test_many_nested_ifs(differ):
     differ.parse(code1, parsers=1, copies=1)
 
 
-@pytest.mark.skipif(sys.version_info < (3, 5), reason="Async starts working in 3.5")
 @pytest.mark.parametrize('prefix', ['', 'async '])
 def test_with_and_funcdef_in_call(differ, prefix):
     code1 = prefix + dedent('''\
@@ -973,17 +971,16 @@ def test_random_unicode_characters(differ):
     Those issues were all found with the fuzzer.
     """
     differ.initialize('')
-    differ.parse(u'\x1dĔBϞɛˁşʑ˳˻ȣſéÎ\x90̕ȟòwʘ\x1dĔBϞɛˁşʑ˳˻ȣſéÎ', parsers=1,
+    differ.parse('\x1dĔBϞɛˁşʑ˳˻ȣſéÎ\x90̕ȟòwʘ\x1dĔBϞɛˁşʑ˳˻ȣſéÎ', parsers=1,
                  expect_error_leaves=True)
-    differ.parse(u'\r\r', parsers=1)
-    differ.parse(u"˟Ę\x05À\r   rúƣ@\x8a\x15r()\n", parsers=1, expect_error_leaves=True)
-    differ.parse(u'a\ntaǁ\rGĒōns__\n\nb', parsers=1,
-                 expect_error_leaves=sys.version_info[0] == 2)
+    differ.parse('\r\r', parsers=1)
+    differ.parse("˟Ę\x05À\r   rúƣ@\x8a\x15r()\n", parsers=1, expect_error_leaves=True)
+    differ.parse('a\ntaǁ\rGĒōns__\n\nb', parsers=1)
     s = '        if not (self, "_fi\x02\x0e\x08\n\nle"):'
     differ.parse(s, parsers=1, expect_error_leaves=True)
     differ.parse('')
     differ.parse(s + '\n', parsers=1, expect_error_leaves=True)
-    differ.parse(u'   result = (\r\f\x17\t\x11res)', parsers=1, expect_error_leaves=True)
+    differ.parse('   result = (\r\f\x17\t\x11res)', parsers=1, expect_error_leaves=True)
     differ.parse('')
     differ.parse('   a( # xx\ndef', parsers=1, expect_error_leaves=True)
 
@@ -996,7 +993,7 @@ def test_dedent_end_positions(differ):
                 c = {
                      5}
         ''')
-    code2 = dedent(u'''\
+    code2 = dedent('''\
         if 1:
             if ⌟ഒᜈྡྷṭb:
                 2
@@ -1269,7 +1266,6 @@ def test_some_weird_removals(differ):
     differ.parse(code1, copies=1)
 
 
-@pytest.mark.skipif(sys.version_info < (3, 5), reason="Async starts working in 3.5")
 def test_async_copy(differ):
     code1 = dedent('''\
         async def main():
@@ -1340,7 +1336,7 @@ def test_backslash_issue(differ):
         pre = (
             '')
              \\if 
-        ''')
+        ''')  # noqa
     differ.initialize(code1)
     differ.parse(code2, parsers=1, copies=1, expect_error_leaves=True)
     differ.parse(code1, parsers=1, copies=1)
@@ -1420,7 +1416,7 @@ def test_with_formfeed(differ):
         \x0cimport 
             return
             return ''
-        ''')
+        ''')  # noqa
     differ.initialize(code1)
     differ.parse(code2, parsers=ANY, copies=ANY, expect_error_leaves=True)
 
@@ -1588,14 +1584,14 @@ def test_byte_order_mark(differ):
 
 
 def test_byte_order_mark2(differ):
-    code = u'\ufeff# foo'
+    code = '\ufeff# foo'
     differ.initialize(code)
     differ.parse(code + 'x', parsers=ANY)
 
 
 def test_byte_order_mark3(differ):
-    code1 = u"\ufeff#\ny\n"
-    code2 = u'x\n\ufeff#\n\ufeff#\ny\n'
+    code1 = "\ufeff#\ny\n"
+    code2 = 'x\n\ufeff#\n\ufeff#\ny\n'
     differ.initialize(code1)
     differ.parse(code2, expect_error_leaves=True, parsers=ANY, copies=ANY)
     differ.parse(code1, parsers=1)

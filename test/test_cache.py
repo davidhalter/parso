@@ -3,17 +3,16 @@ Test all things related to the ``jedi.cache`` module.
 """
 
 import os
-import os.path
-
 import pytest
 import time
+from pathlib import Path
 
 from parso.cache import (_CACHED_FILE_MAXIMUM_SURVIVAL, _VERSION_TAG,
-                         _get_cache_clear_lock, _get_hashed_path,
+                         _get_cache_clear_lock_path, _get_hashed_path,
                          _load_from_file_system, _NodeCacheItem,
                          _remove_cache_and_update_lock, _save_to_file_system,
                          load_module, parser_cache, try_to_save_module)
-from parso._compatibility import is_pypy, PermissionError
+from parso._compatibility import is_pypy
 from parso import load_grammar
 from parso import cache
 from parso import file_io
@@ -30,9 +29,8 @@ skip_pypy = pytest.mark.skipif(
 def isolated_parso_cache(monkeypatch, tmpdir):
     """Set `parso.cache._default_cache_path` to a temporary directory
     during the test. """
-    cache_path = str(os.path.join(str(tmpdir), "__parso_cache"))
+    cache_path = Path(str(tmpdir), "__parso_cache")
     monkeypatch.setattr(cache, '_default_cache_path', cache_path)
-    monkeypatch.setattr(cache, '_get_default_cache_path', lambda *args, **kwargs: cache_path)
     return cache_path
 
 
@@ -42,13 +40,13 @@ def test_modulepickling_change_cache_dir(tmpdir):
 
     See: `#168 <https://github.com/davidhalter/jedi/pull/168>`_
     """
-    dir_1 = str(tmpdir.mkdir('first'))
-    dir_2 = str(tmpdir.mkdir('second'))
+    dir_1 = Path(str(tmpdir.mkdir('first')))
+    dir_2 = Path(str(tmpdir.mkdir('second')))
 
     item_1 = _NodeCacheItem('bla', [])
     item_2 = _NodeCacheItem('bla', [])
-    path_1 = 'fake path 1'
-    path_2 = 'fake path 2'
+    path_1 = Path('fake path 1')
+    path_2 = Path('fake path 2')
 
     hashed_grammar = load_grammar()._hashed
     _save_to_file_system(hashed_grammar, path_1, item_1, cache_path=dir_1)
@@ -81,12 +79,12 @@ def test_modulepickling_simulate_deleted_cache(tmpdir):
     way.
 
     __ https://developer.apple.com/library/content/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html
-    """
+    """  # noqa
     grammar = load_grammar()
     module = 'fake parser'
 
     # Create the file
-    path = tmpdir.dirname + '/some_path'
+    path = Path(str(tmpdir.dirname), 'some_path')
     with open(path, 'w'):
         pass
     io = file_io.FileIO(path)
@@ -124,7 +122,7 @@ def test_cache_limit():
 
 class _FixedTimeFileIO(file_io.KnownContentFileIO):
     def __init__(self, path, content, last_modified):
-        super(_FixedTimeFileIO, self).__init__(path, content)
+        super().__init__(path, content)
         self._last_modified = last_modified
 
     def get_last_modified(self):
@@ -134,7 +132,7 @@ class _FixedTimeFileIO(file_io.KnownContentFileIO):
 @pytest.mark.parametrize('diff_cache', [False, True])
 @pytest.mark.parametrize('use_file_io', [False, True])
 def test_cache_last_used_update(diff_cache, use_file_io):
-    p = '/path/last-used'
+    p = Path('/path/last-used')
     parser_cache.clear()  # Clear, because then it's easier to find stuff.
     parse('somecode', cache=True, path=p)
     node_cache_item = next(iter(parser_cache.values()))[p]
@@ -157,21 +155,21 @@ def test_inactive_cache(tmpdir, isolated_parso_cache):
     test_subjects = "abcdef"
     for path in test_subjects:
         parse('somecode', cache=True, path=os.path.join(str(tmpdir), path))
-    raw_cache_path = os.path.join(isolated_parso_cache, _VERSION_TAG)
-    assert os.path.exists(raw_cache_path)
-    paths = os.listdir(raw_cache_path)
+    raw_cache_path = isolated_parso_cache.joinpath(_VERSION_TAG)
+    assert raw_cache_path.exists()
+    dir_names = os.listdir(raw_cache_path)
     a_while_ago = time.time() - _CACHED_FILE_MAXIMUM_SURVIVAL
     old_paths = set()
-    for path in paths[:len(test_subjects) // 2]:  # make certain number of paths old
-        os.utime(os.path.join(raw_cache_path, path), (a_while_ago, a_while_ago))
-        old_paths.add(path)
+    for dir_name in dir_names[:len(test_subjects) // 2]:  # make certain number of paths old
+        os.utime(raw_cache_path.joinpath(dir_name), (a_while_ago, a_while_ago))
+        old_paths.add(dir_name)
     # nothing should be cleared while the lock is on
-    assert os.path.exists(_get_cache_clear_lock().path)
+    assert _get_cache_clear_lock_path().exists()
     _remove_cache_and_update_lock()  # it shouldn't clear anything
     assert len(os.listdir(raw_cache_path)) == len(test_subjects)
     assert old_paths.issubset(os.listdir(raw_cache_path))
 
-    os.utime(_get_cache_clear_lock().path, (a_while_ago, a_while_ago))
+    os.utime(_get_cache_clear_lock_path(), (a_while_ago, a_while_ago))
     _remove_cache_and_update_lock()
     assert len(os.listdir(raw_cache_path)) == len(test_subjects) // 2
     assert not old_paths.intersection(os.listdir(raw_cache_path))
@@ -180,12 +178,13 @@ def test_inactive_cache(tmpdir, isolated_parso_cache):
 @skip_pypy
 def test_permission_error(monkeypatch):
     def save(*args, **kwargs):
-        was_called[0] = True  # Python 2... Use nonlocal instead
+        nonlocal was_called
+        was_called = True
         raise PermissionError
 
-    was_called = [False]
+    was_called = False
 
     monkeypatch.setattr(cache, '_save_to_file_system', save)
     with pytest.warns(Warning):
         parse(path=__file__, cache=True, diff_cache=True)
-    assert was_called[0]
+    assert was_called
