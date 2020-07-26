@@ -29,7 +29,7 @@ def clean_parso_cache():
     """
     old = cache._default_cache_path
     tmp = tempfile.mkdtemp(prefix='parso-test-')
-    cache._default_cache_path = Path(str(tmp))
+    cache._default_cache_path = Path(tmp)
     yield
     cache._default_cache_path = old
     shutil.rmtree(tmp)
