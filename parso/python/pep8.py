@@ -716,8 +716,8 @@ class PEP8Normalizer(ErrorFinder):
             for i, line in enumerate(leaf.value.splitlines()[1:]):
                 indentation = re.match(r'[ \t]*', line).group(0)
                 start_pos = leaf.line + i, len(indentation)
-                print(start_pos)
                 # TODO check multiline indentation.
+                start_pos
         elif typ == 'endmarker':
             if self._newline_count >= 2:
                 self.add_issue(leaf, 391, 'Blank line at end of file')
