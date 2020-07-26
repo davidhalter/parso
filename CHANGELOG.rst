@@ -3,6 +3,14 @@
 Changelog
 ---------
 
+Unreleased (XXXX-XX-XX)
++++++++++++++++++++++++
+
+- Dropped Support for Python 2.7, 3.4, 3.5
+- It's possible to use ``pathlib.Path`` objects now in the API
+- The stubs are gone, we are now using annotations
+- A lot of smaller refactorings
+
 0.7.1 (2020-07-24)
 ++++++++++++++++++
 
