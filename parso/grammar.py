@@ -231,7 +231,7 @@ class PythonGrammar(Grammar):
         return tokenize(code, version_info=self.version_info)
 
 
-def load_grammar(*, language: str = 'python', version: str = None, path: str = None):
+def load_grammar(*, version: str = None, path: str = None):
     """
     Loads a :py:class:`parso.Grammar`. The default version is the current Python
     version.
@@ -239,29 +239,26 @@ def load_grammar(*, language: str = 'python', version: str = None, path: str = N
     :param str version: A python version string, e.g. ``version='3.8'``.
     :param str path: A path to a grammar file
     """
-    if language == 'python':
-        version_info = parse_version_string(version)
+    version_info = parse_version_string(version)
 
-        file = path or os.path.join(
-            'python',
-            'grammar%s%s.txt' % (version_info.major, version_info.minor)
-        )
+    file = path or os.path.join(
+        'python',
+        'grammar%s%s.txt' % (version_info.major, version_info.minor)
+    )
 
-        global _loaded_grammars
-        path = os.path.join(os.path.dirname(__file__), file)
+    global _loaded_grammars
+    path = os.path.join(os.path.dirname(__file__), file)
+    try:
+        return _loaded_grammars[path]
+    except KeyError:
         try:
-            return _loaded_grammars[path]
-        except KeyError:
-            try:
-                with open(path) as f:
-                    bnf_text = f.read()
+            with open(path) as f:
+                bnf_text = f.read()
 
-                grammar = PythonGrammar(version_info, bnf_text)
-                return _loaded_grammars.setdefault(path, grammar)
-            except FileNotFoundError:
-                message = "Python version %s.%s is currently not supported." % (
-                    version_info.major, version_info.minor
-                )
-                raise NotImplementedError(message)
-    else:
-        raise NotImplementedError("No support for language %s." % language)
+            grammar = PythonGrammar(version_info, bnf_text)
+            return _loaded_grammars.setdefault(path, grammar)
+        except FileNotFoundError:
+            message = "Python version %s.%s is currently not supported." % (
+                version_info.major, version_info.minor
+            )
+            raise NotImplementedError(message)
