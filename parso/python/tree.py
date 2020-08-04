@@ -63,7 +63,7 @@ _FUNC_CONTAINERS = set(
 
 _GET_DEFINITION_TYPES = set([
     'expr_stmt', 'sync_comp_for', 'with_stmt', 'for_stmt', 'import_name',
-    'import_from', 'param', 'del_stmt',
+    'import_from', 'param', 'del_stmt', 'namedexpr_test',
 ])
 _IMPORTS = set(['import_name', 'import_from'])
 
@@ -231,8 +231,6 @@ class Name(_LeafWithoutNewlines):
         while node is not None:
             if node.type == 'suite':
                 return None
-            if node.type == 'namedexpr_test':
-                return node.children[0]
             if node.type in _GET_DEFINITION_TYPES:
                 if self in node.get_defined_names(include_setitem):
                     return node
@@ -1064,6 +1062,13 @@ class ExprStmt(PythonBaseNode, DocstringMixin):
         yield first
 
         yield from self.children[3::2]
+
+
+class NamedExpr(PythonBaseNode):
+    type = 'namedexpr_test'
+
+    def get_defined_names(self, include_setitem=False):
+        return _defined_names(self.children[0], include_setitem)
 
 
 class Param(PythonBaseNode):

@@ -46,6 +46,7 @@ class Parser(BaseParser):
         'decorator': tree.Decorator,
         'lambdef': tree.Lambda,
         'lambdef_nocond': tree.Lambda,
+        'namedexpr_test': tree.NamedExpr,
     }
     default_node = tree.PythonNode
 
