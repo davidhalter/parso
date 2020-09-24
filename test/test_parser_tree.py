@@ -230,6 +230,7 @@ def test_iter_funcdefs():
     func_names = [f.name.value for f in module.iter_funcdefs()]
     assert func_names == ['normal', 'asyn', 'dec_normal', 'dec_async']
 
+
 def test_with_stmt_get_test_node_from_name():
     code = "with A as X.Y, B as (Z), C as Q[0], D as Q['foo']: pass"
     with_stmt = parse(code, version='3').children[0]
