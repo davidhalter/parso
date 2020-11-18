@@ -79,6 +79,7 @@ def test_valid(code, grammar):
 
         # invalid conversion characters
         'f"{1!{a}}"',
+        'f"{1=!{a}}"',
         'f"{!{a}}"',
 
         # The curly braces must contain an expression

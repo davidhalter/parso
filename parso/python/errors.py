@@ -957,7 +957,11 @@ class _FStringRule(SyntaxRule):
         if '\\' in expr.get_code():
             self.add_issue(expr, message=self.message_expr)
 
-        conversion = fstring_expr.children[2]
+        children_2 = fstring_expr.children[2]
+        if children_2.type == 'operator' and children_2.value == '=':
+            conversion = fstring_expr.children[3]
+        else:
+            conversion = children_2
         if conversion.type == 'fstring_conversion':
             name = conversion.children[1]
             if name.value not in ('s', 'r', 'a'):
