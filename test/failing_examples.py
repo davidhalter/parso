@@ -357,3 +357,7 @@ if sys.version_info[:2] >= (3, 8):
         '(None := 1)',
         '(__debug__ := 1)',
     ]
+    # f-string debugging syntax with invalid conversion character
+    FAILING_EXAMPLES += [
+        "f'{1=!b}'",
+    ]
