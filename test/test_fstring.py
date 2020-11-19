@@ -60,6 +60,13 @@ def grammar():
 
         # a line continuation inside of an format spec
         'f"{123:.2\\\nf}"',
+
+        # some unparenthesized syntactic structures
+        'f"{*x,}"',
+        'f"{*x, *y}"',
+        'f"{x, *y}"',
+        'f"{*x, y}"',
+        'f"{x for x in [1]}"',
     ]
 )
 def test_valid(code, grammar):
