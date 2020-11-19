@@ -274,6 +274,8 @@ def test_paren_kwarg():
         r'fr"\""',
         r'fr"\\\""',
         r"print(f'Some {x:.2f} and some {y}')",
+        # Unparenthesized yield expression
+        'def foo(): return f"{yield 1}"',
     ]
 )
 def test_valid_fstrings(code):
