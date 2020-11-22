@@ -72,6 +72,8 @@ def grammar():
         'f"\\N{BULLET}"',
         'f"\\N{FLEUR-DE-LIS}"',
         'f"\\N{NO ENTRY}"',
+        'f"Combo {expr} and \\N{NO ENTRY}"',
+        'f"\\N{NO ENTRY} and {expr}"',
         'f"\\N{no entry}"',
         'f"\\N{SOYOMBO LETTER -A}"',
         'f"\\N{DOMINO TILE HORIZONTAL-00-00}"',
@@ -136,6 +138,8 @@ def test_invalid(code, grammar):
                            (1, 10), (1, 11), (1, 12), (1, 13)]),
         ('f"""\n {\nfoo\n }"""', [(1, 0), (1, 4), (2, 1), (3, 0), (4, 1),
                                   (4, 2), (4, 5)]),
+        ('f"\\N{NO ENTRY} and {expr}"', [(1, 0), (1, 2), (1, 19), (1, 20),
+                                         (1, 24), (1, 25), (1, 26)]),
     ]
 )
 def test_tokenize_start_pos(code, positions):
