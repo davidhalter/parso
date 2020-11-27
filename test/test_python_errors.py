@@ -289,10 +289,35 @@ def test_valid_fstrings(code):
         '[total := total + v for v in range(10)]',
         'while chunk := file.read(2):\n pass',
         'numbers = [y := math.factorial(x), y**2, y**3]',
+        '{(a:="a"): (b:=1)}',
+        '{(y:=1): 2 for x in range(5)}',
+        'a[(b:=0)]',
+        'a[(b:=0, c:=0)]',
+        'a[(b:=0):1:2]',
     ]
 )
 def test_valid_namedexpr(code):
     assert not _get_error_list(code, version='3.8')
+
+
+@pytest.mark.parametrize(
+    'code', [
+        '{x := 1, 2, 3}',
+        '{x4 := x ** 5 for x in range(7)}',
+    ]
+)
+def test_valid_namedexpr_set(code):
+    assert not _get_error_list(code, version='3.9')
+
+
+@pytest.mark.parametrize(
+    'code', [
+        'a[b:=0]',
+        'a[b:=0, c:=0]',
+    ]
+)
+def test_valid_namedexpr_index(code):
+    assert not _get_error_list(code, version='3.10')
 
 
 @pytest.mark.parametrize(

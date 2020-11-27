@@ -124,14 +124,14 @@ atom: ('(' [yield_expr|testlist_comp] ')' |
 testlist_comp: (namedexpr_test|star_expr) ( comp_for | (',' (namedexpr_test|star_expr))* [','] )
 trailer: '(' [arglist] ')' | '[' subscriptlist ']' | '.' NAME
 subscriptlist: subscript (',' subscript)* [',']
-subscript: test | [test] ':' [test] [sliceop]
+subscript: test [':=' test] | [test] ':' [test] [sliceop]
 sliceop: ':' [test]
 exprlist: (expr|star_expr) (',' (expr|star_expr))* [',']
 testlist: test (',' test)* [',']
 dictorsetmaker: ( ((test ':' test | '**' expr)
                    (comp_for | (',' (test ':' test | '**' expr))* [','])) |
-                  ((test | star_expr)
-                   (comp_for | (',' (test | star_expr))* [','])) )
+                  ((test [':=' test] | star_expr)
+                   (comp_for | (',' (test [':=' test] | star_expr))* [','])) )
 
 classdef: 'class' NAME ['(' [arglist] ')'] ':' suite
 
