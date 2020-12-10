@@ -356,6 +356,10 @@ if sys.version_info[:2] >= (3, 8):
         '(False := 1)',
         '(None := 1)',
         '(__debug__ := 1)',
+        # Unparenthesized walrus not allowed in dict literals, dict comprehensions and slices
+        '{a:="a": b:=1}',
+        '{y:=1: 2 for x in range(5)}',
+        'a[b:=0:1:2]',
     ]
     # f-string debugging syntax with invalid conversion character
     FAILING_EXAMPLES += [
