@@ -110,10 +110,11 @@ def _get_token_collection(version_info):
             _create_token_collection(version_info)
         return result
 
+
 unicode_character_name = r'[A-Za-z0-9\-]+(?: [A-Za-z0-9\-]+)*'
 fstring_string_single_line = _compile(
-    r'(?:\{\{|\}\}|\\N\{' + unicode_character_name +
-    r'\}|\\(?:\r\n?|\n)|\\[^\r\nN]|[^{}\r\n\\])+'
+    r'(?:\{\{|\}\}|\\N\{' + unicode_character_name
+    + r'\}|\\(?:\r\n?|\n)|\\[^\r\nN]|[^{}\r\n\\])+'
 )
 fstring_string_multi_line = _compile(
     r'(?:\{\{|\}\}|\\N\{' + unicode_character_name + r'\}|\\[^N]|[^{}\\])+'
