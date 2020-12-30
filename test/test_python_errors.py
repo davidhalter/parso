@@ -415,11 +415,32 @@ def test_unparenthesized_genexp(source, no_errors):
         ('*x = 2', False),
         ('(*y) = 1', False),
         ('((*z)) = 1', False),
+        ('*a,', True),
+        ('*a, = 1', True),
+        ('(*a,)', True),
+        ('(*a,) = 1', True),
+        ('[*a]', True),
+        ('[*a] = 1', True),
+        ('a, *b', True),
         ('a, *b = 1', True),
+        ('a, *b, c', True),
         ('a, *b, c = 1', True),
+        ('a, (*b), c', True),
         ('a, (*b), c = 1', True),
+        ('a, ((*b)), c', True),
         ('a, ((*b)), c = 1', True),
+        ('a, (*b, c), d', True),
         ('a, (*b, c), d = 1', True),
+        ('*a.b,', True),
+        ('*a.b, = 1', True),
+        ('*a[b],', True),
+        ('*a[b], = 1', True),
+        ('*a[b::], c', True),
+        ('*a[b::], c = 1', True),
+        ('(a, *[b, c])', True),
+        ('(a, *[b, c]) = 1', True),
+        ('[a, *(b, [*c])]', True),
+        ('[a, *(b, [*c])] = 1', True),
         ('[*(1,2,3)]', True),
         ('{*(1,2,3)}', True),
         ('[*(1,2,3),]', True),
@@ -432,3 +453,35 @@ def test_unparenthesized_genexp(source, no_errors):
 )
 def test_starred_expr(source, no_errors):
     assert bool(_get_error_list(source, version="3")) ^ no_errors
+
+
+@pytest.mark.parametrize(
+    'code', [
+        '() = ()',
+        '() = []',
+        '[] = ()',
+        '[] = []',
+    ]
+)
+def test_valid_empty_assignment(code):
+    assert not _get_error_list(code)
+
+
+@pytest.mark.parametrize(
+    'code', [
+        'del ()',
+        'del []',
+        'del x',
+        'del x,',
+        'del x, y',
+        'del (x, y)',
+        'del [x, y]',
+        'del (x, [y, z])',
+        'del x.y, x[y]',
+        'del f(x)[y::]',
+        'del x[[*y]]',
+        'del x[[*y]::]',
+    ]
+)
+def test_valid_del(code):
+    assert not _get_error_list(code)

@@ -145,6 +145,44 @@ FAILING_EXAMPLES = [
     '([False], a) = x',
     'def x(): from math import *',
 
+    # invalid del statements
+    'del x + y',
+    'del x(y)',
+    'async def foo(): del await x',
+    'def foo(): del (yield x)',
+    'del [x for x in range(10)]',
+    'del *x',
+    'del *x,',
+    'del (*x,)',
+    'del [*x]',
+    'del x, *y',
+    'del *x.y,',
+    'del *x[y],',
+    'del *x[y::], z',
+    'del x, (y, *z)',
+    'del (x, *[y, z])',
+    'del [x, *(y, [*z])]',
+    'del {}',
+    'del {x}',
+    'del {x, y}',
+    'del {x, *y}',
+
+    # invalid starred expressions
+    '*x',
+    '(*x)',
+    '((*x))',
+    '1 + (*x)',
+    '*x; 1',
+    '1; *x',
+    '1\n*x',
+    'x = *y',
+    'x: int = *y',
+    'def foo(): return *x',
+    'def foo(): yield *x',
+    'f"{*x}"',
+    'for *x in 1: pass',
+    '[1 for *x in 1]',
+
     # str/bytes combinations
     '"s" b""',
     '"s" b"" ""',
@@ -198,6 +236,9 @@ FAILING_EXAMPLES = [
     '[*[] for a in [1]]',
     'async def bla():\n def x():  await bla()',
     'del None',
+    'del True',
+    'del False',
+    'del ...',
 
     # Errors of global / nonlocal
     dedent('''
