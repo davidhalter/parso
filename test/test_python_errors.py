@@ -425,10 +425,6 @@ def test_unparenthesized_genexp(source, no_errors):
         ('a, *b = 1', True),
         ('a, *b, c', True),
         ('a, *b, c = 1', True),
-        ('a, (*b), c', True),
-        ('a, (*b), c = 1', True),
-        ('a, ((*b)), c', True),
-        ('a, ((*b)), c = 1', True),
         ('a, (*b, c), d', True),
         ('a, (*b, c), d = 1', True),
         ('*a.b,', True),
@@ -453,6 +449,19 @@ def test_unparenthesized_genexp(source, no_errors):
 )
 def test_starred_expr(source, no_errors):
     assert bool(_get_error_list(source, version="3")) ^ no_errors
+
+
+@pytest.mark.parametrize(
+    'code', [
+        'a, (*b), c',
+        'a, (*b), c = 1',
+        'a, ((*b)), c',
+        'a, ((*b)), c = 1',
+    ]
+)
+def test_parenthesized_single_starred_expr(code):
+    assert not _get_error_list(code, version='3.8')
+    assert _get_error_list(code, version='3.9')
 
 
 @pytest.mark.parametrize(

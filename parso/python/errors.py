@@ -753,6 +753,16 @@ class _StarExprRule(SyntaxRule):
                     return False
             return False
 
+        if self._normalizer.version >= (3, 9):
+            ancestor = node.parent
+        else:
+            ancestor = _skip_parens_bottom_up(node)
+        # starred expression not in tuple/list/set
+        if ancestor.type not in (*_STAR_EXPR_PARENTS, 'dictorsetmaker') \
+                and not (ancestor.type == 'atom' and ancestor.children[0] != '('):
+            self.add_issue(node, message="can't use starred expression here")
+            return
+
         if check_delete_starred(node):
             if self._normalizer.version >= (3, 9):
                 self.add_issue(node, message="cannot delete starred")
@@ -764,12 +774,6 @@ class _StarExprRule(SyntaxRule):
             # [*[] for a in [1]]
             if node.parent.children[1].type in _COMP_FOR_TYPES:
                 self.add_issue(node, message=self.message_iterable_unpacking)
-                return
-
-        ancestor = _skip_parens_bottom_up(node)
-        # starred expression not in tuple/list/set
-        if ancestor.type not in (*_STAR_EXPR_PARENTS, 'dictorsetmaker', 'atom'):
-            self.add_issue(node, message="can't use starred expression here")
 
 
 @ErrorFinder.register_rule(types=_STAR_EXPR_PARENTS)
@@ -1107,7 +1111,10 @@ class _CheckAssignmentRule(SyntaxRule):
                 else:
                     self.add_issue(node, message="can't use starred expression here")
             else:
-                ancestor = _skip_parens_bottom_up(node)
+                if self._normalizer.version >= (3, 9):
+                    ancestor = node.parent
+                else:
+                    ancestor = _skip_parens_bottom_up(node)
                 if ancestor.type not in _STAR_EXPR_PARENTS and not is_aug_assign \
                         and not (ancestor.type == 'atom' and ancestor.children[0] == '['):
                     message = "starred assignment target must be in a list or tuple"
