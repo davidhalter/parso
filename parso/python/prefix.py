@@ -1,5 +1,6 @@
 import re
 from codecs import BOM_UTF8
+from typing import Tuple
 
 from parso.python.tokenize import group
 
@@ -13,10 +14,10 @@ class PrefixPart:
         self.type = typ
         self.value = value
         self.spacing = spacing
-        self.start_pos = start_pos
+        self.start_pos: Tuple[int, int] = start_pos
 
     @property
-    def end_pos(self):
+    def end_pos(self) -> Tuple[int, int]:
         if self.value.endswith('\n'):
             return self.start_pos[0] + 1, 0
         if self.value == unicode_bom:

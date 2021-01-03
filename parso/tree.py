@@ -1,4 +1,5 @@
 from abc import abstractmethod, abstractproperty
+from typing import List, Optional, Tuple
 
 from parso.utils import split_lines
 
@@ -125,7 +126,7 @@ class NodeOrLeaf:
                 return node
 
     @abstractproperty
-    def start_pos(self):
+    def start_pos(self) -> Tuple[int, int]:
         """
         Returns the starting position of the prefix as a tuple, e.g. `(3, 4)`.
 
@@ -133,7 +134,7 @@ class NodeOrLeaf:
         """
 
     @abstractproperty
-    def end_pos(self):
+    def end_pos(self) -> Tuple[int, int]:
         """
         Returns the end position of the prefix as a tuple, e.g. `(3, 4)`.
 
@@ -180,7 +181,7 @@ class Leaf(NodeOrLeaf):
     '''
     __slots__ = ('value', 'parent', 'line', 'column', 'prefix')
 
-    def __init__(self, value, start_pos, prefix=''):
+    def __init__(self, value: str, start_pos: Tuple[int, int], prefix: str = '') -> None:
         self.value = value
         '''
         :py:func:`str` The value of the current token.
@@ -191,17 +192,17 @@ class Leaf(NodeOrLeaf):
         :py:func:`str` Typically a mixture of whitespace and comments. Stuff
         that is syntactically irrelevant for the syntax tree.
         '''
-        self.parent = None
+        self.parent: Optional[BaseNode] = None
         '''
         The parent :class:`BaseNode` of this leaf.
         '''
 
     @property
-    def start_pos(self):
+    def start_pos(self) -> Tuple[int, int]:
         return self.line, self.column
 
     @start_pos.setter
-    def start_pos(self, value):
+    def start_pos(self, value: Tuple[int, int]) -> None:
         self.line = value[0]
         self.column = value[1]
 
@@ -226,7 +227,7 @@ class Leaf(NodeOrLeaf):
             return self.value
 
     @property
-    def end_pos(self):
+    def end_pos(self) -> Tuple[int, int]:
         lines = split_lines(self.value)
         end_pos_line = self.line + len(lines) - 1
         # Check for multiline token
@@ -258,26 +259,26 @@ class BaseNode(NodeOrLeaf):
     """
     __slots__ = ('children', 'parent')
 
-    def __init__(self, children):
+    def __init__(self, children: List[NodeOrLeaf]) -> None:
         self.children = children
         """
         A list of :class:`NodeOrLeaf` child nodes.
         """
-        self.parent = None
+        self.parent: Optional[BaseNode] = None
         '''
         The parent :class:`BaseNode` of this leaf.
         None if this is the root node.
         '''
 
     @property
-    def start_pos(self):
+    def start_pos(self) -> Tuple[int, int]:
         return self.children[0].start_pos
 
     def get_start_pos_of_prefix(self):
         return self.children[0].get_start_pos_of_prefix()
 
     @property
-    def end_pos(self):
+    def end_pos(self) -> Tuple[int, int]:
         return self.children[-1].end_pos
 
     def _get_code_for_children(self, children, include_prefix):
