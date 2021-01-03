@@ -192,7 +192,7 @@ class Leaf(NodeOrLeaf):
         :py:func:`str` Typically a mixture of whitespace and comments. Stuff
         that is syntactically irrelevant for the syntax tree.
         '''
-        self.parent = None  # type: Optional[BaseNode]
+        self.parent: Optional[BaseNode] = None
         '''
         The parent :class:`BaseNode` of this leaf.
         '''
@@ -264,7 +264,7 @@ class BaseNode(NodeOrLeaf):
         """
         A list of :class:`NodeOrLeaf` child nodes.
         """
-        self.parent = None  # type: Optional[BaseNode]
+        self.parent: Optional[BaseNode] = None
         '''
         The parent :class:`BaseNode` of this leaf.
         None if this is the root node.

@@ -14,7 +14,7 @@ class PrefixPart:
         self.type = typ
         self.value = value
         self.spacing = spacing
-        self.start_pos = start_pos  # type: Tuple[int, int]
+        self.start_pos: Tuple[int, int] = start_pos
 
     @property
     def end_pos(self) -> Tuple[int, int]:
