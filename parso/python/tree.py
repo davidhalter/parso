@@ -47,6 +47,7 @@ try:
     from collections.abc import Mapping
 except ImportError:
     from collections import Mapping
+from typing import Tuple
 
 from parso.tree import Node, BaseNode, Leaf, ErrorNode, ErrorLeaf, \
     search_ancestor
@@ -149,7 +150,7 @@ class _LeafWithoutNewlines(PythonLeaf):
     __slots__ = ()
 
     @property
-    def end_pos(self):
+    def end_pos(self) -> Tuple[int, int]:
         return self.line, self.column + len(self.value)
 
 
