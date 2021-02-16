@@ -6,6 +6,7 @@ David Halter (@davidhalter) <davidhalter88@gmail.com>
 Code Contributors
 =================
 Alisdair Robertson (@robodair)
+Bryan Forbes (@bryanforbes) <bryan@reigndropsfall.net>
 
 
 Code Contributors (to Jedi and therefore possibly to this library)
