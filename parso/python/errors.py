@@ -241,6 +241,7 @@ class _Context:
         self.parent_context = parent_context
         self._used_name_dict = {}
         self._global_names = []
+        self._local_params_names = []
         self._nonlocal_names = []
         self._nonlocal_names_in_subscopes = []
         self._add_syntax_error = add_syntax_error
@@ -264,6 +265,10 @@ class _Context:
             self._global_names.append(name)
         elif parent_type == 'nonlocal_stmt':
             self._nonlocal_names.append(name)
+        elif parent_type == 'funcdef':
+            self._local_params_names.extend(
+                [param.name.value for param in name.parent.get_params()]
+            )
         else:
             self._used_name_dict.setdefault(name.value, []).append(name)
 
@@ -291,6 +296,8 @@ class _Context:
         nonlocals_not_handled = []
         for nonlocal_name in self._nonlocal_names_in_subscopes:
             search = nonlocal_name.value
+            if search in self._local_params_names:
+                continue
             if search in global_name_strs or self.parent_context is None:
                 message = "no binding for nonlocal '%s' found" % nonlocal_name.value
                 self._add_syntax_error(nonlocal_name, message)
