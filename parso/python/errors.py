@@ -160,7 +160,7 @@ def _skip_parens_bottom_up(node):
 
 
 def _iter_params(parent_node):
-    return (n for n in parent_node.children if n.type == 'param')
+    return (n for n in parent_node.children if n.type == 'param' or n.type == 'operator')
 
 
 def _is_future_import_first(import_from):
@@ -942,17 +942,28 @@ class _ParameterRule(SyntaxRule):
     def is_issue(self, node):
         param_names = set()
         default_only = False
+        star_seen = False
         for p in _iter_params(node):
+            if p.type == 'operator':
+                if p.value == '*':
+                    star_seen = True
+                    default_only = False
+                continue
+
             if p.name.value in param_names:
                 message = "duplicate argument '%s' in function definition"
                 self.add_issue(p.name, message=message % p.name.value)
             param_names.add(p.name.value)
 
-            if p.default is None and not p.star_count:
-                if default_only:
-                    return True
-            else:
-                default_only = True
+            if not star_seen:
+                if p.default is None and not p.star_count:
+                    if default_only:
+                        return True
+                elif p.star_count:
+                    star_seen = True
+                    default_only = False
+                else:
+                    default_only = True
 
 
 @ErrorFinder.register_rule(type='try_stmt')
