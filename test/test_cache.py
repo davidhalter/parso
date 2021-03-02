@@ -146,7 +146,7 @@ def test_cache_last_used_update(diff_cache, use_file_io):
         parse('somecode2', cache=True, path=p, diff_cache=diff_cache)
 
     node_cache_item = next(iter(parser_cache.values()))[p]
-    assert now < node_cache_item.last_used < time.time()
+    assert now <= node_cache_item.last_used <= time.time()
 
 
 @skip_pypy
