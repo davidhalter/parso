@@ -135,6 +135,29 @@ def x():
             nonlocal a
 
 
+def x(a):
+    def y():
+        nonlocal a
+
+
+def x(a, b):
+    def y():
+        nonlocal b
+        nonlocal a
+
+
+def x(a):
+    def y():
+        def z():
+            nonlocal a
+
+
+def x():
+    def y(a):
+        def z():
+            nonlocal a
+
+
 a = *args, *args
 error[(*args, *args)] = 3
 *args, *args

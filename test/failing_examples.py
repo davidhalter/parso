@@ -337,6 +337,13 @@ FAILING_EXAMPLES = [
                 def z():
                     nonlocal a
         '''),
+    # Name is assigned before nonlocal declaration
+    dedent('''
+        def x(a):
+            def y():
+                a = 10
+                nonlocal a
+       '''),
 ]
 
 if sys.version_info[:2] >= (3, 7):
