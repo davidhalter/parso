@@ -494,3 +494,14 @@ def test_valid_empty_assignment(code):
 )
 def test_valid_del(code):
     assert not _get_error_list(code)
+
+
+@pytest.mark.parametrize(
+    ('source', 'version', 'no_errors'), [
+        ('[x for x in range(10) if lambda: 1]', '3.8', True),
+        ('[x for x in range(10) if lambda: 1]', '3.9', False),
+        ('[x for x in range(10) if (lambda: 1)]', '3.9', True),
+    ]
+)
+def test_lambda_in_comp_if(source, version, no_errors):
+    assert bool(_get_error_list(source, version=version)) ^ no_errors
