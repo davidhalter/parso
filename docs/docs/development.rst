@@ -34,5 +34,5 @@ easy as::
 
     python3.9 -m pytest
 
-Tests are also run automatically on `Travis CI
-<https://travis-ci.org/davidhalter/parso/>`_.
+Tests are also run automatically on `GitHub Actions
+<https://github.com/davidhalter/parso/actions>`_.
