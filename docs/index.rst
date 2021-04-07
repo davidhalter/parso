@@ -27,5 +27,5 @@ Resources
 ---------
 
 - `Source Code on Github <https://github.com/davidhalter/parso>`_
-- `Travis Testing <https://travis-ci.org/davidhalter/parso>`_
+- `GitHub Actions Testing <https://github.com/davidhalter/parso/actions>`_
 - `Python Package Index <http://pypi.python.org/pypi/parso/>`_
