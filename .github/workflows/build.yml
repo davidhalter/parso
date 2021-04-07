@@ -63,6 +63,8 @@ jobs:
         coverage run -m pytest
         coverage report
     - name: Upload coverage report to Coveralls
-      uses: coverallsapp/github-action@master
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        pip install --quiet coveralls
+        coveralls
