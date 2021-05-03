@@ -1100,7 +1100,7 @@ class Param(PythonBaseNode):
     """
     type = 'param'
 
-    def __init__(self, children, parent):
+    def __init__(self, children, parent=None):
         super().__init__(children)
         self.parent = parent
         for child in children:

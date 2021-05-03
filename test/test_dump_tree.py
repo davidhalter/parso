@@ -17,10 +17,10 @@ from parso.tree import ErrorLeaf, TypedLeaf, dump
                "Param(["
                "Name('x', (1, 7), prefix=' '), "
                "Operator(',', (1, 8)), "
-               "], ...), "
+               "]), "
                "Param(["
                "Name('y', (1, 10), prefix=' '), "
-               "], ...), "
+               "]), "
                "Operator(':', (1, 11)), "
                "PythonNode('arith_expr', ["
                "Name('x', (1, 13), prefix=' '), "
@@ -37,10 +37,10 @@ from parso.tree import ErrorLeaf, TypedLeaf, dump
             Param([
             Name('x', (1, 7), prefix=' '),
             Operator(',', (1, 8)),
-            ], ...),
+            ]),
             Param([
             Name('y', (1, 10), prefix=' '),
-            ], ...),
+            ]),
             Operator(':', (1, 11)),
             PythonNode('arith_expr', [
             Name('x', (1, 13), prefix=' '),
@@ -57,10 +57,10 @@ from parso.tree import ErrorLeaf, TypedLeaf, dump
                     Param([
                         Name('x', (1, 7), prefix=' '),
                         Operator(',', (1, 8)),
-                    ], ...),
+                    ]),
                     Param([
                         Name('y', (1, 10), prefix=' '),
-                    ], ...),
+                    ]),
                     Operator(':', (1, 11)),
                     PythonNode('arith_expr', [
                         Name('x', (1, 13), prefix=' '),
@@ -77,10 +77,10 @@ from parso.tree import ErrorLeaf, TypedLeaf, dump
             \t\tParam([
             \t\t\tName('x', (1, 7), prefix=' '),
             \t\t\tOperator(',', (1, 8)),
-            \t\t], ...),
+            \t\t]),
             \t\tParam([
             \t\t\tName('y', (1, 10), prefix=' '),
-            \t\t], ...),
+            \t\t]),
             \t\tOperator(':', (1, 11)),
             \t\tPythonNode('arith_expr', [
             \t\t\tName('x', (1, 13), prefix=' '),
@@ -114,10 +114,10 @@ def test_dump_parser_tree(indent, expected_dump):
             "Param(["
             "Name('x', (1, 8)), "
             "Operator(',', (1, 9)), "
-            "], ...), "
+            "]), "
             "Param(["
             "Name('y', (1, 11), prefix=' '), "
-            "], ...), "
+            "]), "
             "Operator(')', (1, 12)), "
             "]), "
             "Operator(':', (1, 13)), "

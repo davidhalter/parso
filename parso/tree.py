@@ -407,10 +407,10 @@ def dump(node: NodeOrLeaf, *, indent: Optional[Union[int, str]] = None) -> str:
             Param([
                 Name('x', (1, 7), prefix=' '),
                 Operator(',', (1, 8)),
-            ], ...),
+            ]),
             Param([
                 Name('y', (1, 10), prefix=' '),
-            ], ...),
+            ]),
             Operator(':', (1, 11)),
             PythonNode('arith_expr', [
                 Name('x', (1, 13), prefix=' '),
@@ -420,10 +420,7 @@ def dump(node: NodeOrLeaf, *, indent: Optional[Union[int, str]] = None) -> str:
         ]),
         EndMarker('', (1, 18)),
     ])
-
     """
-    from parso.python.tree import Param
-
     if indent is None:
         newline = False
         indent_string = ''
@@ -458,11 +455,7 @@ def dump(node: NodeOrLeaf, *, indent: Optional[Union[int, str]] = None) -> str:
                 result += '\n'
             for child in node.children:
                 result += _format_dump(child, indent=indent + indent_string, top_level=False)
-            result += f'{indent}]'
-            if isinstance(node, Param):
-                # Set a dummy parent for Param. Will be fixed in Function/Lambda constructor.
-                result += ', ...'
-            result += ')'
+            result += f'{indent}])'
         else:
             raise TypeError(f'unsupported node: {node!r}')
         if not top_level:
