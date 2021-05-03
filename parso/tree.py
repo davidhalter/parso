@@ -28,6 +28,11 @@ class NodeOrLeaf:
     '''
     The type is a string that typically matches the types of the grammar file.
     '''
+    parent: 'Optional[BaseNode]'
+    '''
+    The parent :class:`BaseNode` of this node or leaf.
+    None if this is the root node.
+    '''
 
     def get_root_node(self):
         """
@@ -266,7 +271,7 @@ class BaseNode(NodeOrLeaf):
         """
         self.parent: Optional[BaseNode] = None
         '''
-        The parent :class:`BaseNode` of this leaf.
+        The parent :class:`BaseNode` of this node.
         None if this is the root node.
         '''
         for child in children:
