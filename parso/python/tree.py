@@ -549,7 +549,17 @@ class Function(ClassOrFunc):
     def __init__(self, children):
         super().__init__(children)
         parameters = self.children[2]  # After `def foo`
-        parameters.children[1:-1] = _create_params(parameters, parameters.children[1:-1])
+        parameters_children = parameters.children[1:-1]
+        input_has_param = False
+        for child in parameters_children:
+            if isinstance(child, Param):
+                input_has_param = True
+                # Fix parent relationship of Param children.
+                child.parent = parameters
+        # If input parameters list already has Param objects, keep it as is;
+        # otherwise, convert it to a list of Param objects.
+        if not input_has_param:
+            parameters.children[1:-1] = _create_params(parameters, parameters_children)
 
     def _get_param_nodes(self):
         return self.children[2].children
@@ -652,7 +662,17 @@ class Lambda(Function):
         # We don't want to call the Function constructor, call its parent.
         super(Function, self).__init__(children)
         # Everything between `lambda` and the `:` operator is a parameter.
-        self.children[1:-2] = _create_params(self, self.children[1:-2])
+        parameters_children = self.children[1:-2]
+        input_has_param = False
+        for child in parameters_children:
+            if isinstance(child, Param):
+                input_has_param = True
+                # Fix parent relationship of Param children.
+                child.parent = self
+        # If input children list already has Param objects, keep it as is;
+        # otherwise, convert it to a list of Param objects.
+        if not input_has_param:
+            self.children[1:-2] = _create_params(self, parameters_children)
 
     @property
     def name(self):
