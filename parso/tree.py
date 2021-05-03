@@ -392,6 +392,7 @@ def dump(node: NodeOrLeaf, *, indent: Optional[Union[int, str]] = None) -> str:
 
     :return: the dump of the parser tree
 
+    >>> import parso
     >>> print(parso.tree.dump(parso.parse("lambda x, y: x + y"), indent=4))
     Module([
         Lambda([

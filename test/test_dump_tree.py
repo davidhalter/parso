@@ -3,6 +3,7 @@ from textwrap import dedent
 import pytest
 
 from parso import parse
+# Using star import for easier eval testing below.
 from parso.python.tree import *  # noqa: F403
 from parso.tree import *  # noqa: F403
 from parso.tree import ErrorLeaf, TypedLeaf, dump
