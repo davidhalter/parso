@@ -269,6 +269,8 @@ class BaseNode(NodeOrLeaf):
         The parent :class:`BaseNode` of this leaf.
         None if this is the root node.
         '''
+        for child in children:
+            child.parent = self
 
     @property
     def start_pos(self) -> Tuple[int, int]:
