@@ -6,7 +6,7 @@ from parso import parse
 # Using star import for easier eval testing below.
 from parso.python.tree import *  # noqa: F403
 from parso.tree import *  # noqa: F403
-from parso.tree import ErrorLeaf, TypedLeaf, dump
+from parso.tree import ErrorLeaf, TypedLeaf
 
 
 @pytest.mark.parametrize(
@@ -95,7 +95,7 @@ from parso.tree import ErrorLeaf, TypedLeaf, dump
 def test_dump_parser_tree(indent, expected_dump):
     code = "lambda x, y: x + y"
     module = parse(code)
-    assert dump(module, indent=indent) == expected_dump
+    assert module.dump(indent=indent) == expected_dump
 
     # Check that dumped tree can be eval'd to recover the parser tree and original code.
     recovered_code = eval(expected_dump).get_code()
@@ -150,7 +150,7 @@ def test_dump_parser_tree(indent, expected_dump):
     ]
 )
 def test_dump_parser_tree_not_top_level_module(node, expected_dump, expected_code):
-    dump_result = dump(node)
+    dump_result = node.dump()
     assert dump_result == expected_dump
 
     # Check that dumped tree can be eval'd to recover the parser tree and original code.
@@ -162,7 +162,4 @@ def test_dump_parser_tree_invalid_args():
     module = parse("lambda x, y: x + y")
 
     with pytest.raises(TypeError):
-        dump(module, indent=1.1)
-
-    with pytest.raises(TypeError):
-        dump(1)
+        module.dump(indent=1.1)

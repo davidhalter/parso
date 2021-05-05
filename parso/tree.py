@@ -1,22 +1,23 @@
+import warnings
 from abc import abstractmethod, abstractproperty
 from typing import List, Optional, Tuple, Union
 
 from parso.utils import split_lines
 
 
-def search_ancestor(node, *node_types):
+def search_ancestor(node: 'NodeOrLeaf', *node_types: str) -> 'Optional[BaseNode]':
     """
     Recursively looks at the parents of a node and returns the first found node
-    that matches node_types. Returns ``None`` if no matching node is found.
+    that matches ``node_types``. Returns ``None`` if no matching node is found.
+
+    This function is deprecated, use :meth:`NodeOrLeaf.search_ancestor` instead.
 
     :param node: The ancestors of this node will be checked.
     :param node_types: type names that are searched for.
-    :type node_types: tuple of str
     """
-    while True:
-        node = node.parent
-        if node is None or node.type in node_types:
-            return node
+    warnings.warn("parso.tree.search_ancestor() is deprecated, "
+                  "use NodeOrLeaf.search_ancestor() instead", DeprecationWarning)
+    return node.search_ancestor()
 
 
 class NodeOrLeaf:
@@ -178,6 +179,108 @@ class NodeOrLeaf:
             e.g. a statement.
         """
 
+    def search_ancestor(self, *node_types: str) -> 'Optional[BaseNode]':
+        """
+        Recursively looks at the parents of this node or leaf and returns the
+        first found node that matches ``node_types``. Returns ``None`` if no
+        matching node is found.
+
+        :param node_types: type names that are searched for.
+        """
+        node = self.parent
+        while node is not None:
+            if node.type in node_types:
+                return node
+            node = node.parent
+        return None
+
+    def dump(self, *, indent: Optional[Union[int, str]] = None) -> str:
+        """
+        Returns a formatted dump of the parser tree rooted at this node or leaf. This is
+        mainly useful for debugging purposes.
+
+        The ``indent`` parameter is interpreted in a similar way as :py:func:`ast.dump`.
+        If ``indent`` is a non-negative integer or string, then the tree will be
+        pretty-printed with that indent level. An indent level of 0, negative, or ``""``
+        will only insert newlines. ``None`` (the default) selects the single line
+        representation. Using a positive integer indent indents that many spaces per
+        level. If ``indent`` is a string (such as ``"\\t"``), that string is used to
+        indent each level.
+
+        :param indent: indentation style as described above
+
+        >>> import parso
+        >>> print(parso.parse("lambda x, y: x + y").dump(indent=4))
+        Module([
+            Lambda([
+                Keyword('lambda', (1, 0)),
+                Param([
+                    Name('x', (1, 7), prefix=' '),
+                    Operator(',', (1, 8)),
+                ]),
+                Param([
+                    Name('y', (1, 10), prefix=' '),
+                ]),
+                Operator(':', (1, 11)),
+                PythonNode('arith_expr', [
+                    Name('x', (1, 13), prefix=' '),
+                    Operator('+', (1, 15), prefix=' '),
+                    Name('y', (1, 17), prefix=' '),
+                ]),
+            ]),
+            EndMarker('', (1, 18)),
+        ])
+        """
+        if indent is None:
+            newline = False
+            indent_string = ''
+        elif isinstance(indent, int):
+            newline = True
+            indent_string = ' ' * indent
+        elif isinstance(indent, str):
+            newline = True
+            indent_string = indent
+        else:
+            raise TypeError(f"expect 'indent' to be int, str or None, got {indent!r}")
+
+        def _format_dump(node: NodeOrLeaf, indent: str = '', top_level: bool = True) -> str:
+            result = ''
+            node_type = type(node).__name__
+            if isinstance(node, Leaf):
+                result += f'{indent}{node_type}('
+                if isinstance(node, ErrorLeaf):
+                    result += f'{node.token_type!r}, '
+                elif isinstance(node, TypedLeaf):
+                    result += f'{node.type!r}, '
+                result += f'{node.value!r}, {node.start_pos!r}'
+                if node.prefix:
+                    result += f', prefix={node.prefix!r}'
+                result += ')'
+            elif isinstance(node, BaseNode):
+                result += f'{indent}{node_type}('
+                if isinstance(node, Node):
+                    result += f'{node.type!r}, '
+                result += '['
+                if newline:
+                    result += '\n'
+                for child in node.children:
+                    result += _format_dump(child, indent=indent + indent_string, top_level=False)
+                result += f'{indent}])'
+            else:  # pragma: no cover
+                # We shouldn't ever reach here, unless:
+                # - `NodeOrLeaf` is incorrectly subclassed else where
+                # - or a node's children list contains invalid nodes or leafs
+                # Both are unexpected internal errors.
+                raise TypeError(f'unsupported node encountered: {node!r}')
+            if not top_level:
+                if newline:
+                    result += ',\n'
+                else:
+                    result += ', '
+            return result
+
+        return _format_dump(self)
+
 
 class Leaf(NodeOrLeaf):
     '''
@@ -185,6 +288,7 @@ class Leaf(NodeOrLeaf):
     were defined and what text preceeds them.
     '''
     __slots__ = ('value', 'parent', 'line', 'column', 'prefix')
+    prefix: str
 
     def __init__(self, value: str, start_pos: Tuple[int, int], prefix: str = '') -> None:
         self.value = value
@@ -379,90 +483,3 @@ class ErrorLeaf(Leaf):
     def __repr__(self):
         return "<%s: %s:%s, %s>" % \
             (type(self).__name__, self.token_type, repr(self.value), self.start_pos)
-
-
-def dump(node: NodeOrLeaf, *, indent: Optional[Union[int, str]] = None) -> str:
-    """
-    Return a formatted dump of the parser tree rooted at ``node``. This is mainly
-    useful for debugging purposes.
-
-    The ``indent`` parameter is interpreted in a similar way as :py:func:`ast.dump`.
-    If ``indent`` is a non-negative integer or string, then the tree will be
-    pretty-printed with that indent level. An indent level of 0, negative, or ``""``
-    will only insert newlines. ``None`` (the default) selects the single line
-    representation. Using a positive integer indent indents that many spaces per
-    level. If ``indent`` is a string (such as ``"\\t"``), that string is used to
-    indent each level.
-
-    :param node: the root of the parser tree to be dumped, can be a node or leaf
-    :param indent: indentation style as described above
-
-    :return: the dump of the parser tree
-
-    >>> import parso
-    >>> print(parso.tree.dump(parso.parse("lambda x, y: x + y"), indent=4))
-    Module([
-        Lambda([
-            Keyword('lambda', (1, 0)),
-            Param([
-                Name('x', (1, 7), prefix=' '),
-                Operator(',', (1, 8)),
-            ]),
-            Param([
-                Name('y', (1, 10), prefix=' '),
-            ]),
-            Operator(':', (1, 11)),
-            PythonNode('arith_expr', [
-                Name('x', (1, 13), prefix=' '),
-                Operator('+', (1, 15), prefix=' '),
-                Name('y', (1, 17), prefix=' '),
-            ]),
-        ]),
-        EndMarker('', (1, 18)),
-    ])
-    """
-    if indent is None:
-        newline = False
-        indent_string = ''
-    elif isinstance(indent, int):
-        newline = True
-        indent_string = ' ' * indent
-    elif isinstance(indent, str):
-        newline = True
-        indent_string = indent
-    else:
-        raise TypeError(f"expect 'indent' to be int, str or None, got {indent!r}")
-
-    def _format_dump(node: NodeOrLeaf, indent: str = '', top_level: bool = True) -> str:
-        result = ''
-        node_type = type(node).__name__
-        if isinstance(node, Leaf):
-            result += f'{indent}{node_type}('
-            if isinstance(node, ErrorLeaf):
-                result += f'{node.token_type!r}, '
-            elif isinstance(node, TypedLeaf):
-                result += f'{node.type!r}, '
-            result += f'{node.value!r}, {node.start_pos!r}'
-            if node.prefix:
-                result += f', prefix={node.prefix!r}'
-            result += ')'
-        elif isinstance(node, BaseNode):
-            result += f'{indent}{node_type}('
-            if isinstance(node, Node):
-                result += f'{node.type!r}, '
-            result += '['
-            if newline:
-                result += '\n'
-            for child in node.children:
-                result += _format_dump(child, indent=indent + indent_string, top_level=False)
-            result += f'{indent}])'
-        else:
-            raise TypeError(f'unsupported node: {node!r}')
-        if not top_level:
-            if newline:
-                result += ',\n'
-            else:
-                result += ', '
-        return result
-
-    return _format_dump(node)

@@ -40,6 +40,14 @@ class PrefixPart:
             self.start_pos
         )
 
+    def search_ancestor(self, *node_types):
+        node = self.parent
+        while node is not None:
+            if node.type in node_types:
+                return node
+            node = node.parent
+        return None
+
 
 _comment = r'#[^\n\r\f]*'
 _backslash = r'\\\r?\n'

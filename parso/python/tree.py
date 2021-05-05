@@ -49,8 +49,7 @@ except ImportError:
     from collections import Mapping
 from typing import Tuple
 
-from parso.tree import Node, BaseNode, Leaf, ErrorNode, ErrorLeaf, \
-    search_ancestor
+from parso.tree import Node, BaseNode, Leaf, ErrorNode, ErrorLeaf
 from parso.python.prefix import split_prefix
 from parso.utils import split_lines
 
@@ -796,7 +795,7 @@ class WithStmt(Flow):
         return names
 
     def get_test_node_from_name(self, name):
-        node = search_ancestor(name, "with_item")
+        node = name.search_ancestor("with_item")
         if node is None:
             raise ValueError('The name is not actually part of a with statement.')
         return node.children[0]
@@ -1191,7 +1190,7 @@ class Param(PythonBaseNode):
         """
         Returns the function/lambda of a parameter.
         """
-        return search_ancestor(self, 'funcdef', 'lambdef')
+        return self.search_ancestor('funcdef', 'lambdef')
 
     def get_code(self, include_prefix=True, include_comma=True):
         """

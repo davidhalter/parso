@@ -47,4 +47,3 @@ Utility
 -------
 
 .. autofunction:: parso.tree.search_ancestor
-.. autofunction:: parso.tree.dump
