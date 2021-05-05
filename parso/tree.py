@@ -17,7 +17,7 @@ def search_ancestor(node: 'NodeOrLeaf', *node_types: str) -> 'Optional[BaseNode]
     """
     warnings.warn("parso.tree.search_ancestor() is deprecated, "
                   "use NodeOrLeaf.search_ancestor() instead", DeprecationWarning)
-    return node.search_ancestor()
+    return node.search_ancestor(*node_types)
 
 
 class NodeOrLeaf:
