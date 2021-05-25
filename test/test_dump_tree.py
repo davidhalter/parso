@@ -163,3 +163,20 @@ def test_dump_parser_tree_invalid_args():
 
     with pytest.raises(TypeError):
         module.dump(indent=1.1)
+
+
+def test_eval_dump_recovers_parent():
+    module = parse("lambda x, y: x + y")
+    module2 = eval(module.dump())
+    assert module2.parent is None
+    lambda_node = module2.children[0]
+    assert lambda_node.parent is module2
+    assert module2.children[1].parent is module2
+    assert lambda_node.children[0].parent is lambda_node
+    param_node = lambda_node.children[1]
+    assert param_node.parent is lambda_node
+    assert param_node.children[0].parent is param_node
+    assert param_node.children[1].parent is param_node
+    arith_expr_node = lambda_node.children[-1]
+    assert arith_expr_node.parent is lambda_node
+    assert arith_expr_node.children[0].parent is arith_expr_node

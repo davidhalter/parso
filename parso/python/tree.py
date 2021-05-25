@@ -553,8 +553,6 @@ class Function(ClassOrFunc):
         for child in parameters_children:
             if isinstance(child, Param):
                 input_has_param = True
-                # Fix parent relationship of Param children.
-                child.parent = parameters
         # If input parameters list already has Param objects, keep it as is;
         # otherwise, convert it to a list of Param objects.
         if not input_has_param:
@@ -666,8 +664,6 @@ class Lambda(Function):
         for child in parameters_children:
             if isinstance(child, Param):
                 input_has_param = True
-                # Fix parent relationship of Param children.
-                child.parent = self
         # If input children list already has Param objects, keep it as is;
         # otherwise, convert it to a list of Param objects.
         if not input_has_param:
@@ -1102,8 +1098,6 @@ class Param(PythonBaseNode):
     def __init__(self, children, parent=None):
         super().__init__(children)
         self.parent = parent
-        for child in children:
-            child.parent = self
 
     @property
     def star_count(self):
