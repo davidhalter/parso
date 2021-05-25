@@ -263,6 +263,4 @@ sample_leaf = sample_node.children[0]
 )
 def test_search_ancestor(node, node_types, expected_ancestor):
     assert node.search_ancestor(*node_types) is expected_ancestor
-    with pytest.deprecated_call():
-        ancestor = search_ancestor(node, *node_types)
-    assert ancestor is expected_ancestor
+    assert search_ancestor(node, *node_types) is expected_ancestor  # deprecated

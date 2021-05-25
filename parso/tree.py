@@ -1,4 +1,3 @@
-import warnings
 from abc import abstractmethod, abstractproperty
 from typing import List, Optional, Tuple, Union
 
@@ -15,8 +14,6 @@ def search_ancestor(node: 'NodeOrLeaf', *node_types: str) -> 'Optional[BaseNode]
     :param node: The ancestors of this node will be checked.
     :param node_types: type names that are searched for.
     """
-    warnings.warn("parso.tree.search_ancestor() is deprecated, "
-                  "use NodeOrLeaf.search_ancestor() instead", DeprecationWarning)
     return node.search_ancestor(*node_types)
 
 
