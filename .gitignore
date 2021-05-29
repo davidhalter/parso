@@ -11,3 +11,4 @@ parso.egg-info/
 /.pytest_cache
 test/fuzz-redo.pickle
 /venv/
+/htmlcov/

@@ -4,7 +4,7 @@ from typing import Tuple
 
 from parso.python.errors import ErrorFinder, ErrorFinderConfig
 from parso.normalizer import Rule
-from parso.python.tree import search_ancestor, Flow, Scope
+from parso.python.tree import Flow, Scope
 
 
 _IMPORT_TYPES = ('import_name', 'import_from')
@@ -124,7 +124,7 @@ class BackslashNode(IndentationNode):
     type = IndentationTypes.BACKSLASH
 
     def __init__(self, config, parent_indentation, containing_leaf, spacing, parent=None):
-        expr_stmt = search_ancestor(containing_leaf, 'expr_stmt')
+        expr_stmt = containing_leaf.search_ancestor('expr_stmt')
         if expr_stmt is not None:
             equals = expr_stmt.children[-2]
 
@@ -724,11 +724,11 @@ class PEP8Normalizer(ErrorFinder):
 
     def add_issue(self, node, code, message):
         if self._previous_leaf is not None:
-            if search_ancestor(self._previous_leaf, 'error_node') is not None:
+            if self._previous_leaf.search_ancestor('error_node') is not None:
                 return
             if self._previous_leaf.type == 'error_leaf':
                 return
-        if search_ancestor(node, 'error_node') is not None:
+        if node.search_ancestor('error_node') is not None:
             return
         if code in (901, 903):
             # 901 and 903 are raised by the ErrorFinder.
