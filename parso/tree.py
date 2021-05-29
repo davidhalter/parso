@@ -196,7 +196,7 @@ class NodeOrLeaf:
             node = node.parent
         return None
 
-    def dump(self, *, indent: Optional[Union[int, str]] = None) -> str:
+    def dump(self, *, indent: Optional[Union[int, str]] = 4) -> str:
         """
         Returns a formatted dump of the parser tree rooted at this node or leaf. This is
         mainly useful for debugging purposes.
@@ -204,15 +204,16 @@ class NodeOrLeaf:
         The ``indent`` parameter is interpreted in a similar way as :py:func:`ast.dump`.
         If ``indent`` is a non-negative integer or string, then the tree will be
         pretty-printed with that indent level. An indent level of 0, negative, or ``""``
-        will only insert newlines. ``None`` (the default) selects the single line
-        representation. Using a positive integer indent indents that many spaces per
-        level. If ``indent`` is a string (such as ``"\\t"``), that string is used to
-        indent each level.
+        will only insert newlines. ``None`` selects the single line representation.
+        Using a positive integer indent indents that many spaces per level. If
+        ``indent`` is a string (such as ``"\\t"``), that string is used to indent each
+        level.
 
-        :param indent: indentation style as described above
+        :param indent: Indentation style as described above. The default indentation is
+            4 spaces, which yields a pretty-printed dump.
 
         >>> import parso
-        >>> print(parso.parse("lambda x, y: x + y").dump(indent=4))
+        >>> print(parso.parse("lambda x, y: x + y").dump())
         Module([
             Lambda([
                 Keyword('lambda', (1, 0)),

@@ -105,31 +105,31 @@ def test_dump_parser_tree(indent, expected_dump):
 @pytest.mark.parametrize(
     'node,expected_dump,expected_code', [
         (  # Dump intermediate node (not top level module)
-            parse("def foo(x, y): return x + y").children[0],
-            "Function(["
-            "Keyword('def', (1, 0)), "
-            "Name('foo', (1, 4), prefix=' '), "
-            "PythonNode('parameters', ["
-            "Operator('(', (1, 7)), "
-            "Param(["
-            "Name('x', (1, 8)), "
-            "Operator(',', (1, 9)), "
-            "]), "
-            "Param(["
-            "Name('y', (1, 11), prefix=' '), "
-            "]), "
-            "Operator(')', (1, 12)), "
-            "]), "
-            "Operator(':', (1, 13)), "
-            "ReturnStmt(["
-            "Keyword('return', (1, 15), prefix=' '), "
-            "PythonNode('arith_expr', ["
-            "Name('x', (1, 22), prefix=' '), "
-            "Operator('+', (1, 24), prefix=' '), "
-            "Name('y', (1, 26), prefix=' '), "
-            "]), "
-            "]), "
-            "])",
+            parse("def foo(x, y): return x + y").children[0], dedent('''\
+                Function([
+                    Keyword('def', (1, 0)),
+                    Name('foo', (1, 4), prefix=' '),
+                    PythonNode('parameters', [
+                        Operator('(', (1, 7)),
+                        Param([
+                            Name('x', (1, 8)),
+                            Operator(',', (1, 9)),
+                        ]),
+                        Param([
+                            Name('y', (1, 11), prefix=' '),
+                        ]),
+                        Operator(')', (1, 12)),
+                    ]),
+                    Operator(':', (1, 13)),
+                    ReturnStmt([
+                        Keyword('return', (1, 15), prefix=' '),
+                        PythonNode('arith_expr', [
+                            Name('x', (1, 22), prefix=' '),
+                            Operator('+', (1, 24), prefix=' '),
+                            Name('y', (1, 26), prefix=' '),
+                        ]),
+                    ]),
+                ])'''),
             "def foo(x, y): return x + y",
         ),
         (  # Dump leaf
