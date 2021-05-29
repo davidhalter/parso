@@ -4,6 +4,8 @@ source = parso
 [report]
 # Regexes for lines to exclude from consideration
 exclude_lines =
+    pragma: no cover
+
     # Don't complain about missing debug-only code:
     def __repr__
 
