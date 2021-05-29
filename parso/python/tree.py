@@ -549,13 +549,9 @@ class Function(ClassOrFunc):
         super().__init__(children)
         parameters = self.children[2]  # After `def foo`
         parameters_children = parameters.children[1:-1]
-        input_has_param = False
-        for child in parameters_children:
-            if isinstance(child, Param):
-                input_has_param = True
         # If input parameters list already has Param objects, keep it as is;
         # otherwise, convert it to a list of Param objects.
-        if not input_has_param:
+        if not any(isinstance(child, Param) for child in parameters_children):
             parameters.children[1:-1] = _create_params(parameters, parameters_children)
 
     def _get_param_nodes(self):
@@ -660,13 +656,9 @@ class Lambda(Function):
         super(Function, self).__init__(children)
         # Everything between `lambda` and the `:` operator is a parameter.
         parameters_children = self.children[1:-2]
-        input_has_param = False
-        for child in parameters_children:
-            if isinstance(child, Param):
-                input_has_param = True
         # If input children list already has Param objects, keep it as is;
         # otherwise, convert it to a list of Param objects.
-        if not input_has_param:
+        if not any(isinstance(child, Param) for child in parameters_children):
             self.children[1:-2] = _create_params(self, parameters_children)
 
     @property
