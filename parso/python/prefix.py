@@ -18,7 +18,7 @@ class PrefixPart:
 
     @property
     def end_pos(self) -> Tuple[int, int]:
-        if self.value.endswith('\n'):
+        if self.value.endswith('\n') or self.value.endswith('\r'):
             return self.start_pos[0] + 1, 0
         if self.value == unicode_bom:
             # The bom doesn't have a length at the start of a Python file.
@@ -50,8 +50,8 @@ class PrefixPart:
 
 
 _comment = r'#[^\n\r\f]*'
-_backslash = r'\\\r?\n'
-_newline = r'\r?\n'
+_backslash = r'\\\r?\n|\\\r'
+_newline = r'\r?\n|\r'
 _form_feed = r'\f'
 _only_spacing = '$'
 _spacing = r'[ \t]*'
@@ -94,7 +94,7 @@ def split_prefix(leaf, start_pos):
             bom = True
 
         start = match.end(0)
-        if value.endswith('\n'):
+        if value.endswith('\n') or value.endswith('\r'):
             line += 1
             column = -start
 
