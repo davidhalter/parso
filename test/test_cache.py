@@ -137,7 +137,7 @@ def test_cache_last_used_update(diff_cache, use_file_io):
     parse('somecode', cache=True, path=p)
     node_cache_item = next(iter(parser_cache.values()))[p]
     now = time.time()
-    assert node_cache_item.last_used < now
+    assert node_cache_item.last_used <= now
 
     if use_file_io:
         f = _FixedTimeFileIO(p, 'code', node_cache_item.last_used - 10)
