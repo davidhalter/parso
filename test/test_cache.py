@@ -188,3 +188,4 @@ def test_permission_error(monkeypatch):
     with pytest.warns(Warning):
         parse(path=__file__, cache=True, diff_cache=True)
     assert was_called
+    parser_cache.clear()
