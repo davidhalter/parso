@@ -185,7 +185,9 @@ def test_permission_error(monkeypatch):
     was_called = False
 
     monkeypatch.setattr(cache, '_save_to_file_system', save)
-    with pytest.warns(Warning):
-        parse(path=__file__, cache=True, diff_cache=True)
-    assert was_called
-    parser_cache.clear()
+    try:
+        with pytest.warns(Warning):
+            parse(path=__file__, cache=True, diff_cache=True)
+        assert was_called
+    finally:
+        parser_cache.clear()
