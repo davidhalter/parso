@@ -64,13 +64,14 @@ See: http://docs.python.org/3/library/sys.html#sys.implementation
 
 
 def _get_default_cache_path():
+    # fix 'WindowsPath' object has no attribute 'expanduser'
     if platform.system().lower() == 'windows':
         dir_ = Path(os.getenv('LOCALAPPDATA') or '~', 'Parso', 'Parso')
     elif platform.system().lower() == 'darwin':
-        dir_ = Path('~', 'Library', 'Caches', 'Parso')
+        dir_ = Path('~', 'Library', 'Caches', 'Parso').expanduser()
     else:
-        dir_ = Path(os.getenv('XDG_CACHE_HOME') or '~/.cache', 'parso')
-    return dir_.expanduser()
+        dir_ = Path(os.getenv('XDG_CACHE_HOME') or '~/.cache', 'parso').expanduser()
+    return dir_
 
 
 _default_cache_path = _get_default_cache_path()
