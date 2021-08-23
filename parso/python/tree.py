@@ -49,7 +49,7 @@ except ImportError:
     from collections import Mapping
 from typing import Tuple
 
-from parso.tree import Node, BaseNode, Leaf, ErrorNode, ErrorLeaf
+from parso.tree import Node, BaseNode, Leaf, ErrorNode, ErrorLeaf, search_ancestor  # noqa
 from parso.python.prefix import split_prefix
 from parso.utils import split_lines
 
