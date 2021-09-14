@@ -26,7 +26,7 @@ class NodeOrLeaf:
     """
     The base class for nodes and leaves.
     """
-    __slots__ = ()
+    __slots__ = ('parent',)
     type: str
     '''
     The type is a string that typically matches the types of the grammar file.
@@ -290,7 +290,7 @@ class Leaf(NodeOrLeaf):
     Leafs are basically tokens with a better API. Leafs exactly know where they
     were defined and what text preceeds them.
     '''
-    __slots__ = ('value', 'parent', 'line', 'column', 'prefix')
+    __slots__ = ('value', 'line', 'column', 'prefix')
     prefix: str
 
     def __init__(self, value: str, start_pos: Tuple[int, int], prefix: str = '') -> None:
@@ -369,7 +369,7 @@ class BaseNode(NodeOrLeaf):
     The super class for all nodes.
     A node has children, a type and possibly a parent node.
     """
-    __slots__ = ('children', 'parent')
+    __slots__ = ('children',)
 
     def __init__(self, children: List[NodeOrLeaf]) -> None:
         self.children = children
