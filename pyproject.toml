@@ -2,4 +2,76 @@
 requires = ["setuptools>=44", "wheel", "setuptools_scm[toml]>=3.4.3"]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "parso"
+authors = [{name = "David Halter", email = "davidhalter88@gmail.com"}]
+maintainers = [{name = "David Halter", email = "davidhalter88@gmail.com"}]
+license = {text = "MIT"}
+description = "A Python Parser"
+keywords = ["python", "parser", "parsing"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Plugins",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Text Editors :: Integrated Development Environments (IDE)",
+    "Topic :: Utilities",
+    "Typing :: Typed",
+]
+urls = {Homepage = "https://github.com/davidhalter/parso"}
+dynamic = ["readme", "version"]
+requires-python = ">=3.6"
+
+[project.optional-dependencies]
+testing = ["pytest<6.0.0", "docopt"]
+qa = ["flake8==3.8.3", "mypy==0.782"]
+
+[tool.setuptools]
+include-package-data = true
+platforms = ["any"]
+
+[tool.setuptools.packages.find]
+exclude = [
+    "test",
+    "test.*",
+]
+namespaces = false
+
+[tool.setuptools.package-data]
+parso = [
+    "python/grammar*.txt",
+    "py.typed",
+    "*.pyi",
+    "**/*.pyi",
+]
+
+[tool.setuptools.dynamic]
+readme = {file = ["README.rst", "CHANGELOG.rst"]}
+
 [tool.setuptools_scm]
+
+[tool.distutils.bdist_wheel]
+universal = 1
+
+[tool.flake8]
+max-line-length = "100"
+ignore = """
+E722,
+E226,
+W503,"""
+
+[tool.mypy]
+disallow_subclassing_any = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_return_any = true
+warn_unused_configs = true
+warn_unreachable = true
+strict_equality = true
