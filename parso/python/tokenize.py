@@ -15,7 +15,7 @@ import sys
 import re
 import itertools as _itertools
 from codecs import BOM_UTF8
-from typing import NamedTuple, Tuple, Iterator, Iterable, List, Dict \
+from typing import NamedTuple, Tuple, Iterator, Iterable, List, Dict, \
     Pattern, Set, Optional
 
 from parso.python.token import PythonTokenTypes
