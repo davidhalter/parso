@@ -47,15 +47,15 @@ class Grammar(Generic[_NodeT]):
         self._hashed = hashlib.sha256(text.encode("utf-8")).hexdigest()
 
     def parse(self,
-              code: Union[str, bytes] = None,
+              code: Optional[Union[str, bytes]] = None,
               *,
               error_recovery=True,
-              path: Union[os.PathLike, str] = None,
-              start_symbol: str = None,
+              path: Optional[Union[os.PathLike, str]] = None,
+              start_symbol: Optional[str] = None,
               cache=False,
               diff_cache=False,
-              cache_path: Union[os.PathLike, str] = None,
-              file_io: FileIO = None) -> _NodeT:
+              cache_path: Optional[Union[os.PathLike, str]] = None,
+              file_io: Optional[FileIO] = None) -> _NodeT:
         """
         If you want to parse a Python file you want to start here, most likely.
 
@@ -231,7 +231,7 @@ class PythonGrammar(Grammar):
         return tokenize(code, version_info=self.version_info)
 
 
-def load_grammar(*, version: str = None, path: str = None):
+def load_grammar(*, version: Optional[str] = None, path: Optional[str] = None):
     """
     Loads a :py:class:`parso.Grammar`. The default version is the current Python
     version.

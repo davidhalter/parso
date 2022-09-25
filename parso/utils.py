@@ -2,7 +2,7 @@ import re
 import sys
 from ast import literal_eval
 from functools import total_ordering
-from typing import NamedTuple, Sequence, Union
+from typing import Optional, NamedTuple, Sequence, Union
 
 # The following is a list in Python that are line breaks in str.splitlines, but
 # not in Python. In Python only \r (Carriage Return, 0xD) and \n (Line Feed,
@@ -180,7 +180,7 @@ def _parse_version(version) -> PythonVersionInfo:
     return PythonVersionInfo(major, minor)
 
 
-def parse_version_string(version: str = None) -> PythonVersionInfo:
+def parse_version_string(version: Optional[str] = None) -> PythonVersionInfo:
     """
     Checks for a valid version number (e.g. `3.8` or `3.10.1` or `3`) and
     returns a corresponding version info that is always two characters long in

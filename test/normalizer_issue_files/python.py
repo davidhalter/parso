@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import ClassVar, List
+from typing import Optional, ClassVar, List
 
 print(1, 2)
 
@@ -62,8 +62,8 @@ a[b1, :] == a[b1, ...]
 
 # Annotated Function Definitions
 # Okay
-def munge(input: AnyStr, sep: AnyStr = None, limit=1000,
-          extra: Union[str, dict] = None) -> AnyStr:
+def munge(input: AnyStr, sep: Optional[AnyStr] = None, limit=1000,
+          extra: Optional[Union[str, dict]] = None) -> AnyStr:
     pass
 
 

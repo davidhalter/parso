@@ -15,8 +15,8 @@ import sys
 import re
 import itertools as _itertools
 from codecs import BOM_UTF8
-from typing import NamedTuple, Tuple, Iterator, Iterable, List, Dict, \
-    Pattern, Set
+from typing import NamedTuple, Tuple, Iterator, Iterable, List, Dict \
+    Pattern, Set, Optional
 
 from parso.python.token import PythonTokenTypes
 from parso.utils import split_lines, PythonVersionInfo, parse_version_string
@@ -364,7 +364,7 @@ def tokenize_lines(
     lines: Iterable[str],
     *,
     version_info: PythonVersionInfo,
-    indents: List[int] = None,
+    indents: Optional[List[int]] = None,
     start_pos: Tuple[int, int] = (1, 0),
     is_first_token=True,
 ) -> Iterator[PythonToken]:
