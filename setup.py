@@ -47,7 +47,7 @@ setup(
     ],
     extras_require={
         'testing': [
-            'pytest<6.0.0',
+            'pytest',
             'docopt',
         ],
         'qa': [
