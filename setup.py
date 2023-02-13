@@ -51,7 +51,8 @@ setup(
             'docopt',
         ],
         'qa': [
-            'flake8==3.8.3',
+            # Latest version which supports Python 3.6
+            'flake8==5.0.4',
             'mypy==0.782',
         ],
     },
