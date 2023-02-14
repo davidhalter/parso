@@ -22,7 +22,7 @@ jobs:
       # Ignore F401, which are unused imports. flake8 is a primitive tool and is sometimes wrong.
       run: flake8 --extend-ignore F401 parso test/*.py setup.py scripts/
     - name: Run Mypy
-      run: mypy parso
+      run: mypy parso setup.py
   test:
     runs-on: ubuntu-latest
     continue-on-error: ${{ matrix.experimental }}
