@@ -264,3 +264,17 @@ sample_leaf = sample_node.children[0]
 def test_search_ancestor(node, node_types, expected_ancestor):
     assert node.search_ancestor(*node_types) is expected_ancestor
     assert search_ancestor(node, *node_types) is expected_ancestor  # deprecated
+
+
+def test_get_leaf_for_definition():
+    # https://github.com/davidhalter/parso/issues/217
+    code = """
+from parso import parse
+from parso.python import tree
+from parso.tree import search_ancestor
+"""
+
+    module = parse(code, version='3.8')
+    position = (3, 0)
+    leaf = module.get_leaf_for_position(position)
+    assert leaf.start_pos <= position < leaf.end_pos

@@ -414,28 +414,29 @@ class BaseNode(NodeOrLeaf):
             on whitespace or comments before a leaf
         :return: :py:class:`parso.tree.Leaf` at ``position``, or ``None``
         """
-        def binary_search(lower, upper):
-            if lower == upper:
-                element = self.children[lower]
-                if not include_prefixes and position < element.start_pos:
-                    # We're on a prefix.
-                    return None
-                # In case we have prefixes, a leaf always matches
-                try:
-                    return element.get_leaf_for_position(position, include_prefixes)
-                except AttributeError:
-                    return element
-
-            index = int((lower + upper) / 2)
-            element = self.children[index]
-            if position <= element.end_pos:
-                return binary_search(lower, index)
-            else:
-                return binary_search(index + 1, upper)
-
-        if not ((1, 0) <= position <= self.children[-1].end_pos):
+        if not ((1, 0) <= position < self.children[-1].end_pos):
             raise ValueError('Please provide a position that exists within this node.')
-        return binary_search(0, len(self.children) - 1)
+
+        # Binary search for matching child.
+        lower = 0
+        upper = len(self.children) - 1
+        while lower < upper:
+            middle = int((lower + upper) / 2)
+            element = self.children[middle]
+            if position < element.end_pos:
+                upper = middle
+            else:
+                lower = middle + 1
+
+        element = self.children[lower]
+        if not include_prefixes and position < element.start_pos:
+            # We're on a prefix.
+            return None
+        # In case we have prefixes, a leaf always matches
+        try:
+            return element.get_leaf_for_position(position, include_prefixes)
+        except AttributeError:
+            return element
 
     def get_first_leaf(self):
         return self.children[0].get_first_leaf()
