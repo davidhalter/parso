@@ -227,8 +227,6 @@ FAILING_EXAMPLES = [
     "f'{1;1}'",
     "f'{a;}'",
     "f'{b\"\" \"\"}'",
-    # f-string expression part cannot include a backslash
-    r'''f"{'\n'}"''',
 
     'async def foo():\n yield x\n return 1',
     'async def foo():\n yield x\n return 1',
