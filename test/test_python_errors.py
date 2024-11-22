@@ -105,7 +105,7 @@ def _get_actual_exception(code):
         # It's as simple as either an error or not.
         warnings.filterwarnings('ignore', category=SyntaxWarning)
         try:
-            compiled = compile(code, '<unknown>', 'exec')
+            compile(code, '<unknown>', 'exec')
         except (SyntaxError, IndentationError) as e:
             wanted = e.__class__.__name__ + ': ' + e.msg
             line_nr = e.lineno
@@ -115,20 +115,7 @@ def _get_actual_exception(code):
             wanted = 'SyntaxError: (value error) ' + str(e)
             line_nr = None
         else:
-            # In Python 3.12+, some invalid f-strings compile OK but
-            # only raise an exception when they are evaluated.
-            try:
-                eval(compiled)
-            except ValueError as e:
-                wanted = 'SyntaxError: (value error) ' + str(e)
-                line_nr = None
-            except (ImportError, ModuleNotFoundError):
-                # This comes from 'from .__future__ import whatever'
-                # in Python 3.13+
-                wanted = 'SyntaxError: future feature whatever is not defined'
-                line_nr = None
-            else:
-                assert False, "The piece of code should raise an exception."
+            assert False, "The piece of code should raise an exception."
 
     # SyntaxError
     # Some errors have changed error message in later versions of Python,
