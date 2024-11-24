@@ -68,6 +68,8 @@ Resources
 Installation
 ============
 
+.. code-block:: bash
+
     pip install parso
 
 Future
