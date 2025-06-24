@@ -16,7 +16,7 @@ From git
 --------
 If you want to install the current development version (master branch)::
 
-    sudo pip install -e git://github.com/davidhalter/parso.git#egg=parso
+    sudo pip install -e git+https://github.com/davidhalter/parso.git#egg=parso
 
 
 Manual installation from a downloaded package (not recommended)
