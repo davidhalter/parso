@@ -6,6 +6,11 @@ Changelog
 Unreleased
 ++++++++++
 
+0.8.5 (2025-08-23)
+++++++++++++++++++
+
+- Add a fallback grammar for Python 3.14+
+
 0.8.4 (2024-04-05)
 ++++++++++++++++++
 
