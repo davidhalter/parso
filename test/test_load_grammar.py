@@ -11,8 +11,7 @@ def test_load_inexisting_grammar():
 
 
 def test_load_grammar_uses_older_syntax():
-    with pytest.warns():
-        load_grammar(version='4.0')
+    load_grammar(version='4.0')
 
 
 def test_load_grammar_doesnt_warn(each_version):

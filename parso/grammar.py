@@ -245,10 +245,11 @@ def load_grammar(*, version: str = None, path: str = None):
     passed_version_info = parse_version_string(version)
     version_info = min(passed_version_info, PythonVersionInfo(3, 14))
 
-    if passed_version_info != version_info:
-        warnings.warn('parso does not support %s.%s yet.' % (
-            passed_version_info.major, passed_version_info.minor
-        ))
+    # # NOTE: this is commented out until parso properly supports newer Python grammars.
+    # if passed_version_info != version_info:
+    #     warnings.warn('parso does not support %s.%s yet.' % (
+    #         passed_version_info.major, passed_version_info.minor
+    #     ))
 
     file = path or os.path.join(
         'python',
