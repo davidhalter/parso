@@ -366,7 +366,7 @@ class BaseNode(NodeOrLeaf):
     """
     __slots__ = ('children',)
 
-    def __init__(self, children: List[NodeOrLeaf]) -> None:
+    def __init__(self, children) -> None:
         self.children = children
         """
         A list of :class:`NodeOrLeaf` child nodes.
