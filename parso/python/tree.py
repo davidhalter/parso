@@ -43,10 +43,7 @@ Parser Tree Classes
 """
 
 import re
-try:
-    from collections.abc import Mapping
-except ImportError:
-    from collections import Mapping
+from collections.abc import Mapping
 from typing import Tuple
 
 from parso.tree import Node, BaseNode, Leaf, ErrorNode, ErrorLeaf, search_ancestor  # noqa
