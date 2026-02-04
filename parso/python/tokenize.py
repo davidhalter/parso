@@ -52,7 +52,7 @@ class TokenCollection(NamedTuple):
 
 BOM_UTF8_STRING = BOM_UTF8.decode('utf-8')
 
-_token_collection_cache: Dict[tuple[int, int], TokenCollection] = {}
+_token_collection_cache: Dict[Tuple[int, int], TokenCollection] = {}
 
 
 def group(*choices, capture=False, **kwargs):
@@ -340,7 +340,7 @@ def _find_fstring_string(endpats, fstring_stack, line, lnum, pos):
 
 
 def tokenize(
-    code: str, *, version_info: PythonVersionInfo, start_pos: Tuple[int, int] = (1, 0)
+    code: str, *, version_info: Tuple[int, int], start_pos: Tuple[int, int] = (1, 0)
 ) -> Iterator[PythonToken]:
     """Generate tokens from a the source code (string)."""
     lines = split_lines(code, keepends=True)
@@ -363,7 +363,7 @@ def _print_tokens(func):
 def tokenize_lines(
     lines: Iterable[str],
     *,
-    version_info: PythonVersionInfo,
+    version_info: Tuple[int, int],
     indents: List[int] = None,
     start_pos: Tuple[int, int] = (1, 0),
     is_first_token=True,
