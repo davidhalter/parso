@@ -255,7 +255,6 @@ def load_grammar(*, version: str = None, path: str = None):
         'grammar%s%s.txt' % (version_info.major, version_info.minor)
     )
 
-    global _loaded_grammars
     path = os.path.join(os.path.dirname(__file__), file)
     try:
         return _loaded_grammars[path]
