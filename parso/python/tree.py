@@ -68,7 +68,7 @@ _IMPORTS = set(['import_name', 'import_from'])
 class DocstringMixin:
     __slots__ = ()
     type: str
-    children: list[Any]
+    children: "list[Any]"
     parent: Any
 
     def get_doc_node(self):
@@ -101,7 +101,7 @@ class PythonMixin:
     Some Python specific utilities.
     """
     __slots__ = ()
-    children: list[Any]
+    children: "list[Any]"
 
     def get_name_of_position(self, position):
         """
