@@ -21,8 +21,8 @@ jobs:
     - name: Run Flake8
       # Ignore F401, which are unused imports. flake8 is a primitive tool and is sometimes wrong.
       run: flake8 --extend-ignore F401 parso test/*.py setup.py scripts/
-    - name: Run Mypy
-      run: mypy parso setup.py
+    - name: Run Zuban
+      run: zuban check
   test:
     runs-on: ubuntu-latest
     continue-on-error: ${{ matrix.experimental }}

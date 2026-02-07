@@ -58,9 +58,8 @@ setup(
         'qa': [
             # Latest version which supports Python 3.6
             'flake8==5.0.4',
-            # Latest version which supports Python 3.6
-            'mypy==0.971',
             # Arbitrary pins, latest at the time of pinning
+            'zuban==0.5.0',
             'types-setuptools==67.2.0.1',
         ],
     },
