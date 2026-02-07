@@ -17,7 +17,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip setuptools wheel
-        pip install .[qa]
+        pip install .[qa] .[testing]
     - name: Run Flake8
       # Ignore F401, which are unused imports. flake8 is a primitive tool and is sometimes wrong.
       run: flake8 --extend-ignore F401 parso test/*.py setup.py scripts/
