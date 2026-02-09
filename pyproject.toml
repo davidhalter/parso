@@ -1,0 +1,14 @@
+[tool.zuban]
+enable_error_code = ["ignore-without-code"]
+
+disallow_subclassing_any = true
+
+# Avoid creating future gotchas emerging from bad typing
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_unused_configs = true
+warn_unreachable = true
+
+strict_equality = true
+implicit_optional = true
+exclude = "^test/normalizer_issue_files"

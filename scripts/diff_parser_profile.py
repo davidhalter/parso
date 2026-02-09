@@ -15,11 +15,11 @@ Options:
 import cProfile
 
 from docopt import docopt
-from jedi.parser.python import load_grammar
-from jedi.parser.diff import DiffParser
-from jedi.parser.python import ParserWithRecovery
-from jedi.common import splitlines
-import jedi
+from jedi.parser.python import load_grammar  # type: ignore[import-not-found]
+from jedi.parser.diff import DiffParser  # type: ignore[import-not-found]
+from jedi.parser.python import ParserWithRecovery  # type: ignore[import-not-found]
+from jedi.common import splitlines  # type: ignore[import-not-found]
+import jedi  # type: ignore[import-not-found]
 
 
 def run(parser, lines):
