@@ -59,7 +59,7 @@ setup(
             # Latest version which supports Python 3.6
             'flake8==5.0.4',
             # Arbitrary pins, latest at the time of pinning
-            'zuban==0.5.0',
+            'zuban==0.5.1',
             'types-setuptools==67.2.0.1',
         ],
     },
