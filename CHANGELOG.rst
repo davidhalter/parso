@@ -6,6 +6,12 @@ Changelog
 Unreleased
 ++++++++++
 
+0.8.6 (2026-02-09)
+++++++++++++++++++
+
+- Switch the type checker to Zuban. It's faster and now also checks untyped
+  code.
+
 0.8.5 (2025-08-23)
 ++++++++++++++++++
 
