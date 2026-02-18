@@ -78,6 +78,16 @@ def grammar():
         'f"\\N{SOYOMBO LETTER -A}"',
         'f"\\N{DOMINO TILE HORIZONTAL-00-00}"',
         'f"""\\N{NO ENTRY}"""',
+
+        # raw f-strings: backslash is literal, doesn't escape braces (#207)
+        'rf"\\{x}"',
+        'rf"\\{x:0>3}"',
+        'rf"abc\\{x}def"',
+        'rf"""\\{x}"""',
+        'Rf"\\{x}"',
+        'rF"\\{x}"',
+        'fR"\\{x}"',
+        'Fr"\\{x}"',
     ]
 )
 def test_valid(code, grammar):
