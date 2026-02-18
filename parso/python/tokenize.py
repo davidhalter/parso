@@ -119,6 +119,10 @@ fstring_string_single_line = _compile(
 fstring_string_multi_line = _compile(
     r'(?:\{\{|\}\}|\\N\{' + unicode_character_name + r'\}|\\[^N]|[^{}\\])+'
 )
+# In raw f-strings, backslash is a literal character and does NOT escape
+# the following character.  So \{ means literal \ followed by expression {.
+fstring_string_single_line_raw = _compile(r'(?:\{\{|\}\}|[^{}\r\n])+')
+fstring_string_multi_line_raw = _compile(r'(?:\{\{|\}\}|[^{}])+')
 fstring_format_spec_single_line = _compile(r'(?:\\(?:\r\n?|\n)|[^{}\r\n])+')
 fstring_format_spec_multi_line = _compile(r'[^{}]+')
 
@@ -219,7 +223,7 @@ def _create_token_collection(version_info):
 
     for t in fstring_prefixes:
         for quote in all_quotes:
-            fstring_pattern_map[t + quote] = quote
+            fstring_pattern_map[t + quote] = (quote, 'r' in t.lower())
 
     ALWAYS_BREAK_TOKENS = (';', 'import', 'class', 'def', 'try', 'except',
                            'finally', 'while', 'with', 'return', 'continue',
@@ -253,8 +257,9 @@ class PythonToken(Token):
 
 
 class FStringNode:
-    def __init__(self, quote):
+    def __init__(self, quote, is_raw=False):
         self.quote = quote
+        self.is_raw = is_raw
         self.parentheses_count = 0
         self.previous_lines = ''
         self.last_string_start_pos: Any = None
@@ -307,6 +312,11 @@ def _find_fstring_string(endpats, fstring_stack, line, lnum, pos):
             regex = fstring_format_spec_multi_line
         else:
             regex = fstring_format_spec_single_line
+    elif tos.is_raw:
+        if allow_multiline:
+            regex = fstring_string_multi_line_raw
+        else:
+            regex = fstring_string_single_line_raw
     else:
         if allow_multiline:
             regex = fstring_string_multi_line
@@ -593,7 +603,8 @@ def tokenize_lines(
                 else:                                       # ordinary string
                     yield PythonToken(STRING, token, spos, prefix)
             elif token in fstring_pattern_map:  # The start of an fstring.
-                fstring_stack.append(FStringNode(fstring_pattern_map[token]))
+                quote, is_raw = fstring_pattern_map[token]
+                fstring_stack.append(FStringNode(quote, is_raw=is_raw))
                 yield PythonToken(FSTRING_START, token, spos, prefix)
             elif initial == '\\' and line[start:] in ('\\\n', '\\\r\n', '\\\r'):  # continued stmt
                 additional_prefix += prefix + line[start:]
