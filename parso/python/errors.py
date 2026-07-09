@@ -933,6 +933,18 @@ class _ArglistRule(SyntaxRule):
                             self.add_issue(argument, message=message)
                     else:
                         kw_unpacking_only = True
+                elif argument.children[1] == ':=':
+                    # f(a := 1) is a named expression, i.e. a positional
+                    # argument, not a keyword argument.
+                    if kw_unpacking_only:
+                        # f(**x, a := 1)
+                        message = "positional argument follows " \
+                                  "keyword argument unpacking"
+                        self.add_issue(argument, message=message)
+                    elif kw_only:
+                        # f(x=2, a := 1)
+                        message = "positional argument follows keyword argument"
+                        self.add_issue(argument, message=message)
                 else:  # Is a keyword argument.
                     kw_only = True
                     if first.type == 'name':

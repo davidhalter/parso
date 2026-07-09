@@ -362,6 +362,12 @@ def test_valid_fstrings(code):
         'a[(b:=0)]',
         'a[(b:=0, c:=0)]',
         'a[(b:=0):1:2]',
+        'f(a := 1, b)',
+        'f(a := 1, b=2)',
+        'f(a := 1, *b)',
+        'f(a := 1, **b)',
+        'f(b, a := 1)',
+        'f(*b, a := 1)',
     ]
 )
 def test_valid_namedexpr(code):

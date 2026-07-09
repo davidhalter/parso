@@ -6,6 +6,9 @@ Changelog
 Unreleased
 ++++++++++
 
+- Fix a false ``SyntaxError`` for named expressions used as positional
+  arguments in a call, e.g. ``f(a := 1, b)``
+
 0.8.7 (2026-05-02)
 ++++++++++++++++++
 

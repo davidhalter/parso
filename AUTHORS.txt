@@ -53,6 +53,7 @@ Simon Ruggier (@sruggier)
 Tim Gates (@timgates42) <tim.gates@iress.com>
 Batuhan Taskaya (@isidentical) <isidentical@gmail.com>
 Jocelyn Boullier (@Kazy) <jocelyn@boullier.bzh>
+Apoorv Darshan (@apoorvdarshan) <ad13dtu@gmail.com>
 
 
 Note: (@user) means a github user name.

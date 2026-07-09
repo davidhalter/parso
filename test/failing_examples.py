@@ -49,6 +49,8 @@ FAILING_EXAMPLES = [
     'f(x=1, x=2)',
     'f(**x, y)',
     'f(x=2, y)',
+    'f(x=2, a := 1)',
+    'f(**x, a := 1)',
     'f(**x, *y)',
     'f(**x, y=3, z)',
     # augassign
