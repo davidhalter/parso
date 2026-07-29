@@ -973,7 +973,10 @@ class _ParameterRule(SyntaxRule):
                 continue
 
             if p.name.value in param_names:
-                message = "duplicate argument '%s' in function definition"
+                if sys.version_info[:2] < (3, 15):
+                    message = "duplicate argument '%s' in function definition"
+                else:
+                    message = "duplicate parameter '%s' in function definition"
                 self.add_issue(p.name, message=message % p.name.value)
             param_names.add(p.name.value)
 
