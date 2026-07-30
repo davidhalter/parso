@@ -139,7 +139,6 @@ FAILING_EXAMPLES = [
     'del *a, b',
     'def x(*): pass',
     '(%s *d) = x' % ('a,' * 256),
-    '{**{} for a in [1]}',
     '(True,) = x',
     '([False], a) = x',
     'def x(): from math import *',
@@ -229,7 +228,6 @@ FAILING_EXAMPLES = [
     'async def foo():\n yield x\n return 1',
     'async def foo():\n yield x\n return 1',
 
-    '[*[] for a in [1]]',
     'async def bla():\n def x():  await bla()',
     'del None',
     'del True',
@@ -422,4 +420,11 @@ if sys.version_info[:2] < (3, 13):
     # this compiles successfully but fails when evaluated in 3.13
     FAILING_EXAMPLES += [
         'from .__future__ import whatever',
+    ]
+
+if sys.version_info[:2] < (3, 15):
+    # these nested expression successfully evaluate with 3.15
+    FAILING_EXAMPLES += [
+        '[*[] for a in [1]]',
+        '{**{} for a in [1]}',
     ]

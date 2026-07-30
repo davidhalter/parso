@@ -659,7 +659,10 @@ class _StringChecks(SyntaxRule):
 
 @ErrorFinder.register_rule(value='*')
 class _StarCheck(SyntaxRule):
-    message = "named arguments must follow bare *"
+    if sys.version_info[:2] < (3, 15):
+        message = "named arguments must follow bare *"
+    else:
+        message = "named parameters must follow bare *"
 
     def is_issue(self, leaf):
         params = leaf.parent
