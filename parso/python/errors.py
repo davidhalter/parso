@@ -936,6 +936,9 @@ class _ArglistRule(SyntaxRule):
                             self.add_issue(argument, message=message)
                     else:
                         kw_unpacking_only = True
+                elif argument.children[1] == ':=':
+                    # f(a := 1) is a positional argument, not a keyword one.
+                    pass
                 else:  # Is a keyword argument.
                     kw_only = True
                     if first.type == 'name':
