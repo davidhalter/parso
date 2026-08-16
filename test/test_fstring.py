@@ -78,6 +78,16 @@ def grammar():
         'f"\\N{SOYOMBO LETTER -A}"',
         'f"\\N{DOMINO TILE HORIZONTAL-00-00}"',
         'f"""\\N{NO ENTRY}"""',
+
+        # raw f-strings: backslashes are literal and don't escape braces
+        'rf"script\\{c}.png"',
+        'rf"script\\\\{c}.png"',
+        'fr"script\\{c}.png"',
+        'Rf"script\\{c}.png"',
+        'fR"script\\{c}.png"',
+        'rf"{{}}\\{c}"',
+        'rf"""script\\{c}.png"""',
+        'rf"""abc\\\ndef{1}"""',
     ]
 )
 def test_valid(code, grammar):
@@ -120,6 +130,10 @@ def test_valid(code, grammar):
         'f"\\N{ BULLET }"',
         'f"\\N{NO   ENTRY}"',
         'f"""\\N{NO\nENTRY}"""',
+
+        # in a raw f-string a backslash doesn't escape braces, so a lone
+        # backslash followed by an unmatched '}' is still an unmatched brace
+        'rf"\\}"',
     ]
 )
 def test_invalid(code, grammar):
