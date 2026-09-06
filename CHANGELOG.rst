@@ -6,6 +6,8 @@ Changelog
 Unreleased
 ++++++++++
 
+- Fix a PEP8 normalizer crash on comments following a line continuation.
+
 0.8.7 (2026-05-02)
 ++++++++++++++++++
 

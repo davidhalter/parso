@@ -1,3 +1,5 @@
+import pytest
+
 import parso
 
 
@@ -40,3 +42,12 @@ def test_shebang():
     assert not issues('#!\n')
     assert not issues('#!/foo\n')
     assert not issues('#! python\n')
+
+
+@pytest.mark.parametrize('newline', ['\n', '\r\n', '\r'])
+@pytest.mark.parametrize('prefix', ['', 'x = 1\n', 'if True:\n    pass\n'])
+@pytest.mark.parametrize('comment', ['#', '# comment', '# comment\n'])
+def test_comment_after_line_continuation(newline, prefix, comment):
+    code = prefix + '\\' + newline + comment
+    found = issues(code)
+    assert (292 in [issue.code for issue in found]) == (not code.endswith('\n'))

@@ -444,7 +444,9 @@ class PEP8Normalizer(ErrorFinder):
                         should_be_indentation = n.indentation
 
                         self._last_indentation_tos = n
-                        if n == node:
+                        # A continuation in this prefix can make node newer
+                        # than the saved stack. Always stop at its root.
+                        if n == node or n.parent is None:
                             break
                         n = n.parent
 
