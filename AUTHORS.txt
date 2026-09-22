@@ -7,6 +7,7 @@ Code Contributors
 =================
 Alisdair Robertson (@robodair)
 Bryan Forbes (@bryanforbes) <bryan@reigndropsfall.net>
+Likio3000 (@Likio3000) — documentation
 
 
 Code Contributors (to Jedi and therefore possibly to this library)

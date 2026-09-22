@@ -131,7 +131,8 @@ class NodeOrLeaf:
     @abstractproperty
     def start_pos(self) -> Tuple[int, int]:
         """
-        Returns the starting position of the prefix as a tuple, e.g. `(3, 4)`.
+        Returns the starting position of this node or leaf, excluding its
+        prefix, as a tuple, e.g. `(3, 4)`.
 
         :return tuple of int: (line, column)
         """
@@ -139,7 +140,8 @@ class NodeOrLeaf:
     @abstractproperty
     def end_pos(self) -> Tuple[int, int]:
         """
-        Returns the end position of the prefix as a tuple, e.g. `(3, 4)`.
+        Returns the position immediately after this node or leaf as a tuple,
+        e.g. `(3, 4)`.
 
         :return tuple of int: (line, column)
         """
@@ -147,10 +149,10 @@ class NodeOrLeaf:
     @abstractmethod
     def get_start_pos_of_prefix(self):
         """
-        Returns the start_pos of the prefix. This means basically it returns
-        the end_pos of the last prefix. The `get_start_pos_of_prefix()` of the
-        prefix `+` in `2 + 1` would be `(1, 1)`, while the start_pos is
-        `(1, 2)`.
+        Returns the starting position of the prefix (whitespace and comments).
+        For a leaf with a previous leaf, this is the previous leaf's end_pos.
+        For example, the `+` leaf in `2 + 1` has a prefix starting at `(1, 1)`,
+        while its start_pos is `(1, 2)`.
 
         :return tuple of int: (line, column)
         """
@@ -172,8 +174,9 @@ class NodeOrLeaf:
         """
         Returns the code that was the input for the parser for this node.
 
-        :param include_prefix: Removes the prefix (whitespace and comments) of
-            e.g. a statement.
+        :param bool include_prefix: Include the leading prefix (whitespace and
+            comments) of this node or leaf. If False, omit only that prefix;
+            prefixes within a node are preserved.
         """
 
     def search_ancestor(self, *node_types: str) -> 'Optional[BaseNode]':
