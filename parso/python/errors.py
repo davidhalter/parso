@@ -3,13 +3,14 @@ import codecs
 import sys
 import warnings
 import re
+from ast import literal_eval
 from contextlib import contextmanager
 
 from parso.normalizer import Normalizer, NormalizerConfig, Issue, Rule
 from parso.python.tokenize import _get_token_collection
 
 _BLOCK_STMTS = ('if_stmt', 'while_stmt', 'for_stmt', 'try_stmt', 'with_stmt')
-_STAR_EXPR_PARENTS = ('testlist_star_expr', 'testlist_comp', 'exprlist')
+_STAR_EXPR_PARENTS = ('testlist_star_expr', 'testlist_comp', 'exprlist', 'subject_expr')
 # This is the maximal block size given by python.
 _MAX_BLOCK_SIZE = 20
 _MAX_INDENT_COUNT = 100
@@ -1010,6 +1011,224 @@ class _TryStmtRule(SyntaxRule):
                 default_except = except_clause
             elif default_except is not None:
                 self.add_issue(default_except, message=self.message)
+
+
+def _bound_names(pattern):
+    """
+    Yields the names a pattern binds in source order. An or-pattern binds the
+    names of its first alternative, all alternatives have to bind the same.
+    """
+    type_ = pattern.type
+    if type_ == 'name':
+        if pattern.value != '_':
+            yield pattern
+    elif type_ == 'or_pattern':
+        yield from _bound_names(pattern.children[0])
+    elif type_ == 'as_pattern':
+        yield from _bound_names(pattern.children[0])
+        if pattern.children[-1].value != '_':
+            yield pattern.children[-1]
+    elif type_ == 'star_pattern':
+        if pattern.children[1].value != '_':
+            yield pattern.children[1]
+    elif type_ in ('class_arg', 'mapping_item'):
+        yield from _bound_names(pattern.children[-1])
+    elif type_ == 'name_pattern':
+        if _is_class_pattern(pattern):
+            for argument in _class_pattern_arguments(pattern):
+                yield from _bound_names(argument)
+    elif hasattr(pattern, 'children'):
+        for child in pattern.children:
+            yield from _bound_names(child)
+
+
+def _is_class_pattern(name_pattern):
+    return name_pattern.children[-1].value == ')'
+
+
+def _class_pattern_arguments(name_pattern):
+    for index, child in enumerate(name_pattern.children):
+        if child.type == 'operator' and child.value == '(':
+            return name_pattern.children[index + 1:-1]
+
+
+def _irrefutable_name(pattern):
+    """
+    Returns the capture name or the wildcard that makes a pattern match every
+    subject, or ``None`` if the pattern can fail.
+    """
+    type_ = pattern.type
+    if type_ == 'name':
+        return pattern
+    if type_ == 'as_pattern':
+        return _irrefutable_name(pattern.children[0])
+    if type_ == 'or_pattern':
+        for alternative in pattern.children[::2]:
+            name = _irrefutable_name(alternative)
+            if name is not None:
+                return name
+    if type_ == 'paren_pattern' and len(pattern.children) == 3:
+        return _irrefutable_name(pattern.children[1])
+    return None
+
+
+def _unreachable_message(name):
+    if name.value == '_':
+        return "wildcard makes remaining patterns unreachable"
+    return "name capture %r makes remaining patterns unreachable" % name.value
+
+
+@ErrorFinder.register_rule(type='match_stmt')
+class _MatchStmtRule(SyntaxRule):
+    def is_issue(self, match_stmt):
+        cases = [c for c in match_stmt.children if c.type == 'case_block']
+        for case in cases[:-1]:
+            if any(c.type == 'guard' for c in case.children):
+                continue
+            pattern = case.children[1]
+            if pattern.type == 'or_pattern':
+                # The other alternatives are checked in the or-pattern.
+                pattern = pattern.children[-1]
+            name = _irrefutable_name(pattern)
+            if name is not None:
+                self.add_issue(name, message=_unreachable_message(name))
+
+
+@ErrorFinder.register_rule(type='case_block')
+class _CaseBlockRule(SyntaxRule):
+    message = "multiple assignments to name %r in pattern"
+    message_star = "invalid syntax"
+
+    def is_issue(self, case_block):
+        if case_block.children[1].type == 'star_pattern':
+            self.add_issue(case_block.children[1], message=self.message_star)
+            return
+        seen = set()
+        for name in _bound_names(case_block.children[1]):
+            if name.value in seen:
+                self.add_issue(name, message=self.message % name.value)
+                break
+            seen.add(name.value)
+
+
+@ErrorFinder.register_rule(type='or_pattern')
+class _OrPatternRule(SyntaxRule):
+    message = "alternative patterns bind different names"
+
+    def is_issue(self, or_pattern):
+        alternatives = or_pattern.children[::2]
+        for alternative in alternatives[:-1]:
+            name = _irrefutable_name(alternative)
+            if name is not None:
+                self.add_issue(name, message=_unreachable_message(name))
+                return
+
+        first = {name.value for name in _bound_names(alternatives[0])}
+        for alternative in alternatives[1:]:
+            if {name.value for name in _bound_names(alternative)} != first:
+                self.add_issue(alternative, message=self.message)
+                return
+
+
+@ErrorFinder.register_rule(type='as_pattern')
+class _AsPatternRule(SyntaxRule):
+    message = "cannot use '_' as a target"
+
+    def is_issue(self, as_pattern):
+        return as_pattern.children[-1].value == '_'
+
+    def get_node(self, as_pattern):
+        return as_pattern.children[-1]
+
+
+@ErrorFinder.register_rule(types=('patterns', 'list_pattern', 'paren_pattern'))
+class _StarPatternRule(SyntaxRule):
+    message = "multiple starred names in sequence pattern"
+    message_group = "invalid syntax"
+
+    def is_issue(self, sequence):
+        stars = [c for c in sequence.children if c.type == 'star_pattern']
+        if len(stars) > 1:
+            self.add_issue(stars[1], message=self.message)
+        elif sequence.type == 'paren_pattern' and stars and len(sequence.children) == 3:
+            self.add_issue(stars[0], message=self.message_group)
+
+
+@ErrorFinder.register_rule(type='literal_pattern')
+class _ComplexLiteralRule(SyntaxRule):
+    def is_issue(self, literal):
+        numbers = [c for c in literal.children if c.type == 'number']
+        if len(numbers) == 2:
+            real, imaginary = numbers
+            if real.value[-1] in 'jJ':
+                self.add_issue(real, message="real number required in complex literal")
+            elif imaginary.value[-1] not in 'jJ':
+                self.add_issue(
+                    imaginary, message="imaginary number required in complex literal"
+                )
+
+
+@ErrorFinder.register_rule(type='mapping_pattern')
+class _MappingPatternRule(SyntaxRule):
+    message = "invalid syntax"
+    message_duplicate = "mapping pattern checks duplicate key (%r)"
+
+    @staticmethod
+    def _is_valid_key(key):
+        if key.type in ('number', 'string', 'literal_pattern'):
+            return True
+        if key.type == 'keyword':
+            return key.value in ('None', 'True', 'False')
+        return key.type == 'name_pattern' and not _is_class_pattern(key)
+
+    def is_issue(self, mapping_pattern):
+        keys = set()
+        for child in mapping_pattern.children:
+            if child.type == 'name' and child.value == '_':
+                self.add_issue(child, message=self.message)
+            if child.type != 'mapping_item':
+                continue
+
+            key = child.children[0]
+            if not self._is_valid_key(key):
+                self.add_issue(key, message=self.message)
+                continue
+            if key.type == 'name_pattern':
+                continue
+            try:
+                value = literal_eval(key.get_code(include_prefix=False))
+            except (ValueError, SyntaxError):
+                continue
+            if value in keys:
+                self.add_issue(key, message=self.message_duplicate % (value,))
+            keys.add(value)
+
+
+@ErrorFinder.register_rule(type='name_pattern')
+class _ClassPatternRule(SyntaxRule):
+    message = "invalid syntax"
+    message_positional = "positional patterns follow keyword patterns"
+    message_repeated = "attribute name repeated in class pattern: %s"
+
+    def is_issue(self, name_pattern):
+        if not _is_class_pattern(name_pattern):
+            return
+
+        keywords = set()
+        for argument in _class_pattern_arguments(name_pattern):
+            if argument.type == 'operator':
+                continue
+            if argument.type != 'class_arg':
+                if keywords:
+                    self.add_issue(argument, message=self.message_positional)
+                continue
+
+            keyword = argument.children[0]
+            if keyword.type != 'name':
+                self.add_issue(keyword, message=self.message)
+            elif keyword.value in keywords:
+                self.add_issue(keyword, message=self.message_repeated % keyword.value)
+            keywords.add(keyword.value)
 
 
 @ErrorFinder.register_rule(type='fstring')

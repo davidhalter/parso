@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from textwrap import dedent
 import logging
+import sys
 
 import pytest
 
@@ -1744,3 +1745,41 @@ def test_one_line_property_error_recovery(differ):
 
     differ.initialize(code1)
     differ.parse(code2, parsers=2, copies=1, expect_error_leaves=True)
+
+
+@pytest.mark.skipif(sys.version_info[:2] < (3, 10), reason="match needs Python 3.10")
+def test_match_statement(differ):
+    code1 = dedent('''\
+        import os
+        match x:
+            case 1:
+                a = 1
+            case [b, *c]:
+                d = 2
+        e = 3
+        ''')
+    differ.initialize(code1)
+
+    code2 = code1.replace('a = 1', 'a = 2')
+    differ.parse(code2, parsers=ANY, copies=ANY)
+
+    code3 = code1.replace('case 1:', 'case 1 | 2:\n        pass\n    case 3:')
+    differ.parse(code3, parsers=ANY, copies=ANY)
+
+    code4 = code1.replace('case [b, *c]:', 'case [b, *c]\n')
+    differ.parse(code4, parsers=ANY, copies=ANY, expect_error_leaves=True)
+
+    differ.parse(code1, parsers=ANY, copies=ANY)
+    differ.parse(code1 + 'match = 1\n', parsers=1, copies=1)
+
+
+@pytest.mark.skipif(sys.version_info[:2] < (3, 10), reason="match needs Python 3.10")
+def test_match_statement_is_not_continued(differ):
+    code1 = dedent('''\
+        match x:
+            case 1:
+                pass
+        ''')
+    differ.initialize(code1 + 'y = 1\n')
+    differ.parse(code1 + '    case 2:\n        pass\ny = 1\n', parsers=1, copies=ANY)
+    differ.parse(code1 + 'case 2:\n    pass\n', parsers=ANY, copies=ANY, expect_error_leaves=True)

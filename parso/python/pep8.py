@@ -9,8 +9,10 @@ from parso.python.tree import Flow, Scope
 
 _IMPORT_TYPES = ('import_name', 'import_from')
 _SUITE_INTRODUCERS = ('classdef', 'funcdef', 'if_stmt', 'while_stmt',
-                      'for_stmt', 'try_stmt', 'with_stmt')
+                      'for_stmt', 'try_stmt', 'with_stmt', 'match_stmt',
+                      'case_block')
 _NON_STAR_TYPES = ('term', 'import_from', 'power')
+_KEYWORD_ARGUMENT_TYPES = ('argument', 'param', 'class_arg')
 _OPENING_BRACKETS = '(', '[', '{'
 _CLOSING_BRACKETS = ')', ']', '}'
 _FACTOR = '+', '-', '~'
@@ -254,7 +256,7 @@ class PEP8Normalizer(ErrorFinder):
         in_introducer = typ in _SUITE_INTRODUCERS
         if in_introducer:
             self._in_suite_introducer = True
-        elif typ == 'suite':
+        if typ == 'suite' or typ == 'case_block':
             if self._indentation_tos.type == IndentationTypes.BACKSLASH:
                 self._indentation_tos = self._indentation_tos.parent
 
@@ -266,7 +268,9 @@ class PEP8Normalizer(ErrorFinder):
         elif implicit_indentation_possible:
             self._implicit_indentation_possible = True
         yield
-        if typ == 'suite':
+        if typ == 'case_block':
+            self._indentation_tos = self._indentation_tos.parent
+        elif typ == 'suite':
             assert self._indentation_tos.type == IndentationTypes.SUITE
             self._indentation_tos = self._indentation_tos.parent
             # If we dedent, no lines are needed anymore.
@@ -623,8 +627,8 @@ class PEP8Normalizer(ErrorFinder):
             elif prev == '@' and prev.parent.type == 'decorator':
                 pass  # TODO should probably raise an error if there's a space here
             elif part in _NEEDS_SPACE or prev in _NEEDS_SPACE:
-                if part == '=' and part.parent.type in ('argument', 'param') \
-                        or prev == '=' and prev.parent.type in ('argument', 'param'):
+                if part == '=' and part.parent.type in _KEYWORD_ARGUMENT_TYPES \
+                        or prev == '=' and prev.parent.type in _KEYWORD_ARGUMENT_TYPES:
                     if part == '=':
                         param = part.parent
                     else:

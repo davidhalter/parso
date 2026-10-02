@@ -1,11 +1,14 @@
 from parso.python import tree
 from parso.python.token import PythonTokenTypes
-from parso.parser import BaseParser
+from parso.parser import BaseParser, PlainName
 
 
 NAME = PythonTokenTypes.NAME
 INDENT = PythonTokenTypes.INDENT
 DEDENT = PythonTokenTypes.DEDENT
+NEWLINE = PythonTokenTypes.NEWLINE
+ERROR_DEDENT = PythonTokenTypes.ERROR_DEDENT
+ENDMARKER = PythonTokenTypes.ENDMARKER
 
 
 class Parser(BaseParser):
@@ -61,6 +64,8 @@ class Parser(BaseParser):
         PythonTokenTypes.FSTRING_END: tree.FStringEnd,
     }
 
+    soft_keywords = frozenset(['match', 'case'])
+
     def __init__(self, pgen_grammar, error_recovery=True, start_nonterminal='file_input'):
         super().__init__(pgen_grammar, start_nonterminal,
                          error_recovery=error_recovery)
@@ -70,6 +75,9 @@ class Parser(BaseParser):
         self._indent_counter = 0
 
     def parse(self, tokens):
+        if 'match' in self._pgen_grammar.reserved_syntax_strings:
+            tokens = self._match_statement_tokenize(tokens)
+
         if self._error_recovery:
             if self._start_nonterminal != 'file_input':
                 raise NotImplementedError
@@ -77,6 +85,35 @@ class Parser(BaseParser):
             tokens = self._recovery_tokenize(tokens)
 
         return super().parse(tokens)
+
+    def _match_statement_tokenize(self, tokens):
+        """
+        ``match`` is only a keyword at the start of a match statement, which
+        is a line that ends with a colon. At the start of a statement the
+        grammar accepts both the keyword and a name, so the logical line is
+        looked at before deciding. Everywhere else the parser falls back to a
+        name by itself.
+        """
+        previous_type = NEWLINE
+        tokens = iter(tokens)
+        for token in tokens:
+            if (
+                token.string == 'match'
+                and token.type == NAME
+                and previous_type in (NEWLINE, INDENT, DEDENT, ERROR_DEDENT)
+            ):
+                line = [token]
+                for token in tokens:
+                    line.append(token)
+                    if token.type in (NEWLINE, ENDMARKER):
+                        break
+                if len(line) < 3 or line[-2].string != ':':
+                    line[0] = line[0]._replace(string=PlainName('match'))
+                yield from line
+                previous_type = line[-1].type
+            else:
+                yield token
+                previous_type = token.type
 
     def convert_node(self, nonterminal, children):
         """
@@ -95,12 +132,16 @@ class Parser(BaseParser):
                 # ones and therefore have pseudo start/end positions and no
                 # prefixes. Just ignore them.
                 children = [children[0]] + children[2:-1]
+            elif nonterminal == 'match_stmt':
+                children = children[:4] + children[5:-1]
             node = self.default_node(nonterminal, children)
         return node
 
     def convert_leaf(self, type, value, prefix, start_pos):
         # print('leaf', repr(value), token.tok_name[type])
         if type == NAME:
+            if value.__class__ is PlainName:
+                return tree.Name(str(value), start_pos, prefix)
             if value in self._pgen_grammar.reserved_syntax_strings:
                 return tree.Keyword(value, start_pos, prefix)
             else:
@@ -179,7 +220,13 @@ class Parser(BaseParser):
                 pass
 
     def _stack_removal(self, start_index):
-        all_nodes = [node for stack_node in self.stack[start_index:] for node in stack_node.nodes]
+        all_nodes = [
+            node
+            for stack_node in self.stack[start_index:]
+            for node in stack_node.nodes
+            # The INDENT of a match statement is only a virtual leaf.
+            if stack_node.nonterminal != 'match_stmt' or node.type != 'operator' or node.value
+        ]
 
         if all_nodes:
             node = tree.PythonErrorNode(all_nodes)

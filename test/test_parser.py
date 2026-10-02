@@ -3,7 +3,7 @@ from textwrap import dedent
 
 import pytest
 
-from parso import parse
+from parso import parse, ParserSyntaxError
 from parso.python import tree
 from parso.utils import split_lines
 
@@ -267,3 +267,150 @@ def test_pep695_class_no_bases(works_ge_py312):
 )
 def test_pep696_type_param_defaults(works_ge_py313, code):
     works_ge_py313.parse(code)
+
+
+@pytest.mark.parametrize(
+    'code', [
+        'match x:\n case 1: pass\n',
+        'match x:\n case 1:\n  pass\n case _:\n  pass\n',
+        'match x,:\n case (1,): pass\n',
+        'match x, *y:\n case a, *b: pass\n',
+        'match (x := f()):\n case 1: pass\n',
+        'match [x]:\n case [1]: pass\n',
+        'match -x:\n case -1: pass\n',
+        'match x:\n case None | True | False: pass\n',
+        'match x:\n case "a" "b" | b"c": pass\n',
+        'match x:\n case -1 | 1 | -1j | 1+2j | -1-2j: pass\n',
+        'match x:\n case a: pass\n',
+        'match x:\n case Color.RED | a.b.c: pass\n',
+        'match x:\n case [] | () | {}: pass\n',
+        'match x:\n case [a, b, *rest]: pass\n',
+        'match x:\n case (a, *_, b): pass\n',
+        'match x:\n case a, b: pass\n',
+        'match x:\n case (a): pass\n',
+        'match x:\n case {"k": v, 1: w, K.v: u, **rest}: pass\n',
+        'match x:\n case {**rest,}: pass\n',
+        'match x:\n case P(): pass\n',
+        'match x:\n case P(1, a, x=2, y=b,): pass\n',
+        'match x:\n case a.P(x=[1, {2: c}]): pass\n',
+        'match x:\n case [a] | (a,) as b: pass\n',
+        'match x:\n case (1 | 2) as a: pass\n',
+        'match x:\n case a if a > 1: pass\n',
+        'match x:\n case _ if x: pass\n case 1: pass\n',
+        'match x:\n case y if y:\n  pass\n case _:\n  pass\n',
+        'match x:\n case 1:\n  match y:\n   case 2: pass\n',
+        'def f(x):\n match x:\n  case 1: return 1\n',
+        'class C:\n match = 1\n match x:\n  case 1: pass\n',
+        'if x:\n match x:\n  case 1: pass\nelse:\n pass\n',
+        'for x in y:\n match x:\n  case 1: break\n  case 2: continue\n',
+        'match x:\n case 1: pass\nmatch = 1\n',
+        'match = 1\nmatch match:\n case 1: pass\n',
+        'match x:\n case match: pass\n',
+        'match x:\n case case: pass\n',
+        'match x:\n case match.case: pass\n',
+        'match x:\n case [match, case]: pass\n',
+        'match x:\n case P(match=case): pass\n',
+        'match x:\n case 1:\n  case = 1\n  match = 2\n  match(case)\n',
+        'match x:\n # comment\n\n case 1: pass  # comment\n\n # other\n case 2: pass\n',
+        'match (x,\n y):\n case (1,\n  2): pass\n',
+        'match x: # comment\n case 1: pass',
+    ]
+)
+def test_match_statement(works_ge_py310, code):
+    works_ge_py310.parse(code)
+    works_ge_py310.assert_no_error_in_passing(code)
+
+
+@pytest.mark.parametrize(
+    'code', [
+        'match = 1\n',
+        'case = 1\n',
+        'match, case = 1, 2\n',
+        'match: int = 1\n',
+        'match.group(1)\n',
+        'match[0] = 1\n',
+        'match(x)\n',
+        'match (x)\n',
+        'match -x\n',
+        'match = lambda case: case\n',
+        'x = match\n',
+        'x = {match: case}\n',
+        're.match(x, case)\n',
+        'print(match, case)\n',
+        'def match(case): return case\n',
+        'class match: case = 1\n',
+        'lambda match, case: match\n',
+        'import match\nfrom case import match as case\n',
+        'case(x)\n',
+        'case: int\n',
+        'x = 1; match = 2; case = 3\n',
+        'if x: match = 1\n',
+    ]
+)
+def test_match_and_case_as_names(works_in_py, code):
+    works_in_py.parse(code)
+    works_in_py.assert_no_error_in_passing(code)
+
+
+@pytest.mark.parametrize('version', ['3.8', '3.9'])
+def test_match_statement_before_py310(version):
+    code = 'match x:\n case 1: pass\n'
+    with pytest.raises(ParserSyntaxError):
+        parse(code, version=version, error_recovery=False)
+
+
+def test_match_statement_tree():
+    code = dedent('''\
+        match x, y:
+            case [1, *rest] if rest:
+                pass
+            case {"k": v} | P(a=v):
+                pass
+
+        match = 1
+        ''')
+    module = parse(code, version='3.10')
+    assert module.get_code() == code
+    match_stmt, assignment, _ = module.children
+    assert match_stmt.type == 'match_stmt'
+    keyword, subject, colon, newline, *cases = match_stmt.children
+    assert (keyword.type, keyword.value) == ('keyword', 'match')
+    assert subject.type == 'subject_expr'
+    assert [case.type for case in cases] == ['case_block', 'case_block']
+    assert [case.children[0].type for case in cases] == ['keyword', 'keyword']
+    assert cases[0].children[2].type == 'guard'
+    assert cases[1].children[1].type == 'or_pattern'
+    assert all(child.type != 'operator' or child.value for child in match_stmt.children)
+    assert assignment.children[0].children[0].type == 'name'
+
+
+def test_match_statement_scopes():
+    module = parse(dedent('''\
+        match x:
+            case 1:
+                def f(): return 1
+            case 2:
+                class C: pass
+                import os
+        '''), version='3.10')
+    assert [f.name.value for f in module.iter_funcdefs()] == ['f']
+    assert [c.name.value for c in module.iter_classdefs()] == ['C']
+    assert [i.get_code().strip() for i in module.iter_imports()] == ['import os']
+    function, = module.iter_funcdefs()
+    assert len(list(function.iter_return_stmts())) == 1
+
+
+def test_match_statement_error_recovery():
+    code = dedent('''\
+        match x:
+            case 1:
+                pass
+            foo bar
+            case 2:
+                pass
+        match y
+        match z:
+        a = 1
+        ''')
+    module = parse(code, version='3.10')
+    assert module.get_code() == code

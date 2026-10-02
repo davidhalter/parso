@@ -6,6 +6,9 @@ Changelog
 Unreleased
 ++++++++++
 
+- Add support for the ``match`` statement (PEP 634) in the grammars for
+  Python 3.10 and later
+
 0.8.7 (2026-05-02)
 ++++++++++++++++++
 

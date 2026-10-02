@@ -51,7 +51,8 @@ from parso.python.prefix import split_prefix
 from parso.utils import split_lines
 
 _FLOW_CONTAINERS = set(['if_stmt', 'while_stmt', 'for_stmt', 'try_stmt',
-                        'with_stmt', 'async_stmt', 'suite'])
+                        'with_stmt', 'async_stmt', 'suite', 'match_stmt',
+                        'case_block'])
 _RETURN_STMT_CONTAINERS = set(['suite', 'simple_stmt']) | _FLOW_CONTAINERS
 
 _FUNC_CONTAINERS = set(

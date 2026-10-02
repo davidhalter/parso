@@ -408,6 +408,34 @@ if sys.version_info[:2] >= (3, 8):
         "f'{1=!b}'",
     ]
 
+if sys.version_info[:2] >= (3, 10):
+    FAILING_EXAMPLES += [
+        'match x:\n case {**a, **b}: pass',
+        'match x:\n case {**a, 1: b}: pass',
+        'match x:\n case {**_}: pass',
+        'match x:\n case {a: 1}: pass',
+        'match x:\n case {1: a, 1: b}: pass',
+        'match x:\n case {1: a, 1.0: b}: pass',
+        "match x:\n case {'a': 1, 'a': 2}: pass",
+        'match x:\n case [a, a]: pass',
+        'match x:\n case ({1: a}, a): pass',
+        'match x:\n case [a, *a]: pass',
+        'match x:\n case [*a, *b]: pass',
+        'match x:\n case *a: pass',
+        'match x:\n case (*a): pass',
+        'match x:\n case _: pass\n case 1: pass',
+        'match x:\n case y: pass\n case 1: pass',
+        'match x:\n case 1 | y: pass\n case 2: pass',
+        'match x:\n case _ | 1: pass',
+        'match x:\n case [y | 1]: pass',
+        'match x:\n case [a] | [b]: pass',
+        'match x:\n case 1 as _: pass',
+        'match x:\n case 1+2: pass',
+        'match x:\n case 1j+2j: pass',
+        'match x:\n case P(x=1, y): pass',
+        'match x:\n case P(x=1, x=2): pass',
+    ]
+
 if sys.version_info[:2] < (3, 12):
     FAILING_EXAMPLES += [
         # f-string expression part cannot include a backslash before 3.12

@@ -186,11 +186,13 @@ def _ends_with_newline(leaf, suffix=''):
 
 def _flows_finished(pgen_grammar, stack):
     """
-    if, while, for and try might not be finished, because another part might
-    still be parsed.
+    if, while, for, try and match might not be finished, because another part
+    might still be parsed.
     """
     for stack_node in stack:
-        if stack_node.nonterminal in ('if_stmt', 'while_stmt', 'for_stmt', 'try_stmt'):
+        if stack_node.nonterminal in (
+            'if_stmt', 'while_stmt', 'for_stmt', 'try_stmt', 'match_stmt'
+        ):
             return False
     return True
 
@@ -223,6 +225,8 @@ def _suite_or_file_input_is_valid(pgen_grammar, stack):
 def _is_flow_node(node):
     if node.type == 'async_stmt':
         node = node.children[1]
+    if node.type == 'match_stmt':
+        return True
     try:
         value = node.children[0].value
     except AttributeError:

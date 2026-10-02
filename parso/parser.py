@@ -23,7 +23,7 @@ within the statement. This lowers memory usage and cpu time and reduces the
 complexity of the ``Parser`` (there's another parser sitting inside
 ``Statement``, which produces ``Array`` and ``Call``).
 """
-from typing import Dict, Type
+from typing import Dict, FrozenSet, Type
 
 from parso import tree
 from parso.pgen2.generator import ReservedString
@@ -88,7 +88,7 @@ class StackNode:
 
 def _token_to_transition(grammar, type_, value):
     # Map from token to label
-    if type_.value.contains_syntax:
+    if type_.value.contains_syntax and value.__class__ is not PlainName:
         # Check for reserved words (keywords)
         try:
             return grammar.reserved_syntax_strings[value]
@@ -96,6 +96,14 @@ def _token_to_transition(grammar, type_, value):
             pass
 
     return type_
+
+
+class PlainName(str):
+    """
+    The value of a soft keyword that is used as a name. It is never looked up
+    as a keyword.
+    """
+    __slots__ = ()
 
 
 class BaseParser:
@@ -115,6 +123,10 @@ class BaseParser:
 
     leaf_map: Dict[str, Type[tree.Leaf]] = {}
     default_leaf = tree.Leaf
+
+    # Keywords that are only reserved where the grammar asks for them and are
+    # plain names everywhere else.
+    soft_keywords: FrozenSet[str] = frozenset()
 
     def __init__(self, pgen_grammar, start_nonterminal='file_input', error_recovery=False):
         self._pgen_grammar = pgen_grammar
@@ -180,7 +192,13 @@ class BaseParser:
                 plan = stack[-1].dfa.transitions[transition]
                 break
             except KeyError:
-                if stack[-1].dfa.is_final:
+                if (
+                    value in self.soft_keywords
+                    and type_ in stack[-1].dfa.transitions
+                ):
+                    value = PlainName(value)
+                    transition = type_
+                elif stack[-1].dfa.is_final:
                     self._pop()
                 else:
                     self.error_recovery(token)
