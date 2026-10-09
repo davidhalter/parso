@@ -444,7 +444,10 @@ class PEP8Normalizer(ErrorFinder):
                         should_be_indentation = n.indentation
 
                         self._last_indentation_tos = n
-                        if n == node:
+                        # A backslash in the same prefix can introduce a new
+                        # node below the previous indentation stack. In that
+                        # case, stop at the root instead of walking past it.
+                        if n == node or n.parent is None:
                             break
                         n = n.parent
 

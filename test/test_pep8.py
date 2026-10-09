@@ -1,4 +1,5 @@
 import parso
+import pytest
 
 
 def issues(code):
@@ -40,3 +41,14 @@ def test_shebang():
     assert not issues('#!\n')
     assert not issues('#!/foo\n')
     assert not issues('#! python\n')
+
+
+@pytest.mark.parametrize('newline', ['\n', '\r\n', '\r'])
+@pytest.mark.parametrize('backslashes', [1, 2])
+@pytest.mark.parametrize('comment', ['#', '# comment'])
+def test_comment_after_backslash(newline, backslashes, comment):
+    prefix = ('\\' + newline) * backslashes
+    found = issues(prefix + comment)
+    assert [(issue.code, issue.start_pos) for issue in found] == [
+        (292, (backslashes + 1, len(comment))),
+    ]

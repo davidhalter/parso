@@ -56,4 +56,6 @@ Batuhan Taskaya (@isidentical) <isidentical@gmail.com>
 Jocelyn Boullier (@Kazy) <jocelyn@boullier.bzh>
 
 
+salpenr (@salapenar-max)
+
 Note: (@user) means a github user name.
