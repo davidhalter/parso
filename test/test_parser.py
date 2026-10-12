@@ -3,9 +3,9 @@ from textwrap import dedent
 
 import pytest
 
-from parso import parse
+from parso import ParserSyntaxError, load_grammar, parse
 from parso.python import tree
-from parso.utils import split_lines
+from parso.utils import parse_version_string, split_lines
 
 
 def test_basic_parsing(each_version):
@@ -17,6 +17,85 @@ def test_basic_parsing(each_version):
     compare('wblabla* 1\t\n')
     compare('def x(a, b:3): pass\n')
     compare('assert foo\n')
+
+
+@pytest.mark.parametrize('code', [
+    'x = tuple[*Ts]\n',
+    'a[*xs,]',
+    'a[int, *Ts, str]',
+    'a[*xs, *ys]',
+    'a[1:2, *xs, ::2]',
+    'a[*xs, 1:2]',
+    'a[*(xs + ys)]',
+    'a[*xs | ys]',
+    'a[*(xs if condition else ys)]',
+    'a[*xs if condition else ys]',
+    'a[*xs or ys]',
+    'a[*xs and ys]',
+    'a[*not xs]',
+    'a[*xs < ys]',
+    'a[*lambda: xs]',
+    'a[*xs] = value',
+    'a[*xs, *ys] = value',
+    'a[*xs] += value',
+    'del a[*xs]',
+    'del a[*xs, *ys]',
+    'for a[*xs] in items: pass',
+    'def f(x: tuple[*Ts]) -> tuple[*Ts]: pass',
+    'class C(Generic[*Ts]): pass',
+    'a[\n    *xs,  # unpack\n    *b[*ys],\n]\n',
+])
+@pytest.mark.parametrize('error_recovery', [False, True])
+def test_starred_subscripts(each_version, code, error_recovery):
+    grammar = load_grammar(version=each_version)
+    supported = parse_version_string(each_version) >= (3, 11)
+    if not supported and not error_recovery:
+        with pytest.raises(ParserSyntaxError):
+            grammar.parse(code, error_recovery=False)
+    else:
+        module = grammar.parse(code, error_recovery=error_recovery)
+        assert module.get_code() == code
+        assert bool(list(grammar.iter_errors(module))) != supported
+
+
+@pytest.mark.parametrize('code', [
+    'a[*xs:ys]',
+    'a[x:*ys]',
+    'a[x:y:*zs]',
+    'a[*xs:*ys]',
+    'a[**xs]',
+    'a[*]',
+    'a[*xs for x in items]',
+    'a[*xs := ys]',
+])
+def test_invalid_starred_subscripts(each_version, code):
+    grammar = load_grammar(version=each_version)
+    with pytest.raises(ParserSyntaxError):
+        grammar.parse(code, error_recovery=False)
+    module = grammar.parse(code)
+    assert module.get_code() == code
+    assert list(grammar.iter_errors(module))
+
+
+@pytest.mark.parametrize('code', ['a[*xs]', 'a[*xs, 1]', 'a[1, *xs]'])
+def test_starred_subscript_tree(code):
+    expression = parse(code, version='3.11', error_recovery=False).children[0]
+    index = expression.children[-1].children[1]
+    if index.type == 'subscriptlist':
+        index, = [child for child in index.children if child.type == 'star_expr']
+    assert index.type == 'star_expr'
+    assert index.children[0] == '*'
+    assert index.children[1].value == 'xs'
+
+
+@pytest.mark.parametrize('code', [
+    '[*xs if condition else ys]',
+    '(*xs or ys,)',
+    '{*lambda: xs}',
+])
+def test_starred_subscript_expression_scope(works_not_in_py, code):
+    works_not_in_py.parse(code)
+    works_not_in_py.get_error(code)
 
 
 def test_subscope_names(each_version):

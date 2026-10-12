@@ -538,6 +538,11 @@ def test_parenthesized_single_starred_expr(code):
     assert _get_error_list(code, version='3.9')
 
 
+@pytest.mark.parametrize('code', ['a[(*xs)]', 'a[*(*xs)]'])
+def test_parenthesized_starred_subscript(each_version, code):
+    assert _get_error_list(code, version=each_version)
+
+
 @pytest.mark.parametrize(
     'code', [
         '() = ()',

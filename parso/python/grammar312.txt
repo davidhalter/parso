@@ -125,7 +125,8 @@ atom: ('(' [yield_expr|testlist_comp] ')' |
        NAME | NUMBER | strings | '...' | 'None' | 'True' | 'False')
 testlist_comp: (namedexpr_test|star_expr) ( comp_for | (',' (namedexpr_test|star_expr))* [','] )
 trailer: '(' [arglist] ')' | '[' subscriptlist ']' | '.' NAME
-subscriptlist: subscript (',' subscript)* [',']
+subscriptlist: (subscript|starred_expression) (',' (subscript|starred_expression))* [',']
+starred_expression: '*' test
 subscript: test [':=' test] | [test] ':' [test] [sliceop]
 sliceop: ':' [test]
 exprlist: (expr|star_expr) (',' (expr|star_expr))* [',']

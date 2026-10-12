@@ -782,6 +782,9 @@ class _StarExprRule(SyntaxRule):
             ancestor = node.parent
         else:
             ancestor = _skip_parens_bottom_up(node)
+        if self._normalizer.version >= (3, 11) \
+                and ancestor.type in ('subscriptlist', 'trailer'):
+            return
         # starred expression not in tuple/list/set
         if ancestor.type not in (*_STAR_EXPR_PARENTS, 'dictorsetmaker') \
                 and not (ancestor.type == 'atom' and ancestor.children[0] != '('):

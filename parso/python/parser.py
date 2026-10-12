@@ -86,6 +86,9 @@ class Parser(BaseParser):
         grammar rule produces a new complete node, so that the tree is build
         strictly bottom-up.
         """
+        if nonterminal == 'starred_expression':
+            # Subscripts allow a full test after '*', unlike other star_exprs.
+            nonterminal = 'star_expr'
         try:
             node = self.node_map[nonterminal](children)
         except KeyError:

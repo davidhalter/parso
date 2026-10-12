@@ -22,6 +22,19 @@ def test_simple():
     assert grammar.parse('b', diff_cache=True) == module_a
 
 
+@pytest.mark.parametrize('version', ['3.11', '3.12', '3.13', '3.14'])
+def test_starred_subscript_diff(version, tmp_path):
+    grammar = load_grammar(version=version)
+    for index in ['xs', '*xs', '*xs, *ys', '*xs if condition else ys',
+                  '*lambda: xs', '1:2, *xs', '*', '*xs', 'xs']:
+        code = 'def f():\n    return a[%s]\n\ntail = 1\n' % index
+        module = grammar.parse(code, path=tmp_path / 'star.py', diff_cache=True)
+        assert module.get_code() == code
+        _assert_valid_graph(module)
+        _assert_nodes_are_equal(module, grammar.parse(code))
+        assert bool(list(grammar.iter_errors(module))) == (index == '*')
+
+
 def _check_error_leaves_nodes(node):
     if node.type in ('error_leaf', 'error_node'):
         return node
