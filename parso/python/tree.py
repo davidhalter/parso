@@ -229,6 +229,10 @@ class Name(_LeafWithoutNewlines):
                 return node.parent  # The try_stmt.
             return None
 
+        # Unparenthesized assignment expressions in calls use argument nodes.
+        if type_ == 'argument' and node.children[1] == ':=':
+            return node if node.children[0] is self else None
+
         while node is not None:
             if node.type == 'suite':
                 return None

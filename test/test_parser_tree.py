@@ -1,5 +1,6 @@
 # -*- coding: utf-8    # This file contains Unicode characters.
 
+import sys
 from textwrap import dedent
 
 import pytest
@@ -214,6 +215,47 @@ def test_is_definition(code, name_index, is_definition, include_setitem):
         name = name.get_next_leaf()
 
     assert name.is_definition(include_setitem=include_setitem) == is_definition
+
+
+@pytest.mark.parametrize('code', [
+    'f(target := source)\n',
+    'f(target := target)\n',
+    'f(0, target := source)\n',
+    'result = f(target := source)\n',
+    'def outer():\n    return f(target := source)\n',
+    'f(target := source.attr)\n',
+    'f(target := g(source))\n',
+    'obj.f(target := source)\n',
+])
+def test_walrus_argument_definition(code, version_ge_py38):
+    if sys.version_info >= (3, 8):
+        compile(code, '<walrus argument>', 'exec')
+    module = parse(code, version=version_ge_py38, error_recovery=False)
+    names = module.get_used_names()
+    target = names['target'][0]
+
+    assert target.get_definition() is target.parent
+    assert target.is_definition()
+    assert target.is_definition(include_setitem=True)
+    assert target.get_definition(import_name_always=True) is target.parent
+    for name in names.get('source', []) + names['target'][1:]:
+        assert name.get_definition() is None
+        assert not name.is_definition()
+    assert module.get_code() == code
+
+
+@pytest.mark.parametrize('code, expected', [
+    ('f(target=source)\n', [False]),
+    ('f(target)\n', [False]),
+    ('f(*target)\n', [False]),
+    ('f(**target)\n', [False]),
+    ('f(target for target in source)\n', [False, True]),
+    ('(target := source)\n', [True]),
+    ('f((target := source))\n', [True]),
+])
+def test_argument_definition_controls(code, expected, version_ge_py38):
+    module = parse(code, version=version_ge_py38, error_recovery=False)
+    assert [name.is_definition() for name in module.get_used_names()['target']] == expected
 
 
 def test_iter_funcdefs():

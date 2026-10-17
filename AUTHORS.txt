@@ -6,6 +6,7 @@ David Halter (@davidhalter) <davidhalter88@gmail.com>
 Code Contributors
 =================
 Alisdair Robertson (@robodair)
+AryanRG (@AryanRG)
 Bryan Forbes (@bryanforbes) <bryan@reigndropsfall.net>
 Likio3000 (@Likio3000) — documentation
 
