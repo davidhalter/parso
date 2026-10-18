@@ -40,3 +40,8 @@ def test_shebang():
     assert not issues('#!\n')
     assert not issues('#!/foo\n')
     assert not issues('#! python\n')
+
+
+def test_comment_after_line_continuation():
+    issue, = issues('\\\n#')
+    assert issue.code == 292
