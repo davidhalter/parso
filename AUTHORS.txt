@@ -55,5 +55,6 @@ Tim Gates (@timgates42) <tim.gates@iress.com>
 Batuhan Taskaya (@isidentical) <isidentical@gmail.com>
 Jocelyn Boullier (@Kazy) <jocelyn@boullier.bzh>
 
+Rudy Celekli (@rudycelekli)
 
 Note: (@user) means a github user name.
