@@ -6,6 +6,9 @@ Changelog
 Unreleased
 ++++++++++
 
+- Fix f-string tokenization when a backslash precedes a replacement-field
+  brace, including raw f-strings with format specifications (#207).
+
 0.8.7 (2026-05-02)
 ++++++++++++++++++
 
