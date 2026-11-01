@@ -219,7 +219,7 @@ def clear_inactive_cache(
         if not version_path.is_dir():
             continue
         for file in os.scandir(version_path):
-            if file.stat().st_atime + _CACHED_FILE_MAXIMUM_SURVIVAL <= time.time():
+            if file.stat().st_atime + inactivity_threshold <= time.time():
                 try:
                     os.remove(file.path)
                 except OSError:  # silently ignore all failures
