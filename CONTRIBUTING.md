@@ -6,3 +6,7 @@ We <3 Pull Requests! Three core things:
 
  If you want to add methods to the parser tree, we will need to discuss this in
  an issue first.
+
+# LLM usage
+
+LLM usage is prohibited unless done by maintainers or people who understand what they do.
