@@ -3,6 +3,7 @@ import codecs
 import sys
 import warnings
 import re
+import unicodedata
 from contextlib import contextmanager
 
 from parso.normalizer import Normalizer, NormalizerConfig, Issue, Rule
@@ -942,14 +943,15 @@ class _ArglistRule(SyntaxRule):
                 else:  # Is a keyword argument.
                     kw_only = True
                     if first.type == 'name':
-                        if first.value in arg_set:
+                        name = unicodedata.normalize('NFKC', first.value)
+                        if name in arg_set:
                             # f(x=1, x=2)
                             message = "keyword argument repeated"
                             if self._normalizer.version >= (3, 9):
-                                message += ": {}".format(first.value)
+                                message += ": {}".format(name)
                             self.add_issue(first, message=message)
                         else:
-                            arg_set.add(first.value)
+                            arg_set.add(name)
             else:
                 if kw_unpacking_only:
                     # f(**x, y)
@@ -978,13 +980,14 @@ class _ParameterRule(SyntaxRule):
                     default_only = False
                 continue
 
-            if p.name.value in param_names:
+            name = unicodedata.normalize('NFKC', p.name.value)
+            if name in param_names:
                 if sys.version_info[:2] < (3, 15):
                     message = "duplicate argument '%s' in function definition"
                 else:
                     message = "duplicate parameter '%s' in function definition"
-                self.add_issue(p.name, message=message % p.name.value)
-            param_names.add(p.name.value)
+                self.add_issue(p.name, message=message % name)
+            param_names.add(name)
 
             if not star_seen:
                 if p.default is None and not p.star_count:

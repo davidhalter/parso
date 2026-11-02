@@ -456,6 +456,38 @@ def test_forbidden_name(template, target):
     assert _get_error_list(template.format(target=target), version="3")
 
 
+@pytest.mark.parametrize('code', [
+    'def f(K, K): pass',
+    'def f(K, K): pass',
+    'def f(a, ａ): pass',
+    'def f(K, *, K): pass',
+    'lambda K, K: None',
+    'lambda a, ａ: None',
+    'f(K=1, K=2)',
+    'f(K=1, K=2)',
+    'f(a=1, ａ=2)',
+])
+def test_nfkc_duplicate_arguments(code):
+    wanted, line_nr = _get_actual_exception(code)
+    errors = _get_error_list(code)
+
+    error, = errors
+    assert error.message in wanted
+    assert error.start_pos[0] == line_nr
+    assert parso.parse(code).get_code() == code
+
+
+@pytest.mark.parametrize('code', [
+    'def f(K, k): pass',
+    'def f(K, K2): pass',
+    'lambda K, k: None',
+    'f(K=1, k=2)',
+])
+def test_distinct_unicode_arguments(code):
+    compile(code, '<test>', 'exec')
+    assert not _get_error_list(code)
+
+
 def test_repeated_kwarg():
     # python 3.9+ shows which argument is repeated
     assert (
